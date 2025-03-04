@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 // Read and parse the JSON file
-const tasks = JSON.parse(fs.readFileSync('./example_multiagent_construction_tasks.json'));
+const tasks = JSON.parse(fs.readFileSync('./test_multiagent_construction_tasks.json'));
 
 // Validate format and count variants
 const counts = {};

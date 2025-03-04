@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {proceduralGeneration} from "../../src/agent/construction_tasks.js";
+import {proceduralGeneration} from "../../src/agent/task_types/construction_tasks.js";
 
 function createInitialInventory(blueprint, agents) {
     /*
@@ -20,7 +20,7 @@ function createInitialInventory(blueprint, agents) {
 
     // Initialize inventories
     for (let i = 0; i < agents; i++) {
-        inventories[i] = {};
+        inventories[i] = {'diamond_pickaxe':1};
     }
 
     // Count materials in blueprint
@@ -30,7 +30,9 @@ function createInitialInventory(blueprint, agents) {
                 if (block !== 'air') {
                     // Check if material contains 'door' or 'ladder' and convert appropriately
                     let materialKey = block;
-                    if (block.includes('door')) {
+                    if (block.includes('dark_oak_door')) {
+                        materialKey = 'dark_oak_door';
+                    } else if (block.includes('oak_door')) {
                         materialKey = 'oak_door';
                     } else if (block.includes('ladder')) {
                         materialKey = 'ladder';
@@ -47,9 +49,6 @@ function createInitialInventory(blueprint, agents) {
         inventories[currentAgent][material] = count;
         currentAgent = (currentAgent + 1) % agents;
     }
-
-
-    // Todo: add tools to all agents (diamond pickaxe)
     
 
     return inventories;
@@ -61,9 +60,8 @@ function calculateSpaceNeeded(rooms) {
     return baseSize + scaleFactor;
 }
 
-function generateConstructionTasks() {
+function generateConstructionTasks(variants) {
     const tasks = {};
-    const variants = 1
     const materialLevels = 5;
     const roomCounts = [4, 6, 8];
     const windowStyles = [0, 1, 2];
@@ -102,7 +100,7 @@ function generateConstructionTasks() {
                             agent_count: 2,
                             initial_inventory: createInitialInventory(blueprint, 2),
                             timeout: timeout+(300*r), // 5 minute per additional level of complexity
-                            blueprint: blueprint, //todo: make a pointer?
+                            blueprint: blueprint,
 
                         };
                     }
@@ -114,13 +112,13 @@ function generateConstructionTasks() {
     return tasks;
 }
 
-const tasks = generateConstructionTasks();
+const tasks = generateConstructionTasks(1);
 // Clear existing file content
-fs.writeFileSync('./example_multiagent_construction_tasks.json', '');
+fs.writeFileSync('./test_multiagent_construction_tasks.json', '');
 // re-add
 fs.writeFileSync(
-    './example_multiagent_construction_tasks.json',
+    './test_multiagent_construction_tasks.json',
     JSON.stringify(tasks, null, 2)
 );
 
-console.log("Generated tasks saved to example_multiagent_construction_tasks.json");
+console.log("Generated tasks saved to test_multiagent_construction_tasks.json");

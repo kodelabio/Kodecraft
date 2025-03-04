@@ -77,7 +77,6 @@ export class Blueprint {
     explain() {
         var explanation = "";
 
-        // todo: we need to limit this to be a certain amount of levels to not overload memory...
         for (let item of this.data.levels) {
             var coordinates = item.coordinates;
             explanation += `Level ${item.level}: `;
@@ -913,10 +912,45 @@ export function proceduralGeneration(m = 20,
         }
     }
 
+    // uncomment to visualize blueprint output
+    // printMatrix(matrix)
+
     return matrixToBlueprint(matrix, [148,-60,-170])
 }
 
 
+
+
+/**
+ * for cutesy output
+ * @param matrix
+ */
+function printMatrix(matrix) {
+    matrix.forEach((layer, layerIndex) => {
+        console.log(`Layer ${layerIndex}:`);
+        layer.forEach(row => {
+            console.log(
+                row.map(cell => {
+                    switch (cell) {
+                        case 'stone': return '█';  // Wall
+                        case 'air': return '.';    // Open space
+                        case 'dark_oak_door[half=upper, hinge=left]': return 'D';
+                        case 'dark_oak_door[half=lower, hinge=left]': return 'D';
+                        case 'oak_stairs[facing=north]': return 'S';  // Stairs
+                        case 'oak_stairs[facing=east]': return 'S';  // Stairs
+                        case 'oak_stairs[facing=south]': return 'S';  // Stairs
+                        case 'oak_stairs[facing=west]': return 'S';  // Stairs
+                        case 'glass': return 'W'
+
+
+                        default: return '?';       // Unknown or unmarked space
+                    }
+                }).join(' ')
+            );
+        });
+        console.log('---');
+    });
+}
 
 /**
  * Converts a 3D matrix into a Minecraft blueprint format

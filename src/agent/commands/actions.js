@@ -42,6 +42,7 @@ export const actionsList = [
             const actionFn = async () => {
                 try {
                     result = await agent.coder.generateCode(agent.history);
+                    console.log("[Kodelab] Example of generated code:", result)
                 } catch (e) {
                     result = 'Error generating code: ' + e.toString();
                 }

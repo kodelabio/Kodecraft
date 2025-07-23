@@ -1,0 +1,10 @@
+{
+    "name": "Kodelab_Alpha",
+
+    "model": {
+        "model": "gpt-4o",
+        "params": {
+            "temperature": 0.5
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import { readFileSync, mkdirSync, writeFileSync} from 'fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import { Examples } from '../utils/examples.js';
 import { getCommandDocs } from '../agent/commands/index.js';
 import { SkillLibrary } from "../agent/library/skill_library.js";
@@ -58,7 +58,7 @@ export class Prompter {
 
         this.convo_examples = null;
         this.coding_examples = null;
-        
+
         let name = this.profile.name;
         this.cooldown = this.profile.cooldown ? this.profile.cooldown : 0;
         this.last_prompt_time = 0;
@@ -91,12 +91,12 @@ export class Prompter {
         let embedding = this.profile.embedding;
         if (embedding === undefined) {
             if (chat_model_profile.api !== 'ollama')
-                embedding = {api: chat_model_profile.api};
+                embedding = { api: chat_model_profile.api };
             else
-                embedding = {api: 'none'};
+                embedding = { api: 'none' };
         }
         else if (typeof embedding === 'string' || embedding instanceof String)
-            embedding = {api: embedding};
+            embedding = { api: embedding };
 
         console.log('Using embedding settings:', embedding);
 
@@ -140,7 +140,7 @@ export class Prompter {
 
     _selectAPI(profile) {
         if (typeof profile === 'string' || profile instanceof String) {
-            profile = {model: profile};
+            profile = { model: profile };
         }
         if (!profile.api) {
             if (profile.model.includes('openrouter/'))
@@ -151,7 +151,7 @@ export class Prompter {
                 profile.api = 'google';
             else if (profile.model.includes('vllm/'))
                 profile.api = 'vllm';
-            else if (profile.model.includes('gpt') || profile.model.includes('o1')|| profile.model.includes('o3'))
+            else if (profile.model.includes('gpt') || profile.model.includes('o1') || profile.model.includes('o3'))
                 profile.api = 'openai';
             else if (profile.model.includes('claude'))
                 profile.api = 'anthropic';
@@ -175,9 +175,9 @@ export class Prompter {
                 profile.api = 'xai';
             else if (profile.model.includes('deepseek'))
                 profile.api = 'deepseek';
-	        else if (profile.model.includes('mistral'))
+            else if (profile.model.includes('mistral'))
                 profile.api = 'mistral';
-            else 
+            else
                 throw new Error('Unknown model:', profile.model);
         }
         return profile;
@@ -232,7 +232,7 @@ export class Prompter {
         try {
             this.convo_examples = new Examples(this.embedding_model, settings.num_examples);
             this.coding_examples = new Examples(this.embedding_model, settings.num_examples);
-            
+
             // Wait for both examples to load before proceeding
             await Promise.all([
                 this.convo_examples.load(this.profile.conversation_examples),
@@ -253,7 +253,7 @@ export class Prompter {
         }
     }
 
-    async replaceStrings(prompt, messages, examples=null, to_summarize=[], last_goals=null) {
+    async replaceStrings(prompt, messages, examples = null, to_summarize = [], last_goals = null) {
         prompt = prompt.replaceAll('$NAME', this.agent.name);
 
         if (prompt.includes('$STATS')) {
@@ -348,7 +348,7 @@ export class Prompter {
                     console.error('Error: Generated response is not a string', generation);
                     throw new Error('Generated response is not a string');
                 }
-                console.log("Generated response:", generation); 
+                console.log("Generated response:", generation);
                 await this._saveLog(prompt, messages, generation, 'conversation');
 
             } catch (error) {
@@ -365,7 +365,7 @@ export class Prompter {
             if (current_msg_time !== this.most_recent_msg_time) {
                 console.warn(`${this.agent.name} received new message while generating, discarding old response.`);
                 return '';
-            } 
+            }
 
             if (generation?.includes('</think>')) {
                 const [_, afterThink] = generation.split('</think>')
@@ -411,7 +411,7 @@ export class Prompter {
         await this.checkCooldown();
         let prompt = this.profile.bot_responder;
         let messages = this.agent.history.getHistory();
-        messages.push({role: 'user', content: new_message});
+        messages.push({ role: 'user', content: new_message });
         prompt = await this.replaceStrings(prompt, null, null, messages);
         let res = await this.chat_model.sendRequest([], prompt);
         return res.trim().toLowerCase() === 'respond';
@@ -432,7 +432,7 @@ export class Prompter {
         let user_message = 'Use the below info to determine what goal to target next\n\n';
         user_message += '$LAST_GOALS\n$STATS\n$INVENTORY\n$CONVO'
         user_message = await this.replaceStrings(user_message, messages, null, null, last_goals);
-        let user_messages = [{role: 'user', content: user_message}];
+        let user_messages = [{ role: 'user', content: user_message }];
 
         let res = await this.chat_model.sendRequest(user_messages, system_message);
 

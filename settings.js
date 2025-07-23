@@ -1,5 +1,5 @@
 const settings = {
-    "minecraft_version": "1.21.4", // supports up to 1.21.1
+    "minecraft_version": "1.21.1", // supports up to 1.21.1
     "host": "minecraft-250712.kodelab.dev", 
     "port": 25565,
     "auth": "offline", // or "microsoft"

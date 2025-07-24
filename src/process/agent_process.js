@@ -1,10 +1,12 @@
 import { spawn } from 'child_process';
-import { logoutAgent } from '../mindcraft/mindserver.js';
+import { EventEmitter } from 'events';
 
-export class AgentProcess {
-    constructor(name, port) {
+export class AgentProcess extends EventEmitter {
+    constructor(name, port, onExit = () => {}) {
+        super();
         this.name = name;
         this.port = port;
+        this.onExit = onExit;
     }
 
     start(load_memory=false, init_message=null, count_id=0) {
@@ -29,7 +31,7 @@ export class AgentProcess {
         agentProcess.on('exit', (code, signal) => {
             console.log(`Agent process exited with code ${code} and signal ${signal}`);
             this.running = false;
-            logoutAgent(this.name);
+            this.emit('exit', this.name); // Emit exit event
             
             if (code > 1) {
                 console.log(`Ending task`);

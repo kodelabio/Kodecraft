@@ -420,7 +420,7 @@ export const actionsList = [
     },
     {
         name: '!lookAtPlayer',
-        description: 'Look at a player or look in the same direction as the player.',
+        description: 'Capture and analyze an image of a specific player or their view direction. Useful when interacting with other players or inspecting their surroundings.',
         params: {
             'player_name': { type: 'string', description: 'Name of the target player' },
             'direction': {
@@ -442,7 +442,7 @@ export const actionsList = [
     },
     {
         name: '!lookAtPosition',
-        description: 'Look at specified coordinates.',
+        description: '!lookAtPosition: !!!IMPORTANT COMMAND!!! This command is incredibly powerful, and will give you real visual data on what the bot is looking at. \n!lookAtPosition: Take a screenshot of a specific location and analyze the environment. Use this to scout terrain, check for hazards, or assess structures and blocks.',
         params: {
             'x': { type: 'int', description: 'x coordinate' },
             'y': { type: 'int', description: 'y coordinate' },

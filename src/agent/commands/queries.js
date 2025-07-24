@@ -13,7 +13,7 @@ const pad = (str) => {
 export const queryList = [
     {
         name: "!stats",
-        description: "Get your bot's location, health, hunger, and time of day.", 
+        description: "Get your bot's location, health, hunger, and time of day.",
         perform: function (agent) {
             let bot = agent.bot;
             let res = 'STATS';
@@ -67,7 +67,7 @@ export const queryList = [
     },
     {
         name: "!inventory",
-        description: "Get your bot's inventory.",
+        description: "Returns the bot's current inventory, including items, quantities, and equipped gear. You must call this before any task involving crafting, building, smelting, or item usage. Treat this as your very first step in any plan — without it, you risk failure due to missing materials. Always check before acting.",
         perform: function (agent) {
             let bot = agent.bot;
             let inventory = world.getInventoryCounts(bot);
@@ -114,7 +114,7 @@ export const queryList = [
             }
             if (blocks.length == 0) {
                 res += ': none';
-            } 
+            }
             else {
                 // Environmental Awareness
                 res += '\n- ' + world.getSurroundingBlocks(bot).join('\n- ')
@@ -179,7 +179,7 @@ export const queryList = [
         perform: async function (agent) {
             return "Saved place names: " + agent.memory_bank.getKeys();
         }
-    }, 
+    },
     {
         name: '!checkBlueprintLevel',
         description: 'Check if the level is complete and what blocks still need to be placed for the blueprint',
@@ -191,7 +191,7 @@ export const queryList = [
             console.log(res);
             return pad(res);
         }
-    }, 
+    },
     {
         name: '!checkBlueprint',
         description: 'Check what blocks still need to be placed for the blueprint',
@@ -199,7 +199,7 @@ export const queryList = [
             let res = checkBlueprint(agent);
             return pad(res);
         }
-    }, 
+    },
     {
         name: '!getBlueprint',
         description: 'Get the blueprint for the building',
@@ -207,7 +207,7 @@ export const queryList = [
             let res = agent.task.blueprint.explain();
             return pad(res);
         }
-    }, 
+    },
     {
         name: '!getBlueprintLevel',
         description: 'Get the blueprint for the building',
@@ -224,11 +224,11 @@ export const queryList = [
         name: '!getCraftingPlan',
         description: "Provides a comprehensive crafting plan for a specified item. This includes a breakdown of required ingredients, the exact quantities needed, and an analysis of missing ingredients or extra items needed based on the bot's current inventory.",
         params: {
-            targetItem: { 
-                type: 'string', 
-                description: 'The item that we are trying to craft' 
+            targetItem: {
+                type: 'string',
+                description: 'The item that we are trying to craft'
             },
-            quantity: { 
+            quantity: {
                 type: 'int',
                 description: 'The quantity of the item that we are trying to craft',
                 optional: true,
@@ -240,7 +240,7 @@ export const queryList = [
             let bot = agent.bot;
 
             // Fetch the bot's inventory
-            const curr_inventory = world.getInventoryCounts(bot); 
+            const curr_inventory = world.getInventoryCounts(bot);
             const target_item = targetItem;
             let existingCount = curr_inventory[target_item] || 0;
             let prefixMessage = '';
@@ -258,8 +258,8 @@ export const queryList = [
                 console.error("Error generating crafting plan:", error);
                 return `An error occurred while generating the crafting plan: ${error.message}`;
             }
-            
-            
+
+
         },
     },
     {
@@ -273,22 +273,22 @@ export const queryList = [
             try {
                 const response = await fetch(url);
                 if (response.status === 404) {
-                  return `${query} was not found on the Minecraft Wiki. Try adjusting your search term.`;
+                    return `${query} was not found on the Minecraft Wiki. Try adjusting your search term.`;
                 }
                 const html = await response.text();
                 const $ = load(html);
-            
+
                 const parserOutput = $("div.mw-parser-output");
-                
+
                 parserOutput.find("table.navbox").remove();
 
                 const divContent = parserOutput.text();
-            
+
                 return divContent.trim();
-              } catch (error) {
+            } catch (error) {
                 console.error("Error fetching or parsing HTML:", error);
                 return `The following error occurred: ${error}`
-              }
+            }
         }
     },
     {

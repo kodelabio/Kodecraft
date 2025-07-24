@@ -1,7 +1,7 @@
 const settings = {
     "minecraft_version": "1.21.1", // supports up to 1.21.1
-    "host": "minecraft-250712.kodelab.dev", 
-    "port": 25565,
+    "host": "127.0.0.1", 
+    "port": 55916,
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
@@ -10,7 +10,7 @@ const settings = {
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
         "./profiles/jainesh.json",
-        "./profiles/kodelab_beta.json",
+        // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
         // "./profiles/claude.json",

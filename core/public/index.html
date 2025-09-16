@@ -117,6 +117,48 @@
     <h1>Mindcraft</h1>
     <div id="agents"></div>
 
+    <!-- Quick Add Bot Section -->
+    <div id="quickAddBotSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
+        <h2>Quick Add Bot</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
+            <div>
+                <label for="quickBotName" style="display:block;margin-bottom:5px;">Bot Name:</label>
+                <input type="text" id="quickBotName" placeholder="Enter bot name" style="width:100%;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;">
+            </div>
+            <div>
+                <label for="quickBotTemplate" style="display:block;margin-bottom:5px;">Template:</label>
+                <select id="quickBotTemplate" style="width:100%;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;">
+                    <option value="">Loading templates...</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:15px;">
+            <label for="quickBotPersonality" style="display:block;margin-bottom:5px;">Personality (optional):</label>
+            <textarea id="quickBotPersonality" placeholder="Describe the bot's personality and behavior..." style="width:100%;height:60px;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;resize:vertical;"></textarea>
+        </div>
+        <div style="margin-bottom:15px;">
+            <label for="quickBotInitMessage" style="display:block;margin-bottom:5px;">Initial Message (optional):</label>
+            <input type="text" id="quickBotInitMessage" placeholder="First message to send to the bot" style="width:100%;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;">
+        </div>
+        <div style="margin-bottom:15px;">
+            <label style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="quickBotLoadMemory" style="transform:scale(1.2);">
+                Load Memory
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                <input type="checkbox" id="quickBotSaveToFile" style="transform:scale(1.2);">
+                Save Profile to File
+            </label>
+        </div>
+        <div style="margin-top:15px;">
+            <button id="quickAddBotBtn" class="start-btn">Add Bot</button>
+        </div>
+        <div id="quickAddError" style="color:#f44336;margin-top:10px;"></div>
+        <div id="quickAddSuccess" style="color:#4CAF50;margin-top:10px;"></div>
+    </div>
+
+    <div id="createAgentSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
+
     <div id="createAgentSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
         <h2>Create Agent</h2>
         <div id="settingsForm"></div>
@@ -281,6 +323,115 @@
         function killAllAgents() { socket.emit('stop-all-agents'); }
         function shutdown() { socket.emit('shutdown'); }
         function sendMessage(n, m) { socket.emit('send-message', n, m); }
+
+        // Quick Add Bot functionality
+        let botTemplates = [];
+
+        // Request bot templates from server
+        socket.emit('get-bot-templates', (response) => {
+            if (response && response.success && Array.isArray(response.templates)) {
+                botTemplates = response.templates;
+                const templateSelect = document.getElementById('quickBotTemplate');
+                if (templateSelect) {
+                    templateSelect.innerHTML = '<option value="">Custom Bot</option>' +
+                        botTemplates.map(template =>
+                            `<option value="${template.name}">${template.name}</option>`
+                        ).join('');
+                }
+            }
+        });
+
+        // Handle template selection
+        const quickBotTemplateEl = document.getElementById('quickBotTemplate');
+        if (quickBotTemplateEl) {
+            quickBotTemplateEl.addEventListener('change', (e) => {
+                const selectedTemplate = botTemplates.find(t => t.name === e.target.value);
+                const personalityEl = document.getElementById('quickBotPersonality');
+                if (selectedTemplate && personalityEl) {
+                    personalityEl.value = selectedTemplate.personality || '';
+                } else if (personalityEl) {
+                    personalityEl.value = '';
+                }
+            });
+        }
+
+        // Handle quick bot creation
+        const quickAddBtn = document.getElementById('quickAddBotBtn');
+        if (quickAddBtn) {
+            quickAddBtn.addEventListener('click', () => {
+                const nameEl = document.getElementById('quickBotName');
+                const personalityEl = document.getElementById('quickBotPersonality');
+                const initMsgEl = document.getElementById('quickBotInitMessage');
+                const loadMemoryEl = document.getElementById('quickBotLoadMemory');
+                const saveToFileEl = document.getElementById('quickBotSaveToFile');
+                const errorEl = document.getElementById('quickAddError');
+                const successEl = document.getElementById('quickAddSuccess');
+                const templateEl = document.getElementById('quickBotTemplate');
+
+                if (!nameEl || !personalityEl || !initMsgEl || !loadMemoryEl || !saveToFileEl || !errorEl || !successEl) {
+                    console.warn('Quick Add Bot elements missing from DOM');
+                    return;
+                }
+
+                const name = nameEl.value.trim();
+                const personality = personalityEl.value.trim();
+                const initMessage = initMsgEl.value.trim();
+                const loadMemory = loadMemoryEl.checked;
+                const saveToFile = saveToFileEl.checked;
+
+                // Clear previous messages
+                errorEl.textContent = '';
+                successEl.textContent = '';
+
+                if (!name) {
+                    errorEl.textContent = 'Bot name is required';
+                    return;
+                }
+
+                const botData = {
+                    name: name,
+                    personality: personality || undefined,
+                    initMessage: initMessage || undefined,
+                    loadMemory: !!loadMemory,
+                    saveToFile: !!saveToFile
+                };
+
+                // Disable button during creation
+                quickAddBtn.disabled = true;
+                const origText = quickAddBtn.textContent;
+                quickAddBtn.textContent = 'Creating...';
+
+                socket.emit('create-bot', botData, (response) => {
+                    // Re-enable button
+                    quickAddBtn.disabled = false;
+                    quickAddBtn.textContent = origText || 'Add Bot';
+
+                    if (response && response.success) {
+                        successEl.textContent = response.message || 'Bot created';
+                        // Clear form
+                        nameEl.value = '';
+                        personalityEl.value = '';
+                        initMsgEl.value = '';
+                        loadMemoryEl.checked = false;
+                        saveToFileEl.checked = false;
+                        if (templateEl) templateEl.value = '';
+                    } else {
+                        errorEl.textContent = (response && (response.error || response.message)) || 'Failed to create bot';
+                    }
+                });
+            });
+        }
+
+        // Allow Enter key to submit in name field
+        const quickBotNameEl = document.getElementById('quickBotName');
+        if (quickBotNameEl) {
+            quickBotNameEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const btn = document.getElementById('quickAddBotBtn');
+                    if (btn) btn.click();
+                }
+            });
+        }
     </script>
 </body>
 </html> 

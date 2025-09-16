@@ -1,5 +1,5 @@
 const settings = {
-    "minecraft_version": "1.21.1", // supports up to 1.21.1
+    "minecraft_version": "1.21.4", // supports up to 1.21.1
     "host": "127.0.0.1", 
     "port": 55916,
     "auth": "offline", // or "microsoft"
@@ -9,7 +9,7 @@ const settings = {
     
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
-        "./profiles/jainesh.json",
+        "./profiles/jainesh.json",  
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",

@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
 import { projectRoot } from '../paths.js';
+import { BotCreator } from './BotCreator.js';
 
 const specPath = path.join(projectRoot, 'core/public/settings_spec.json');
 
@@ -14,10 +15,12 @@ export class KodecraftControlPanel {
     server;
     io;
     agentConnections = {};
+    botCreator; // Add BotCreator instance
 
     constructor(config, agentHandler) {
         this.config = config;
         this.agentHandler = agentHandler;
+        this.botCreator = new BotCreator(agentHandler); // Initialize BotCreator
 
         this.agentHandler.on('agentOffline', (agentName) => {
             this.handleAgentOffline(agentName);
@@ -132,6 +135,28 @@ export class KodecraftControlPanel {
 
         socket.on('start-agent', (agentName) => this.agentHandler.startAgent(agentName));
         socket.on('stop-agent', (agentName) => this.agentHandler.stopAgent(agentName));
+
+        // New bot creation handlers
+        socket.on('create-bot', (botData, callback) => {
+            console.log('Creating new bot:', botData.name);
+            const result = this.botCreator.createBot(botData);
+
+            if (result.success) {
+                // Add to agent connections for tracking with complete settings
+                this.agentConnections[result.botName] = {
+                    socket: null,
+                    settings: result.settings, // Use the complete settings returned from createBot
+                    in_game: false
+                };
+            }
+
+            callback(result);
+        });
+
+        socket.on('get-bot-templates', (callback) => {
+            const templates = this.botCreator.getBotTemplates();
+            callback({ success: true, templates });
+        });
 
         socket.on('stop-all-agents', () => {
             console.log('Killing all agents');

@@ -9,7 +9,9 @@ const settings = {
     
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
-        "./profiles/jainesh.json",  
+        "./profiles/kid.json",
+        // "./profiles/kid2.json",
+        // "./profiles/jainesh.json",
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
@@ -45,6 +47,9 @@ const settings = {
     "narrate_behavior": true, // chat simple automatic actions ('Picking up item!')
     "chat_bot_messages": true, // publicly chat messages to other bots
     "log_all_prompts": false, // log ALL prompts to file
+
+    // Telegram integration
+    "telegram_webhook_url": "https://064d45e3212f.ngrok-free.app/webhook-test/telegram-response", // Replace with your actual working ngrok URL
 }
 
 export default settings;

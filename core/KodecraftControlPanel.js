@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
 import { projectRoot } from '../paths.js';
 import { BotCreator } from './BotCreator.js';
+import { KodecraftAPI } from './KodecraftAPI.js';
 
 const specPath = path.join(projectRoot, 'core/public/settings_spec.json');
 
@@ -16,11 +17,16 @@ export class KodecraftControlPanel {
     io;
     agentConnections = {};
     botCreator; // Add BotCreator instance
+    api; // Add API instance
 
-    constructor(config, agentHandler) {
+    constructor(config, agentHandler, hierarchicalBotManager = null) {
         this.config = config;
         this.agentHandler = agentHandler;
+        this.hierarchicalBotManager = hierarchicalBotManager;
         this.botCreator = new BotCreator(agentHandler); // Initialize BotCreator
+
+        // Initialize API module
+        this.api = new KodecraftAPI(agentHandler, this.agentConnections, hierarchicalBotManager);
 
         this.agentHandler.on('agentOffline', (agentName) => {
             this.handleAgentOffline(agentName);
@@ -35,8 +41,13 @@ export class KodecraftControlPanel {
         this.server = http.createServer(app);
         this.io = new Server(this.server);
 
+        // Serve static files
         app.use(express.static(path.join(projectRoot, 'core/public')));
 
+        // Mount API routes
+        app.use('/api', this.api.getRouter());
+
+        // Socket.IO connection handling
         this.io.on('connection', (socket) => this.handleSocket(socket));
 
         const host = this.config.host_public ? '0.0.0.0' : 'localhost';
@@ -44,8 +55,19 @@ export class KodecraftControlPanel {
 
         this.server.listen(port, host, () => {
             console.log(`KodecraftDashboard running on http://${host}:${port}`);
+            console.log(`API endpoints available:`);
+            console.log(`  POST http://${host}:${port}/api/task - Send tasks to agents`);
+            console.log(`  POST http://${host}:${port}/api/coordinated-task - Create coordinated tasks for multiple agents`);
+            console.log(`  GET  http://${host}:${port}/api/tasks - List active coordinated tasks`);
+            console.log(`  GET  http://${host}:${port}/api/tasks/:taskId - Get coordinated task status`);
+            console.log(`  DELETE http://${host}:${port}/api/tasks/:taskId - Cancel coordinated task`);
+            console.log(`  GET  http://${host}:${port}/api/agents - List available agents`);
+            console.log(`  GET  http://${host}:${port}/api/agents/:name/status - Get agent status`);
+            console.log(`  POST http://${host}:${port}/api/agents/:name/message - Send message to agent`);
+            console.log(`  GET  http://${host}:${port}/api/health - Health check`);
         });
     }
+
 
     registerAgent(agentInfo) {
         this.agentConnections[agentInfo.name] = {
@@ -148,6 +170,12 @@ export class KodecraftControlPanel {
                     settings: result.settings, // Use the complete settings returned from createBot
                     in_game: false
                 };
+
+                // Update the agent list in the UI immediately
+                this.sendAgentList();
+                console.log(`Bot '${result.botName}' created and added to agent list`);
+            } else {
+                console.error(`Failed to create bot '${botData.name}':`, result.error);
             }
 
             callback(result);
@@ -168,6 +196,10 @@ export class KodecraftControlPanel {
             this.agentHandler.shutdown();
         });
 
+        // Deprecated 'message' event handler removed.
+        // Tasks should be forwarded using the 'send-message' socket event instead.
+        // Deprecated 'message' event handler removed.
+
         socket.on('send-message', (agentName, message) => {
             const conn = this.agentConnections[agentName];
             if (!conn || !conn.socket) {
@@ -177,6 +209,8 @@ export class KodecraftControlPanel {
             console.log(`Sending message to ${agentName}: ${message}`);
             conn.socket.emit('send-message', agentName, message);
         });
+
+        // Coordinated task handlers removed: TaskCoordinator dependency unavailable
     }
 
     validateSettings(settings) {

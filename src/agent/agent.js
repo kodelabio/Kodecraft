@@ -16,6 +16,8 @@ import { serverProxy } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { say } from './speak.js';
+import https from 'https';
+import http from 'http';
 
 export class Agent {
     async start(load_mem = false, init_message = null, count_id = 0) {
@@ -353,6 +355,11 @@ export class Agent {
             to_player = this.last_sender;
         }
 
+        // Send response to Telegram webhook if the message came from "NO USERNAME" (external API)
+        if (to_player === 'NO USERNAME') {
+            await this.sendToTelegramWebhook(message);
+        }
+
         if (convoManager.isOtherAgent(to_player) && convoManager.inConversation(to_player)) {
             // if we're in an ongoing conversation with the other bot, send the response to it
             convoManager.sendToBot(to_player, message);
@@ -361,6 +368,69 @@ export class Agent {
             // otherwise, use open chat
             this.openChat(message);
             // note that to_player could be another bot, but if we get here the conversation has ended
+        }
+    }
+
+    async sendToTelegramWebhook(message) {
+        try {
+            // Get webhook URL from settings or environment
+            const webhookUrl = settings.telegram_webhook_url || process.env.TELEGRAM_WEBHOOK_URL;
+
+            if (!webhookUrl) {
+                console.log('[Telegram] No webhook URL configured, skipping Telegram response');
+                return;
+            }
+
+            const payload = {
+                agent: this.name,
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                // Get webhook URL from settings or environment
+                const webhookUrl = settings.telegram_webhook_url || process.env.TELEGRAM_WEBHOOK_URL;
+
+                if (!webhookUrl) {
+                    console.log('[Telegram] No webhook URL configured, skipping Telegram response');
+                    return;
+                }
+
+                const postData = JSON.stringify(payload);
+                const url = new URL(webhookUrl);
+                const isHttps = url.protocol === 'https:';
+                const httpModule = isHttps ? https : http;
+
+                const options = {
+                    hostname: url.hostname,
+                    port: url.port || (isHttps ? 443 : 80),
+                    path: url.pathname + url.search,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postData)
+                    }
+                };
+
+                const req = httpModule.request(options, (res) => {
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        console.log(`[Telegram] Response sent to webhook: ${message}`);
+                    } else {
+                        console.error(`[Telegram] Failed to send response to webhook: ${res.statusCode} ${res.statusMessage}`);
+                    }
+                });
+
+                req.on('error', (error) => {
+                    console.error('[Telegram] Error sending response to webhook:', error);
+                });
+
+                req.write(postData);
+                req.end();
+            } catch (error) {
+                console.error('[Telegram] Error sending response to webhook:', error);
+            }
+        } catch (error) {
+            console.error('[Telegram] Error sending response to webhook:', error);
         }
     }
 

@@ -1,6 +1,7 @@
 import * as skills from '../library/skills.js';
 import settings from '../settings.js';
 import convoManager from '../conversation.js';
+import { hierarchicalActions } from './hierarchical_actions.js';
 
 
 function runAsAction (actionFn, resume = false, timeout = -1) {
@@ -466,3 +467,6 @@ export const actionsList = [
         })
     },
 ];
+
+// Add hierarchical actions to the main actions list
+ actionsList.push(...hierarchicalActions);

@@ -155,6 +155,55 @@
         </div>
         <div id="quickAddError" style="color:#f44336;margin-top:10px;"></div>
         <div id="quickAddSuccess" style="color:#4CAF50;margin-top:10px;"></div>
+
+    <div id="createAgentSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
+
+    <div id="createAgentSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
+        <h2>Create Agent</h2>
+        <div id="settingsForm"></div>
+
+    </div>
+
+    <!-- Coordinated Task Section -->
+    <div id="coordinatedTaskSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
+        <h2>🤝 Coordinated Tasks</h2>
+        <p style="color:#cccccc;margin-bottom:15px;">Create tasks that multiple bots can work on together. Perfect for building walls, houses, farms, and other complex projects.</p>
+
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:15px;margin-bottom:15px;">
+            <div>
+                <label for="coordinatedTaskDescription" style="display:block;margin-bottom:5px;">Task Description:</label>
+                <textarea id="coordinatedTaskDescription" placeholder="e.g., 'build a stone wall 20 blocks long' or 'construct a wooden house'" style="width:100%;height:80px;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;resize:vertical;"></textarea>
+            </div>
+            <div>
+                <div style="margin-bottom:10px;">
+                    <label for="maxBots" style="display:block;margin-bottom:5px;">Max Bots:</label>
+                    <input type="number" id="maxBots" min="1" max="10" value="2" style="width:100%;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;">
+                </div>
+                <div>
+                    <label for="taskPriority" style="display:block;margin-bottom:5px;">Priority:</label>
+                    <select id="taskPriority" style="width:100%;padding:8px;background:#262626;border:1px solid #555;color:#e0e0e0;border-radius:4px;">
+                        <option value="low">Low</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <button id="createCoordinatedTaskBtn" class="start-btn">🚀 Create Coordinated Task</button>
+            <button id="listActiveTasksBtn" class="start-btn" style="margin-left:10px;">📋 View Active Tasks</button>
+        </div>
+
+        <div id="coordinatedTaskError" style="color:#f44336;margin-top:10px;"></div>
+        <div id="coordinatedTaskSuccess" style="color:#4CAF50;margin-top:10px;"></div>
+
+        <!-- Active Tasks Display -->
+        <div id="activeTasksContainer" style="margin-top:20px;display:none;">
+            <h3>Active Coordinated Tasks</h3>
+            <div id="activeTasksList" style="background:#363636;padding:15px;border-radius:4px;"></div>
+        </div>
     </div>
 
     <div id="createAgentSection" style="margin-top:20px;background:#2d2d2d;padding:20px;border-radius:8px;">
@@ -428,6 +477,170 @@
             quickBotNameEl.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const btn = document.getElementById('quickAddBotBtn');
+                    if (btn) btn.click();
+                }
+            });
+        }
+
+        // Coordinated Task functionality
+        const createCoordinatedTaskBtn = document.getElementById('createCoordinatedTaskBtn');
+        const listActiveTasksBtn = document.getElementById('listActiveTasksBtn');
+
+        if (createCoordinatedTaskBtn) {
+            createCoordinatedTaskBtn.addEventListener('click', () => {
+                const descriptionEl = document.getElementById('coordinatedTaskDescription');
+                const maxBotsEl = document.getElementById('maxBots');
+                const priorityEl = document.getElementById('taskPriority');
+                const errorEl = document.getElementById('coordinatedTaskError');
+                const successEl = document.getElementById('coordinatedTaskSuccess');
+
+                if (!descriptionEl || !maxBotsEl || !priorityEl || !errorEl || !successEl) {
+                    console.warn('Coordinated task elements missing from DOM');
+                    return;
+                }
+
+                const description = descriptionEl.value.trim();
+                const maxBots = parseInt(maxBotsEl.value) || 2;
+                const priority = priorityEl.value || 'normal';
+
+                // Clear previous messages
+                errorEl.textContent = '';
+                successEl.textContent = '';
+
+                if (!description) {
+                    errorEl.textContent = 'Task description is required';
+                    return;
+                }
+
+                const taskData = {
+                    task: description,
+                    maxBots: maxBots,
+                    priority: priority,
+                    type: 'coordinated'
+                };
+
+                // Disable button during creation
+                createCoordinatedTaskBtn.disabled = true;
+                const origText = createCoordinatedTaskBtn.textContent;
+                createCoordinatedTaskBtn.textContent = 'Creating...';
+
+                socket.emit('create-coordinated-task', taskData, (response) => {
+                    // Re-enable button
+                    createCoordinatedTaskBtn.disabled = false;
+                    createCoordinatedTaskBtn.textContent = origText;
+
+                    if (response && response.success) {
+                        successEl.innerHTML = `
+                            <strong>✅ Task Created Successfully!</strong><br>
+                            Task ID: ${response.taskId}<br>
+                            Assigned to: ${response.assignedBots.join(', ')}<br>
+                            Subtasks: ${response.subtasks.length}
+                        `;
+                        // Clear form
+                        descriptionEl.value = '';
+                        maxBotsEl.value = '2';
+                        priorityEl.value = 'normal';
+
+                        // Auto-refresh active tasks if visible
+                        const container = document.getElementById('activeTasksContainer');
+                        if (container && container.style.display !== 'none') {
+                            listActiveTasks();
+                        }
+                    } else {
+                        errorEl.textContent = (response && response.error) || 'Failed to create coordinated task';
+                    }
+                });
+            });
+        }
+
+        if (listActiveTasksBtn) {
+            listActiveTasksBtn.addEventListener('click', () => {
+                listActiveTasks();
+            });
+        }
+
+        function listActiveTasks() {
+            const container = document.getElementById('activeTasksContainer');
+            const listEl = document.getElementById('activeTasksList');
+            const errorEl = document.getElementById('coordinatedTaskError');
+
+            if (!container || !listEl) return;
+
+            socket.emit('list-active-tasks', (response) => {
+                if (response && response.success) {
+                    container.style.display = 'block';
+
+                    if (response.tasks && response.tasks.length > 0) {
+                        listEl.innerHTML = response.tasks.map(task => `
+                            <div style="background:#2d2d2d;padding:10px;margin:5px 0;border-radius:4px;border-left:4px solid #4CAF50;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <div>
+                                        <strong>${task.description}</strong><br>
+                                        <small style="color:#cccccc;">
+                                            ID: ${task.id} | Status: ${task.status} |
+                                            Bots: ${task.assignedBots.join(', ')} |
+                                            Subtasks: ${task.subtaskCount} |
+                                            Created: ${new Date(task.createdAt).toLocaleString()}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <button class="start-btn" onclick="getTaskDetails('${task.id}')" style="margin-right:5px;">Details</button>
+                                        <button class="stop-btn" onclick="cancelTask('${task.id}')">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        listEl.innerHTML = '<div style="color:#cccccc;text-align:center;padding:20px;">No active coordinated tasks</div>';
+                    }
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = (response && response.error) || 'Failed to load active tasks';
+                    }
+                }
+            });
+        }
+
+        // Global functions for task management
+        window.getTaskDetails = function(taskId) {
+            socket.emit('get-task-status', taskId, (response) => {
+                if (response && response.success) {
+                    const task = response.task;
+                    const details = `
+Task: ${task.description}
+Status: ${task.status}
+Created: ${new Date(task.createdAt).toLocaleString()}
+Assigned Bots: ${task.assignedBots.join(', ')}
+
+Subtasks:
+${task.subtasks.map((st, i) => `${i + 1}. ${st.assignedBot}: ${st.description}`).join('\n')}
+                    `;
+                    alert(details);
+                } else {
+                    alert('Failed to get task details: ' + (response && response.error || 'Unknown error'));
+                }
+            });
+        };
+
+        window.cancelTask = function(taskId) {
+            if (confirm('Are you sure you want to cancel this task?')) {
+                socket.emit('cancel-task', taskId, (response) => {
+                    if (response && response.success) {
+                        alert('Task cancelled successfully');
+                        listActiveTasks(); // Refresh the list
+                    } else {
+                        alert('Failed to cancel task: ' + (response && response.error || 'Unknown error'));
+                    }
+                });
+            }
+        };
+
+        // Allow Enter key to submit in task description field
+        const coordinatedTaskDescEl = document.getElementById('coordinatedTaskDescription');
+        if (coordinatedTaskDescEl) {
+            coordinatedTaskDescEl.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                    const btn = document.getElementById('createCoordinatedTaskBtn');
                     if (btn) btn.click();
                 }
             });

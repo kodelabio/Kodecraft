@@ -102,4 +102,19 @@ export class KodecraftAgentHandler extends EventEmitter {
     getAgentProcess(agentName) {
         return this.agentProcesses[agentName];
     }
+
+    // Send message to agent via socket connection
+    async sendMessage(agentName, message) {
+        const agent = this.agentProcesses[agentName];
+        if (!agent || !agent.running) {
+            throw new Error(`Agent '${agentName}' is not running`);
+        }
+
+        // For now, we'll use console output to send the message
+        // The actual message sending should be handled by the KodecraftAPI via socket communication
+        console.log(`[AgentHandler] Sending message to ${agentName}: ${message}`);
+
+        // Throw an error to force the API to use socket communication as fallback
+        throw new Error(`Agent handler message sending not implemented - use socket fallback`);
+    }
 }

@@ -1,19 +1,46 @@
 import { KodecraftControlPanel } from './KodecraftControlPanel.js';
 import { KodecraftAgentHandler } from './KodecraftAgentHandler.js';
+import HierarchicalBotManager from './HierarchicalBotManager.js';
 import { existsSync, readFileSync } from 'fs';
 
 export class KodecraftManager {
     static config;
     static agentHandler;
     static controlPanel;
+    static hierarchicalBotManager;
 
     static async init(config) {
         this.config = config;
 
+        // Initialize agent handler
         this.agentHandler = new KodecraftAgentHandler(config);
 
-        this.controlPanel = new KodecraftControlPanel(config, this.agentHandler);
+        // Initialize hierarchical bot manager first. We'll update its agentConnections after the control panel is created.
+        this.hierarchicalBotManager = new HierarchicalBotManager(
+            this.agentHandler,
+            {} // placeholder; updated below once control panel is started
+        );
+
+        console.log('[KodecraftManager] Hierarchical bot manager initialized');
+
+        // Initialize control panel with hierarchical bot manager
+        this.controlPanel = new KodecraftControlPanel(config, this.agentHandler, this.hierarchicalBotManager);
         await this.controlPanel.startServer();
+
+        // Update hierarchical bot manager with real agent connections
+        this.hierarchicalBotManager.agentConnections = this.controlPanel.agentConnections;
+
+        // Expose global references for bot management commands
+        global.kodecraftAgentHandler = this.agentHandler;
+        // Expose hierarchical bot manager
+        global.kodecraftHierarchicalBotManager = this.hierarchicalBotManager;
+        global.kodecraftAgentConnections = () => this.controlPanel.agentConnections;
+
+        console.log('[KodecraftManager] Global references exposed:', {
+            agentHandler: !!global.kodecraftAgentHandler,
+            agentConnections: !!global.kodecraftAgentConnections,
+            hierarchicalBotManager: !!global.kodecraftHierarchicalBotManager
+        });
 
         // Setup agents
         let agentCount = 0;

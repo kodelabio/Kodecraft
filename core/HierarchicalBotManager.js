@@ -54,9 +54,21 @@ class HierarchicalBotManager {
     async delegateTask(leaderName, taskDescription) {
         try {
             console.log('[HierarchicalBot] ' + leaderName + ' analyzing task: "' + taskDescription + '"');
-            
+
+            // Check if this is a worker bot trying to delegate (prevent infinite loops)
+            if (leaderName.includes('builder_') || leaderName.includes('miner_') ||
+                leaderName.includes('farmer_') || leaderName.includes('gatherer_') ||
+                leaderName.includes('worker_')) {
+                console.log('[HierarchicalBot] Worker bot ' + leaderName + ' attempted to delegate - redirecting to direct execution');
+                return {
+                    success: false,
+                    reason: 'worker_should_execute',
+                    message: 'Worker bots should execute tasks directly, not delegate them. Use !newAction instead.'
+                };
+            }
+
             const analysis = this.analyzeTask(taskDescription);
-            
+
             if (!analysis.needsWorkers) {
                 console.log('[HierarchicalBot] Task can be handled by ' + leaderName + ' alone');
                 return {
@@ -67,10 +79,10 @@ class HierarchicalBotManager {
             }
 
             let availableWorkers = this.getAvailableWorkers(leaderName);
-            
+
             if (availableWorkers.length === 0) {
                 console.log('[HierarchicalBot] No worker bots available, spawning new ones for ' + leaderName);
-                
+
                 const spawnResult = await this.spawnWorkersForTask(leaderName, analysis);
                 if (!spawnResult.success) {
                     return {
@@ -79,15 +91,29 @@ class HierarchicalBotManager {
                         message: 'Failed to spawn worker bots: ' + spawnResult.error
                     };
                 }
-                
-                console.log('[HierarchicalBot] Waiting for spawned bots to initialize...');
-                await new Promise(resolve => setTimeout(resolve, 8000));
-                
+
+                // Wait for all spawned bots to connect
+                console.log('[HierarchicalBot] Waiting for spawned bots to connect and initialize...');
+                const botNames = spawnResult.workers;
+                const allConnected = await this.waitForBotsConnection(botNames, 30000); // 30 second timeout
+
+                if (!allConnected) {
+                    return {
+                        success: false,
+                        reason: 'connection_timeout',
+                        message: 'Some worker bots failed to connect in time'
+                    };
+                }
+
+                // Give bots a moment to fully initialize after connection
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
                 availableWorkers = this.getAvailableWorkers(leaderName);
                 console.log('[HierarchicalBot] Found ' + availableWorkers.length + ' available workers after spawning');
             }
 
             const selectedWorkers = this.selectWorkersForTask(availableWorkers, analysis);
+            // ... existing code ...
             
             if (selectedWorkers.length === 0) {
                 console.log('[HierarchicalBot] No suitable workers found for task type: ' + analysis.taskType);
@@ -203,7 +229,7 @@ class HierarchicalBotManager {
             default:
                 workers.push({ name: 'worker_' + timestamp, type: 'general' });
         }
-        
+
         return workers;
     }
 
@@ -211,11 +237,11 @@ class HierarchicalBotManager {
         try {
             const agentConnections = global.kodecraftAgentConnections();
             const leaderConnection = agentConnections[leaderName];
-            
+
             if (leaderConnection && leaderConnection.socket) {
                 console.log('[HierarchicalBot] Spawning ' + botName + ' near ' + leaderName);
             }
-            
+
             const botSettings = {
                 minecraft_version: "1.21.4",
                 host: "127.0.0.1",
@@ -224,7 +250,7 @@ class HierarchicalBotManager {
                 mindserver_port: 8080,
                 base_profile: "creative",
                 load_memory: false,
-                init_message: 'You are ' + botName + ', a ' + botType + ' worker bot. You work under the direction of ' + leaderName + '. Follow their instructions and help with ' + botType + ' tasks. Always respond with action commands when given tasks.',
+                init_message: 'You are ' + botName + ', a ' + botType + ' worker bot. You work under the direction of ' + leaderName + '. When given tasks, execute them directly using !newAction() - do NOT delegate tasks to other bots. Focus on ' + botType + ' work and follow instructions from your supervisor.',
                 only_chat_with: [],
                 speak: false,
                 language: "en",
@@ -262,7 +288,7 @@ class HierarchicalBotManager {
             }
 
             const result = await response.json();
-            
+
             return {
                 success: true,
                 botName: botName,
@@ -278,6 +304,46 @@ class HierarchicalBotManager {
                 botName: botName
             };
         }
+    }
+
+    // Wait for a bot to be connected and in-game
+    async waitForBotConnection(botName, maxWaitTime = 30000) {
+        const startTime = Date.now();
+        const checkInterval = 500; // Check every 500ms
+
+        console.log('[HierarchicalBot] Waiting for ' + botName + ' to connect...');
+
+        while (Date.now() - startTime < maxWaitTime) {
+            const agentConnections = global.kodecraftAgentConnections();
+            const botConnection = agentConnections[botName];
+
+            if (botConnection && botConnection.in_game) {
+                console.log('[HierarchicalBot] ' + botName + ' is now connected and in-game');
+                return true;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+        }
+
+        console.error('[HierarchicalBot] Timeout waiting for ' + botName + ' to connect after ' + maxWaitTime + 'ms');
+        return false;
+    }
+
+    // Wait for multiple bots to connect
+    async waitForBotsConnection(botNames, maxWaitTime = 30000) {
+        const connectionPromises = botNames.map(botName =>
+            this.waitForBotConnection(botName, maxWaitTime)
+        );
+
+        const results = await Promise.all(connectionPromises);
+        const allConnected = results.every(result => result === true);
+
+        if (!allConnected) {
+            const failedBots = botNames.filter((name, index) => !results[index]);
+            console.error('[HierarchicalBot] Failed to connect bots: ' + failedBots.join(', '));
+        }
+
+        return allConnected;
     }
 
     getAvailableWorkers(leaderName) {
@@ -353,35 +419,46 @@ class HierarchicalBotManager {
         return assignments;
     }
 
-    async assignTaskToWorker(supervisorName, workerName, taskDescription) {
+    async assignTaskToWorker(supervisorName, workerName, taskDescription, waitForConnection = false) {
         try {
             console.log('[HierarchicalBot] ' + supervisorName + ' assigning task to ' + workerName + ': "' + taskDescription + '"');
-            
+
+            // If waitForConnection is true, wait for the bot to be connected first
+            if (waitForConnection) {
+                const isConnected = await this.waitForBotConnection(workerName, 15000); // 15 second timeout
+                if (!isConnected) {
+                    return {
+                        success: false,
+                        error: 'Worker \'' + workerName + '\' failed to connect in time'
+                    };
+                }
+            }
+
             const agentConnections = global.kodecraftAgentConnections();
             const workerConnection = agentConnections[workerName];
-            
+
             if (!workerConnection) {
                 return {
                     success: false,
                     error: 'Worker \'' + workerName + '\' not found'
                 };
             }
-            
+
             if (!workerConnection.in_game) {
                 return {
                     success: false,
                     error: 'Worker \'' + workerName + '\' is not in-game'
                 };
             }
-            
+
             if (workerConnection.socket) {
                 workerConnection.socket.emit('send-message', workerName, taskDescription);
-                
+
                 if (!this.managedWorkers.has(supervisorName)) {
                     this.managedWorkers.set(supervisorName, new Set());
                 }
                 this.managedWorkers.get(supervisorName).add(workerName);
-                
+
                 return {
                     success: true,
                     message: 'Task assigned to ' + workerName,
@@ -394,7 +471,7 @@ class HierarchicalBotManager {
                     error: 'Worker \'' + workerName + '\' is not connected'
                 };
             }
-            
+
         } catch (error) {
             console.error('[HierarchicalBot] Error assigning task to worker:', error);
             return {

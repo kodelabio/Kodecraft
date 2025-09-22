@@ -48,7 +48,11 @@ export const hierarchicalActions = [
                     return `Task successfully delegated to ${result.workersAssigned.length} worker(s): ${result.workersAssigned.join(', ')}. Task breakdown: ${result.taskBreakdown.join(' | ')}`;
                 } else {
                     // Handle different failure reasons
-                    if (result.error && result.error.includes('simple_task')) {
+                    if (result.reason === 'worker_should_execute') {
+                        agent.bot.chat(`⚠️ I'm a worker bot - I should execute tasks directly, not delegate them!`);
+                        agent.bot.chat(`💡 I'll use !newAction() to complete this task instead.`);
+                        return `As a worker bot, I should execute tasks directly using !newAction() rather than delegating. Let me do the work myself.`;
+                    } else if (result.reason === 'simple_task') {
                         agent.bot.chat(`ℹ️ This task is simple enough for me to handle personally.`);
                         return `Task "${task_description}" is simple enough to handle personally without delegating to workers.`;
                     } else if (result.error) {

@@ -1,8 +1,12 @@
 class HierarchicalBotManager {
-    constructor() {
+    constructor(agentHandler = null, agentConnections = {}) {
         this.managedWorkers = new Map();
         this.taskAssignments = new Map();
         this.taskCounter = 0;
+        
+        // Store references for compatibility
+        this.agentHandler = agentHandler;
+        this.agentConnections = agentConnections;
     }
 
     analyzeTask(taskDescription) {
@@ -142,7 +146,6 @@ class HierarchicalBotManager {
             }
 
             const selectedWorkers = this.selectWorkersForTask(availableWorkers, analysis);
-            // ... existing code ...
             
             if (selectedWorkers.length === 0) {
                 console.log('[HierarchicalBot] No suitable workers found for task type: ' + analysis.taskType);
@@ -155,10 +158,38 @@ class HierarchicalBotManager {
 
             const taskBreakdown = this.breakDownTask(analysis, selectedWorkers);
             
+            // COORDINATION FIX: Assign tasks sequentially with coordination
             const assignments = [];
-            for (const assignment of taskBreakdown) {
-                const result = await this.assignTaskToWorker(leaderName, assignment.workerName, assignment.task);
+            
+            // Phase 1: Assign lead worker first
+            if (taskBreakdown.length > 0) {
+                const leadAssignment = taskBreakdown[0];
+                console.log('[HierarchicalBot] Assigning lead task to ' + leadAssignment.workerName);
+                const leadResult = await this.assignTaskToWorker(leaderName, leadAssignment.workerName, leadAssignment.task);
+                assignments.push(leadResult);
+                
+                // Wait for lead worker to start
+                if (leadResult.success && taskBreakdown.length > 1) {
+                    console.log('[HierarchicalBot] Waiting 3 seconds for lead worker to establish location...');
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            }
+            
+            // Phase 2: Assign follower workers with coordination commands
+            for (let i = 1; i < taskBreakdown.length; i++) {
+                const assignment = taskBreakdown[i];
+                console.log('[HierarchicalBot] Assigning coordinated task to ' + assignment.workerName);
+                
+                // Add coordination command to follower tasks
+                const coordinatedTask = `!newAction("First, go to ${taskBreakdown[0].workerName} to coordinate: !goToPlayer('${taskBreakdown[0].workerName}')"); ${assignment.task}`;
+                
+                const result = await this.assignTaskToWorker(leaderName, assignment.workerName, coordinatedTask);
                 assignments.push(result);
+                
+                // Small delay between assignments
+                if (i < taskBreakdown.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
             }
 
             const taskId = 'task_' + (++this.taskCounter);
@@ -181,7 +212,7 @@ class HierarchicalBotManager {
             return {
                 success: true,
                 taskId,
-                message: 'Task delegated to ' + selectedWorkers.length + ' worker(s)',
+                message: 'Task delegated to ' + selectedWorkers.length + ' worker(s) with coordination',
                 workersAssigned: selectedWorkers.map(w => w.name),
                 taskBreakdown: taskBreakdown.map(t => ({ worker: t.workerName, task: t.task }))
             };
@@ -357,7 +388,7 @@ class HierarchicalBotManager {
                 auth: "offline",
                 base_profile: "creative",
                 load_memory: false,
-                init_message: 'You are ' + botName + ', a ' + botType + ' worker bot. You work under the direction of ' + leaderName + '. When given tasks, execute them directly using !newAction() - do NOT delegate tasks to other bots. Focus on ' + botType + ' work and follow instructions from your supervisor.',
+                init_message: 'You are ' + botName + ', a ' + botType + ' worker bot. You work under the direction of ' + leaderName + '. When given tasks, execute them directly using !newAction() - do NOT delegate tasks to other bots. IMPORTANT COORDINATION: When working with other bots, use !goToPlayer("botname") to coordinate locations and work at the SAME location as your team. Focus on ' + botType + ' work and follow instructions from your supervisor.',
                 only_chat_with: [],
                 speak: false,
                 language: "en",
@@ -524,89 +555,6 @@ class HierarchicalBotManager {
         return suitableWorkers;
     }
 
-    breakDownBuildingTask(analysis, workers) {
-        const assignments = [];
-        const task = analysis.originalTask;
-
-        // If user explicitly requested a specific number of workers and we have at least that many available,
-        // create more specific, coordinated subtasks so workers can collaborate effectively.
-        if (analysis.explicitWorkerCount && workers.length >= 2) {
-            // Two-worker explicit coordination: split into complementary halves with explicit coordination mentions.
-            if (workers.length === 2) {
-                assignments.push({
-                    workerName: workers[0].name,
-                    task: `Build the first half of: ${task}. Focus on foundation and initial structure. Coordinate with ${workers[1].name}.`
-                });
-                assignments.push({
-                    workerName: workers[1].name,
-                    task: `Build the second half of: ${task}. Focus on completion and finishing touches. Coordinate with ${workers[0].name}.`
-                });
-            } else if (workers.length >= 3) {
-                // Three or more: assign clear phased roles, then assign extras as support/assistants.
-                assignments.push({
-                    workerName: workers[0].name,
-                    task: `Build the foundation and base structure for: ${task}. Start the construction process and ensure layout is correct. Coordinate handoffs with the rest of the team.`
-                });
-                assignments.push({
-                    workerName: workers[1].name,
-                    task: `Build the walls and main structure for: ${task}. Continue after ${workers[0].name} starts and maintain alignment with foundation.`
-                });
-                assignments.push({
-                    workerName: workers[2].name,
-                    task: `Add the roof and finishing details for: ${task}. Complete the construction and prepare for final touches.`
-                });
-
-                // Additional workers act as assistants/support to increase throughput and handle materials.
-                for (let i = 3; i < workers.length; i++) {
-                    assignments.push({
-                        workerName: workers[i].name,
-                        task: `Assist with construction of: ${task}. Help with materials, support work, and coordination between primary builders.`
-                    });
-                }
-            }
-        } else if (workers.length === 2) {
-            // Default two-worker split when no explicit count was requested: one focuses on structure, one on details.
-            assignments.push({
-                workerName: workers[0].name,
-                task: `Build the main structure for: ${task}. Focus on walls, foundation, and basic framework. Coordinate with ${workers[1].name} as needed.`
-            });
-            assignments.push({
-                workerName: workers[1].name,
-                task: `Handle architectural details for: ${task}. Focus on rooms, doors, windows, and interior layout. Coordinate with ${workers[0].name}.`
-            });
-        } else if (workers.length >= 3) {
-            // Default three-or-more split: foundation, layout, finishing.
-            assignments.push({
-                workerName: workers[0].name,
-                task: `Build the foundation and main walls for: ${task}. Start with the basic structure and ensure stability.`
-            });
-            assignments.push({
-                workerName: workers[1].name,
-                task: `Create the architectural layout for: ${task}. Add rooms, divisions, and structural details.`
-            });
-            assignments.push({
-                workerName: workers[2].name,
-                task: `Add finishing touches for: ${task}. Install doors, windows, roof, and decorative elements.`
-            });
-
-            // If there are more than three workers, assign extras as assistants.
-            for (let i = 3; i < workers.length; i++) {
-                assignments.push({
-                    workerName: workers[i].name,
-                    task: `Assist with construction of: ${task}. Support the primary builders and manage materials.`
-                });
-            }
-        } else if (workers.length === 1) {
-            // Single worker: assign the full building task scaled to one person.
-            assignments.push({
-                workerName: workers[0].name,
-                task: `Build: ${task}. Manage foundation, structure, and finishing as a single worker.`
-            });
-        }
-
-        return assignments;
-    }
-
     breakDownTask(analysis, workers) {
         const assignments = [];
 
@@ -633,9 +581,20 @@ class HierarchicalBotManager {
                 default:
                     // Generic task breakdown for other task types
                     for (let i = 0; i < workers.length; i++) {
+                        let task = 'Help with: ' + analysis.originalTask + ' (Part ' + (i + 1) + ' of ' + workers.length + ')';
+                        
+                        // COORDINATION FIX: Add coordination instructions for multi-worker tasks
+                        if (workers.length > 1) {
+                            if (i === 0) {
+                                task += ' LEAD WORKER: Establish work location and announce coordinates in chat. Wait for team members to arrive.';
+                            } else {
+                                task += ' TEAM MEMBER: Wait for location announcement from ' + workers[0].name + ' and work at the SAME location.';
+                            }
+                        }
+                        
                         assignments.push({
                             workerName: workers[i].name,
-                            task: 'Help with: ' + analysis.originalTask + ' (Part ' + (i + 1) + ' of ' + workers.length + ')'
+                            task: task
                         });
                     }
             }
@@ -651,24 +610,37 @@ class HierarchicalBotManager {
         if (workers.length === 2) {
             assignments.push({
                 workerName: workers[0].name,
-                task: `Build the main structure for: ${task}. Focus on walls, foundation, and basic framework.`
+                task: `LEAD BUILDER: Build the main structure for: ${task}. Focus on walls, foundation, and basic framework. COORDINATION: Establish build location and announce coordinates in chat. Wait for ${workers[1].name} to arrive before starting major construction.`
             });
             assignments.push({
                 workerName: workers[1].name,
-                task: `Handle architectural details for: ${task}. Focus on rooms, doors, windows, and interior layout.`
+                task: `TEAM BUILDER: Handle architectural details for: ${task}. Focus on rooms, doors, windows, and interior layout. COORDINATION: Wait for ${workers[0].name} to announce build location, then work on the SAME structure.`
             });
         } else if (workers.length >= 3) {
             assignments.push({
                 workerName: workers[0].name,
-                task: `Build the foundation and main walls for: ${task}. Start with the basic structure.`
+                task: `LEAD BUILDER: Build the foundation and main walls for: ${task}. Start with the basic structure. COORDINATION: Establish ONE build location and announce coordinates in chat for all team members.`
             });
             assignments.push({
                 workerName: workers[1].name,
-                task: `Create the architectural layout for: ${task}. Add rooms, divisions, and structural details.`
+                task: `STRUCTURE BUILDER: Create the architectural layout for: ${task}. Add rooms, divisions, and structural details. COORDINATION: Wait for build location announcement and work on the SAME structure as ${workers[0].name}.`
             });
             assignments.push({
                 workerName: workers[2].name,
-                task: `Add finishing touches for: ${task}. Install doors, windows, roof, and decorative elements.`
+                task: `FINISHING BUILDER: Add finishing touches for: ${task}. Install doors, windows, roof, and decorative elements. COORDINATION: Work on the SAME structure established by the team.`
+            });
+            
+            // Additional workers as assistants
+            for (let i = 3; i < workers.length; i++) {
+                assignments.push({
+                    workerName: workers[i].name,
+                    task: `SUPPORT BUILDER: Assist with construction of: ${task}. Support the primary builders and manage materials. COORDINATION: Work at the SAME location as the team.`
+                });
+            }
+        } else if (workers.length === 1) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build: ${task}. Manage foundation, structure, and finishing as a single worker.`
             });
         }
 
@@ -682,11 +654,11 @@ class HierarchicalBotManager {
         if (workers.length >= 2) {
             assignments.push({
                 workerName: workers[0].name,
-                task: `Primary mining for: ${task}. Focus on digging and excavation work.`
+                task: `LEAD MINER: Primary mining for: ${task}. Focus on digging and excavation work. COORDINATION: Establish mining site and announce location in chat.`
             });
             assignments.push({
                 workerName: workers[1].name,
-                task: `Resource collection for: ${task}. Gather and organize mined materials.`
+                task: `COLLECTOR: Resource collection for: ${task}. Gather and organize mined materials. COORDINATION: Work at the SAME mining site as ${workers[0].name}.`
             });
         }
 
@@ -700,11 +672,11 @@ class HierarchicalBotManager {
         if (workers.length >= 2) {
             assignments.push({
                 workerName: workers[0].name,
-                task: `Planting and cultivation for: ${task}. Prepare soil and plant crops.`
+                task: `LEAD FARMER: Planting and cultivation for: ${task}. Prepare soil and plant crops. COORDINATION: Establish farm location and announce coordinates.`
             });
             assignments.push({
                 workerName: workers[1].name,
-                task: `Harvesting and maintenance for: ${task}. Collect crops and maintain farm.`
+                task: `FARM HELPER: Harvesting and maintenance for: ${task}. Collect crops and maintain farm. COORDINATION: Work at the SAME farm location as ${workers[0].name}.`
             });
         }
 
@@ -718,11 +690,11 @@ class HierarchicalBotManager {
         if (workers.length >= 2) {
             assignments.push({
                 workerName: workers[0].name,
-                task: `Primary resource gathering for: ${task}. Focus on main collection objectives.`
+                task: `LEAD GATHERER: Primary resource gathering for: ${task}. Focus on main collection objectives. COORDINATION: Establish gathering areas and announce locations.`
             });
             assignments.push({
                 workerName: workers[1].name,
-                task: `Secondary resource collection for: ${task}. Support and organize gathered materials.`
+                task: `GATHERER HELPER: Secondary resource collection for: ${task}. Support and organize gathered materials. COORDINATION: Work in the SAME areas as ${workers[0].name}.`
             });
         }
 
@@ -935,6 +907,56 @@ class HierarchicalBotManager {
 
         } catch (error) {
             console.error('[HierarchicalBot] Error spawning additional workers:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    checkWorkers(supervisorName) {
+        try {
+            console.log('[HierarchicalBot] ' + supervisorName + ' checking worker status');
+
+            const agentConnections = global.kodecraftAgentConnections ? global.kodecraftAgentConnections() : {};
+            const managedWorkers = this.managedWorkers.get(supervisorName) || new Set();
+            
+            const workerStatus = [];
+            const connectedWorkers = [];
+            const disconnectedWorkers = [];
+
+            for (const workerName of managedWorkers) {
+                const connection = agentConnections[workerName];
+                const status = {
+                    name: workerName,
+                    connected: !!(connection && connection.socket),
+                    inGame: !!(connection && connection.in_game),
+                    hasSocket: !!(connection && connection.socket)
+                };
+
+                workerStatus.push(status);
+
+                if (status.connected && status.inGame) {
+                    connectedWorkers.push(workerName);
+                } else {
+                    disconnectedWorkers.push(workerName);
+                }
+            }
+
+            return {
+                success: true,
+                supervisor: supervisorName,
+                totalWorkers: managedWorkers.size,
+                connectedWorkers: connectedWorkers.length,
+                disconnectedWorkers: disconnectedWorkers.length,
+                workerDetails: workerStatus,
+                connectedWorkerNames: connectedWorkers,
+                disconnectedWorkerNames: disconnectedWorkers,
+                workers: Array.from(managedWorkers)
+            };
+
+        } catch (error) {
+            console.error('[HierarchicalBot] Error checking workers:', error);
             return {
                 success: false,
                 error: error.message

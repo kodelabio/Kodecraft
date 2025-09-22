@@ -1,4 +1,4 @@
-// Helper function to make API calls to hierarchical bot manager
+ // Helper function to make API calls to hierarchical bot manager
 async function callHierarchicalAPI(endpoint, data) {
     try {
         const response = await fetch(`http://localhost:8080/api/hierarchical/${endpoint}`, {
@@ -8,12 +8,17 @@ async function callHierarchicalAPI(endpoint, data) {
             },
             body: JSON.stringify(data)
         });
-        
-        if (!response.ok) {
+
+        // Parse the response body regardless of status
+        const responseData = await response.json();
+
+        // For hierarchical API, we want to return the data even if status is not 200
+        // because it contains useful information about why the request failed
+        if (!response.ok && !responseData) {
             throw new Error(`API request failed: ${response.status}`);
         }
-        
-        return await response.json();
+
+        return responseData;
     } catch (error) {
         console.log(`[HierarchicalAction] API error for ${endpoint}:`, error.message);
         throw error;
@@ -30,20 +35,29 @@ export const hierarchicalActions = [
         perform: async function(agent, task_description) {
             try {
                 console.log('[HierarchicalAction] delegateTask called by:', agent.name);
-                
+
                 const result = await callHierarchicalAPI('delegate', {
                     supervisorName: agent.name,
                     taskDescription: task_description
                 });
-                
+
                 if (result.success) {
                     agent.bot.chat(`✅ Task delegated successfully!`);
                     agent.bot.chat(`📋 Workers assigned: ${result.workersAssigned.join(', ')}`);
                     agent.bot.chat(`🎯 Task: ${result.taskBreakdown.join(' | ')}`);
                     return `Task successfully delegated to ${result.workersAssigned.length} worker(s): ${result.workersAssigned.join(', ')}. Task breakdown: ${result.taskBreakdown.join(' | ')}`;
                 } else {
-                    agent.bot.chat(`❌ Failed to delegate task: ${result.error}`);
-                    return `Failed to delegate task: ${result.error}`;
+                    // Handle different failure reasons
+                    if (result.error && result.error.includes('simple_task')) {
+                        agent.bot.chat(`ℹ️ This task is simple enough for me to handle personally.`);
+                        return `Task "${task_description}" is simple enough to handle personally without delegating to workers.`;
+                    } else if (result.error) {
+                        agent.bot.chat(`❌ Failed to delegate task: ${result.error}`);
+                        return `Failed to delegate task: ${result.error}`;
+                    } else {
+                        agent.bot.chat(`❌ Failed to delegate task for unknown reason`);
+                        return `Failed to delegate task for unknown reason`;
+                    }
                 }
             } catch (error) {
                 console.error('[HierarchicalAction] Error in delegateTask:', error);

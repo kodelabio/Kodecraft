@@ -7,8 +7,8 @@ class HierarchicalBotManager {
 
     analyzeTask(taskDescription) {
         const task = taskDescription.toLowerCase();
-        
-        const buildingKeywords = ['build', 'construct', 'create', 'make', 'house', 'wall', 'tower', 'structure'];
+
+        const buildingKeywords = ['build', 'construct', 'create', 'make', 'house', 'wall', 'tower', 'structure', 'place'];
         const miningKeywords = ['mine', 'dig', 'excavate', 'tunnel', 'cave', 'ore', 'diamond', 'coal'];
         const farmingKeywords = ['farm', 'plant', 'grow', 'harvest', 'crop', 'wheat', 'carrot', 'potato'];
         const gatheringKeywords = ['gather', 'collect', 'get', 'find', 'wood', 'stone', 'resource'];

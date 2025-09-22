@@ -375,8 +375,19 @@ export class KodecraftAPI {
                     message: result.message || 'Task delegated successfully'
                 });
             } else {
-                console.warn('[API] Delegation failed:', result && (result.error || result));
-                this.sendError(res, 400, result && result.error ? result.error : 'Failed to delegate task');
+                // For simple_task reason, return 200 with success: false
+                if (result.reason === 'simple_task') {
+                    console.log('[API] Task identified as simple, no delegation needed');
+                    this.sendSuccess(res, {
+                        success: false,
+                        reason: result.reason,
+                        error: result.reason,
+                        message: result.message || 'This task can be handled personally'
+                    });
+                } else {
+                    console.warn('[API] Delegation failed:', result && (result.error || result));
+                    this.sendError(res, 400, result && result.error ? result.error : 'Failed to delegate task');
+                }
             }
 
         } catch (error) {

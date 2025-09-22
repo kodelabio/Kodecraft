@@ -27,6 +27,7 @@ export class KodecraftAPI {
         this.router.post('/hierarchical/release-all-workers', this.handleReleaseAllWorkers.bind(this));
         this.router.post('/hierarchical/assign-task', this.handleAssignTask.bind(this));
         this.router.post('/hierarchical/list-workers', this.handleListWorkers.bind(this));
+        this.router.post('/hierarchical/spawn-additional', this.handleSpawnAdditional.bind(this));
         this.router.get('/health', this.healthCheck.bind(this));
     }
 
@@ -487,6 +488,25 @@ export class KodecraftAPI {
             this.sendSuccess(res, result);
         } catch (error) {
             console.error('[API] Error in handleListWorkers:', error);
+            this.sendError(res, 500, 'Internal server error');
+        }
+    }
+
+    // Handle spawning additional workers
+    // POST /api/hierarchical/spawn-additional
+    async handleSpawnAdditional(req, res) {
+        try {
+            const { supervisorName, workerCount, workerType } = req.body;
+            const hierarchicalManager = this.hierarchicalBotManager || global.kodecraftHierarchicalBotManager;
+
+            if (!hierarchicalManager) {
+                return this.sendError(res, 503, 'Hierarchical bot management system is not available');
+            }
+
+            const result = await hierarchicalManager.spawnAdditionalWorkers(supervisorName, workerCount, workerType);
+            this.sendSuccess(res, result);
+        } catch (error) {
+            console.error('[API] Error in handleSpawnAdditional:', error);
             this.sendError(res, 500, 'Internal server error');
         }
     }

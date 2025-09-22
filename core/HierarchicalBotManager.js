@@ -13,11 +13,39 @@ class HierarchicalBotManager {
         const farmingKeywords = ['farm', 'plant', 'grow', 'harvest', 'crop', 'wheat', 'carrot', 'potato'];
         const gatheringKeywords = ['gather', 'collect', 'get', 'find', 'wood', 'stone', 'resource'];
         const complexKeywords = ['large', 'big', 'huge', 'massive', 'complex', 'multiple', 'many', 'several'];
-        
+
         let taskType = 'general';
         let needsWorkers = false;
         let complexity = 'simple';
-        
+        let explicitWorkerCount = null;
+
+        // Check for explicit worker count requests
+        const workerCountPatterns = [
+            /(\d+)\s*bots?/,
+            /(\d+)\s*workers?/,
+            /(\d+)\s*agents?/,
+            /spawn\s*(\d+)/,
+            /assign\s*(\d+)/,
+            /use\s*(\d+)/,
+            /get\s*(\d+)/
+        ];
+
+        for (const pattern of workerCountPatterns) {
+            const match = task.match(pattern);
+            if (match) {
+                const count = parseInt(match[1]);
+                if (count >= 1 && count <= 10) { // Reasonable limits
+                    explicitWorkerCount = count;
+                    needsWorkers = true;
+                    if (count > 1) {
+                        complexity = 'complex'; // Multiple workers = complex task
+                    }
+                    console.log('[HierarchicalBot] Detected explicit worker count request: ' + count + ' workers');
+                    break;
+                }
+            }
+        }
+
         if (buildingKeywords.some(keyword => task.includes(keyword))) {
             taskType = 'building';
             needsWorkers = true;
@@ -31,22 +59,23 @@ class HierarchicalBotManager {
             taskType = 'gathering';
             needsWorkers = true;
         }
-        
+
         if (complexKeywords.some(keyword => task.includes(keyword))) {
             complexity = 'complex';
             needsWorkers = true;
         }
-        
+
         const simpleKeywords = ['say', 'tell', 'move', 'go', 'walk', 'run', 'jump', 'look'];
-        if (simpleKeywords.some(keyword => task.includes(keyword))) {
+        if (simpleKeywords.some(keyword => task.includes(keyword)) && !explicitWorkerCount) {
             needsWorkers = false;
             complexity = 'simple';
         }
-        
+
         return {
             taskType,
             complexity,
             needsWorkers,
+            explicitWorkerCount,
             originalTask: taskDescription
         };
     }
@@ -209,34 +238,113 @@ class HierarchicalBotManager {
     determineWorkersNeeded(analysis) {
         const workers = [];
         const timestamp = Date.now().toString().slice(-4);
-        
-        switch (analysis.taskType) {
-            case 'building':
-                workers.push({ name: 'builder_' + timestamp, type: 'builder' });
-                break;
-            case 'mining':
-                workers.push({ name: 'miner_' + timestamp, type: 'miner' });
-                break;
-            case 'farming':
-                workers.push({ name: 'farmer_' + timestamp, type: 'farmer' });
-                break;
-            case 'gathering':
-                workers.push({ name: 'gatherer_' + timestamp, type: 'gatherer' });
-                break;
-            case 'complex':
-                workers.push({ name: 'builder_' + timestamp, type: 'builder' });
-                break;
-            default:
-                workers.push({ name: 'worker_' + timestamp, type: 'general' });
+
+        // Use explicit worker count if provided, otherwise determine based on complexity
+        let workerCount = 1; // Default to 1 worker
+
+        if (analysis.explicitWorkerCount) {
+            // User explicitly requested a specific number of workers
+            workerCount = analysis.explicitWorkerCount;
+            console.log('[HierarchicalBot] Using explicit worker count: ' + workerCount);
+        } else if (analysis.complexity === 'complex') {
+            // Complex tasks need multiple workers
+            if (analysis.taskType === 'building') {
+                workerCount = 3; // Main builder, foundation specialist, decorator
+            } else if (analysis.taskType === 'mining') {
+                workerCount = 2; // Main miner, resource collector
+            } else if (analysis.taskType === 'farming') {
+                workerCount = 2; // Planter, harvester
+            } else if (analysis.taskType === 'gathering') {
+                workerCount = 2; // Primary gatherer, secondary gatherer
+            } else {
+                workerCount = 2; // General complex tasks get 2 workers
+            }
         }
 
+        // Check for specific keywords that indicate need for multiple workers
+        const task = analysis.originalTask.toLowerCase();
+        const multiWorkerKeywords = ['coordinate', 'collaborate', 'team', 'together', 'divide', 'split'];
+        if (multiWorkerKeywords.some(keyword => task.includes(keyword)) && !analysis.explicitWorkerCount) {
+            workerCount = Math.max(workerCount, 2); // At least 2 workers for coordination tasks
+        }
+
+        // Spawn the determined number of workers
+        for (let i = 0; i < workerCount; i++) {
+            const workerTimestamp = (parseInt(timestamp) + i).toString();
+            let workerName, workerType;
+
+            switch (analysis.taskType) {
+                case 'building':
+                    if (i === 0) {
+                        workerName = 'builder_' + workerTimestamp;
+                        workerType = 'builder';
+                    } else if (i === 1) {
+                        workerName = 'architect_' + workerTimestamp;
+                        workerType = 'architect';
+                    } else {
+                        workerName = 'decorator_' + workerTimestamp;
+                        workerType = 'decorator';
+                    }
+                    break;
+                case 'mining':
+                    if (i === 0) {
+                        workerName = 'miner_' + workerTimestamp;
+                        workerType = 'miner';
+                    } else {
+                        workerName = 'collector_' + workerTimestamp;
+                        workerType = 'collector';
+                    }
+                    break;
+                case 'farming':
+                    if (i === 0) {
+                        workerName = 'farmer_' + workerTimestamp;
+                        workerType = 'farmer';
+                    } else {
+                        workerName = 'harvester_' + workerTimestamp;
+                        workerType = 'harvester';
+                    }
+                    break;
+                case 'gathering':
+                    if (i === 0) {
+                        workerName = 'gatherer_' + workerTimestamp;
+                        workerType = 'gatherer';
+                    } else {
+                        workerName = 'collector_' + workerTimestamp;
+                        workerType = 'collector';
+                    }
+                    break;
+                case 'complex':
+                    if (i === 0) {
+                        workerName = 'builder_' + workerTimestamp;
+                        workerType = 'builder';
+                    } else {
+                        workerName = 'assistant_' + workerTimestamp;
+                        workerType = 'assistant';
+                    }
+                    break;
+                default:
+                    // For explicit worker counts with general tasks, create numbered workers
+                    if (analysis.explicitWorkerCount) {
+                        workerName = 'worker_' + workerTimestamp;
+                        workerType = 'general';
+                    } else {
+                        workerName = 'worker_' + workerTimestamp;
+                        workerType = 'general';
+                    }
+            }
+
+            workers.push({ name: workerName, type: workerType });
+        }
+
+        const source = analysis.explicitWorkerCount ? 'explicit request' : 'automatic analysis';
+        console.log('[HierarchicalBot] Determined need for ' + workerCount + ' workers for ' + analysis.taskType + ' task (complexity: ' + analysis.complexity + ', source: ' + source + ')');
         return workers;
     }
 
     async spawnWorkerBot(botName, botType, leaderName) {
         try {
-            const agentConnections = global.kodecraftAgentConnections();
-            const leaderConnection = agentConnections[leaderName];
+            const agentConnections = global.kodecraftAgentConnections ? global.kodecraftAgentConnections() : {};
+            const leaderConnection = agentConnections && agentConnections[leaderName];
 
             if (leaderConnection && leaderConnection.socket) {
                 console.log('[HierarchicalBot] Spawning ' + botName + ' near ' + leaderName);
@@ -247,7 +355,6 @@ class HierarchicalBotManager {
                 host: "127.0.0.1",
                 port: 55916,
                 auth: "offline",
-                mindserver_port: 8080,
                 base_profile: "creative",
                 load_memory: false,
                 init_message: 'You are ' + botName + ', a ' + botType + ' worker bot. You work under the direction of ' + leaderName + '. When given tasks, execute them directly using !newAction() - do NOT delegate tasks to other bots. Focus on ' + botType + ' work and follow instructions from your supervisor.',
@@ -370,52 +477,255 @@ class HierarchicalBotManager {
 
     selectWorkersForTask(availableWorkers, analysis) {
         console.log('[HierarchicalBot] Selecting workers for ' + analysis.taskType + ' task from ' + availableWorkers.length + ' available workers');
-        
+
         let suitableWorkers = [];
-        
+
         for (const worker of availableWorkers) {
             const workerName = worker.name.toLowerCase();
-            
-            if (analysis.taskType === 'building' && workerName.includes('builder')) {
-                suitableWorkers.push(worker);
-            } else if (analysis.taskType === 'mining' && workerName.includes('miner')) {
-                suitableWorkers.push(worker);
-            } else if (analysis.taskType === 'farming' && workerName.includes('farmer')) {
-                suitableWorkers.push(worker);
-            } else if (analysis.taskType === 'gathering' && workerName.includes('gatherer')) {
-                suitableWorkers.push(worker);
-            } else if (workerName.includes('worker') || workerName.includes('helper')) {
+
+            // Check for task-specific workers and their specializations
+            if (analysis.taskType === 'building') {
+                if (workerName.includes('builder') || workerName.includes('architect') ||
+                    workerName.includes('decorator') || workerName.includes('assistant')) {
+                    suitableWorkers.push(worker);
+                }
+            } else if (analysis.taskType === 'mining') {
+                if (workerName.includes('miner') || workerName.includes('collector')) {
+                    suitableWorkers.push(worker);
+                }
+            } else if (analysis.taskType === 'farming') {
+                if (workerName.includes('farmer') || workerName.includes('harvester')) {
+                    suitableWorkers.push(worker);
+                }
+            } else if (analysis.taskType === 'gathering') {
+                if (workerName.includes('gatherer') || workerName.includes('collector')) {
+                    suitableWorkers.push(worker);
+                }
+            }
+
+            // Also include general workers
+            if (workerName.includes('worker') || workerName.includes('helper') || workerName.includes('assistant')) {
                 suitableWorkers.push(worker);
             }
         }
-        
+
+        // Remove duplicates (in case a worker matches multiple criteria)
+        suitableWorkers = suitableWorkers.filter((worker, index, self) =>
+            index === self.findIndex(w => w.name === worker.name)
+        );
+
         console.log('[HierarchicalBot] Found ' + suitableWorkers.length + ' suitable workers for ' + analysis.taskType + ' task');
-        
+
         if (suitableWorkers.length === 0) {
             console.log('[HierarchicalBot] No specialized workers found, using all available workers');
             suitableWorkers = availableWorkers;
         }
-        
+
         return suitableWorkers;
+    }
+
+    breakDownBuildingTask(analysis, workers) {
+        const assignments = [];
+        const task = analysis.originalTask;
+
+        // If user explicitly requested a specific number of workers and we have at least that many available,
+        // create more specific, coordinated subtasks so workers can collaborate effectively.
+        if (analysis.explicitWorkerCount && workers.length >= 2) {
+            // Two-worker explicit coordination: split into complementary halves with explicit coordination mentions.
+            if (workers.length === 2) {
+                assignments.push({
+                    workerName: workers[0].name,
+                    task: `Build the first half of: ${task}. Focus on foundation and initial structure. Coordinate with ${workers[1].name}.`
+                });
+                assignments.push({
+                    workerName: workers[1].name,
+                    task: `Build the second half of: ${task}. Focus on completion and finishing touches. Coordinate with ${workers[0].name}.`
+                });
+            } else if (workers.length >= 3) {
+                // Three or more: assign clear phased roles, then assign extras as support/assistants.
+                assignments.push({
+                    workerName: workers[0].name,
+                    task: `Build the foundation and base structure for: ${task}. Start the construction process and ensure layout is correct. Coordinate handoffs with the rest of the team.`
+                });
+                assignments.push({
+                    workerName: workers[1].name,
+                    task: `Build the walls and main structure for: ${task}. Continue after ${workers[0].name} starts and maintain alignment with foundation.`
+                });
+                assignments.push({
+                    workerName: workers[2].name,
+                    task: `Add the roof and finishing details for: ${task}. Complete the construction and prepare for final touches.`
+                });
+
+                // Additional workers act as assistants/support to increase throughput and handle materials.
+                for (let i = 3; i < workers.length; i++) {
+                    assignments.push({
+                        workerName: workers[i].name,
+                        task: `Assist with construction of: ${task}. Help with materials, support work, and coordination between primary builders.`
+                    });
+                }
+            }
+        } else if (workers.length === 2) {
+            // Default two-worker split when no explicit count was requested: one focuses on structure, one on details.
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build the main structure for: ${task}. Focus on walls, foundation, and basic framework. Coordinate with ${workers[1].name} as needed.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Handle architectural details for: ${task}. Focus on rooms, doors, windows, and interior layout. Coordinate with ${workers[0].name}.`
+            });
+        } else if (workers.length >= 3) {
+            // Default three-or-more split: foundation, layout, finishing.
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build the foundation and main walls for: ${task}. Start with the basic structure and ensure stability.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Create the architectural layout for: ${task}. Add rooms, divisions, and structural details.`
+            });
+            assignments.push({
+                workerName: workers[2].name,
+                task: `Add finishing touches for: ${task}. Install doors, windows, roof, and decorative elements.`
+            });
+
+            // If there are more than three workers, assign extras as assistants.
+            for (let i = 3; i < workers.length; i++) {
+                assignments.push({
+                    workerName: workers[i].name,
+                    task: `Assist with construction of: ${task}. Support the primary builders and manage materials.`
+                });
+            }
+        } else if (workers.length === 1) {
+            // Single worker: assign the full building task scaled to one person.
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build: ${task}. Manage foundation, structure, and finishing as a single worker.`
+            });
+        }
+
+        return assignments;
     }
 
     breakDownTask(analysis, workers) {
         const assignments = [];
-        
+
         if (workers.length === 1) {
             assignments.push({
                 workerName: workers[0].name,
                 task: analysis.originalTask
             });
         } else {
-            for (let i = 0; i < workers.length; i++) {
-                assignments.push({
-                    workerName: workers[i].name,
-                    task: 'Help with: ' + analysis.originalTask + ' (Part ' + (i + 1) + ' of ' + workers.length + ')'
-                });
+            // Create specific subtasks based on task type and worker specializations
+            switch (analysis.taskType) {
+                case 'building':
+                    assignments.push(...this.breakDownBuildingTask(analysis, workers));
+                    break;
+                case 'mining':
+                    assignments.push(...this.breakDownMiningTask(analysis, workers));
+                    break;
+                case 'farming':
+                    assignments.push(...this.breakDownFarmingTask(analysis, workers));
+                    break;
+                case 'gathering':
+                    assignments.push(...this.breakDownGatheringTask(analysis, workers));
+                    break;
+                default:
+                    // Generic task breakdown for other task types
+                    for (let i = 0; i < workers.length; i++) {
+                        assignments.push({
+                            workerName: workers[i].name,
+                            task: 'Help with: ' + analysis.originalTask + ' (Part ' + (i + 1) + ' of ' + workers.length + ')'
+                        });
+                    }
             }
         }
-        
+
+        return assignments;
+    }
+
+    breakDownBuildingTask(analysis, workers) {
+        const assignments = [];
+        const task = analysis.originalTask;
+
+        if (workers.length === 2) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build the main structure for: ${task}. Focus on walls, foundation, and basic framework.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Handle architectural details for: ${task}. Focus on rooms, doors, windows, and interior layout.`
+            });
+        } else if (workers.length >= 3) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Build the foundation and main walls for: ${task}. Start with the basic structure.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Create the architectural layout for: ${task}. Add rooms, divisions, and structural details.`
+            });
+            assignments.push({
+                workerName: workers[2].name,
+                task: `Add finishing touches for: ${task}. Install doors, windows, roof, and decorative elements.`
+            });
+        }
+
+        return assignments;
+    }
+
+    breakDownMiningTask(analysis, workers) {
+        const assignments = [];
+        const task = analysis.originalTask;
+
+        if (workers.length >= 2) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Primary mining for: ${task}. Focus on digging and excavation work.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Resource collection for: ${task}. Gather and organize mined materials.`
+            });
+        }
+
+        return assignments;
+    }
+
+    breakDownFarmingTask(analysis, workers) {
+        const assignments = [];
+        const task = analysis.originalTask;
+
+        if (workers.length >= 2) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Planting and cultivation for: ${task}. Prepare soil and plant crops.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Harvesting and maintenance for: ${task}. Collect crops and maintain farm.`
+            });
+        }
+
+        return assignments;
+    }
+
+    breakDownGatheringTask(analysis, workers) {
+        const assignments = [];
+        const task = analysis.originalTask;
+
+        if (workers.length >= 2) {
+            assignments.push({
+                workerName: workers[0].name,
+                task: `Primary resource gathering for: ${task}. Focus on main collection objectives.`
+            });
+            assignments.push({
+                workerName: workers[1].name,
+                task: `Secondary resource collection for: ${task}. Support and organize gathered materials.`
+            });
+        }
+
         return assignments;
     }
 
@@ -546,9 +856,85 @@ class HierarchicalBotManager {
                 totalAvailable: availableWorkers.length,
                 totalManaged: managedWorkers.size
             };
-            
         } catch (error) {
-            console.error('[HierarchicalBot] Error listing workers:', error);
+            console.error('[HierarchicalBot] Error while gathering worker info:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // Spawn additional workers for a supervisor
+    async spawnAdditionalWorkers(supervisorName, workerCount, workerType) {
+        try {
+            console.log('[HierarchicalBot] ' + supervisorName + ' requesting ' + workerCount + ' additional ' + workerType + ' workers');
+
+            // Validate inputs
+            const count = parseInt(workerCount);
+            if (isNaN(count) || count < 1 || count > 5) {
+                return {
+                    success: false,
+                    error: 'Invalid worker count. Must be between 1 and 5.'
+                };
+            }
+
+            const validTypes = ['builder', 'miner', 'farmer', 'gatherer', 'general'];
+            if (!validTypes.includes(workerType)) {
+                return {
+                    success: false,
+                    error: 'Invalid worker type. Valid types: ' + validTypes.join(', ')
+                };
+            }
+
+            // Create worker specifications
+            const workers = [];
+            const timestamp = Date.now().toString().slice(-4);
+
+            for (let i = 0; i < count; i++) {
+                const workerTimestamp = (parseInt(timestamp) + i).toString();
+                const workerName = workerType + '_' + workerTimestamp;
+                workers.push({ name: workerName, type: workerType });
+            }
+
+            // Spawn the workers
+            const spawnResults = [];
+            for (const workerSpec of workers) {
+                const spawnResult = await this.spawnWorkerBot(workerSpec.name, workerSpec.type, supervisorName);
+                spawnResults.push(spawnResult);
+
+                if (spawnResult.success) {
+                    console.log('[HierarchicalBot] Successfully spawned additional worker ' + workerSpec.name);
+                } else {
+                    console.log('[HierarchicalBot] Failed to spawn additional worker ' + workerSpec.name + ': ' + spawnResult.error);
+                }
+
+                // Small delay between spawns
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            const successfulSpawns = spawnResults.filter(r => r.success);
+
+            if (successfulSpawns.length > 0) {
+                // Wait for all spawned bots to connect
+                const botNames = successfulSpawns.map(r => r.botName);
+                const allConnected = await this.waitForBotsConnection(botNames, 30000);
+
+                if (!allConnected) {
+                    console.warn('[HierarchicalBot] Some additional workers failed to connect');
+                }
+            }
+
+            return {
+                success: successfulSpawns.length > 0,
+                spawned: successfulSpawns.length,
+                total: count,
+                workers: successfulSpawns.map(r => r.botName),
+                error: successfulSpawns.length === 0 ? 'No workers could be spawned' : null
+            };
+
+        } catch (error) {
+            console.error('[HierarchicalBot] Error spawning additional workers:', error);
             return {
                 success: false,
                 error: error.message

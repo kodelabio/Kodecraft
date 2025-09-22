@@ -193,5 +193,50 @@ export const hierarchicalActions = [
                 return 'Hierarchical bot management system is not available.';
             }
         }
+    },
+    {
+        name: '!spawnAdditionalWorkers',
+        description: 'Spawn additional worker bots to help with current tasks. Specify the number and type of workers needed.',
+        params: {
+            'worker_count': { type: 'float', description: 'Number of additional workers to spawn (1-5).' },
+            'worker_type': { type: 'string', description: 'Type of workers to spawn: builder, miner, farmer, gatherer, or general.' }
+        },
+        perform: async function(agent, worker_count, worker_type = 'general') {
+            try {
+                // Validate input
+                const count = parseInt(worker_count);
+                if (isNaN(count) || count < 1 || count > 5) {
+                    agent.bot.chat('⚠️ Please specify a valid number of workers (1-5).');
+                    return 'Invalid worker count. Please specify 1-5 workers.';
+                }
+
+                const validTypes = ['builder', 'miner', 'farmer', 'gatherer', 'general'];
+                if (!validTypes.includes(worker_type.toLowerCase())) {
+                    agent.bot.chat('⚠️ Invalid worker type. Use: builder, miner, farmer, gatherer, or general.');
+                    return 'Invalid worker type. Valid types: ' + validTypes.join(', ');
+                }
+
+                console.log('[HierarchicalAction] spawnAdditionalWorkers called by:', agent.name);
+
+                const result = await callHierarchicalAPI('spawn-additional', {
+                    supervisorName: agent.name,
+                    workerCount: count,
+                    workerType: worker_type.toLowerCase()
+                });
+
+                if (result.success) {
+                    const spawnedWorkers = result.workers || [];
+                    agent.bot.chat(`✅ Successfully spawned ${spawnedWorkers.length} additional ${worker_type} worker(s)!`);
+                    agent.bot.chat(`👥 New workers: ${spawnedWorkers.join(', ')}`);
+                    return `Successfully spawned ${spawnedWorkers.length} ${worker_type} worker(s): ${spawnedWorkers.join(', ')}`;
+                } else {
+                    agent.bot.chat(`❌ Failed to spawn additional workers: ${result.error}`);
+                    return `Failed to spawn additional workers: ${result.error}`;
+                }
+            } catch (error) {
+                console.error('[HierarchicalAction] Error in spawnAdditionalWorkers:', error);
+                return 'Hierarchical bot management system is not available.';
+            }
+        }
     }
 ];

@@ -28,6 +28,7 @@ export class KodecraftAPI {
         this.router.post('/hierarchical/assign-task', this.handleAssignTask.bind(this));
         this.router.post('/hierarchical/list-workers', this.handleListWorkers.bind(this));
         this.router.post('/hierarchical/spawn-additional', this.handleSpawnAdditional.bind(this));
+        this.router.post('/hierarchical/spawn-and-delegate', this.handleSpawnAndDelegate.bind(this));
         this.router.get('/health', this.healthCheck.bind(this));
     }
 
@@ -508,6 +509,57 @@ export class KodecraftAPI {
         } catch (error) {
             console.error('[API] Error in handleSpawnAdditional:', error);
             this.sendError(res, 500, 'Internal server error');
+        }
+    }
+
+    // Handle spawning workers and delegating task in one step
+    // POST /api/hierarchical/spawn-and-delegate
+    async handleSpawnAndDelegate(req, res) {
+        try {
+            const { supervisorName, taskDescription, workerCount, workerType } = req.body;
+
+            if (!supervisorName || !taskDescription) {
+                return this.sendError(res, 400, 'Missing required fields: supervisorName, taskDescription');
+            }
+
+            const hierarchicalManager = this.hierarchicalBotManager || global.kodecraftHierarchicalBotManager;
+
+            if (!hierarchicalManager) {
+                return this.sendError(res, 503, 'Hierarchical bot management system is not available');
+            }
+
+            console.log(`[API] Spawn and delegate request from ${supervisorName}: ${taskDescription} with ${workerCount || 'auto'} ${workerType || 'auto'} workers`);
+
+            const result = await hierarchicalManager.spawnAndDelegateTask(
+                supervisorName,
+                taskDescription,
+                workerCount,
+                workerType
+            );
+
+            if (result.success) {
+                this.sendSuccess(res, {
+                    success: true,
+                    workersAssigned: result.workersAssigned || [],
+                    taskBreakdown: result.taskBreakdown || [],
+                    message: result.message || 'Workers spawned and task delegated successfully'
+                });
+            } else {
+                // Handle different failure reasons
+                if (result.reason === 'simple_task') {
+                    this.sendSuccess(res, {
+                        success: false,
+                        reason: result.reason,
+                        message: result.message || 'This task can be handled personally'
+                    });
+                } else {
+                    this.sendError(res, 400, result.message || result.reason || 'Failed to spawn and delegate task');
+                }
+            }
+
+        } catch (error) {
+            console.error('[API] Error in handleSpawnAndDelegate:', error);
+            this.sendError(res, 500, 'Internal server error during spawn and delegate');
         }
     }
 }

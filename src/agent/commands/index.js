@@ -26,8 +26,41 @@ export function blacklistCommands(commands) {
     }
 }
 
-const commandRegex = /!(\w+)(?:\(((?:-?\d+(?:\.\d+)?|true|false|"[^"]*")(?:\s*,\s*(?:-?\d+(?:\.\d+)?|true|false|"[^"]*"))*)\))?/
-const argRegex = /-?\d+(?:\.\d+)?|true|false|"[^"]*"/g;
+// Improved regex: matches !commandName(...), where ... can be a quoted string, number, boolean, or a JSON object
+const commandRegex = /!(\w+)\s*\(([^)]*)\)?/;
+
+// Improved argument extraction: handles quoted strings, numbers, booleans, and JSON objects
+function extractArgs(argString, expectedCount) {
+    if (!argString || !argString.trim()) return [];
+    const trimmed = argString.trim();
+    // If only one argument is expected, pass the whole string as one argument
+    if (expectedCount === 1) {
+        return [trimmed];
+    }
+    // Otherwise, split by comma, but respect quoted strings
+    const args = [];
+    let current = '';
+    let inQuotes = false;
+    let quoteChar = '';
+    for (let i = 0; i < trimmed.length; i++) {
+        const c = trimmed[i];
+        if ((c === '"' || c === "'") && !inQuotes) {
+            inQuotes = true;
+            quoteChar = c;
+            current += c;
+        } else if (inQuotes && c === quoteChar) {
+            inQuotes = false;
+            current += c;
+        } else if (!inQuotes && c === ',') {
+            args.push(current.trim());
+            current = '';
+        } else {
+            current += c;
+        }
+    }
+    if (current.trim()) args.push(current.trim());
+    return args;
+}
 
 export function containsCommand(message) {
     const commandMatch = message.match(commandRegex);
@@ -99,29 +132,28 @@ export function parseCommandMessage(message) {
     if (!commandMatch) return `Command is incorrectly formatted`;
 
     const commandName = "!"+commandMatch[1];
-
-    let args;
-    if (commandMatch[2]) args = commandMatch[2].match(argRegex);
-    else args = [];
-
     const command = getCommand(commandName);
     if(!command) return `${commandName} is not a command.`
 
     const params = commandParams(command);
     const paramNames = commandParamNames(command);
-    
+    let args = [];
+    if (commandMatch[2]) args = extractArgs(commandMatch[2], params.length);
+
     if (args.length !== params.length)
         return `Command ${command.name} was given ${args.length} args, but requires ${params.length} args.`;
 
-    
     for (let i = 0; i < args.length; i++) {
         const param = params[i];
-        //Remove any extra characters
         let arg = args[i].trim();
-        if ((arg.startsWith('"') && arg.endsWith('"')) || (arg.startsWith("'") && arg.endsWith("'"))) {
+        // If argument is a JSON object, keep as string (or parse if needed)
+        if ((arg.startsWith('{') && arg.endsWith('}')) || (arg.startsWith('[') && arg.endsWith(']'))) {
+            // Optionally: try to parse JSON, but keep as string for now
+            // arg = JSON.parse(arg);
+        } else if ((arg.startsWith('"') && arg.endsWith('"')) || (arg.startsWith("'") && arg.endsWith("'"))) {
             arg = arg.substring(1, arg.length-1);
         }
-        
+
         //Convert to the correct type
         switch(param.type) {
             case 'int':
@@ -132,8 +164,9 @@ export function parseCommandMessage(message) {
                 arg = parseBoolean(arg); break;
             case 'BlockName':
             case 'ItemName':
+                if(getItemId(arg) == null) return `Invalid item type: ${arg}.`
                 if (arg.endsWith('plank'))
-                    arg += 's'; // catches common mistakes like "oak_plank" instead of "oak_planks"
+                    arg += 's';
             case 'string':
                 break;
             default:
@@ -145,28 +178,14 @@ export function parseCommandMessage(message) {
         if(typeof arg === 'number') { //Check the domain of numbers
             const domain = param.domain;
             if(domain) {
-                /**
-                 * Javascript has a built in object for sets but not intervals.
-                 * Currently the interval (lowerbound,upperbound] is represented as an Array: `[lowerbound, upperbound, '(]']`
-                 */
-                if (!domain[2]) domain[2] = '[)'; //By default, lower bound is included. Upper is not.
-
+                if (!domain[2]) domain[2] = '[)';
                 if(!checkInInterval(arg, ...domain)) {
                     return `Error: Param '${paramNames[i]}' must be an element of ${domain[2][0]}${domain[0]}, ${domain[1]}${domain[2][1]}.`;
-                    //Alternatively arg could be set to the nearest value in the domain.
                 }
-            } else if (!suppressNoDomainWarning) {
-                console.warn(`Command '${commandName}' parameter '${paramNames[i]}' has no domain set. Expect any value [-Infinity, Infinity].`)
-                suppressNoDomainWarning = true; //Don't spam console. Only give the warning once.
             }
-        } else if(param.type === 'BlockName') { //Check that there is a block with this name
-            if(getBlockId(arg) == null && arg !== 'air') return  `Invalid block type: ${arg}.`
-        } else if(param.type === 'ItemName') { //Check that there is an item with this name
-            if(getItemId(arg) == null) return `Invalid item type: ${arg}.`
         }
         args[i] = arg;
     }
-    
     return { commandName, args };
 }
 

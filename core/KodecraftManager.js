@@ -34,13 +34,19 @@ export class KodecraftManager {
         global.kodecraftAgentHandler = this.agentHandler;
         // Expose hierarchical bot manager
         global.kodecraftHierarchicalBotManager = this.hierarchicalBotManager;
+        // Also expose with shorter name for backward compatibility
+        global.hierarchicalBotManager = this.hierarchicalBotManager;
         global.kodecraftAgentConnections = () => this.controlPanel.agentConnections;
 
         console.log('[KodecraftManager] Global references exposed:', {
             agentHandler: !!global.kodecraftAgentHandler,
             agentConnections: !!global.kodecraftAgentConnections,
-            hierarchicalBotManager: !!global.kodecraftHierarchicalBotManager
+            hierarchicalBotManager: !!global.kodecraftHierarchicalBotManager,
+            hierarchicalBotManagerShort: !!global.hierarchicalBotManager
         });
+
+        // Setup chat monitoring for task completion
+        this.hierarchicalBotManager.setupChatMonitoring();
 
         // Setup agents
         let agentCount = 0;

@@ -102,6 +102,61 @@ export const actionsList = [
         })
     },
     {
+    name: '!shareFoundationLocation',
+    description: 'Share the exact coordinates of the completed foundation.',
+    params: {},
+    perform: async function(agent) {
+        const pos = agent.bot.entity.position;
+        const message = `Foundation completed at coordinates: X=${Math.floor(pos.x)}, Y=${Math.floor(pos.y-1)}, Z=${Math.floor(pos.z)}. The base spans from X=${Math.floor(pos.x-9)} to X=${Math.floor(pos.x)} and Z=${Math.floor(pos.z)} to Z=${Math.floor(pos.z+9)}.`;
+        agent.bot.chat(message);
+        return message;
+    }
+},
+
+{
+    name: '!announceCompletion',
+    description: 'Announce task completion with current location details.',
+    params: {
+        'taskDescription': { type: 'string', description: 'Description of completed task' }
+    },
+    perform: async function(agent, taskDescription) {
+        const pos = agent.bot.entity.position;
+        const message = `${taskDescription} complete at coordinates X=${Math.floor(pos.x)}, Y=${Math.floor(pos.y)}, Z=${Math.floor(pos.z)}`;
+        agent.bot.chat(message);
+        console.log(`[${agent.name}] Announced: ${message}`);
+        return message;
+    }
+},
+{
+    name: '!waitForAnnouncement',
+    description: 'Wait and listen for specific announcement from another bot.',
+    params: {
+        'keyword': { type: 'string', description: 'Keyword to listen for in chat' },
+        'timeout': { type: 'float', description: 'Seconds to wait', domain: [10, 120] }
+    },
+    perform: async function(agent, keyword, timeout = 30) {
+        return new Promise((resolve) => {
+            let timeoutId;
+            const chatHandler = (username, message) => {
+                if (message.toLowerCase().includes(keyword.toLowerCase())) {
+                    agent.bot.removeListener('chat', chatHandler);
+                    clearTimeout(timeoutId);
+                    resolve(`Heard announcement: ${message}`);
+                }
+            };
+            
+            agent.bot.on('chat', chatHandler);
+            
+            timeoutId = setTimeout(() => {
+                agent.bot.removeListener('chat', chatHandler);
+                resolve(`Timeout waiting for announcement containing: ${keyword}`);
+            }, timeout * 1000);
+        });
+    }
+},
+
+
+    {
         name: '!followPlayer',
         description: 'Endlessly follow the given player.',
         params: {
@@ -112,6 +167,46 @@ export const actionsList = [
             await skills.followPlayer(agent.bot, player_name, follow_dist);
         }, true)
     },
+
+{
+    name: '!spawnAndDelegateTask',
+    description: 'Spawn workers and assign them a coordinated task',
+    params: {
+        'taskDescription': { type: 'string', description: 'The task to be performed' },
+        'workerCount': { type: 'int', description: 'Number of workers to spawn', domain: [1, 10] },
+        'workerType': { type: 'string', description: 'Type of worker to spawn (e.g., builder, miner, gatherer)' }
+    },
+    perform: async function(agent, taskDescription, workerCount = 2, workerType = "builder") {
+        try {
+            console.log('[SpawnAndDelegateTask] Called by:', agent.name);
+
+            // Use API call instead of global variable
+            const response = await fetch(`http://localhost:8080/api/hierarchical/spawn-and-delegate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    supervisorName: agent.name,
+                    taskDescription: taskDescription,
+                    workerCount: workerCount,
+                    workerType: workerType
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                return `Successfully spawned ${result.workersAssigned?.length || workerCount} workers for task: "${taskDescription}". Workers: ${result.workersAssigned?.join(', ') || 'spawning...'}`;
+            } else {
+                return `Failed to spawn and delegate task: ${result.message || result.reason}`;
+            }
+        } catch (error) {
+            return `Error spawning and delegating task: ${error.message}`;
+        }
+    }
+},
+
     {
         name: '!goToCoordinates',
         description: 'Go to the given x, y, z location.',
@@ -466,7 +561,181 @@ export const actionsList = [
             await skills.digDown(agent.bot, distance)
         })
     },
+    {
+    name: '!announceLocation',
+    description: 'Announce current location in chat for team coordination.',
+    params: {
+        'message': { type: 'string', description: 'Message to announce with location' }
+    },
+    perform: async function(agent, message) {
+        const pos = agent.bot.entity.position;
+        const locationMessage = `${message} - I'm at coordinates (${Math.floor(pos.x)}, ${Math.floor(pos.y)}, ${Math.floor(pos.z)})`;
+        agent.bot.chat(locationMessage);
+        return `Announced location: ${locationMessage}`;
+    }
+},
+{
+    name: '!findNearbyPlayers',
+    description: 'Find and list nearby players within a certain range.',
+    params: {
+        'range': { type: 'float', description: 'Search range in blocks', domain: [5, 100] }
+    },
+    perform: async function(agent, range = 50) {
+        const myPos = agent.bot.entity.position;
+        const nearbyPlayers = [];
+        
+        for (const [playerName, player] of Object.entries(agent.bot.players)) {
+            if (playerName === agent.name) continue;
+            
+            if (player.entity) {
+                const playerPos = player.entity.position;
+                const distance = myPos.distanceTo(playerPos);
+                
+                if (distance <= range) {
+                    nearbyPlayers.push({
+                        name: playerName,
+                        distance: Math.round(distance),
+                        position: {
+                            x: Math.floor(playerPos.x),
+                            y: Math.floor(playerPos.y),
+                            z: Math.floor(playerPos.z)
+                        }
+                    });
+                }
+            }
+        }
+        
+        if (nearbyPlayers.length === 0) {
+            return `No players found within ${range} blocks.`;
+        }
+        
+        const playerList = nearbyPlayers.map(p => 
+            `${p.name} at (${p.position.x}, ${p.position.y}, ${p.position.z}) - ${p.distance} blocks away`
+        ).join(', ');
+        
+        return `Found ${nearbyPlayers.length} nearby player(s): ${playerList}`;
+    }
+},
+    {
+        name: '!shareWorkspaceCoords',
+        description: 'Share current coordinates with team members in a workspace for coordination.',
+        params: {
+            'workspace_id': { type: 'string', description: 'The workspace ID to share coordinates with' }
+        },
+        perform: async function(agent, workspace_id) {
+            const pos = agent.bot.entity.position;
+            const coordMessage = `WORKSPACE_${workspace_id}_COORDS:${Math.floor(pos.x)},${Math.floor(pos.y)},${Math.floor(pos.z)}`;
+            agent.bot.chat(coordMessage);
+
+            // Also update the hierarchical bot manager if available
+            if (global.kodecraftHierarchicalBotManager) {
+                global.kodecraftHierarchicalBotManager.updateWorkspaceCoordinationPoint(workspace_id, {
+                    x: Math.floor(pos.x),
+                    y: Math.floor(pos.y),
+                    z: Math.floor(pos.z)
+                });
+            }
+
+            return `Shared coordinates (${Math.floor(pos.x)}, ${Math.floor(pos.y)}, ${Math.floor(pos.z)}) with workspace ${workspace_id}`;
+        }
+    },
+    {
+        name: '!waitForWorkspaceCoords',
+        description: 'Wait for workspace coordinates to be shared by the lead worker.',
+        params: {
+            'workspace_id': { type: 'string', description: 'The workspace ID to wait for coordinates from' },
+            'timeout_seconds': { type: 'int', description: 'Maximum time to wait in seconds', domain: [10, 300] }
+        },
+        perform: async function(agent, workspace_id, timeout_seconds = 30) {
+            return new Promise((resolve) => {
+                const startTime = Date.now();
+                const coordPattern = new RegExp(`WORKSPACE_${workspace_id}_COORDS:([-\\d]+),([-\\d]+),([-\\d]+)`);
+
+                const messageHandler = (username, message) => {
+                    const match = message.match(coordPattern);
+                    if (match) {
+                        const x = parseInt(match[1]);
+                        const y = parseInt(match[2]);
+                        const z = parseInt(match[3]);
+
+                        agent.bot.removeListener('chat', messageHandler);
+                        resolve(`Received workspace coordinates: ${x}, ${y}, ${z}. Use !goToCoordinates(${x}, ${y}, ${z}) to go there.`);
+                    }
+                };
+
+                agent.bot.on('chat', messageHandler);
+
+                // Timeout handler
+                setTimeout(() => {
+                    agent.bot.removeListener('chat', messageHandler);
+                    resolve(`Timeout waiting for workspace ${workspace_id} coordinates after ${timeout_seconds} seconds.`);
+                }, timeout_seconds * 1000);
+            });
+        }
+    },
+    {
+        name: '!announceWorkspaceStatus',
+        description: 'Announce current status to workspace team members.',
+        params: {
+            'workspace_id': { type: 'string', description: 'The workspace ID' },
+            'status_message': { type: 'string', description: 'Status message to announce' }
+        },
+        perform: async function(agent, workspace_id, status_message) {
+            const message = `WORKSPACE_${workspace_id}_STATUS: ${agent.name}: ${status_message}`;
+            agent.bot.chat(message);
+            return `Announced status to workspace ${workspace_id}: ${status_message}`;
+        }
+    },
+    {
+        name: '!checkWorkspaceTeam',
+        description: 'Check which team members are online and nearby in the workspace.',
+        params: {
+            'workspace_id': { type: 'string', description: 'The workspace ID to check' }
+        },
+        perform: async function(agent, workspace_id) {
+            if (!global.kodecraftHierarchicalBotManager) {
+                return "Workspace management not available.";
+            }
+
+            const coordination = await global.kodecraftHierarchicalBotManager.checkWorkspaceCoordination(workspace_id);
+
+            if (!coordination.coordinated) {
+                return `Workspace ${workspace_id} coordination status: ${coordination.reason || 'Not all team members are coordinated'}. Coordinated: ${coordination.coordinatedWorkers?.join(', ') || 'none'}. Uncoordinated: ${coordination.uncoordinatedWorkers?.map(w => `${w.name} (${w.distance})`).join(', ') || 'none'}.`;
+            } else {
+                return `Workspace ${workspace_id} is fully coordinated! All team members are at the work site: ${coordination.coordinatedWorkers.join(', ')}.`;
+            }
+        }
+    },
+
+    {
+        name: '!completePhase',
+        description: 'Signal completion of a building phase to trigger the next phase for coordinated workers',
+        params: {
+            'phase': { type: 'string', description: 'The phase that was completed (e.g., "foundation", "walls", "roof")' },
+            'description': { type: 'string', description: 'Brief description of what was completed' }
+        },
+        perform: async function(agent, phase, description = '') {
+            try {
+                // Notify the hierarchical bot manager about phase completion
+                const completionMessage = `${phase} phase complete: ${description}`;
+
+                // Call the hierarchical bot manager's completion handler
+                if (global.kodecraftHierarchicalBotManager) {
+                    await global.kodecraftHierarchicalBotManager.handleTaskCompletion(agent.name, completionMessage);
+                }
+
+                // Also announce in chat for coordination
+                agent.bot.chat(`✅ ${phase.toUpperCase()} COMPLETE: ${description}`);
+
+                return `Phase "${phase}" marked as complete. Coordinated workers have been notified to proceed with next phase.`;
+            } catch (error) {
+                return `Error signaling phase completion: ${error.message}`;
+            }
+        }
+    }
 ];
 
 // Add hierarchical actions to the main actions list
  actionsList.push(...hierarchicalActions);
+
+

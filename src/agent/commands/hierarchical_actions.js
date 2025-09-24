@@ -70,6 +70,60 @@ export const hierarchicalActions = [
         }
     },
     {
+    name: '!debugWorkerStatus',
+    description: 'Debug the status of all workers and their current activities.',
+    params: {},
+    perform: async function(agent) {
+        try {
+            const agentConnections = global.kodecraftAgentConnections();
+            if (!agentConnections) {
+                return 'Agent connections not available.';
+            }
+
+            let status = `=== WORKER DEBUG STATUS ===\n`;
+            for (const [botName, connection] of Object.entries(agentConnections)) {
+                if (botName !== agent.name) {
+                    status += `${botName}: `;
+                    status += `Connected: ${!!connection.socket}, `;
+                    status += `In-game: ${!!connection.in_game}, `;
+                    status += `Position: ${connection.bot?.entity?.position ? 
+                        `(${Math.floor(connection.bot.entity.position.x)}, ${Math.floor(connection.bot.entity.position.y)}, ${Math.floor(connection.bot.entity.position.z)})` : 
+                        'Unknown'}\n`;
+                }
+            }
+
+            agent.bot.chat(status);
+            return status;
+        } catch (error) {
+            return `Debug error: ${error.message}`;
+        }
+    }
+},
+{
+    name: '!sendDirectCommand',
+    description: 'Send a direct command to a specific worker bot for testing.',
+    params: {
+        'worker_name': { type: 'string', description: 'Name of the worker bot' },
+        'command': { type: 'string', description: 'Command to send' }
+    },
+    perform: async function(agent, worker_name, command) {
+        try {
+            const agentConnections = global.kodecraftAgentConnections();
+            const workerConnection = agentConnections[worker_name];
+
+            if (!workerConnection || !workerConnection.socket) {
+                return `Worker ${worker_name} not found or not connected.`;
+            }
+
+            workerConnection.socket.emit('send-message', worker_name, command);
+            agent.bot.chat(`Sent command to ${worker_name}: ${command}`);
+            return `Command sent to ${worker_name}`;
+        } catch (error) {
+            return `Error sending command: ${error.message}`;
+        }
+    }
+},
+    {
         name: '!checkMyWorkers',
         description: 'Check the status of all workers assigned to this supervisor.',
         params: {},
@@ -240,3 +294,4 @@ export const hierarchicalActions = [
         }
     }
 ];
+

@@ -59,7 +59,14 @@ class MindServerProxy {
 		
         this.socket.on('send-message', (agentName, message) => {
             try {
-                this.agent.respondFunc("NO USERNAME", message);
+                if (this.agent && this.agent.respondFunc) {
+                    this.agent.respondFunc("NO USERNAME", message);
+                } else {
+                    console.warn(`Agent not ready to receive messages yet. Queuing message: ${message}`);
+                    // Queue the message for when agent is ready
+                    if (!this.pendingMessages) this.pendingMessages = [];
+                    this.pendingMessages.push({agentName, message});
+                }
             } catch (error) {
                 console.error('Error: ', JSON.stringify(error, Object.getOwnPropertyNames(error)));
             }
@@ -84,6 +91,21 @@ class MindServerProxy {
 
     setAgent(agent) {
         this.agent = agent;
+        
+        // Process any queued messages
+        if (this.pendingMessages && this.pendingMessages.length > 0) {
+            console.log(`Processing ${this.pendingMessages.length} queued messages`);
+            this.pendingMessages.forEach(({agentName, message}) => {
+                try {
+                    if (this.agent.respondFunc) {
+                        this.agent.respondFunc("NO USERNAME", message);
+                    }
+                } catch (error) {
+                    console.error('Error processing queued message:', error);
+                }
+            });
+            this.pendingMessages = [];
+        }
     }
 
     getAgents() {

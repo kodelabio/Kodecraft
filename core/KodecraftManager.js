@@ -1,18 +1,29 @@
 import { KodecraftControlPanel } from './KodecraftControlPanel.js';
 import { KodecraftAgentHandler } from './KodecraftAgentHandler.js';
+import { CollaborativeManager } from '../src/collaborative/CollaborativeManager.js';
 import { existsSync, readFileSync } from 'fs';
 
 export class KodecraftManager {
     static config;
     static agentHandler;
     static controlPanel;
+    static collaborativeManager;
 
     static async init(config) {
         this.config = config;
 
         this.agentHandler = new KodecraftAgentHandler(config);
+        
+        // Initialize collaborative manager
+        this.collaborativeManager = new CollaborativeManager(this, this.agentHandler);
+        
+        // Set global reference for agents to access
+        global.kodecraftCollaborativeManager = this.collaborativeManager;
+        console.log('Collaborative manager set up and global reference created');
 
         this.controlPanel = new KodecraftControlPanel(config, this.agentHandler);
+        // Pass reference to this manager so control panel can access collaborative manager
+        this.controlPanel.kodecraftManager = this;
         await this.controlPanel.startServer();
 
         // Setup agents

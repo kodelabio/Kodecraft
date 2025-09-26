@@ -152,6 +152,107 @@ export class KodecraftControlPanel {
             console.log(`Sending message to ${agentName}: ${message}`);
             conn.socket.emit('send-message', agentName, message);
         });
+
+        socket.on('collaborative-command', async (request) => {
+            const { requestId, command, data, agentName } = request;
+            
+            try {
+                const collaborativeManager = this.kodecraftManager?.collaborativeManager;
+                if (!collaborativeManager) {
+                    socket.emit(`collab-response-${requestId}`, {
+                        success: false,
+                        error: 'Collaborative manager not available'
+                    });
+                    return;
+                }
+
+                let result;
+                switch (command) {
+                    case 'spawn':
+                        result = collaborativeManager.spawnWorkerBots(data.count, data.baseSettings);
+                        
+                        // If spawn location provided, teleport workers there after a delay
+                        if (data.spawnLocation && result.length > 0) {
+                            setTimeout(() => {
+                                const workerNames = result.map(bot => bot.name);
+                                collaborativeManager.teleportWorkersToLocationWithRetry(workerNames, data.spawnLocation);
+                            }, 2000); // 2 second delay, then dynamically wait for workers to be ready
+                        }
+                        
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { spawnedBots: result }
+                        });
+                        break;
+
+                    case 'getStatus':
+                        result = collaborativeManager.getStatus();
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: result
+                        });
+                        break;
+
+                    case 'stopAllWorkers':
+                        collaborativeManager.stopAllWorkers();
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { message: 'All workers stopped' }
+                        });
+                        break;
+
+                    case 'teleportWorkers':
+                        const workers = collaborativeManager.getWorkerBots();
+                        const workerNames = workers.map(w => w.name);
+                        if (data.useRetry) {
+                            collaborativeManager.teleportWorkersToLocationWithRetry(workerNames, data.location);
+                        } else {
+                            collaborativeManager.teleportWorkersToLocation(workerNames, data.location);
+                        }
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { message: `Teleporting ${workerNames.length} workers`, workers: workerNames }
+                        });
+                        break;
+
+                    case 'startWallTask':
+                        result = collaborativeManager.startCollaborativeWallTask(data.workers, data.wallSpec);
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { taskId: result }
+                        });
+                        break;
+
+                    case 'sendMessageToWorker':
+                        collaborativeManager.sendMessageToWorker(data.workerName, data.message);
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { message: `Message sent to ${data.workerName}` }
+                        });
+                        break;
+
+                    case 'sendImprovedBuildTask':
+                        collaborativeManager.sendImprovedBuildTask(data.workerName, data.section, data.material);
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: true,
+                            data: { message: `Improved build task sent to ${data.workerName}` }
+                        });
+                        break;
+
+                    default:
+                        socket.emit(`collab-response-${requestId}`, {
+                            success: false,
+                            error: `Unknown collaborative command: ${command}`
+                        });
+                }
+            } catch (error) {
+                console.error('Error handling collaborative command:', error);
+                socket.emit(`collab-response-${requestId}`, {
+                    success: false,
+                    error: error.message
+                });
+            }
+        });
     }
 
     validateSettings(settings) {

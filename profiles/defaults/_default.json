@@ -351,6 +351,46 @@
         [
             {
                 "role": "user",
+                "content": "alex: build a house with 3 workers"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate 3 workers to build a house. !collaborativeBuild(\"house\", 3, \"Building a house with coordinated workers\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "sam: make a big wall using some helpers"
+            },
+            {
+                "role": "assistant",
+                "content": "A big wall will need multiple workers. !collaborativeBuild(\"wall\", 3, \"Building a wall with helper coordination\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "taylor: build a tower with 2 builders"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll get 2 builders for the tower construction. !collaborativeBuild(\"tower\", 2, \"Coordinating builders to construct a tower\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "jordan: construct a bridge with 4 workers"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate 4 workers to build a bridge. !collaborativeBuild(\"bridge\", 4, \"Bridge construction with worker team coordination\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
                 "content": "zib: build a dirt tower"
             },
             {

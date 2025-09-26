@@ -232,6 +232,11 @@ export class Agent {
         const from_other_bot = convoManager.isOtherAgent(source);
 
         if (!self_prompt && !from_other_bot) { // from user, check for forced commands
+            // Check for collaborative commands first (but only slash commands, not natural language)
+            if (message.trim().startsWith('/') && await this.handleCollaborativeCommands(source, message)) {
+                return true;
+            }
+            
             const user_command_name = containsCommand(message);
             if (user_command_name) {
                 if (!commandExists(user_command_name)) {
@@ -480,7 +485,415 @@ export class Agent {
         return !this.actions.executing;
     }
 
+    /**
+     * Handle collaborative commands like /spawn, /wall, etc.
+     * @param {string} source - Message source
+     * @param {string} message - The message content
+     * @returns {boolean} - True if command was handled
+     */
+    async handleCollaborativeCommands(source, message) {
+        const trimmed = message.trim();
+        
+        // Handle /spawn command
+        const spawnMatch = trimmed.match(/^\/spawn\s+(\d+)$/);
+        if (spawnMatch) {
+            const count = parseInt(spawnMatch[1]);
+            if (count < 1 || count > 10) {
+                this.routeResponse(source, `Spawn count must be between 1 and 10. Got: ${count}`);
+                return true;
+            }
+            
+            try {
+                // Check if collaborative manager is available
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available - not connected to MindServer');
+                    return true;
+                }
+                
+                // Send spawn command to main process with current position
+                const currentPos = this.bot.entity.position;
+                const result = await this.sendCollaborativeCommand('spawn', { 
+                    count, 
+                    baseSettings: settings,
+                    spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z }
+                });
+                
+                if (result.spawnedBots && result.spawnedBots.length > 0) {
+                    const botNames = result.spawnedBots.map(bot => bot.name).join(', ');
+                    this.routeResponse(source, `Successfully spawned ${result.spawnedBots.length} worker bots: ${botNames}`);
+                } else {
+                    this.routeResponse(source, 'Failed to spawn any worker bots');
+                }
+            } catch (error) {
+                console.error('Error in /spawn command:', error);
+                this.routeResponse(source, `Error spawning bots: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /wall command for collaborative building
+        const wallMatch = trimmed.match(/^\/wall\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)(?:\s+(\w+))?$/);
+        if (wallMatch) {
+            const [, x1, y1, z1, x2, y2, z2, material = 'cobblestone'] = wallMatch;
+            
+            try {
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available');
+                    return true;
+                }
+                
+                const status = await this.sendCollaborativeCommand('getStatus');
+                if (status.totalWorkers < 1) {
+                    this.routeResponse(source, 'Need at least 1 worker bot for building. Use /spawn first.');
+                    return true;
+                }
+                
+                // Jainesh coordinates the wall building
+                const wallStart = { x: parseInt(x1), y: parseInt(y1), z: parseInt(z1) };
+                const wallEnd = { x: parseInt(x2), y: parseInt(y2), z: parseInt(z2) };
+                
+                this.routeResponse(source, `I'll coordinate building a ${material} wall from (${x1},${y1},${z1}) to (${x2},${y2},${z2})`);
+                
+                // Calculate dimensions and assign to workers
+                const availableWorkers = status.workers.slice(0, Math.min(4, status.totalWorkers)); // Use up to 4 workers
+                const wallLength = Math.abs(wallEnd.x - wallStart.x) + Math.abs(wallEnd.z - wallStart.z) + 1;
+                const sectionsPerWorker = Math.ceil(wallLength / availableWorkers.length);
+                
+                this.routeResponse(source, `Dividing ${wallLength}-block wall between ${availableWorkers.length} workers...`);
+                
+                // Assign sections to each worker
+                for (let i = 0; i < availableWorkers.length; i++) {
+                    const worker = availableWorkers[i];
+                    
+                    // Calculate section coordinates (simplified for X-axis walls)
+                    const sectionStartX = Math.min(wallStart.x, wallEnd.x) + (i * sectionsPerWorker);
+                    const sectionEndX = Math.min(wallStart.x, wallEnd.x) + Math.min((i + 1) * sectionsPerWorker - 1, wallLength - 1);
+                    
+                    const workerTask = `Build wall section from (${sectionStartX},${wallStart.y},${wallStart.z}) to (${sectionEndX},${wallEnd.y},${wallEnd.z}) using ${material}. Part of team wall project!`;
+                    
+                    await this.sendCollaborativeCommand('sendMessageToWorker', {
+                        workerName: worker.name,
+                        message: workerTask
+                    });
+                    
+                    this.routeResponse(source, `${worker.name}: Section x=${sectionStartX} to x=${sectionEndX}`);
+                }
+                
+                this.routeResponse(source, `All workers assigned! Wall construction coordinated by me.`);
+            } catch (error) {
+                console.error('Error in /wall command:', error);
+                this.routeResponse(source, `Error coordinating wall: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /workers command to list workers
+        if (trimmed === '/workers') {
+            try {
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available');
+                    return true;
+                }
+                
+                const status = await this.sendCollaborativeCommand('getStatus');
+                if (status.totalWorkers === 0) {
+                    this.routeResponse(source, 'No worker bots currently active. Use /spawn to create some.');
+                } else {
+                    const workerList = status.workers.map(w => `${w.name} (${w.status})`).join(', ');
+                    this.routeResponse(source, `Active workers (${status.totalWorkers}): ${workerList}`);
+                }
+            } catch (error) {
+                console.error('Error in /workers command:', error);
+                this.routeResponse(source, `Error getting worker status: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /bringworkers command to teleport workers to current location
+        if (trimmed === '/bringworkers') {
+            try {
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available');
+                    return true;
+                }
+                
+                const currentPos = this.bot.entity.position;
+                const result = await this.sendCollaborativeCommand('teleportWorkers', {
+                    location: { x: currentPos.x, y: currentPos.y, z: currentPos.z },
+                    useRetry: true
+                });
+                
+                this.routeResponse(source, `Teleporting all workers to my current location (${Math.floor(currentPos.x)}, ${Math.floor(currentPos.y)}, ${Math.floor(currentPos.z)})`);
+            } catch (error) {
+                console.error('Error in /bringworkers command:', error);
+                this.routeResponse(source, `Error teleporting workers: ${error.message}`);
+            }
+            return true;
+        }
 
+        // Handle /stopworkers command
+        if (trimmed === '/stopworkers') {
+            try {
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available');
+                    return true;
+                }
+                
+                await this.sendCollaborativeCommand('stopAllWorkers');
+                this.routeResponse(source, 'Stopped all worker bots');
+            } catch (error) {
+                console.error('Error in /stopworkers command:', error);
+                this.routeResponse(source, `Error stopping workers: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /repair command for fixing specific missing blocks
+        const repairMatch = trimmed.match(/^\/repair\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)(?:\s+(\w+))?$/);
+        if (repairMatch) {
+            const [, x1, y1, z1, x2, y2, z2, material = 'cobblestone'] = repairMatch;
+            
+            try {
+                const status = await this.sendCollaborativeCommand('getStatus');
+                if (status.totalWorkers === 0) {
+                    this.routeResponse(source, 'No workers available for repairs. Use /spawn first.');
+                    return true;
+                }
+                
+                const repairWorker = status.workers[0]; // Use first available worker
+                const repairTask = `REPAIR TASK: Fix any missing ${material} blocks in area from (${x1},${y1},${z1}) to (${x2},${y2},${z2}). Check each position and place ${material} where needed. Build foundation blocks if needed.`;
+                
+                await this.sendCollaborativeCommand('sendMessageToWorker', {
+                    workerName: repairWorker.name,
+                    message: repairTask
+                });
+                
+                this.routeResponse(source, `${repairWorker.name} assigned to repair area (${x1},${y1},${z1}) to (${x2},${y2},${z2})`);
+            } catch (error) {
+                console.error('Error in /repair command:', error);
+                this.routeResponse(source, `Error during repair: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /inspect command for Jainesh to check wall quality
+        const inspectMatch = trimmed.match(/^\/inspect\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)(?:\s+(\w+))?$/);
+        if (inspectMatch) {
+            const [, x1, y1, z1, x2, y2, z2, material = 'cobblestone'] = inspectMatch;
+            
+            try {
+                this.routeResponse(source, `I'll inspect the wall from (${x1},${y1},${z1}) to (${x2},${y2},${z2}) for quality control.`);
+                
+                // Calculate all expected block positions
+                const missingBlocks = [];
+                const wallStart = { x: parseInt(x1), y: parseInt(y1), z: parseInt(z1) };
+                const wallEnd = { x: parseInt(x2), y: parseInt(y2), z: parseInt(z2) };
+                
+                // Check each position in the wall area
+                for (let x = Math.min(wallStart.x, wallEnd.x); x <= Math.max(wallStart.x, wallEnd.x); x++) {
+                    for (let y = Math.min(wallStart.y, wallEnd.y); y <= Math.max(wallStart.y, wallEnd.y); y++) {
+                        for (let z = Math.min(wallStart.z, wallEnd.z); z <= Math.max(wallStart.z, wallEnd.z); z++) {
+                            // Check if block exists at position using !getBlockAtPosition
+                            const checkResult = await executeCommand(this, `!getBlockAtPosition(${x}, ${y}, ${z})`);
+                            if (checkResult && (checkResult.includes('air') || checkResult.includes('nothing'))) {
+                                missingBlocks.push({ x, y, z });
+                            }
+                        }
+                    }
+                }
+                
+                if (missingBlocks.length === 0) {
+                    this.routeResponse(source, `✅ Wall inspection complete! All blocks are properly placed. Great work team!`);
+                } else {
+                    this.routeResponse(source, `⚠️ Wall inspection found ${missingBlocks.length} missing blocks. Assigning repairs...`);
+                    
+                    // Get available workers for repairs
+                    const status = await this.sendCollaborativeCommand('getStatus');
+                    if (status.totalWorkers > 0) {
+                        const repairWorker = status.workers[0]; // Use first available worker
+                        
+                        // Create repair task for missing blocks
+                        const repairBlocks = missingBlocks.slice(0, 10); // Limit to 10 blocks at a time
+                        const repairList = repairBlocks.map(b => `(${b.x},${b.y},${b.z})`).join(', ');
+                        
+                        const repairTask = `Repair wall - place ${material} blocks at these positions: ${repairList}`;
+                        
+                        await this.sendCollaborativeCommand('sendMessageToWorker', {
+                            workerName: repairWorker.name,
+                            message: repairTask
+                        });
+                        
+                        this.routeResponse(source, `${repairWorker.name} assigned to repair ${repairBlocks.length} missing blocks.`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error in /inspect command:', error);
+                this.routeResponse(source, `Error during inspection: ${error.message}`);
+            }
+            return true;
+        }
+        
+        // Handle /help collaborative command
+        if (trimmed === '/help' || trimmed === '/collab') {
+            const helpText = `
+🤖 Jainesh Leadership Commands - I coordinate my worker team:
+• /spawn <count> - I'll spawn worker bots (1-10) near me
+• /workers - Check status of my worker team
+• /bringworkers - I'll teleport all workers to my location
+• /testwall - I'll coordinate a test wall with auto-inspection
+• /wall <x1> <y1> <z1> <x2> <y2> <z2> [material] - I'll coordinate wall building
+• /inspect <x1> <y1> <z1> <x2> <y2> <z2> [material] - I'll inspect wall quality
+• /repair <x1> <y1> <z1> <x2> <y2> <z2> [material] - I'll send worker to fix area
+• /stopworkers - I'll stop all my workers
+• /collab or /help - Show this help
+
+🏗️ How I work as team leader:
+1. You give me building tasks
+2. I divide work with foundation-first building
+3. Each worker gets a section of the same structure
+4. I auto-inspect work after 30 seconds
+5. I assign repairs for any missing blocks
+6. Quality control ensures perfect results!
+
+Example workflow:
+1. /spawn 2 (I create Worker1, Worker2)
+2. /testwall (I coordinate + auto-inspect + repair)
+3. Perfect wall with no missing blocks!
+            `.trim();
+            
+            this.routeResponse(source, helpText);
+            return true;
+        }
+        
+        // Handle /testwall command for a simple collaborative building test
+        if (trimmed === '/testwall') {
+            try {
+                const isAvailable = await this.getCollaborativeManager();
+                if (!isAvailable) {
+                    this.routeResponse(source, 'Collaborative manager not available');
+                    return true;
+                }
+                
+                // Get worker status first
+                const status = await this.sendCollaborativeCommand('getStatus');
+                if (status.totalWorkers < 2) {
+                    this.routeResponse(source, 'Need at least 2 worker bots for test. Use "/spawn 2" first.');
+                    return true;
+                }
+                
+                // Jainesh acts as coordinator and assigns the task
+                const pos = this.bot.entity.position;
+                const wallStart = { x: Math.floor(pos.x + 5), y: Math.floor(pos.y), z: Math.floor(pos.z) };
+                const wallEnd = { x: Math.floor(pos.x + 15), y: Math.floor(pos.y + 2), z: Math.floor(pos.z) };
+                
+                this.routeResponse(source, `I'll coordinate the workers to build a wall from (${wallStart.x},${wallStart.y},${wallStart.z}) to (${wallEnd.x},${wallEnd.y},${wallEnd.z})`);
+                
+                // Calculate wall sections and assign to workers
+                const availableWorkers = status.workers.slice(0, 2);
+                const wallLength = wallEnd.x - wallStart.x + 1;
+                const sectionsPerWorker = Math.ceil(wallLength / availableWorkers.length);
+                
+                this.routeResponse(source, `Dividing ${wallLength}-block wall between ${availableWorkers.length} workers...`);
+                
+                // Assign sections to each worker using improved building logic
+                for (let i = 0; i < availableWorkers.length; i++) {
+                    const worker = availableWorkers[i];
+                    const sectionStartX = wallStart.x + (i * sectionsPerWorker);
+                    const sectionEndX = Math.min(wallStart.x + ((i + 1) * sectionsPerWorker) - 1, wallEnd.x);
+                    
+                    const section = {
+                        start: { x: sectionStartX, y: wallStart.y, z: wallStart.z },
+                        end: { x: sectionEndX, y: wallEnd.y, z: wallEnd.z }
+                    };
+                    
+                    // Use improved build task with foundation-first logic
+                    await this.sendCollaborativeCommand('sendImprovedBuildTask', {
+                        workerName: worker.name,
+                        section: section,
+                        material: 'cobblestone'
+                    });
+                    
+                    this.routeResponse(source, `${worker.name}: Section x=${sectionStartX} to x=${sectionEndX} (foundation-first method)`);
+                }
+                
+                this.routeResponse(source, `All workers assigned! Building will begin. I'll inspect the results in 30 seconds.`);
+                
+                // Schedule automatic inspection after workers have had time to build
+                setTimeout(async () => {
+                    try {
+                        this.routeResponse(source, `🔍 Time for quality control inspection!`);
+                        
+                        // Inspect the wall automatically
+                        const inspectMessage = `/inspect ${wallStart.x} ${wallStart.y} ${wallStart.z} ${wallEnd.x} ${wallEnd.y} ${wallEnd.z} cobblestone`;
+                        await this.handleCollaborativeCommands(source, inspectMessage);
+                    } catch (error) {
+                        console.error('Error during automatic inspection:', error);
+                        this.routeResponse(source, `Error during automatic inspection: ${error.message}`);
+                    }
+                }, 30000); // 30 second delay
+            } catch (error) {
+                console.error('Error in /testwall command:', error);
+                this.routeResponse(source, `Error coordinating wall task: ${error.message}`);
+            }
+            return true;
+        }
+        
+        return false; // Command not handled
+    }
+    
+    /**
+     * Get the collaborative manager from the MindServer
+     * @returns {Promise<boolean>} Success status
+     */
+    async getCollaborativeManager() {
+        // Since the agent runs in a separate process, we need to communicate
+        // with the main process through the MindServer proxy
+        return serverProxy && serverProxy.connected;
+    }
+
+    /**
+     * Send collaborative command to the main process
+     * @param {string} command - Command type
+     * @param {Object} data - Command data
+     * @returns {Promise<Object>} Response from main process
+     */
+    async sendCollaborativeCommand(command, data = {}) {
+        if (!serverProxy || !serverProxy.connected) {
+            throw new Error('Not connected to MindServer');
+        }
+
+        return new Promise((resolve, reject) => {
+            const requestId = `collab_${Date.now()}_${Math.random()}`;
+            
+            // Set up one-time listener for response
+            const timeout = setTimeout(() => {
+                serverProxy.getSocket().off(`collab-response-${requestId}`);
+                reject(new Error('Collaborative command timeout'));
+            }, 10000);
+
+            serverProxy.getSocket().once(`collab-response-${requestId}`, (response) => {
+                clearTimeout(timeout);
+                if (response.success) {
+                    resolve(response.data);
+                } else {
+                    reject(new Error(response.error));
+                }
+            });
+
+            // Send command to main process
+            serverProxy.getSocket().emit('collaborative-command', {
+                requestId,
+                command,
+                data,
+                agentName: this.name
+            });
+        });
+    }
     cleanKill(msg = 'Killing agent process...', code = 1) {
         this.history.add('system', msg);
         this.bot.chat(code > 1 ? 'Restarting.' : 'Exiting.');
@@ -502,5 +915,157 @@ export class Agent {
 
     killAll() {
         serverProxy.shutdown();
+    }
+
+    /**
+     * Create building plan for different structure types
+     * @param {string} structureType - Type of structure (house, tower, wall, etc.)
+     * @param {Object} position - Bot's current position
+     * @param {number} workerCount - Number of available workers
+     * @returns {Object} Building plan with tasks
+     */
+    async _createBuildingPlan(structureType, position, workerCount) {
+        const baseX = Math.floor(position.x + 5);
+        const baseY = Math.floor(position.y);
+        const baseZ = Math.floor(position.z);
+        
+        const plans = {
+            house: {
+                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 10, y: baseY + 5, z: baseZ + 10 } },
+                tasks: [
+                    {
+                        summary: "Foundation and floor construction", 
+                        instruction: `Build the foundation and floor for a house from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) using cobblestone. Work with the team!`
+                    },
+                    {
+                        summary: "Wall construction", 
+                        instruction: `Build walls for a house from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using cobblestone. Leave spaces for door and windows. Work with the team!`
+                    },
+                    {
+                        summary: "Roof construction", 
+                        instruction: `Build the roof for a house at level y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) using oak_planks. Work with the team!`
+                    }
+                ]
+            },
+            wall: {
+                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 20, y: baseY + 4, z: baseZ } },
+                tasks: []
+            },
+            tower: {
+                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 5, y: baseY + 15, z: baseZ + 5 } },
+                tasks: [
+                    {
+                        summary: "Tower base construction", 
+                        instruction: `Build the base of a tower from (${baseX},${baseY},${baseZ}) to (${baseX + 5},${baseY + 7},${baseZ + 5}) using stone. Hollow out the interior. Work with the team!`
+                    },
+                    {
+                        summary: "Tower top construction", 
+                        instruction: `Build the top of a tower from (${baseX},${baseY + 8},${baseZ}) to (${baseX + 5},${baseY + 15},${baseZ + 5}) using stone. Add windows. Work with the team!`
+                    }
+                ]
+            },
+            bridge: {
+                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 20, y: baseY + 3, z: baseZ + 5 } },
+                tasks: [
+                    {
+                        summary: "Bridge support pillars", 
+                        instruction: `Build support pillars for a bridge at positions (${baseX},${baseY},${baseZ}) and (${baseX + 20},${baseY},${baseZ + 5}). Make them 5 blocks tall using stone. Work with the team!`
+                    },
+                    {
+                        summary: "Bridge deck construction", 
+                        instruction: `Build the bridge deck from (${baseX},${baseY + 2},${baseZ}) to (${baseX + 20},${baseY + 2},${baseZ + 5}) using oak_planks. Work with the team!`
+                    }
+                ]
+            }
+        };
+        
+        let plan = plans[structureType] || plans.house; // Default to house if unknown structure
+        
+        // For wall, create dynamic sections based on worker count
+        if (structureType === 'wall') {
+            const wallLength = 20;
+            const sectionsPerWorker = Math.ceil(wallLength / workerCount);
+            plan.tasks = [];
+            
+            for (let i = 0; i < workerCount; i++) {
+                const sectionStartX = baseX + (i * sectionsPerWorker);
+                const sectionEndX = Math.min(baseX + ((i + 1) * sectionsPerWorker) - 1, baseX + wallLength);
+                
+                plan.tasks.push({
+                    summary: `Wall section ${i + 1} (x=${sectionStartX} to x=${sectionEndX})`,
+                    instruction: `Build wall section from (${sectionStartX},${baseY},${baseZ}) to (${sectionEndX},${baseY + 4},${baseZ}) using cobblestone. Build foundation first if needed. Work with the team!`
+                });
+            }
+        }
+        
+        // Limit tasks to available workers
+        plan.tasks = plan.tasks.slice(0, workerCount);
+        
+        return plan;
+    }
+
+    /**
+     * Inspect collaborative build and coordinate repairs
+     * @param {Object} buildPlan - The building plan with area information
+     */
+    async _inspectCollaborativeBuild(buildPlan) {
+        try {
+            const { start, end } = buildPlan.area;
+            
+            this.openChat(`Inspecting build area from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z})`);
+            
+            // Simple inspection - check if basic blocks are placed
+            let missingCount = 0;
+            const samplePositions = [
+                { x: start.x, y: start.y, z: start.z },
+                { x: Math.floor((start.x + end.x) / 2), y: start.y, z: start.z },
+                { x: end.x, y: start.y, z: start.z },
+                { x: start.x, y: start.y + 1, z: start.z },
+                { x: end.x, y: start.y + 1, z: start.z }
+            ];
+            
+            for (const pos of samplePositions) {
+                try {
+                    const checkResult = await executeCommand(this, `!getBlockAtPosition(${pos.x}, ${pos.y}, ${pos.z})`);
+                    if (checkResult && (checkResult.includes('air') || checkResult.includes('nothing'))) {
+                        missingCount++;
+                    }
+                } catch (error) {
+                    // Skip errors in block checking
+                }
+            }
+            
+            if (missingCount === 0) {
+                this.openChat(`✅ Build inspection complete! Structure looks good. Great teamwork! 🏗️`);
+            } else {
+                this.openChat(`⚠️ Build inspection found some gaps. ${missingCount}/${samplePositions.length} sample positions need attention.`);
+                
+                // Get a worker for repairs if available
+                try {
+                    const status = await this.sendCollaborativeCommand('getStatus');
+                    if (status.totalWorkers > 0) {
+                        const repairWorker = status.workers[0];
+                        const repairTask = `REPAIR TASK: Check and fix any missing blocks in the build area from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z}). Fill any gaps with appropriate materials.`;
+                        
+                        await this.sendCollaborativeCommand('sendMessageToWorker', {
+                            workerName: repairWorker.name,
+                            message: repairTask
+                        });
+                        
+                        this.openChat(`${repairWorker.name} assigned to repair any remaining gaps.`);
+                    }
+                } catch (error) {
+                    console.error('Error assigning repairs:', error);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error during build inspection:', error);
+            this.openChat(`Error during inspection: ${error.message}`);
+        }
     }
 }

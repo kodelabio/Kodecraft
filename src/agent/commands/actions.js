@@ -465,4 +465,71 @@ export const actionsList = [
             await skills.digDown(agent.bot, distance)
         })
     },
+    {
+        name: '!collaborativeBuild',
+        description: 'Coordinate multiple worker bots to build structures collaboratively. Use this when users request building with multiple workers.',
+        params: {
+            'structure_type': { type: 'string', description: 'Type of structure to build: house, tower, wall, bridge, castle, etc.' },
+            'worker_count': { type: 'int', description: 'Number of worker bots to spawn and coordinate', domain: [1, 10] },
+            'description': { type: 'string', description: 'Natural language description of the collaborative building task' }
+        },
+        perform: async function(agent, structure_type, worker_count, description) {
+            try {
+                // Check if collaborative manager is available
+                const isAvailable = await agent.getCollaborativeManager();
+                if (!isAvailable) {
+                    return 'Collaborative building not available - not connected to coordination system';
+                }
+                
+                agent.openChat(`I'll coordinate ${worker_count} workers to build a ${structure_type}.`);
+                
+                // Spawn workers first
+                const currentPos = agent.bot.entity.position;
+                const spawnResult = await agent.sendCollaborativeCommand('spawn', { 
+                    count: worker_count, 
+                    baseSettings: settings,
+                    spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z }
+                });
+                
+                if (!spawnResult.spawnedBots || spawnResult.spawnedBots.length === 0) {
+                    return 'Failed to spawn worker bots for collaborative building';
+                }
+                
+                const botNames = spawnResult.spawnedBots.map(bot => bot.name).join(', ');
+                agent.openChat(`Spawned ${spawnResult.spawnedBots.length} workers: ${botNames}`);
+                
+                // Create structure-specific building plan
+                const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, worker_count);
+                agent.openChat(`Building plan: ${buildPlan.description}`);
+                
+                // Assign tasks to workers
+                for (let i = 0; i < buildPlan.tasks.length && i < spawnResult.spawnedBots.length; i++) {
+                    const worker = spawnResult.spawnedBots[i];
+                    const task = buildPlan.tasks[i];
+                    
+                    await agent.sendCollaborativeCommand('sendMessageToWorker', {
+                        workerName: worker.name,
+                        message: task.instruction
+                    });
+                    
+                    agent.openChat(`${worker.name}: ${task.summary}`);
+                }
+                
+                // Schedule quality inspection
+                setTimeout(async () => {
+                    try {
+                        agent.openChat('🔍 Starting quality inspection of collaborative build...');
+                        await agent._inspectCollaborativeBuild(buildPlan);
+                    } catch (error) {
+                        console.error('Error during collaborative build inspection:', error);
+                    }
+                }, 45000); // 45 second delay for completion
+                
+                return `Successfully coordinated ${worker_count} workers for ${structure_type} construction. Monitoring progress...`;
+            } catch (error) {
+                console.error('Error in collaborative building:', error);
+                return `Error coordinating collaborative build: ${error.message}`;
+            }
+        }
+    },
 ];

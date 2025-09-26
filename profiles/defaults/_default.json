@@ -391,6 +391,36 @@
         [
             {
                 "role": "user",
+                "content": "NO USERNAME: Build foundation only: Place cobblestone blocks for the entire floor area from (159,-60,-162) to (169,-60,-152). This is the foundation layer. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the foundation floor layer with cobblestone. !newAction(\"Place cobblestone foundation blocks covering area from 159,-60,-162 to 169,-60,-152\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build TWO walls only: 1) North wall from (159,-59,-162) to (169,-56,-162) using cobblestone. 2) South wall from (159,-59,-152) to (169,-56,-152) using cobblestone. Leave 2-block door opening in North wall at x=164. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the North and South walls with a door opening. !newAction(\"Build two perimeter walls: North wall 159,-59,-162 to 169,-56,-162 and South wall 159,-59,-152 to 169,-56,-152 with door opening at x=164\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build TWO walls only: 1) East wall from (169,-59,-162) to (169,-56,-152) using cobblestone. 2) West wall from (159,-59,-162) to (159,-56,-152) using cobblestone. Leave window spaces at y=-58. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the East and West walls with window openings. !newAction(\"Build two perimeter walls: East wall 169,-59,-162 to 169,-56,-152 and West wall 159,-59,-162 to 159,-56,-152 with window spaces at y=-58\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
                 "content": "zib: build a dirt tower"
             },
             {

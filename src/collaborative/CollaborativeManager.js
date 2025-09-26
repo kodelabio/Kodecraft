@@ -303,6 +303,8 @@ export class CollaborativeManager extends EventEmitter {
         const startTime = Date.now();
         const checkInterval = 1000; // Check every second
         
+        const teleportedWorkers = new Set(); // Track already teleported workers
+        
         const waitAndTeleport = () => {
             const currentTime = Date.now();
             const elapsedTime = currentTime - startTime;
@@ -317,9 +319,11 @@ export class CollaborativeManager extends EventEmitter {
                 console.log(`Still waiting for: ${notReadyWorkers.join(', ')}`);
             }
             
-            // Teleport any workers that are ready
-            if (readyWorkers.length > 0) {
-                this.teleportReadyWorkers(readyWorkers, location);
+            // Teleport any workers that are ready and haven't been teleported yet
+            const workersToTeleport = readyWorkers.filter(name => !teleportedWorkers.has(name));
+            if (workersToTeleport.length > 0) {
+                this.teleportReadyWorkers(workersToTeleport, location);
+                workersToTeleport.forEach(name => teleportedWorkers.add(name));
             }
             
             // Continue waiting for remaining workers if we haven't exceeded max wait time

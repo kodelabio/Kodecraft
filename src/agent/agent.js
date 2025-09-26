@@ -935,16 +935,20 @@ Example workflow:
                 area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 10, y: baseY + 5, z: baseZ + 10 } },
                 tasks: [
                     {
-                        summary: "Foundation and floor construction", 
-                        instruction: `Build the foundation and floor for a house from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) using cobblestone. Work with the team!`
+                        summary: "Foundation construction", 
+                        instruction: `Build foundation only: Place cobblestone blocks for the entire floor area from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}). This is the foundation layer. Work with the team!`
                     },
                     {
-                        summary: "Wall construction", 
-                        instruction: `Build walls for a house from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using cobblestone. Leave spaces for door and windows. Work with the team!`
+                        summary: "North and South walls", 
+                        instruction: `Build TWO walls only: 1) North wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using cobblestone. 2) South wall from (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using cobblestone. Leave 2-block door opening in North wall at x=${baseX + 5}. Work with the team!`
+                    },
+                    {
+                        summary: "East and West walls", 
+                        instruction: `Build TWO walls only: 1) East wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using cobblestone. 2) West wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using cobblestone. Leave window spaces at y=${baseY + 2}. Work with the team!`
                     },
                     {
                         summary: "Roof construction", 
-                        instruction: `Build the roof for a house at level y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) using oak_planks. Work with the team!`
+                        instruction: `Build roof only: Place oak_planks blocks to cover the top at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}). This is just the flat roof layer. Work with the team!`
                     }
                 ]
             },

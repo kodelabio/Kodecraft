@@ -502,18 +502,27 @@ export const actionsList = [
                 const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, worker_count);
                 agent.openChat(`Building plan: ${buildPlan.description}`);
                 
-                // Assign tasks to workers
-                for (let i = 0; i < buildPlan.tasks.length && i < spawnResult.spawnedBots.length; i++) {
-                    const worker = spawnResult.spawnedBots[i];
-                    const task = buildPlan.tasks[i];
-                    
-                    await agent.sendCollaborativeCommand('sendMessageToWorker', {
-                        workerName: worker.name,
-                        message: task.instruction
-                    });
-                    
-                    agent.openChat(`${worker.name}: ${task.summary}`);
-                }
+                // Wait for workers to be ready, then assign tasks
+                setTimeout(async () => {
+                    try {
+                        agent.openChat('🔧 Workers are ready! Assigning build tasks...');
+                        
+                        // Assign tasks to workers
+                        for (let i = 0; i < buildPlan.tasks.length && i < spawnResult.spawnedBots.length; i++) {
+                            const worker = spawnResult.spawnedBots[i];
+                            const task = buildPlan.tasks[i];
+                            
+                            await agent.sendCollaborativeCommand('sendMessageToWorker', {
+                                workerName: worker.name,
+                                message: task.instruction
+                            });
+                            
+                            agent.openChat(`✅ ${worker.name}: ${task.summary}`);
+                        }
+                    } catch (error) {
+                        console.error('Error assigning tasks to workers:', error);
+                    }
+                }, 20000); // 20 second delay to ensure workers are connected and ready
                 
                 // Schedule quality inspection
                 setTimeout(async () => {

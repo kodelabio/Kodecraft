@@ -475,54 +475,130 @@ export const actionsList = [
         },
         perform: async function(agent, structure_type, worker_count, description) {
             try {
+                // CRITICAL: Prevent workers from using collaborative build (only coordinators like Kid can)
+                if (agent.name && agent.name.startsWith('Worker')) {
+                    agent.openChat(`⚠️ I'm a worker bot - I can only build, not coordinate other workers. I'll use !newAction instead.`);
+                    return 'Workers cannot use !collaborativeBuild - only coordinators can. Workers must use !newAction.';
+                }
+                
                 // Check if collaborative manager is available
                 const isAvailable = await agent.getCollaborativeManager();
                 if (!isAvailable) {
                     return 'Collaborative building not available - not connected to coordination system';
                 }
                 
-                agent.openChat(`I'll coordinate ${worker_count} workers to build a ${structure_type}.`);
+                // Check for existing workers and use them if mentioned
+                const status = await agent.sendCollaborativeCommand('getStatus');
+                const existingWorkers = status ? status.workers || [] : [];
                 
-                // Spawn workers first
-                const currentPos = agent.bot.entity.position;
-                const spawnResult = await agent.sendCollaborativeCommand('spawn', { 
-                    count: worker_count, 
-                    baseSettings: settings,
-                    spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z }
-                });
+                let workersToUse = [];
+                let workersToSpawn = worker_count;
                 
-                if (!spawnResult.spawnedBots || spawnResult.spawnedBots.length === 0) {
-                    return 'Failed to spawn worker bots for collaborative building';
+                // If we have existing workers, try to use them
+                if (existingWorkers.length > 0) {
+                    const availableWorkers = existingWorkers.filter(w => w.status === 'ready' || w.status === 'idle');
+                    const workersNeeded = Math.min(worker_count, availableWorkers.length);
+                    
+                    if (workersNeeded > 0) {
+                        workersToUse = availableWorkers.slice(0, workersNeeded).map(w => ({ name: w.name }));
+                        workersToSpawn = worker_count - workersNeeded;
+                        agent.openChat(`Using ${workersNeeded} existing workers: ${workersToUse.map(w => w.name).join(', ')}`);
+                    }
                 }
                 
-                const botNames = spawnResult.spawnedBots.map(bot => bot.name).join(', ');
-                agent.openChat(`Spawned ${spawnResult.spawnedBots.length} workers: ${botNames}`);
+                agent.openChat(`I'll coordinate ${worker_count} workers to build a ${structure_type}. ${workersToSpawn > 0 ? `Spawning ${workersToSpawn} new workers.` : 'Using existing workers.'}`);
+                
+                // Spawn only the needed workers (if any)
+                let spawnedWorkers = [];
+                if (workersToSpawn > 0) {
+                    const currentPos = agent.bot.entity.position;
+                    const spawnResult = await agent.sendCollaborativeCommand('spawn', { 
+                        count: workersToSpawn, 
+                        baseSettings: settings,
+                        spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z }
+                    });
+                    
+                    if (spawnResult.spawnedBots && spawnResult.spawnedBots.length > 0) {
+                        spawnedWorkers = spawnResult.spawnedBots;
+                    } else if (workersToUse.length === 0) {
+                        return 'Failed to spawn worker bots and no existing workers available';
+                    }
+                }
+                
+                // Combine existing and newly spawned workers
+                const allWorkers = [...workersToUse, ...spawnedWorkers];
+                if (allWorkers.length === 0) {
+                    return 'No workers available for collaborative building';
+                }
+                
+                const workerNames = allWorkers.map(w => w.name).join(', ');
+                agent.openChat(`Using ${allWorkers.length} workers: ${workerNames} ${spawnedWorkers.length > 0 ? `(${spawnedWorkers.length} newly spawned)` : '(existing)'}`);
                 
                 // Create structure-specific building plan
-                const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, worker_count);
+                const currentPos = agent.bot.entity.position;
+                const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, allWorkers.length);
                 agent.openChat(`Building plan: ${buildPlan.description}`);
                 
-                // Wait for workers to be ready, then assign tasks
+                // Teleport all workers (existing + newly spawned) to build location
+                if (allWorkers.length > 0) {
+                    agent.openChat(`📍 Gathering all ${allWorkers.length} workers to build location...`);
+                    await agent.sendCollaborativeCommand('teleportWorkers', {
+                        workers: allWorkers.map(w => w.name),
+                        location: { x: currentPos.x, y: currentPos.y, z: currentPos.z },
+                        useRetry: true
+                    });
+                }
+                
+                // Wait longer for workers to be fully ready, then assign tasks  
                 setTimeout(async () => {
                     try {
-                        agent.openChat('🔧 Workers are ready! Assigning build tasks...');
+                        agent.openChat('⏰ Validating worker readiness and assigning build tasks...');
                         
-                        // Assign tasks to workers
-                        for (let i = 0; i < buildPlan.tasks.length && i < spawnResult.spawnedBots.length; i++) {
-                            const worker = spawnResult.spawnedBots[i];
+                        // Check worker status before assigning tasks
+                        const collaborativeStatus = await agent.sendCollaborativeCommand('getStatus');
+                        agent.openChat(`📊 Workers status: ${collaborativeStatus.readyWorkers} ready, ${collaborativeStatus.totalWorkers} total`);
+                        
+                        // Assign tasks to workers with delays and validation
+                        for (let i = 0; i < buildPlan.tasks.length && i < allWorkers.length; i++) {
+                            const worker = allWorkers[i];
                             const task = buildPlan.tasks[i];
                             
-                            await agent.sendCollaborativeCommand('sendMessageToWorker', {
-                                workerName: worker.name,
-                                message: task.instruction
-                            });
-                            
-                            agent.openChat(`✅ ${worker.name}: ${task.summary}`);
+                            // Add delay between task assignments to avoid overwhelming workers
+                            setTimeout(async () => {
+                                try {
+                                    const result = await agent.sendCollaborativeCommand('sendMessageToWorker', {
+                                        workerName: worker.name,
+                                        message: task.instruction
+                                    });
+                                    
+                                    if (result !== false) {
+                                        agent.openChat(`📋 Task assigned to ${worker.name}: ${task.summary}`);
+                                    } else {
+                                        agent.openChat(`⚠️ ${worker.name} not ready for tasks yet. Will retry...`);
+                                        // Retry after additional delay
+                                        setTimeout(async () => {
+                                            try {
+                                                await agent.sendCollaborativeCommand('sendMessageToWorker', {
+                                                    workerName: worker.name,
+                                                    message: task.instruction
+                                                });
+                                                agent.openChat(`🔄 Retry: Task assigned to ${worker.name}`);
+                                            } catch (retryErr) {
+                                                agent.openChat(`❌ ${worker.name} still not ready after retry`);
+                                            }
+                                        }, 10000); // 10 second retry delay
+                                    }
+                                } catch (err) {
+                                    console.error(`Error sending task to ${worker.name}:`, err);
+                                    agent.openChat(`❌ Failed to assign task to ${worker.name}: ${err.message}`);
+                                }
+                            }, i * 5000); // Increased to 5 second delay between each worker task
                         }
                     } catch (error) {
                         console.error('Error assigning tasks to workers:', error);
+                        agent.openChat(`❌ Error during task assignment: ${error.message}`);
                     }
-                }, 20000); // 20 second delay to ensure workers are connected and ready
+                }, 40000); // Increased to 40 second delay to ensure full initialization
                 
                 // Schedule quality inspection
                 setTimeout(async () => {
@@ -534,7 +610,7 @@ export const actionsList = [
                     }
                 }, 45000); // 45 second delay for completion
                 
-                return `Successfully coordinated ${worker_count} workers for ${structure_type} construction. Monitoring progress...`;
+                return `Started ${structure_type} construction with ${worker_count} workers. Tasks will be assigned once workers are ready. Quality inspection in 45 seconds...`;
             } catch (error) {
                 console.error('Error in collaborative building:', error);
                 return `Error coordinating collaborative build: ${error.message}`;

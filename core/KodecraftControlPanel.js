@@ -14,6 +14,9 @@ export class KodecraftControlPanel {
     server;
     io;
     agentConnections = {};
+    // Simple in-memory message/event log for external integrations (Telegram polling)
+    messageLog = [];
+    nextMessageId = 1;
 
     constructor(config, agentHandler) {
         this.config = config;
@@ -33,6 +36,55 @@ export class KodecraftControlPanel {
         this.io = new Server(this.server);
 
         app.use(express.static(path.join(projectRoot, 'core/public')));
+        
+        // Add JSON parsing middleware
+        app.use(express.json());
+        
+        // Add command endpoint for Telegram integration
+        app.post('/command', async (req, res) => {
+            try {
+                const { user, command } = req.body;
+                
+                if (!user || !command) {
+                    return res.status(400).json({
+                        status: 'error',
+                        reply: 'Missing user or command in request body'
+                    });
+                }
+                
+                // Find Kid agent
+                const kidAgent = this.agentConnections['Kid'];
+                if (!kidAgent || !kidAgent.socket) {
+                    return res.status(500).json({
+                        status: 'error',
+                        reply: 'Kid bot is not connected'
+                    });
+                }
+                
+                // Send command to Kid agent and wait for response
+                const reply = await this.sendCommandToAgent('Kid', user, command);
+                
+                res.json({
+                    status: 'success',
+                    reply: reply || 'Command executed successfully'
+                });
+                
+            } catch (error) {
+                console.error('Error handling command:', error);
+                res.status(500).json({
+                    status: 'error',
+                    reply: `Internal error: ${error.message}`
+                });
+            }
+        });
+
+        // Fetch new updates since last id (polling friendly for n8n/Telegram)
+        // GET /updates?since=123  -> returns { lastId, items: [...] }
+        app.get('/updates', (req, res) => {
+            const since = parseInt(req.query.since, 10) || 0;
+            const items = this.messageLog.filter(m => m.id > since);
+            res.json({ lastId: this.nextMessageId - 1, items });
+        });
 
         this.io.on('connection', (socket) => this.handleSocket(socket));
 
@@ -123,6 +175,24 @@ export class KodecraftControlPanel {
             }
             console.log(`${curAgentName} → ${targetName}: ${json.message}`);
             target.socket.emit('chat-message', curAgentName, json);
+
+            // Record chat event (direction: from curAgentName to targetName)
+            this.recordEvent('chat', {
+                from: curAgentName,
+                to: targetName,
+                message: json.message
+            });
+
+            // Simple heuristic: detect completion / progress keywords for status feed
+            const lower = (json.message || '').toLowerCase();
+            if (/(build complete|completed|task done|foundation finished|roof complete|walls complete)/.test(lower)) {
+                this.recordEvent('status', {
+                    from: curAgentName,
+                    to: targetName,
+                    message: json.message,
+                    status: 'detected'
+                });
+            }
         });
 
         socket.on('restart-agent', (agentName) => {
@@ -289,5 +359,49 @@ export class KodecraftControlPanel {
         } else {
             this.io.emit('agents-update', list);
         }
+    }
+
+    /**
+     * Send command to agent and wait for response (for HTTP API)
+     * @param {string} agentName - Name of the agent
+     * @param {string} user - Username sending the command
+     * @param {string} command - Command to send
+     * @returns {Promise<string>} Agent's response
+     */
+    async sendCommandToAgent(agentName, user, command) {
+        const conn = this.agentConnections[agentName];
+        if (!conn || !conn.socket) {
+            throw new Error(`Agent ${agentName} is not connected`);
+        }
+
+        // For now, just send the message and return a simple confirmation
+        // In the future, we can implement proper response capturing
+        const message = `${user}: ${command}`;
+        console.log(`HTTP API sending to ${agentName}: ${message}`);
+        conn.socket.emit('send-message', agentName, message);
+        
+        // Return a simple confirmation for now
+        this.recordEvent('command', { user, agent: agentName, command });
+        return `Command "${command}" sent to ${agentName}`;
+    }
+
+    /**
+     * Record an event/message in the integration log
+     * @param {string} type - Type of event (chat|command|taskAssigned|improvedTaskAssigned|status)
+     * @param {Object} data - Payload
+     */
+    recordEvent(type, data) {
+        const entry = {
+            id: this.nextMessageId++,
+            ts: Date.now(),
+            type,
+            ...data
+        };
+        this.messageLog.push(entry);
+        // Keep memory bounded
+        if (this.messageLog.length > 500) {
+            this.messageLog.splice(0, this.messageLog.length - 500);
+        }
+        return entry;
     }
 }

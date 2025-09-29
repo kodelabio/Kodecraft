@@ -14,9 +14,9 @@ export class CollaborativeManager extends EventEmitter {
     }
 
     /**
-     * Spawn multiple worker bots based on the main Jainesh bot settings
-     * @param {number} count - Number of worker bots to spawn
-     * @param {Object} baseSettings - Base settings from Jainesh bot
+     * Spawn multiple worker bots based on the main Kid bot settings
+     * @param {number} count - Number of workers to spawn (1-10)
+     * @param {Object} baseSettings - Base settings from Kid bot
      * @returns {Array} Array of spawned worker bot info
      */
     spawnWorkerBots(count, baseSettings) {
@@ -226,13 +226,20 @@ export class CollaborativeManager extends EventEmitter {
     }
 
     /**
-     * Public method to send message to worker (for Jainesh coordination)
+     * Public method to send message to worker (for Kid coordination)
      * @param {string} workerName - Name of the worker bot
      * @param {string} message - Message to send
      */
     sendMessageToWorker(workerName, message) {
-        console.log(`[Jainesh Coordination] Sending task to ${workerName}: ${message}`);
+        // Validate worker is ready before sending task
+        if (!this.isWorkerReady(workerName)) {
+            console.warn(`[Worker Validation] ${workerName} not ready for message. Connection status: ${!!this.kodecraftManager?.controlPanel?.agentConnections?.[workerName]}`);
+            return false;
+        }
+        
+        console.log(`[Kid Coordination] Sending task to ${workerName}: ${message} (validated ready)`);
         this._sendMessageToWorker(workerName, message);
+        return true;
     }
 
     /**
@@ -242,13 +249,20 @@ export class CollaborativeManager extends EventEmitter {
      * @param {string} material - Block material to use
      */
     sendImprovedBuildTask(workerName, section, material = 'cobblestone') {
+        // Validate worker is ready before sending task
+        if (!this.isWorkerReady(workerName)) {
+            console.warn(`[Worker Validation] ${workerName} not ready for task assignment. Skipping.`);
+            return false;
+        }
+        
         const { start, end } = section;
         
         // Create a task that builds foundation first, then upper layers
         const buildTask = `Build wall section from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z}) using ${material}. Build foundation layer first (y=${start.y}), then upper layers. If a block fails to place due to "nothing to place on", place a support block below it first.`;
         
-        console.log(`[Improved Building] Sending enhanced task to ${workerName}`);
+        console.log(`[Improved Building] Sending enhanced task to ${workerName} (validated ready)`);
         this._sendMessageToWorker(workerName, buildTask);
+        return true;
     }
 
     /**

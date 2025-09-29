@@ -391,11 +391,81 @@
         [
             {
                 "role": "user",
+                "content": "maya: build a tower using worker1 and worker2"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate worker1 and worker2 to build a tower. !collaborativeBuild(\"tower\", 2, \"Building tower using existing workers worker1 and worker2\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "alex: make worker3 build a wall"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate worker3 to build a wall. !collaborativeBuild(\"wall\", 1, \"Building wall using existing worker worker3\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "sam: use the existing builders to make a house"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate the existing workers to build a house. !collaborativeBuild(\"house\", 3, \"Building house using existing available workers\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
                 "content": "NO USERNAME: Build foundation only: Place cobblestone blocks for the entire floor area from (159,-60,-162) to (169,-60,-152). This is the foundation layer. Work with the team!"
             },
             {
                 "role": "assistant",
                 "content": "I'll build the foundation floor layer with cobblestone. !newAction(\"Place cobblestone foundation blocks covering area from 159,-60,-162 to 169,-60,-152\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build North wall: Build wall from (159,-59,-162) to (169,-56,-162) using cobblestone. Leave 2-block door opening at x=164. Build foundation blocks below if needed. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the North wall with foundation support. !newAction(\"Build North wall from 159,-59,-162 to 169,-56,-162 with cobblestone, place foundation blocks below if needed, leave door opening at x=164\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build walls and add windows: 1) Build East wall with window at y=-58. 2) Build West wall with window. 3) Place glass blocks in both window openings. Use cobblestone, place support blocks if needed. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the East and West walls with windows and add glass. !newAction(\"Build East and West walls with window openings, then place glass blocks in the window spaces for proper windows\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build roof and add lighting: 1) Build roof with oak_planks. 2) Place 4+ torches for interior and exterior lighting. 3) Repair any walls broken during roof construction. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the roof and add proper lighting. !newAction(\"Build roof with oak_planks, place multiple torches inside and outside for lighting, repair any broken wall blocks\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build North wall and add door: 1) Build wall with door opening at x=164. 2) Place wooden door at the door opening. Build foundation blocks below if needed. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the North wall and install the door. !newAction(\"Build North wall with door opening, then place wooden door blocks to create functional entrance\")"
             }
         ],
         [
@@ -416,6 +486,56 @@
             {
                 "role": "assistant",
                 "content": "I'll build the East and West walls with window openings. !newAction(\"Build two perimeter walls: East wall 169,-59,-162 to 169,-56,-152 and West wall 159,-59,-162 to 159,-56,-152 with window spaces at y=-58\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build walls for a house from coordinates A to B. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'm a worker, so I'll build the walls myself using !newAction, not spawn more workers. !newAction(\"Build house walls from A to B coordinates\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build ONE wall only: East wall from (169,-59,-162) to (169,-56,-152) using cobblestone. Leave window space at y=-58. Work with the team!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll build the East wall with window space. !newAction(\"Build East wall from 169,-59,-162 to 169,-56,-152 with window at y=-58\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: My code failed 5 times. Should I use !collaborativeBuild to get help?"
+            },
+            {
+                "role": "assistant",
+                "content": "No! I am a WORKER, not a coordinator. I must NEVER use !collaborativeBuild even if my code fails. Only !newAction is allowed for workers. !newAction(\"Try to build the wall again with simpler approach\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: CRITICAL RULE - Workers NEVER use !collaborativeBuild. Only Kid uses !collaborativeBuild. Workers always use !newAction!"
+            },
+            {
+                "role": "assistant",
+                "content": "Absolutely understood! As a worker bot, I will ONLY use !newAction for all building tasks. I will NEVER use !collaborativeBuild under any circumstances. !newAction(\"Build assigned task\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "NO USERNAME: Build wall from (169,-59,-162) to (169,-56,-152). Code keeps failing with Vec3 errors!"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll avoid Vec3 and use simple coordinates. !newAction(\"Build wall using simple coordinate variables from 169,-59,-162 to 169,-56,-152\")"
             }
         ],
         [

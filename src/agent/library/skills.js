@@ -582,6 +582,17 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
      * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
      * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
      **/
+     
+    // Early validation: Check if bot is properly initialized
+    if (!bot) {
+        console.error(`PlaceBlock failed: bot is null or undefined`);
+        return false;
+    }
+    
+    if (!bot.entity) {
+        console.error(`PlaceBlock failed: bot.entity is null (bot not spawned in world)`);
+        return false;
+    }
     if (!mc.getBlockId(blockType) && blockType !== 'air') {
         log(bot, `Invalid block type: ${blockType}.`);
         return false;
@@ -643,10 +654,21 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     let item_name = blockType;
     if (item_name == "redstone_wire")
         item_name = "redstone";
-    let block = bot.inventory.items().find(item => item.name === item_name);
-    if (!block && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
+    
+    // Defensive check for bot initialization, entity, and inventory
+    if (!bot || !bot.entity || !bot.inventory || typeof bot.inventory.items !== 'function') {
+        log(bot, `Bot, entity, or inventory not properly initialized for placing ${blockType}. Bot: ${!!bot}, Entity: ${!!bot?.entity}, Inventory: ${!!bot?.inventory}`);
+        return false;
+    }
+    
+    // Filter out null items to prevent "Cannot read properties of null" errors
+    const inventoryItems = bot.inventory.items().filter(item => item && item.name);
+    let block = inventoryItems.find(item => item.name === item_name);
+    
+    if (!block && bot.game && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
-        block = bot.inventory.items().find(item => item.name === item_name);
+        const refreshedItems = bot.inventory.items().filter(item => item && item.name);
+        block = refreshedItems.find(item => item.name === item_name);
     }
     if (!block) {
         log(bot, `Don't have any ${blockType} to place.`);
@@ -701,7 +723,22 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     }
     if (!buildOffBlock) {
-        log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
+        // Try to place a support block below first
+        const supportY = y - 1;
+        const supportBlock = bot.blockAt(new Vec3(x, supportY, z));
+        
+        if (supportBlock && empty_blocks.includes(supportBlock.name) && supportY >= -64) {
+            log(bot, `No support found for ${blockType} at ${targetBlock.position}. Placing support block below first.`);
+            
+            // Recursively place a support block below
+            const supportPlaced = await placeBlock(bot, 'cobblestone', x, supportY, z, 'bottom');
+            if (supportPlaced) {
+                // Try again after placing support
+                return await placeBlock(bot, blockType, x, y, z, placeOn);
+            }
+        }
+        
+        log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on and cannot create support.`);
         return false;
     }
 

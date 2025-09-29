@@ -61,12 +61,13 @@ export class KodecraftControlPanel {
                     });
                 }
                 
-                // Send command to Kid agent and wait for response
-                const reply = await this.sendCommandToAgent('Kid', user, command);
+                // Send command to Kid agent and get command ID
+                const commandId = await this.sendCommandToAgent('Kid', user, command);
                 
                 res.json({
                     status: 'success',
-                    reply: reply || 'Command executed successfully'
+                    commandId: commandId,
+                    reply: 'Command sent - check /updates for response'
                 });
                 
             } catch (error) {
@@ -183,6 +184,30 @@ export class KodecraftControlPanel {
                 message: json.message
             });
 
+            // Check if this is a response to a pending HTTP command
+            if (curAgentName && !targetName) {
+                // This is an outbound message from an agent (like Kid responding)
+                // Look for recent pending commands from this agent
+                const recentCommands = this.messageLog
+                    .filter(entry => entry.type === 'command' && 
+                            entry.agent === curAgentName && 
+                            entry.expectingResponse &&
+                            (Date.now() - entry.ts) < 30000) // within 30 seconds
+                    .sort((a, b) => b.ts - a.ts); // most recent first
+
+                if (recentCommands.length > 0) {
+                    const matchingCommand = recentCommands[0];
+                    this.recordEvent('response', {
+                        commandId: matchingCommand.commandId,
+                        from: curAgentName,
+                        originalUser: matchingCommand.user,
+                        originalCommand: matchingCommand.command,
+                        message: json.message,
+                        responseToCommand: true
+                    });
+                }
+            }
+
             // Simple heuristic: detect completion / progress keywords for status feed
             const lower = (json.message || '').toLowerCase();
             if (/(build complete|completed|task done|foundation finished|roof complete|walls complete)/.test(lower)) {
@@ -221,6 +246,40 @@ export class KodecraftControlPanel {
             }
             console.log(`Sending message to ${agentName}: ${message}`);
             conn.socket.emit('send-message', agentName, message);
+        });
+
+        socket.on('agent-response', (data) => {
+            const { agentName, message, timestamp } = data;
+            console.log(`Agent response from ${agentName}: ${message}`);
+            
+            // Look for recent pending commands from this agent
+            const recentCommands = this.messageLog
+                .filter(entry => entry.type === 'command' && 
+                        entry.agent === agentName && 
+                        entry.expectingResponse &&
+                        (timestamp - entry.ts) < 30000) // within 30 seconds
+                .sort((a, b) => b.ts - a.ts); // most recent first
+
+            if (recentCommands.length > 0) {
+                const matchingCommand = recentCommands[0];
+                this.recordEvent('response', {
+                    commandId: matchingCommand.commandId,
+                    from: agentName,
+                    originalUser: matchingCommand.user,
+                    originalCommand: matchingCommand.command,
+                    message: message,
+                    responseToCommand: true
+                });
+                
+                // Mark the command as no longer expecting a response
+                matchingCommand.expectingResponse = false;
+            } else {
+                // Log as general chat if no matching command
+                this.recordEvent('chat', {
+                    from: agentName,
+                    message: message
+                });
+            }
         });
 
         socket.on('collaborative-command', async (request) => {
@@ -362,11 +421,11 @@ export class KodecraftControlPanel {
     }
 
     /**
-     * Send command to agent and wait for response (for HTTP API)
+     * Send command to agent and return command ID for correlation
      * @param {string} agentName - Name of the agent
-     * @param {string} user - Username sending the command
+     * @param {string} user - Username sending the command  
      * @param {string} command - Command to send
-     * @returns {Promise<string>} Agent's response
+     * @returns {Promise<string>} Command ID for tracking response
      */
     async sendCommandToAgent(agentName, user, command) {
         const conn = this.agentConnections[agentName];
@@ -374,15 +433,22 @@ export class KodecraftControlPanel {
             throw new Error(`Agent ${agentName} is not connected`);
         }
 
-        // For now, just send the message and return a simple confirmation
-        // In the future, we can implement proper response capturing
         const message = `${user}: ${command}`;
+        const commandId = `cmd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         console.log(`HTTP API sending to ${agentName}: ${message}`);
         conn.socket.emit('send-message', agentName, message);
         
-        // Return a simple confirmation for now
-        this.recordEvent('command', { user, agent: agentName, command });
-        return `Command "${command}" sent to ${agentName}`;
+        // Log the command with ID for correlation
+        this.recordEvent('command', { 
+            commandId,
+            user, 
+            agent: agentName, 
+            command,
+            expectingResponse: true 
+        });
+        
+        return commandId;
     }
 
     /**

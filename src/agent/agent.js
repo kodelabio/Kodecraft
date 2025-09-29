@@ -382,6 +382,15 @@ export class Agent {
         // newlines are interpreted as separate chats, which triggers spam filters. replace them with spaces
         message = message.replaceAll('\n', ' ');
 
+        // Emit response to control panel for HTTP API integration
+        if (serverProxy && serverProxy.connected) {
+            serverProxy.getSocket().emit('agent-response', {
+                agentName: this.name,
+                message: message,
+                timestamp: Date.now()
+            });
+        }
+
         if (settings.only_chat_with.length > 0) {
             for (let username of settings.only_chat_with) {
                 this.bot.whisper(username, message);

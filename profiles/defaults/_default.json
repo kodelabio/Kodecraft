@@ -421,6 +421,66 @@
         [
             {
                 "role": "user",
+                "content": "ALIEN: can you spawn 2 builders to build a house"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll spawn 2 workers to build a house. !collaborativeBuild(\"house\", 2, \"Building house with 2 spawned workers\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: assign 2 builders to build a house"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll assign 2 builders to construct a house. !collaborativeBuild(\"house\", 2, \"Building house with 2 assigned workers\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: can you assign 2 builders to build a house"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll coordinate 2 builders to build a house. !collaborativeBuild(\"house\", 2, \"Coordinating house construction with 2 builders\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: spawn 2 workers"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll spawn 2 workers to help with tasks. !spawn(2, \"Spawning 2 worker bots for assistance\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: create 3 builders"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll create 3 builder bots. !spawn(3, \"Creating 3 builder bots\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: get some helpers to build"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll get helper bots for building. !spawn(3, \"Spawning helper bots for building tasks\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
                 "content": "NO USERNAME: Build foundation only: Place cobblestone blocks for the entire floor area from (159,-60,-162) to (169,-60,-152). This is the foundation layer. Work with the team!"
             },
             {

@@ -208,6 +208,14 @@ export class KodecraftControlPanel {
                 }
             }
 
+            // Detect worker completion messages and notify collaborative manager
+            if (curAgentName && curAgentName.startsWith('Worker')) {
+                const collaborativeManager = this.kodecraftManager?.collaborativeManager;
+                if (collaborativeManager) {
+                    collaborativeManager.detectWorkerCompletion(curAgentName, json.message);
+                }
+            }
+
             // Simple heuristic: detect completion / progress keywords for status feed
             const lower = (json.message || '').toLowerCase();
             if (/(build complete|completed|task done|foundation finished|roof complete|walls complete)/.test(lower)) {

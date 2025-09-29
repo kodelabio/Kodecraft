@@ -258,10 +258,20 @@ export class CollaborativeManager extends EventEmitter {
         const { start, end } = section;
         
         // Create a task that builds foundation first, then upper layers
-        const buildTask = `Build wall section from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z}) using ${material}. Build foundation layer first (y=${start.y}), then upper layers. If a block fails to place due to "nothing to place on", place a support block below it first.`;
+        const buildTask = `Build wall section from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z}) using ${material}. Build foundation layer first (y=${start.y}), then upper layers. If a block fails to place due to "nothing to place on", place a support block below it first. When finished, say "Task complete for ${workerName}".`;
         
         console.log(`[Improved Building] Sending enhanced task to ${workerName} (validated ready)`);
         this._sendMessageToWorker(workerName, buildTask);
+
+        // Set up completion timeout (2 minutes per task)
+        setTimeout(() => {
+            const worker = this.workerBots.get(workerName);
+            if (worker && worker.currentTask) {
+                console.log(`[Auto-Complete] ${workerName} task timeout reached, marking as complete`);
+                this.markWorkerComplete(workerName, worker.currentTask);
+            }
+        }, 120000); // 2 minutes
+
         return true;
     }
 
@@ -423,5 +433,70 @@ export class CollaborativeManager extends EventEmitter {
             activeTasks: tasks.length,
             tasks
         };
+    }
+
+    /**
+     * Mark a worker as completed for a task and check if all workers are done
+     * @param {string} workerName - Name of the worker
+     * @param {string} taskId - ID of the task
+     */
+    markWorkerComplete(workerName, taskId) {
+        const worker = this.workerBots.get(workerName);
+        if (!worker) return;
+
+        worker.status = 'completed';
+        worker.currentTask = null;
+
+        // Check if this completes a collaborative task
+        const task = this.activeTasks.get(taskId);
+        if (task) {
+            if (!task.completedWorkers) task.completedWorkers = new Set();
+            task.completedWorkers.add(workerName);
+
+            // Check if all workers for this task are complete
+            if (task.completedWorkers.size >= task.workers.length) {
+                task.status = 'completed';
+                this.emit('taskCompleted', { id: taskId, type: task.type });
+                
+                // Log to control panel for external updates
+                try {
+                    this.kodecraftManager?.controlPanel?.recordEvent?.('buildComplete', {
+                        taskId: taskId,
+                        type: task.type,
+                        totalWorkers: task.workers.length,
+                        message: `🏗️ Construction complete! All ${task.workers.length} workers have finished building the ${task.type}.`,
+                        structure: task.type,
+                        workersInvolved: task.workers
+                    });
+                } catch (e) { /* ignore */ }
+                
+                console.log(`[Collaborative] Build complete! Task ${taskId} (${task.type}) finished by all ${task.workers.length} workers`);
+            }
+        }
+    }
+
+    /**
+     * Auto-detect completion by monitoring worker chat messages
+     * @param {string} workerName - Name of the worker
+     * @param {string} message - Message from worker
+     */
+    detectWorkerCompletion(workerName, message) {
+        const worker = this.workerBots.get(workerName);
+        if (!worker || !worker.currentTask) return;
+
+        // Look for completion keywords in worker messages
+        const lower = message.toLowerCase();
+        const completionKeywords = [
+            'complete', 'finished', 'done', 'built', 'construction finished',
+            'task complete', 'build complete', 'structure complete',
+            'wall complete', 'house complete', 'foundation finished'
+        ];
+
+        const isComplete = completionKeywords.some(keyword => lower.includes(keyword));
+        
+        if (isComplete) {
+            console.log(`[Completion Detection] ${workerName} reported completion: "${message}"`);
+            this.markWorkerComplete(workerName, worker.currentTask);
+        }
     }
 }

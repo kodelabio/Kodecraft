@@ -405,7 +405,17 @@
             },
             {
                 "role": "assistant",
-                "content": "I'll coordinate worker3 to build a wall. !collaborativeBuild(\"wall\", 1, \"Building wall using existing worker worker3\")"
+                "content": "I need more details for the wall. Please specify: What length and height should the wall be? For example: \"5 blocks length, 2 blocks height\""
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "alex: make worker1 build a 10 block long 3 block high wall using stone"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll have Worker1 build a 10-block long, 3-block high stone wall. !collaborativeBuild(\"wall\", 1, \"Building 10x3 stone wall with Worker1\", \"10 blocks length, 3 blocks height\", \"stone\")"
             }
         ],
         [
@@ -476,6 +486,36 @@
             {
                 "role": "assistant",
                 "content": "I'll get helper bots for building. !spawn(3, \"Spawning helper bots for building tasks\")"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: can you assign worker 1 to build a wall of 5 blocks length and 2 blocks height"
+            },
+            {
+                "role": "assistant",
+                "content": "What material should I use for the wall? (e.g., cobblestone, stone, oak_planks, etc.)"
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: assign worker 1 to build a wall"
+            },
+            {
+                "role": "assistant",
+                "content": "I need more details for the wall. Please specify: What length and height should the wall be? For example: \"5 blocks length, 2 blocks height\""
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "ALIEN: assign worker 1 to build a wall 5 blocks long 2 blocks high using cobblestone"
+            },
+            {
+                "role": "assistant",
+                "content": "I'll assign Worker1 to build a 5-block long, 2-block high wall using cobblestone. !collaborativeBuild(\"wall\", 1, \"Building 5x2 wall with Worker1\", \"5 blocks length, 2 blocks height\", \"cobblestone\")"
             }
         ],
         [

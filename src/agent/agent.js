@@ -933,10 +933,13 @@ Example workflow:
      * @param {number} baseY - Base Y coordinate  
      * @param {number} baseZ - Base Z coordinate
      * @param {number} workerCount - Number of workers
+     * @param {Object} dimensions - Wall dimensions {length, height}
+     * @param {string} material - Building material
      * @returns {Array} Array of wall building tasks
      */
-    _createWallTasks(baseX, baseY, baseZ, workerCount) {
-        const wallLength = 20;
+    _createWallTasks(baseX, baseY, baseZ, workerCount, dimensions = null, material = 'cobblestone') {
+        const wallLength = dimensions && dimensions.length ? dimensions.length : 20;
+        const wallHeight = dimensions && dimensions.height ? dimensions.height : 4;
         const sectionLength = Math.ceil(wallLength / workerCount);
         const tasks = [];
         
@@ -946,7 +949,7 @@ Example workflow:
             
             tasks.push({
                 summary: `Wall section ${i + 1}`,
-                instruction: `Build wall section from (${startX},${baseY},${baseZ}) to (${endX},${baseY + 4},${baseZ}) using cobblestone. Build foundation first if needed. Work with the team!`
+                instruction: `Build wall section from (${startX},${baseY},${baseZ}) to (${endX},${baseY + wallHeight - 1},${baseZ}) using ${material}. Build foundation first if needed. Work with the team!`
             });
         }
         
@@ -962,37 +965,46 @@ Example workflow:
      * @returns {Array} Array of house building tasks
      */
     _createHouseTasks(baseX, baseY, baseZ, workerCount) {
+        // Generate a unique task ID for this building session
+        const taskId = `build_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
         // Define all components needed for a complete house
         const allComponents = [
             {
+                id: `${taskId}_foundation`,
                 name: "foundation",
                 summary: "Foundation construction", 
-                instruction: `Build foundation: Place stone blocks for the entire floor area from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}). This is the foundation layer. Place support blocks below if needed. Work with the team!`
+                instruction: `Build foundation: Place stone blocks for the entire floor area from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}). This is the foundation layer. Place support blocks below if needed. When finished, say 'Task complete for foundation'. Work with the team!`
             },
             {
+                id: `${taskId}_north_wall`,
                 name: "north_wall",
                 summary: "North wall", 
-                instruction: `Build North wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave 2-block door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. Build foundation blocks below if needed. Work with the team!`
+                instruction: `Build North wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave 2-block door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. Build foundation blocks below if needed. When finished, say 'Task complete for north_wall'. Work with the team!`
             },
             {
+                id: `${taskId}_south_wall`,
                 name: "south_wall",
                 summary: "South wall", 
-                instruction: `Build South wall: Build wall from (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Build foundation blocks below if needed. Work with the team!`
+                instruction: `Build South wall: Build wall from (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Build foundation blocks below if needed. When finished, say 'Task complete for south_wall'. Work with the team!`
             },
             {
+                id: `${taskId}_east_wall`,
                 name: "east_wall",
                 summary: "East wall", 
-                instruction: `Build East wall: Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. Work with the team!`
+                instruction: `Build East wall: Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. When finished, say 'Task complete for east_wall'. Work with the team!`
             },
             {
+                id: `${taskId}_west_wall`,
                 name: "west_wall",
                 summary: "West wall", 
-                instruction: `Build West wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. Work with the team!`
+                instruction: `Build West wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. When finished, say 'Task complete for west_wall'. Work with the team!`
             },
             {
+                id: `${taskId}_roof`,
                 name: "roof",
                 summary: "Roof construction", 
-                instruction: `Build roof: Place oak_planks blocks to cover the top at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}). This is the flat roof layer. Work with the team!`
+                instruction: `Build roof: Place oak_planks blocks to cover the top at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}). This is the flat roof layer. When finished, say 'Task complete for roof'. Work with the team!`
             }
         ];
         
@@ -1000,55 +1012,65 @@ Example workflow:
         if (workerCount === 1) {
             // 1 worker does everything in sequence
             return [{
+                id: `${taskId}_complete_house`,
                 summary: "Complete house with decorations",
-                instruction: `Build complete house: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}). 5) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}). 6) Build roof at y=${baseY + 5} with oak_planks. 7) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 8) Place glass blocks in windows at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). 9) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Use stone for foundation, oak_planks for walls. Place support blocks if needed.`
+                instruction: `Build complete house: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}). 5) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}). 6) Build roof at y=${baseY + 5} with oak_planks. 7) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 8) Place glass blocks in windows at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). 9) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Use stone for foundation, oak_planks for walls. When complete, say 'Task complete for complete_house'. Place support blocks if needed.`
             }];
             } else if (workerCount === 2) {
             // 2 workers: one does foundation + 2 walls + decorations, other does 2 walls + roof + decorations
             return [
                 {
+                    id: `${taskId}_foundation_ns_walls`,
                     summary: "Foundation, North/South walls, and door",
-                    instruction: `Build foundation, 2 walls, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 5) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). DO NOT break walls to place torches. Place support blocks if needed. Work with the team!`
+                    instruction: `Build foundation, 2 walls, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 5) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). DO NOT break walls to place torches. When complete, say 'Task complete for foundation_ns_walls'. Place support blocks if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_ew_walls_roof`,
                     summary: "East/West walls, roof, and windows",
-                    instruction: `Build 2 walls, roof, and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 4) Place glass blocks in window openings: East wall at (${baseX + 10},${baseY + 2},${baseZ + 5}) and West wall at (${baseX},${baseY + 2},${baseZ + 5}). 5) Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Place support blocks if needed. Work with the team!`
+                    instruction: `Build 2 walls, roof, and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 4) Place glass blocks in window openings: East wall at (${baseX + 10},${baseY + 2},${baseZ + 5}) and West wall at (${baseX},${baseY + 2},${baseZ + 5}). 5) Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for ew_walls_roof'. Place support blocks if needed. Work with the team!`
                 }
             ];
             } else if (workerCount === 3) {
             // 3 workers: foundation+north+door, south+east+windows, west+roof+torches
             return [
                 {
+                    id: `${taskId}_foundation_north`,
                     summary: "Foundation, North wall, and door",
-                    instruction: `Build foundation, North wall, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). Place support blocks if needed. Work with the team!`
+                    instruction: `Build foundation, North wall, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for foundation_north'. Place support blocks if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_south_east_walls`,
                     summary: "South/East walls and windows",
-                    instruction: `Build walls and add windows: 1) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 2) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in East window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls and add windows: 1) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 2) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in East window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for south_east_walls'. Place support blocks if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_west_roof_lighting`,
                     summary: "West wall, roof, and lighting",
-                    instruction: `Build wall, roof, and add lighting: 1) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 3) Place glass in West window at (${baseX},${baseY + 2},${baseZ + 5}). 4) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Place support blocks if needed. Work with the team!`
+                    instruction: `Build wall, roof, and add lighting: 1) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 3) Place glass in West window at (${baseX},${baseY + 2},${baseZ + 5}). 4) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for west_roof_lighting'. Place support blocks if needed. Work with the team!`
                 }
             ];
         } else if (workerCount === 4) {
             // 4 workers: foundation, north+south walls+door, east+west walls+windows, roof+lighting
             return [
                 {
+                    id: `${taskId}_foundation_only`,
                     summary: "Foundation construction",
-                    instruction: `Build foundation: Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. Place support blocks below if needed. Work with the team!`
+                    instruction: `Build foundation: Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. When complete, say 'Task complete for foundation_only'. Place support blocks below if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_ns_walls_door`,
                     summary: "North/South walls and door",
-                    instruction: `Build walls and add door: 1) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls and add door: 1) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for ns_walls_door'. Place support blocks if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_ew_walls_windows`,
                     summary: "East/West walls and windows",
-                    instruction: `Build walls and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in both window openings at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in both window openings at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for ew_walls_windows'. Place support blocks if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_roof_lighting`,
                     summary: "Roof and lighting",
-                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Work with the team!`
+                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for roof_lighting'. Work with the team!`
                 }
             ];
         } else { // 5 or more workers: each gets individual components + decorations
@@ -1056,25 +1078,29 @@ Example workflow:
             const decoratedTasks = [
                 allComponents[0], // foundation
                 {
+                    id: `${taskId}_north_wall_door`,
                     name: "north_wall_door",
                     summary: "North wall and door",
-                    instruction: `Build North wall and add door: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build North wall and add door: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for north_wall_door'. Build foundation blocks below if needed. Work with the team!`
                 },
                 allComponents[2], // south wall
                 {
+                    id: `${taskId}_east_wall_window`,
                     name: "east_wall_window",
                     summary: "East wall and window",
-                    instruction: `Build East wall and add window: 1) Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build East wall and add window: 1) Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for east_wall_window'. Build foundation blocks below if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_west_wall_window`,
                     name: "west_wall_window",
                     summary: "West wall and window",
-                    instruction: `Build West wall and add window: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX},${baseY + 2},${baseZ + 5}). Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build West wall and add window: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for west_wall_window'. Build foundation blocks below if needed. Work with the team!`
                 },
                 {
+                    id: `${taskId}_roof_lighting_final`,
                     name: "roof_lighting",
                     summary: "Roof and lighting",
-                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Work with the team!`
+                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for roof_lighting_final'. Work with the team!`
                 }
             ];
             return decoratedTasks.slice(0, workerCount);
@@ -1086,9 +1112,11 @@ Example workflow:
      * @param {string} structureType - Type of structure (house, tower, wall, etc.)
      * @param {Object} position - Bot's current position
      * @param {number} workerCount - Number of available workers
+     * @param {Object} dimensions - Parsed dimensions {length, width, height}
+     * @param {string} material - Building material
      * @returns {Object} Building plan with tasks
      */
-    async _createBuildingPlan(structureType, position, workerCount) {
+    async _createBuildingPlan(structureType, position, workerCount, dimensions = null, material = 'cobblestone') {
         const baseX = Math.floor(position.x + 5);
         const baseY = Math.floor(position.y);
         const baseZ = Math.floor(position.z);
@@ -1102,7 +1130,7 @@ Example workflow:
             wall: {
                 description: `Building a ${structureType} with ${workerCount} workers at (${baseX},${baseY},${baseZ})`,
                 area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 20, y: baseY + 4, z: baseZ } },
-                tasks: this._createWallTasks(baseX, baseY, baseZ, workerCount)
+                tasks: this._createWallTasks(baseX, baseY, baseZ, workerCount, dimensions, material)
             },
             tower: {
                 description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
@@ -1136,19 +1164,26 @@ Example workflow:
         
         let plan = plans[structureType] || plans.house; // Default to house if unknown structure
         
-        // For wall, create dynamic sections based on worker count
+        // For wall, create dynamic sections based on worker count and use actual dimensions
         if (structureType === 'wall') {
-            const wallLength = 20;
+            const wallLength = dimensions && dimensions.length ? dimensions.length : 20;
+            const wallHeight = dimensions && dimensions.height ? dimensions.height : 4;
+            const wallMaterial = material || 'cobblestone';
+            
+            // Update plan description and area with actual dimensions
+            plan.description = `Building a ${wallLength}-block long, ${wallHeight}-block high ${structureType} with ${workerCount} workers at (${baseX},${baseY},${baseZ}) using ${wallMaterial}`;
+            plan.area = { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + wallLength - 1, y: baseY + wallHeight - 1, z: baseZ } };
+            
             const sectionsPerWorker = Math.ceil(wallLength / workerCount);
             plan.tasks = [];
             
             for (let i = 0; i < workerCount; i++) {
                 const sectionStartX = baseX + (i * sectionsPerWorker);
-                const sectionEndX = Math.min(baseX + ((i + 1) * sectionsPerWorker) - 1, baseX + wallLength);
+                const sectionEndX = Math.min(baseX + ((i + 1) * sectionsPerWorker) - 1, baseX + wallLength - 1);
                 
                 plan.tasks.push({
                     summary: `Wall section ${i + 1} (x=${sectionStartX} to x=${sectionEndX})`,
-                    instruction: `Build wall section from (${sectionStartX},${baseY},${baseZ}) to (${sectionEndX},${baseY + 4},${baseZ}) using cobblestone. Build foundation first if needed. Work with the team!`
+                    instruction: `Build wall section from (${sectionStartX},${baseY},${baseZ}) to (${sectionEndX},${baseY + wallHeight - 1},${baseZ}) using ${wallMaterial}. Build foundation first if needed. Work with the team!`
                 });
             }
         }

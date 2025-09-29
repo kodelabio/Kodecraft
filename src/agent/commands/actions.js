@@ -471,14 +471,45 @@ export const actionsList = [
         params: {
             'structure_type': { type: 'string', description: 'Type of structure to build: house, tower, wall, bridge, castle, etc.' },
             'worker_count': { type: 'int', description: 'Number of worker bots to spawn and coordinate', domain: [1, 10] },
-            'description': { type: 'string', description: 'Natural language description of the collaborative building task' }
+            'description': { type: 'string', description: 'Natural language description of the collaborative building task' },
+            'dimensions': { type: 'string', optional: true, description: 'Dimensions like "5 blocks length, 2 blocks height"' },
+            'material': { type: 'string', optional: true, description: 'Building material like cobblestone, oak_planks, etc.' }
         },
-        perform: async function(agent, structure_type, worker_count, description) {
+        perform: async function(agent, structure_type, worker_count, description, dimensions, material) {
             try {
                 // CRITICAL: Prevent workers from using collaborative build (only coordinators like Kid can)
                 if (agent.name && agent.name.startsWith('Worker')) {
                     agent.openChat(`⚠️ I'm a worker bot - I can only build, not coordinate other workers. I'll use !newAction instead.`);
                     return 'Workers cannot use !collaborativeBuild - only coordinators can. Workers must use !newAction.';
+                }
+                
+                // Parse dimensions and ask for missing information
+                let parsedDimensions = null;
+                if (dimensions) {
+                    // Parse dimensions like "5 blocks length, 2 blocks height"
+                    const lengthMatch = dimensions.match(/(\d+)\s*blocks?\s*length/i);
+                    const widthMatch = dimensions.match(/(\d+)\s*blocks?\s*width/i);
+                    const heightMatch = dimensions.match(/(\d+)\s*blocks?\s*height/i);
+                    
+                    parsedDimensions = {
+                        length: lengthMatch ? parseInt(lengthMatch[1]) : null,
+                        width: widthMatch ? parseInt(widthMatch[1]) : null, 
+                        height: heightMatch ? parseInt(heightMatch[1]) : null
+                    };
+                }
+                
+                // Ask for missing dimensions for wall structures
+                if (structure_type === 'wall') {
+                    if (!parsedDimensions || !parsedDimensions.length || !parsedDimensions.height) {
+                        agent.openChat(`I need more details for the wall. Please specify: What length and height should the wall be? For example: "5 blocks length, 2 blocks height"`);
+                        return 'Missing wall dimensions - please specify length and height';
+                    }
+                }
+                
+                // Ask for material if not specified
+                if (!material && structure_type === 'wall') {
+                    agent.openChat(`What material should I use for the wall? (e.g., cobblestone, stone, oak_planks, etc.)`);
+                    return 'Missing material - please specify what to build with';
                 }
                 
                 // Check if collaborative manager is available
@@ -487,23 +518,31 @@ export const actionsList = [
                     return 'Collaborative building not available - not connected to coordination system';
                 }
                 
-                // Check for existing workers and use them if mentioned
+                // Check for existing workers and prioritize using them
                 const status = await agent.sendCollaborativeCommand('getStatus');
                 const existingWorkers = status ? status.workers || [] : [];
                 
                 let workersToUse = [];
-                let workersToSpawn = worker_count;
+                let workersToSpawn = 0;
                 
-                // If we have existing workers, try to use them
+                // ALWAYS try to use existing workers first
                 if (existingWorkers.length > 0) {
                     const availableWorkers = existingWorkers.filter(w => w.status === 'ready' || w.status === 'idle');
                     const workersNeeded = Math.min(worker_count, availableWorkers.length);
                     
                     if (workersNeeded > 0) {
                         workersToUse = availableWorkers.slice(0, workersNeeded).map(w => ({ name: w.name }));
-                        workersToSpawn = worker_count - workersNeeded;
                         agent.openChat(`Using ${workersNeeded} existing workers: ${workersToUse.map(w => w.name).join(', ')}`);
+                        
+                        // Only spawn additional workers if we need more than what's available
+                        if (worker_count > workersNeeded) {
+                            workersToSpawn = worker_count - workersNeeded;
+                        }
+                    } else {
+                        workersToSpawn = worker_count;
                     }
+                } else {
+                    workersToSpawn = worker_count;
                 }
                 
                 agent.openChat(`I'll coordinate ${worker_count} workers to build a ${structure_type}. ${workersToSpawn > 0 ? `Spawning ${workersToSpawn} new workers.` : 'Using existing workers.'}`);
@@ -534,9 +573,9 @@ export const actionsList = [
                 const workerNames = allWorkers.map(w => w.name).join(', ');
                 agent.openChat(`Using ${allWorkers.length} workers: ${workerNames} ${spawnedWorkers.length > 0 ? `(${spawnedWorkers.length} newly spawned)` : '(existing)'}`);
                 
-                // Create structure-specific building plan
+                // Create structure-specific building plan with dimensions and material
                 const currentPos = agent.bot.entity.position;
-                const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, allWorkers.length);
+                const buildPlan = await agent._createBuildingPlan(structure_type, currentPos, allWorkers.length, parsedDimensions, material);
                 agent.openChat(`Building plan: ${buildPlan.description}`);
                 
                 // Teleport all workers (existing + newly spawned) to build location

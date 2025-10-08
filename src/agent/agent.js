@@ -220,6 +220,14 @@ export class Agent {
             return false;
         }
 
+        // Worker focus system: ignore non-task messages during building
+        if (this.name && this.name.startsWith('Worker') && this.isActivelyBuilding()) {
+            // Only accept task messages, ignore casual conversation
+            if (!this.isTaskMessage(message)) {
+                return false; // Silently ignore non-task messages
+            }
+        }
+
         let used_command = false;
         if (max_responses === null) {
             max_responses = settings.max_commands === -1 ? Infinity : settings.max_commands;
@@ -315,14 +323,7 @@ export class Agent {
                 if (settings.verbose_commands) {
                     this.routeResponse(source, res);
                 }
-                else { // only output command name
-                    // let pre_message = res.substring(0, res.indexOf(command_name)).trim();
-                    // let chat_message = `*used ${command_name.substring(1)}*`;
-                    // if (pre_message.length > 0)
-                    //     chat_message = `${pre_message}  ${chat_message}`;
-                    // this.routeResponse(source, chat_message);
-
-                    // No command verbage at all, please 
+                else { 
                     let message = res.substring(0, res.indexOf(command_name)).trim();
                     this.routeResponse(source, message);
                 }
@@ -353,19 +354,14 @@ export class Agent {
         if (this.shut_up) return;
         let self_prompt = to_player === 'system' || to_player === this.name;
         if (self_prompt && this.last_sender) {
-            // this is for when the agent is prompted by system while still in conversation
-            // so it can respond to events like death but be routed back to the last sender
             to_player = this.last_sender;
         }
 
         if (convoManager.isOtherAgent(to_player) && convoManager.inConversation(to_player)) {
-            // if we're in an ongoing conversation with the other bot, send the response to it
             convoManager.sendToBot(to_player, message);
         }
         else {
-            // otherwise, use open chat
             this.openChat(message);
-            // note that to_player could be another bot, but if we get here the conversation has ended
         }
     }
 
@@ -374,21 +370,15 @@ export class Agent {
         let remaining = '';
         let command_name = containsCommand(message);
         let translate_up_to = command_name ? message.indexOf(command_name) : -1;
-        if (translate_up_to != -1) { // don't translate the command
+        if (translate_up_to != -1) {
             to_translate = to_translate.substring(0, translate_up_to);
             remaining = message.substring(translate_up_to);
         }
         message = (await handleTranslation(to_translate)).trim() + " " + remaining;
-        // newlines are interpreted as separate chats, which triggers spam filters. replace them with spaces
         message = message.replaceAll('\n', ' ');
 
-        // Emit response to control panel for HTTP API integration
         if (serverProxy && serverProxy.connected) {
-            serverProxy.getSocket().emit('agent-response', {
-                agentName: this.name,
-                message: message,
-                timestamp: Date.now()
-            });
+            serverProxy.getSocket().emit('agent-response', this.name, message);
         }
 
         if (settings.only_chat_with.length > 0) {
@@ -717,9 +707,9 @@ export class Agent {
                 }
                 
                 if (missingBlocks.length === 0) {
-                    this.routeResponse(source, `✅ Wall inspection complete! All blocks are properly placed. Great work team!`);
+                    this.routeResponse(source, `Wall inspection complete! All blocks are properly placed. Great work team!`);
                 } else {
-                    this.routeResponse(source, `⚠️ Wall inspection found ${missingBlocks.length} missing blocks. Assigning repairs...`);
+                    this.routeResponse(source, `Wall inspection found ${missingBlocks.length} missing blocks. Assigning repairs...`);
                     
                     // Get available workers for repairs
                     const status = await this.sendCollaborativeCommand('getStatus');
@@ -727,7 +717,7 @@ export class Agent {
                         const repairWorker = status.workers[0]; // Use first available worker
                         
                         // Create repair task for missing blocks
-                        const repairBlocks = missingBlocks.slice(0, 10); // Limit to 10 blocks at a time
+                        const repairBlocks = missingBlocks.slice(0, 10);
                         const repairList = repairBlocks.map(b => `(${b.x},${b.y},${b.z})`).join(', ');
                         
                         const repairTask = `Repair wall - place ${material} blocks at these positions: ${repairList}`;
@@ -750,7 +740,7 @@ export class Agent {
         // Handle /help collaborative command
         if (trimmed === '/help' || trimmed === '/collab') {
             const helpText = `
-🤖 Kid Leadership Commands - I coordinate my worker team:
+Kid Leadership Commands - I coordinate my worker team:
 • /spawn <count> - I'll spawn worker bots (1-10) near me
 • /workers - Check status of my worker team
 • /bringworkers - I'll teleport all workers to my location
@@ -761,7 +751,7 @@ export class Agent {
 • /stopworkers - I'll stop all my workers
 • /collab or /help - Show this help
 
-🏗️ How I work as team leader:
+How I work as team leader:
 1. You give me building tasks
 2. I divide work with foundation-first building
 3. Each worker gets a section of the same structure
@@ -821,7 +811,7 @@ Example workflow:
                         end: { x: sectionEndX, y: wallEnd.y, z: wallEnd.z }
                     };
                     
-                    // Use improved build task with foundation-first logic
+                    // Use improved build task with foundation first logic
                     await this.sendCollaborativeCommand('sendImprovedBuildTask', {
                         workerName: worker.name,
                         section: section,
@@ -856,22 +846,17 @@ Example workflow:
         return false; // Command not handled
     }
     
-    /**
-     * Get the collaborative manager from the MindServer
-     * @returns {Promise<boolean>} Success status
-     */
+     // Get the collaborative manager from the MindServer
+
     async getCollaborativeManager() {
         // Since the agent runs in a separate process, we need to communicate
         // with the main process through the MindServer proxy
         return serverProxy && serverProxy.connected;
     }
 
-    /**
-     * Send collaborative command to the main process
-     * @param {string} command - Command type
-     * @param {Object} data - Command data
-     * @returns {Promise<Object>} Response from main process
-     */
+    
+     // Send collaborative command to the main process
+
     async sendCollaborativeCommand(command, data = {}) {
         if (!serverProxy || !serverProxy.connected) {
             throw new Error('Not connected to MindServer');
@@ -880,7 +865,7 @@ Example workflow:
         return new Promise((resolve, reject) => {
             const requestId = `collab_${Date.now()}_${Math.random()}`;
             
-            // Set up one-time listener for response
+            // Set up listener for response
             const timeout = setTimeout(() => {
                 serverProxy.getSocket().off(`collab-response-${requestId}`);
                 reject(new Error('Collaborative command timeout'));
@@ -916,7 +901,6 @@ Example workflow:
             if (res) {
                 await this.history.add('system', `Task ended with score : ${res.score}`);
                 await this.history.save();
-                // await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 second for save to complete
                 console.log('Task finished:', res.message);
                 this.killAll();
             }
@@ -927,16 +911,9 @@ Example workflow:
         serverProxy.shutdown();
     }
 
-    /**
-     * Create wall tasks dynamically based on worker count
-     * @param {number} baseX - Base X coordinate
-     * @param {number} baseY - Base Y coordinate  
-     * @param {number} baseZ - Base Z coordinate
-     * @param {number} workerCount - Number of workers
-     * @param {Object} dimensions - Wall dimensions {length, height}
-     * @param {string} material - Building material
-     * @returns {Array} Array of wall building tasks
-     */
+    
+     //Create wall tasks dynamically based on worker count
+
     _createWallTasks(baseX, baseY, baseZ, workerCount, dimensions = null, material = 'cobblestone') {
         const wallLength = dimensions && dimensions.length ? dimensions.length : 20;
         const wallHeight = dimensions && dimensions.height ? dimensions.height : 4;
@@ -956,166 +933,150 @@ Example workflow:
         return tasks;
     }
 
-    /**
-     * Create house tasks dynamically based on worker count
-     * @param {number} baseX - Base X coordinate
-     * @param {number} baseY - Base Y coordinate  
-     * @param {number} baseZ - Base Z coordinate
-     * @param {number} workerCount - Number of workers
-     * @returns {Array} Array of house building tasks
-     */
+    
+     // Create house tasks dynamically based on worker count
+
     _createHouseTasks(baseX, baseY, baseZ, workerCount) {
         // Generate a unique task ID for this building session
         const taskId = `build_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
-        // Define all components needed for a complete house
         const allComponents = [
             {
                 id: `${taskId}_foundation`,
                 name: "foundation",
                 summary: "Foundation construction", 
-                instruction: `Build foundation: Place stone blocks for the entire floor area from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}). This is the foundation layer. Place support blocks below if needed. When finished, say 'Task complete for foundation'. Work with the team!`
+                instruction: `Build foundation with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Use await skills.placeBlock() for each block placement.") When finished, say 'Task complete for foundation'.`
             },
             {
                 id: `${taskId}_north_wall`,
                 name: "north_wall",
                 summary: "North wall", 
-                instruction: `Build North wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave 2-block door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. Build foundation blocks below if needed. When finished, say 'Task complete for north_wall'. Work with the team!`
+                instruction: `Build north wall with repair: !repairAction("Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for north_wall'.`
             },
             {
                 id: `${taskId}_south_wall`,
                 name: "south_wall",
-                summary: "South wall", 
-                instruction: `Build South wall: Build wall from (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Build foundation blocks below if needed. When finished, say 'Task complete for south_wall'. Work with the team!`
+                summary: "South wall with windows", 
+                instruction: `Build south wall with repair: !repairAction("Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 7},${baseY + 2},${baseZ + 10}). Use await skills.placeBlock() for each block placement.") When finished, say 'Task complete for south_wall'.`
             },
             {
                 id: `${taskId}_east_wall`,
                 name: "east_wall",
-                summary: "East wall", 
-                instruction: `Build East wall: Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. When finished, say 'Task complete for east_wall'. Work with the team!`
+                summary: "East wall with windows", 
+                instruction: `Build east wall with repair: !repairAction("Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for east_wall'.`
             },
             {
                 id: `${taskId}_west_wall`,
                 name: "west_wall",
-                summary: "West wall", 
-                instruction: `Build West wall: Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window space at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. Build foundation blocks below if needed. When finished, say 'Task complete for west_wall'. Work with the team!`
+                summary: "West wall with windows", 
+                instruction: `Build west wall with repair: !repairAction("Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for west_wall'.`
             },
             {
                 id: `${taskId}_roof`,
                 name: "roof",
                 summary: "Roof construction", 
-                instruction: `Build roof: Place oak_planks blocks to cover the top at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}). This is the flat roof layer. When finished, say 'Task complete for roof'. Work with the team!`
+                instruction: `Build roof with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Use await skills.placeBlock() for each roof block. No stairs needed - just build directly.") When finished, say 'Task complete for roof'.`
             }
         ];
         
-        // Intelligently distribute work based on worker count
+        //  distribute work based on worker count
         if (workerCount === 1) {
-            // 1 worker does everything in sequence
             return [{
                 id: `${taskId}_complete_house`,
                 summary: "Complete house with decorations",
-                instruction: `Build complete house: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}). 5) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}). 6) Build roof at y=${baseY + 5} with oak_planks. 7) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 8) Place glass blocks in windows at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). 9) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. Use stone for foundation, oak_planks for walls. When complete, say 'Task complete for complete_house'. Place support blocks if needed.`
+                instruction: `Build complete house with repair: !repairAction("Step 1: Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. Step 2: Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Step 3: Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 8}, y=${baseY + 2} for window. Step 4: Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 5: Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 6: Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Step 7: Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Step 8: Place glass at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}), (${baseX + 8},${baseY + 2},${baseZ + 10}). Step 9: Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Step 10: Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}) and (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for complete_house'.`
             }];
             } else if (workerCount === 2) {
-            // 2 workers: one does foundation + 2 walls + decorations, other does 2 walls + roof + decorations
             return [
                 {
                     id: `${taskId}_foundation_ns_walls`,
                     summary: "Foundation, North/South walls, and door",
-                    instruction: `Build foundation, 2 walls, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 4) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). 5) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). DO NOT break walls to place torches. When complete, say 'Task complete for foundation_ns_walls'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build foundation and walls with repair: !repairAction("Step 1: Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. Step 2: Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Step 3: Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip block at x=${baseX + 8}, y=${baseY + 2} for window. Step 4: Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Step 5: Place glass at window (${baseX + 8},${baseY + 2},${baseZ + 10}). Step 6: Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}) and (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for foundation_ns_walls'.`
                 },
                 {
                     id: `${taskId}_ew_walls_roof`,
                     summary: "East/West walls, roof, and windows",
-                    instruction: `Build 2 walls, roof, and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 4) Place glass blocks in window openings: East wall at (${baseX + 10},${baseY + 2},${baseZ + 5}) and West wall at (${baseX},${baseY + 2},${baseZ + 5}). 5) Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for ew_walls_roof'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls and roof with repair: !repairAction("Step 1: Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 2: Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 3: Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Step 4: Place glass at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Step 5: Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Step 6: Place wall torches at (${baseX + 1},${baseY + 2},${baseZ + 1}) and (${baseX + 9},${baseY + 2},${baseZ + 9}). Use await skills.placeBlock() only.") When complete, say 'Task complete for ew_walls_roof'.`
                 }
             ];
             } else if (workerCount === 3) {
-            // 3 workers: foundation+north+door, south+east+windows, west+roof+torches
+
             return [
                 {
                     id: `${taskId}_foundation_north`,
                     summary: "Foundation, North wall, and door",
-                    instruction: `Build foundation, North wall, and add door: 1) Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. 2) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for foundation_north'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build foundation and wall with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Then build North wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Finally place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Use await skills.placeBlock() for each block.") When complete, say 'Task complete for foundation_north'.`
                 },
                 {
                     id: `${taskId}_south_east_walls`,
                     summary: "South/East walls and windows",
-                    instruction: `Build walls and add windows: 1) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 2) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in East window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for south_east_walls'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls with repair: !repairAction("Build South wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 8}, y=${baseY + 2} for windows. Build East wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at all windows: (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for south_east_walls'.`
                 },
                 {
                     id: `${taskId}_west_roof_lighting`,
                     summary: "West wall, roof, and lighting",
-                    instruction: `Build wall, roof, and add lighting: 1) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 3) Place glass in West window at (${baseX},${baseY + 2},${baseZ + 5}). 4) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for west_roof_lighting'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build west wall and simple roof: !repairAction("Build West wall - place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place glass at windows: (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() only.") When complete, say 'Task complete for west_roof_lighting'.`
                 }
             ];
         } else if (workerCount === 4) {
-            // 4 workers: foundation, north+south walls+door, east+west walls+windows, roof+lighting
+            
             return [
                 {
                     id: `${taskId}_foundation_only`,
                     summary: "Foundation construction",
-                    instruction: `Build foundation: Build foundation from (${baseX},${baseY},${baseZ}) to (${baseX + 10},${baseY},${baseZ + 10}) with stone. When complete, say 'Task complete for foundation_only'. Place support blocks below if needed. Work with the team!`
+                    instruction: `Build foundation with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Use await skills.placeBlock() for each block.") When complete, say 'Task complete for foundation_only'.`
                 },
                 {
                     id: `${taskId}_ns_walls_door`,
                     summary: "North/South walls and door",
-                    instruction: `Build walls and add door: 1) Build North wall (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) with oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Build South wall (${baseX},${baseY + 1},${baseZ + 10}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. 3) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for ns_walls_door'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls with repair: !repairAction("Build North wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Skip blocks at x=${baseX + 2} and x=${baseX + 8}, y=${baseY + 2} for windows. Build South wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 8}, y=${baseY + 2} for windows. Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Place glass at windows: (${baseX + 2},${baseY + 2},${baseZ}), (${baseX + 8},${baseY + 2},${baseZ}), (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for ns_walls_door'.`
                 },
                 {
                     id: `${taskId}_ew_walls_windows`,
                     summary: "East/West walls and windows",
-                    instruction: `Build walls and add windows: 1) Build East wall (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Build West wall (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) with oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 3) Place glass blocks in both window openings at (${baseX + 10},${baseY + 2},${baseZ + 5}) and (${baseX},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for ew_walls_windows'. Place support blocks if needed. Work with the team!`
+                    instruction: `Build walls with repair: !repairAction("Build East wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Build West wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for ew_walls_windows'.`
                 },
                 {
                     id: `${taskId}_roof_lighting`,
                     summary: "Roof and lighting",
-                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for roof_lighting'. Work with the team!`
+                    instruction: `Build simple roof with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}), (${baseX + 1},${baseY + 2},${baseZ + 4}), (${baseX + 9},${baseY + 2},${baseZ + 6}). Use await skills.placeBlock() only.") When complete, say 'Task complete for roof_lighting'.`
                 }
             ];
-        } else { // 5 or more workers: each gets individual components + decorations
-            // 5+ workers: foundation, north wall+door, south wall, east wall+window, west wall+window, roof+lighting
+        } else { // 5 or more workers
             const decoratedTasks = [
-                allComponents[0], // foundation
+                allComponents[0],
                 {
                     id: `${taskId}_north_wall_door`,
                     name: "north_wall_door",
                     summary: "North wall and door",
-                    instruction: `Build North wall and add door: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ}) using oak_planks. Leave door opening at (${baseX + 5},${baseY + 1},${baseZ}) and (${baseX + 5},${baseY + 2},${baseZ}) - do NOT place blocks there. 2) Place wooden door at (${baseX + 5},${baseY + 1},${baseZ}). When complete, say 'Task complete for north_wall_door'. Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build wall and door with repair: !repairAction("Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Skip blocks at x=${baseX + 2} and x=${baseX + 8}, y=${baseY + 2} for windows. Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Place glass blocks at (${baseX + 2},${baseY + 2},${baseZ}), (${baseX + 8},${baseY + 2},${baseZ}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for north_wall_door'.`
                 },
-                allComponents[2], // south wall
+                allComponents[2],
                 {
                     id: `${taskId}_east_wall_window`,
                     name: "east_wall_window",
                     summary: "East wall and window",
-                    instruction: `Build East wall and add window: 1) Build wall from (${baseX + 10},${baseY + 1},${baseZ}) to (${baseX + 10},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX + 10},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX + 10},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for east_wall_window'. Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build wall and window with repair: !repairAction("Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for east_wall_window'.`
                 },
                 {
                     id: `${taskId}_west_wall_window`,
                     name: "west_wall_window",
                     summary: "West wall and window",
-                    instruction: `Build West wall and add window: 1) Build wall from (${baseX},${baseY + 1},${baseZ}) to (${baseX},${baseY + 4},${baseZ + 10}) using oak_planks. Leave window at (${baseX},${baseY + 2},${baseZ + 5}) - do NOT place block there. 2) Place glass block in window opening at (${baseX},${baseY + 2},${baseZ + 5}). When complete, say 'Task complete for west_wall_window'. Build foundation blocks below if needed. Work with the team!`
+                    instruction: `Build wall and window with repair: !repairAction("Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for west_wall_window'.`
                 },
                 {
                     id: `${taskId}_roof_lighting_final`,
                     name: "roof_lighting",
                     summary: "Roof and lighting",
-                    instruction: `Build roof and add lighting: 1) Build roof at y=${baseY + 5} from (${baseX},${baseY + 5},${baseZ}) to (${baseX + 10},${baseY + 5},${baseZ + 10}) with oak_planks. 2) Place torches on GROUND inside house: (${baseX + 2},${baseY + 1},${baseZ + 2}) and (${baseX + 8},${baseY + 1},${baseZ + 8}). Place torches outside on ground: (${baseX + 2},${baseY + 1},${baseZ - 1}) and (${baseX + 8},${baseY + 1},${baseZ + 11}). DO NOT break walls to place torches. When complete, say 'Task complete for roof_lighting_final'. Work with the team!`
+                    instruction: `Build simple roof and lighting with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}), (${baseX + 1},${baseY + 2},${baseZ + 4}), (${baseX + 9},${baseY + 2},${baseZ + 6}). Use await skills.placeBlock() only.") When complete, say 'Task complete for roof_lighting_final'.`
                 }
             ];
             return decoratedTasks.slice(0, workerCount);
         }
     }
 
-    /**
-     * Create building plan for different structure types
-     * @param {string} structureType - Type of structure (house, tower, wall, etc.)
-     * @param {Object} position - Bot's current position
-     * @param {number} workerCount - Number of available workers
-     * @param {Object} dimensions - Parsed dimensions {length, width, height}
-     * @param {string} material - Building material
-     * @returns {Object} Building plan with tasks
-     */
+     // Create building plan for different structure types
+
     async _createBuildingPlan(structureType, position, workerCount, dimensions = null, material = 'cobblestone') {
         const baseX = Math.floor(position.x + 5);
         const baseY = Math.floor(position.y);
@@ -1124,7 +1085,7 @@ Example workflow:
         const plans = {
             house: {
                 description: `Building a ${structureType} with ${workerCount} workers at (${baseX},${baseY},${baseZ})`,
-                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 10, y: baseY + 5, z: baseZ + 10 } },
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 10, y: baseY + 4, z: baseZ + 10 } },
                 tasks: this._createHouseTasks(baseX, baseY, baseZ, workerCount)
             },
             wall: {
@@ -1194,10 +1155,9 @@ Example workflow:
         return plan;
     }
 
-    /**
-     * Inspect collaborative build and coordinate repairs
-     * @param {Object} buildPlan - The building plan with area information
-     */
+
+     //Inspect collaborative build and coordinate repairs
+
     async _inspectCollaborativeBuild(buildPlan) {
         try {
             const { start, end } = buildPlan.area;
@@ -1226,9 +1186,9 @@ Example workflow:
             }
             
             if (missingCount === 0) {
-                this.openChat(`✅ Build inspection complete! Structure looks good. Great teamwork! 🏗️`);
+                this.openChat(`Build inspection complete! Structure looks good. Great teamwork!`);
             } else {
-                this.openChat(`⚠️ Build inspection found some gaps. ${missingCount}/${samplePositions.length} sample positions need attention.`);
+                this.openChat(`Build inspection found some gaps. ${missingCount}/${samplePositions.length} sample positions need attention.`);
                 
                 // Get a worker for repairs if available
                 try {
@@ -1252,6 +1212,122 @@ Example workflow:
         } catch (error) {
             console.error('Error during build inspection:', error);
             this.openChat(`Error during inspection: ${error.message}`);
+        }
+    }
+
+     // Check if worker is actively building
+
+    isActivelyBuilding() {
+        if (!this.name || !this.name.startsWith('Worker')) return false;
+        
+        // Check if worker has received a task in the last 5 minutes
+        const taskStart = this.history?.memory?.taskStart;
+        if (taskStart) {
+            const timeSinceTask = Date.now() - taskStart;
+            return timeSinceTask < 300000; // 5 minutes
+        }
+        return false;
+    }
+
+     // Check if message is a task-related message
+
+    isTaskMessage(message) {
+        if (!message) return false;
+        
+        const taskKeywords = [
+            'build', 'construct', 'place', 'task', 'foundation', 'wall', 'roof', 
+            'door', 'window', 'torch', 'glass', 'complete', 'repair', 'goToCoordinates'
+        ];
+        
+        const messageText = message.toLowerCase();
+        return taskKeywords.some(keyword => messageText.includes(keyword)) || 
+               message.startsWith('!') ||
+               messageText.includes('work with the team') ||
+               messageText.includes('when complete');
+    }
+
+     // Monitor task completion and trigger inspection when done
+
+    async _monitorTaskCompletion(workerNames, buildPlan) {
+        const completedWorkers = new Set();
+        const maxWaitTime = 300000;
+        const startTime = Date.now();
+        
+        const checkCompletion = async () => {
+            // Check for completion messages in worker histories or collaborative manager
+            try {
+                const status = await this.sendCollaborativeCommand('getStatus');
+                
+                // Check if any workers reported completion
+                for (const workerName of workerNames) {
+                    if (!completedWorkers.has(workerName)) {
+                        // Check if worker reported completion
+                        const isComplete = await this._checkWorkerTaskCompletion(workerName);
+                        if (isComplete) {
+                            completedWorkers.add(workerName);
+                            this.openChat(`${workerName} completed their task!`);
+                        }
+                    }
+                }
+                
+                // If all workers completed or timeout reached
+                if (completedWorkers.size >= workerNames.length || (Date.now() - startTime) > maxWaitTime) {
+                    if (completedWorkers.size >= workerNames.length) {
+                        this.openChat(`All ${workerNames.length} workers completed their tasks! Starting quality inspection...`);
+                    } else {
+                        this.openChat(`Time limit reached. Starting quality inspection with ${completedWorkers.size}/${workerNames.length} workers completed...`);
+                    }
+                    
+                    try {
+                        await this._inspectCollaborativeBuild(buildPlan);
+                    } catch (error) {
+                        console.error('Error during collaborative build inspection:', error);
+                    }
+                } else {
+                    // Check again in 10 seconds
+                    setTimeout(checkCompletion, 10000);
+                }
+            } catch (error) {
+                console.error('Error monitoring task completion:', error);
+                setTimeout(checkCompletion, 10000); // Retry on error
+            }
+        };
+        
+        // Start monitoring after initial delay
+        setTimeout(checkCompletion, 30000); // Start checking after 30 seconds
+    }
+
+
+     // Check if a specific worker has completed their task
+
+    async _checkWorkerTaskCompletion(workerName) {
+        try {
+            // Check worker's recent message history for completion indicators
+            const controlPanel = this.kodecraftManager?.controlPanel;
+            if (!controlPanel?.agentConnections?.[workerName]?.agent) {
+                return false;
+            }
+            
+            const worker = controlPanel.agentConnections[workerName].agent;
+            const recentMessages = worker.history?.memory?.turns?.slice(-5) || []; // Last 5 messages
+            
+            // Look for completion indicators in recent messages
+            for (const turn of recentMessages) {
+                if (turn.role === 'assistant' && turn.content) {
+                    const content = turn.content.toLowerCase();
+                    if (content.includes('task complete') || 
+                        content.includes('finished') || 
+                        content.includes('construction complete') ||
+                        content.includes('build complete')) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        } catch (error) {
+            console.error(`Error checking completion for ${workerName}:`, error);
+            return false;
         }
     }
 }

@@ -75,6 +75,62 @@ export const actionsList = [
         }
     },
     {
+        name: '!repairAction',
+        description: 'Perform building actions with automatic repair for broken blocks.',
+        params: {
+            'buildPlan': { type: 'string', description: 'Detailed building plan with coordinates and materials' }
+        },
+        perform: async function(agent, buildPlan) {
+            if (!settings.allow_insecure_coding) { 
+                return "Coding is disabled in settings.";
+            }
+            
+            let result = "";
+            const actionFn = async () => {
+                try {
+                    // Add simplified building instructions for better execution
+                    const enhancedPrompt = `SIMPLE BUILDING TASK: ${buildPlan}
+
+CRITICAL REQUIREMENTS:
+1. Generate ONLY simple for loops - NO functions, NO objects, NO complex code
+2. Use await skills.placeBlock(bot, 'material', x, y, z) ONLY
+3. NO try-catch blocks, NO variables except loop counters
+4. NO functions, NO async functions, NO complex logic
+5. Generate code that can execute immediately
+
+EXAMPLE PATTERN - Copy this style exactly:
+for (let x = 36; x <= 46; x++) {
+    for (let z = -171; z <= -161; z++) {
+        await skills.placeBlock(bot, 'stone', x, -60, z);
+    }
+}
+
+for (let x = 36; x <= 46; x++) {
+    for (let y = -59; y <= -57; y++) {
+        if (x === 41 && y !== -57) continue;
+        await skills.placeBlock(bot, 'oak_planks', x, y, -171);
+    }
+}
+
+await skills.placeBlock(bot, 'oak_door', 41, -59, -171);
+await skills.placeBlock(bot, 'glass', 38, -58, -171);
+
+RESPOND WITH CODE ONLY - no explanations, no functions, no extra text.`;
+                    
+                    // Set the enhanced prompt in context
+                    agent.history.add('system', enhancedPrompt);
+                    
+                    result = await agent.coder.generateCode(agent.history);
+                    console.log("[Kodelab] Generated repair-aware building code:", result);
+                } catch (e) {
+                    result = 'Error generating repair code: ' + e.toString();
+                }
+            };
+            await agent.actions.runAction('action:repairAction', actionFn, {timeout: settings.code_timeout_mins * 2});
+            return result;
+        }
+    },
+    {
         name: '!restart',
         description: 'Restart the agent process.',
         perform: async function (agent) {
@@ -475,12 +531,26 @@ export const actionsList = [
             'dimensions': { type: 'string', optional: true, description: 'Dimensions like "5 blocks length, 2 blocks height"' },
             'material': { type: 'string', optional: true, description: 'Building material like cobblestone, oak_planks, etc.' }
         },
-        perform: async function(agent, structure_type, worker_count, description, dimensions, material) {
+        perform: async function(agent, structure_type, worker_count, description, dimensions = 'default dimensions', material = 'default materials') {
             try {
-                // CRITICAL: Prevent workers from using collaborative build (only coordinators like Kid can)
+                // prevent workers from using collaborative build
                 if (agent.name && agent.name.startsWith('Worker')) {
-                    agent.openChat(`⚠️ I'm a worker bot - I can only build, not coordinate other workers. I'll use !newAction instead.`);
+                    agent.openChat(`I'm a worker bot - I can only build, not coordinate other workers. I'll use !newAction instead.`);
                     return 'Workers cannot use !collaborativeBuild - only coordinators can. Workers must use !newAction.';
+                }
+                
+                // Handle default values and parse dimensions
+                if (dimensions === 'default dimensions' || dimensions === 'default') {
+                    dimensions = structure_type === 'house' ? '10 blocks length, 10 blocks width, 3 blocks height' :
+                                structure_type === 'wall' ? '20 blocks length, 3 blocks height' :
+                                structure_type === 'tower' ? '5 blocks length, 5 blocks width, 10 blocks height' :
+                                '10 blocks length, 3 blocks height';
+                }
+                
+                if (material === 'default materials' || material === 'default') {
+                    material = structure_type === 'house' ? 'oak_planks' :
+                              structure_type === 'wall' ? 'cobblestone' :
+                              'oak_planks';
                 }
                 
                 // Parse dimensions and ask for missing information
@@ -519,20 +589,25 @@ export const actionsList = [
                 }
                 
                 // Check for existing workers and prioritize using them
-                const status = await agent.sendCollaborativeCommand('getStatus');
+                const status = await agent.sendCollaborativeCommand('getStatus', { leaderName: agent.name });
                 const existingWorkers = status ? status.workers || [] : [];
+                
+                console.log(`${agent.name} checking existing workers:`, existingWorkers.map(w => `${w.name}(${w.status})`));
                 
                 let workersToUse = [];
                 let workersToSpawn = 0;
                 
                 // ALWAYS try to use existing workers first
                 if (existingWorkers.length > 0) {
-                    const availableWorkers = existingWorkers.filter(w => w.status === 'ready' || w.status === 'idle');
+                    const availableWorkers = existingWorkers.filter(w => 
+                        w.status === 'ready' || w.status === 'idle' || w.status === 'completed' || w.status === 'spawned'
+                    );
                     const workersNeeded = Math.min(worker_count, availableWorkers.length);
                     
                     if (workersNeeded > 0) {
                         workersToUse = availableWorkers.slice(0, workersNeeded).map(w => ({ name: w.name }));
                         agent.openChat(`Using ${workersNeeded} existing workers: ${workersToUse.map(w => w.name).join(', ')}`);
+                        console.log(`♻️  ${agent.name} reusing ${workersNeeded} workers, need to spawn ${worker_count - workersNeeded} more`);
                         
                         // Only spawn additional workers if we need more than what's available
                         if (worker_count > workersNeeded) {
@@ -540,6 +615,7 @@ export const actionsList = [
                         }
                     } else {
                         workersToSpawn = worker_count;
+                        console.log(`${agent.name} has no available workers, spawning ${workersToSpawn} new ones`);
                     }
                 } else {
                     workersToSpawn = worker_count;
@@ -554,7 +630,8 @@ export const actionsList = [
                     const spawnResult = await agent.sendCollaborativeCommand('spawn', { 
                         count: workersToSpawn, 
                         baseSettings: settings,
-                        spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z }
+                        spawnLocation: { x: currentPos.x, y: currentPos.y, z: currentPos.z },
+                        leaderName: agent.name // Pass the leader bot's name
                     });
                     
                     if (spawnResult.spawnedBots && spawnResult.spawnedBots.length > 0) {
@@ -580,7 +657,7 @@ export const actionsList = [
                 
                 // Teleport all workers (existing + newly spawned) to build location
                 if (allWorkers.length > 0) {
-                    agent.openChat(`📍 Gathering all ${allWorkers.length} workers to build location...`);
+                    agent.openChat(`Gathering all ${allWorkers.length} workers to build location...`);
                     await agent.sendCollaborativeCommand('teleportWorkers', {
                         workers: allWorkers.map(w => w.name),
                         location: { x: currentPos.x, y: currentPos.y, z: currentPos.z },
@@ -591,11 +668,11 @@ export const actionsList = [
                 // Wait longer for workers to be fully ready, then assign tasks  
                 setTimeout(async () => {
                     try {
-                        agent.openChat('⏰ Validating worker readiness and assigning build tasks...');
+                        agent.openChat('Validating worker readiness and assigning build tasks...');
                         
                         // Check worker status before assigning tasks
                         const collaborativeStatus = await agent.sendCollaborativeCommand('getStatus');
-                        agent.openChat(`📊 Workers status: ${collaborativeStatus.readyWorkers} ready, ${collaborativeStatus.totalWorkers} total`);
+                        agent.openChat(`Workers status: ${collaborativeStatus.readyWorkers} ready, ${collaborativeStatus.totalWorkers} total`);
                         
                         // Assign tasks to workers with delays and validation
                         for (let i = 0; i < buildPlan.tasks.length && i < allWorkers.length; i++) {
@@ -607,49 +684,44 @@ export const actionsList = [
                                 try {
                                     const result = await agent.sendCollaborativeCommand('sendMessageToWorker', {
                                         workerName: worker.name,
-                                        message: task.instruction
+                                        message: task.instruction,
+                                        leaderName: agent.name
                                     });
                                     
-                                    if (result !== false) {
-                                        agent.openChat(`📋 Task assigned to ${worker.name}: ${task.summary}`);
+                                    if (result !== false){
+                                        agent.openChat(`Task assigned to ${worker.name}: ${task.summary}`);
                                     } else {
-                                        agent.openChat(`⚠️ ${worker.name} not ready for tasks yet. Will retry...`);
+                                        agent.openChat(`${worker.name} not ready for tasks yet. Will retry...`);
                                         // Retry after additional delay
                                         setTimeout(async () => {
                                             try {
                                                 await agent.sendCollaborativeCommand('sendMessageToWorker', {
                                                     workerName: worker.name,
-                                                    message: task.instruction
+                                                    message: task.instruction,
+                                                    leaderName: agent.name
                                                 });
-                                                agent.openChat(`🔄 Retry: Task assigned to ${worker.name}`);
+                                                agent.openChat(`Retry: Task assigned to ${worker.name}`);
                                             } catch (retryErr) {
-                                                agent.openChat(`❌ ${worker.name} still not ready after retry`);
+                                                agent.openChat(`${worker.name} still not ready after retry`);
                                             }
                                         }, 10000); // 10 second retry delay
                                     }
                                 } catch (err) {
                                     console.error(`Error sending task to ${worker.name}:`, err);
-                                    agent.openChat(`❌ Failed to assign task to ${worker.name}: ${err.message}`);
+                                    agent.openChat(`Failed to assign task to ${worker.name}: ${err.message}`);
                                 }
                             }, i * 5000); // Increased to 5 second delay between each worker task
                         }
                     } catch (error) {
                         console.error('Error assigning tasks to workers:', error);
-                        agent.openChat(`❌ Error during task assignment: ${error.message}`);
+                        agent.openChat(`Error during task assignment: ${error.message}`);
                     }
                 }, 40000); // Increased to 40 second delay to ensure full initialization
                 
-                // Schedule quality inspection
-                setTimeout(async () => {
-                    try {
-                        agent.openChat('🔍 Starting quality inspection of collaborative build...');
-                        await agent._inspectCollaborativeBuild(buildPlan);
-                    } catch (error) {
-                        console.error('Error during collaborative build inspection:', error);
-                    }
-                }, 45000); // 45 second delay for completion
+                // Monitor task completion and trigger inspection when all tasks are done
+                agent._monitorTaskCompletion(allWorkers.map(w => w.name), buildPlan);
                 
-                return `Started ${structure_type} construction with ${worker_count} workers. Tasks will be assigned once workers are ready. Quality inspection in 45 seconds...`;
+                return `Started ${structure_type} construction with ${worker_count} workers. Tasks will be assigned and monitored for completion. Quality inspection will occur once all workers finish.`;
             } catch (error) {
                 console.error('Error in collaborative building:', error);
                 return `Error coordinating collaborative build: ${error.message}`;

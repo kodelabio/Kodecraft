@@ -10,6 +10,7 @@ const settings = {
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
         "./profiles/kid.json",
+        "./profiles/boss.json",
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
@@ -21,7 +22,7 @@ const settings = {
         // "./profiles/mistral.json",
         // "./profiles/deepseek.json",
 
-        // using more than 1 profile requires you to /msg each bot indivually
+        // using more than 1 profile requires you to /msg each bot individually
         // individual profiles override values from the base profile
     ],
 

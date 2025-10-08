@@ -40,10 +40,10 @@ export class KodecraftControlPanel {
         // Add JSON parsing middleware
         app.use(express.json());
         
-        // Add command endpoint for Telegram integration
+        // Add command endpoint for Telegram integration with bot routing
         app.post('/command', async (req, res) => {
             try {
-                const { user, command } = req.body;
+                const { user, command, bot } = req.body;
                 
                 if (!user || !command) {
                     return res.status(400).json({
@@ -52,22 +52,26 @@ export class KodecraftControlPanel {
                     });
                 }
                 
-                // Find Kid agent
-                const kidAgent = this.agentConnections['Kid'];
-                if (!kidAgent || !kidAgent.socket) {
+                // Default to Kid if no bot specified, otherwise use specified bot
+                const targetBot = bot || 'Kid';
+                
+                // Find target agent
+                const targetAgent = this.agentConnections[targetBot];
+                if (!targetAgent || !targetAgent.socket) {
                     return res.status(500).json({
                         status: 'error',
-                        reply: 'Kid bot is not connected'
+                        reply: `${targetBot} bot is not connected`
                     });
                 }
                 
-                // Send command to Kid agent and get command ID
-                const commandId = await this.sendCommandToAgent('Kid', user, command);
+                // Send command to target agent and get command ID
+                const commandId = await this.sendCommandToAgent(targetBot, user, command);
                 
                 res.json({
                     status: 'success',
                     commandId: commandId,
-                    reply: 'Command sent - check /updates for response'
+                    bot: targetBot,
+                    reply: `Command sent to ${targetBot} - check /updates for response`
                 });
                 
             } catch (error) {
@@ -85,6 +89,16 @@ export class KodecraftControlPanel {
             const since = parseInt(req.query.since, 10) || 0;
             const items = this.messageLog.filter(m => m.id > since);
             res.json({ lastId: this.nextMessageId - 1, items });
+        });
+
+        // Get bot status endpoint
+        app.get('/bots', (req, res) => {
+            const bots = Object.entries(this.agentConnections).map(([name, conn]) => ({
+                name,
+                connected: conn.in_game,
+                available: !!(conn.socket)
+            }));
+            res.json({ bots });
         });
 
         this.io.on('connection', (socket) => this.handleSocket(socket));
@@ -184,27 +198,32 @@ export class KodecraftControlPanel {
                 message: json.message
             });
 
-            // Check if this is a response to a pending HTTP command
-            if (curAgentName && !targetName) {
-                // This is an outbound message from an agent (like Kid responding)
+            // Check if this is a response to a pending HTTP command - improved detection
+            if (curAgentName) {
                 // Look for recent pending commands from this agent
                 const recentCommands = this.messageLog
                     .filter(entry => entry.type === 'command' && 
                             entry.agent === curAgentName && 
                             entry.expectingResponse &&
-                            (Date.now() - entry.ts) < 30000) // within 30 seconds
+                            (Date.now() - entry.ts) < 60000) // Increased to 60 seconds
                     .sort((a, b) => b.ts - a.ts); // most recent first
 
                 if (recentCommands.length > 0) {
                     const matchingCommand = recentCommands[0];
+                    // Mark this command as no longer expecting response
+                    matchingCommand.expectingResponse = false;
+                    
                     this.recordEvent('response', {
                         commandId: matchingCommand.commandId,
                         from: curAgentName,
+                        to: targetName || 'NO USERNAME', // Include targetName for better tracking
                         originalUser: matchingCommand.user,
                         originalCommand: matchingCommand.command,
                         message: json.message,
                         responseToCommand: true
                     });
+                    
+                    console.log(`📞 Logged response from ${curAgentName} to command ${matchingCommand.commandId}`);
                 }
             }
 
@@ -231,6 +250,35 @@ export class KodecraftControlPanel {
         socket.on('restart-agent', (agentName) => {
             const conn = this.agentConnections[agentName];
             if (conn && conn.socket) conn.socket.emit('restart-agent');
+        });
+
+        // Handle agent responses (direct responses without chat routing)
+        socket.on('agent-response', (agentName, message) => {
+            console.log(`Direct response from ${agentName}: ${message}`);
+            
+            // Look for recent pending commands from this agent
+            const recentCommands = this.messageLog
+                .filter(entry => entry.type === 'command' && 
+                        entry.agent === agentName && 
+                        entry.expectingResponse &&
+                        (Date.now() - entry.ts) < 60000) // within 60 seconds
+                .sort((a, b) => b.ts - a.ts); // most recent first
+
+            if (recentCommands.length > 0) {
+                const matchingCommand = recentCommands[0];
+                matchingCommand.expectingResponse = false;
+                
+                this.recordEvent('response', {
+                    commandId: matchingCommand.commandId,
+                    from: agentName,
+                    originalUser: matchingCommand.user,
+                    originalCommand: matchingCommand.command,
+                    message: message,
+                    responseToCommand: true
+                });
+                
+                console.log(`📞 Logged direct response from ${agentName} to command ${matchingCommand.commandId}`);
+            }
         });
 
         socket.on('start-agent', (agentName) => this.agentHandler.startAgent(agentName));
@@ -306,7 +354,7 @@ export class KodecraftControlPanel {
                 let result;
                 switch (command) {
                     case 'spawn':
-                        result = collaborativeManager.spawnWorkerBots(data.count, data.baseSettings);
+                        result = collaborativeManager.spawnWorkerBots(data.count, data.baseSettings, data.leaderName);
                         
                         // If spawn location provided, teleport workers there after a delay
                         if (data.spawnLocation && result.length > 0) {
@@ -323,7 +371,7 @@ export class KodecraftControlPanel {
                         break;
 
                     case 'getStatus':
-                        result = collaborativeManager.getStatus();
+                        result = collaborativeManager.getStatus(data.leaderName || agentName);
                         socket.emit(`collab-response-${requestId}`, {
                             success: true,
                             data: result
@@ -361,10 +409,11 @@ export class KodecraftControlPanel {
                         break;
 
                     case 'sendMessageToWorker':
-                        collaborativeManager.sendMessageToWorker(data.workerName, data.message);
+                        const leaderName = data.leaderName || agentName;
+                        const messageSent = collaborativeManager.sendMessageToWorker(data.workerName, data.message, leaderName);
                         socket.emit(`collab-response-${requestId}`, {
-                            success: true,
-                            data: { message: `Message sent to ${data.workerName}` }
+                            success: messageSent,
+                            data: { message: messageSent ? `Message sent to ${data.workerName}` : `Failed to send message to ${data.workerName} (access denied or worker unavailable)` }
                         });
                         break;
 

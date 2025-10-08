@@ -6,20 +6,15 @@ export class CollaborativeManager extends EventEmitter {
         this.kodecraftManager = kodecraftManager;
         this.agentHandler = agentHandler;
         this.workerBots = new Map(); // Map of worker bot names to their info
-        this.workerCount = 0;
+        this.leaderWorkerPools = new Map(); // Map of leader bot names to their worker pools
+        this.globalWorkerCount = 0; // Global counter for unique worker IDs
         this.activeTasks = new Map(); // Map of task IDs to task info
         this.taskIdCounter = 0;
         
         console.log('CollaborativeManager initialized');
     }
 
-    /**
-     * Spawn multiple worker bots based on the main Kid bot settings
-     * @param {number} count - Number of workers to spawn (1-10)
-     * @param {Object} baseSettings - Base settings from Kid bot
-     * @returns {Array} Array of spawned worker bot info
-     */
-    spawnWorkerBots(count, baseSettings) {
+    spawnWorkerBots(count, baseSettings, leaderName = 'DefaultLeader') {
         const spawnedBots = [];
         
         if (!baseSettings) {
@@ -27,11 +22,101 @@ export class CollaborativeManager extends EventEmitter {
             return spawnedBots;
         }
         
+        if (!this.leaderWorkerPools.has(leaderName)) {
+            this.leaderWorkerPools.set(leaderName, []);
+        }
+        
+        const leaderWorkers = this.leaderWorkerPools.get(leaderName) || [];
+        
+        console.log(`Attempting to spawn ${count} workers for leader '${leaderName}'. Current pool size: ${leaderWorkers.length}`);
+        console.log(`Global stats: ${this.workerBots.size} total workers across all leaders`);
+        
+        if (this.workerBots.size + count > 15) {
+            console.warn(`WARNING: Attempting to create ${this.workerBots.size + count} total bots. Minecraft servers typically limit players to 20. Check your server.properties max-players setting if bots fail to join.`);
+        }
+        
         for (let i = 0; i < count; i++) {
-            const workerId = ++this.workerCount;
-            const workerName = `Worker${workerId}`;
+            const globalWorkerId = ++this.globalWorkerCount;
+            const localWorkerId = this.getLeaderWorkerCount(leaderName) + 1;
+            const workerName = `${leaderName}Worker${localWorkerId}`;
             
-            // Clone the base settings and modify for worker bot
+            console.log(`Creating worker ${i+1}/${count}: '${workerName}' (Global: ${globalWorkerId}, Local: ${localWorkerId})`);
+            
+            const workerSettings = JSON.parse(JSON.stringify(baseSettings));
+            
+            if (!workerSettings.profile) {
+                workerSettings.profile = { name: workerName };
+            } else {
+                workerSettings.profile.name = workerName;
+            }
+            
+            try {
+                const workerAgent = this.agentHandler.createAgent(workerSettings);
+                
+                if (workerAgent) {
+                    const workerInfo = {
+                        name: workerName,
+                        id: globalWorkerId,
+                        localId: localWorkerId,
+                        leader: leaderName,
+                        agent: workerAgent,
+                        settings: workerSettings,
+                        status: 'spawned',
+                        currentTask: null
+                    };
+                    
+                    this.workerBots.set(workerName, workerInfo);
+                    leaderWorkers.push(workerInfo);
+                    this.leaderWorkerPools.set(leaderName, leaderWorkers);
+                    spawnedBots.push(workerInfo);
+                    
+                    this.kodecraftManager.controlPanel.registerAgent(workerAgent);
+                    
+                    console.log(`Worker bot '${workerName}' spawned for leader '${leaderName}' (Global ID: ${globalWorkerId}, Local ID: ${localWorkerId})`);
+                    this.emit('workerSpawned', workerInfo);
+                } else {
+                    console.error(`Failed to create worker bot '${workerName}' for leader '${leaderName}'`);
+                }
+            } catch (error) {
+                console.error(`Error spawning worker bot '${workerName}' for leader '${leaderName}':`, error);
+            }
+        }
+        
+        console.log(`Spawn complete for '${leaderName}': ${spawnedBots.length}/${count} workers created successfully`);
+        return spawnedBots;
+    }
+
+    // Legacy spawn method - now calls enhanced version
+    spawnWorkerBotsLegacy(count, baseSettings, leaderName = 'DefaultLeader') {
+        const spawnedBots = [];
+        
+        if (!baseSettings) {
+            console.error('No base settings provided for worker bots');
+            return spawnedBots;
+        }
+        
+        // Initialize leader's worker pool if it doesn't exist
+        if (!this.leaderWorkerPools.has(leaderName)) {
+            this.leaderWorkerPools.set(leaderName, []);
+        }
+        
+        const leaderWorkers = this.leaderWorkerPools.get(leaderName) || [];
+        
+        console.log(`Attempting to spawn ${count} workers for leader '${leaderName}'. Current pool size: ${leaderWorkers.length}`);
+        console.log(`Global stats: ${this.workerBots.size} total workers across all leaders`);
+        
+        if (this.workerBots.size + count > 15) {
+            console.warn(`WARNING: Attempting to create ${this.workerBots.size + count} total bots. Minecraft servers typically limit players to 20. Check your server.properties max-players setting if bots fail to join.`);
+        }
+        
+        for (let i = 0; i < count; i++) {
+            const globalWorkerId = ++this.globalWorkerCount;
+            const localWorkerId = this.getLeaderWorkerCount(leaderName) + 1;
+            // Create unique worker names with leader prefix to avoid conflicts
+            const workerName = `${leaderName}Worker${localWorkerId}`;
+            
+            console.log(`Creating worker ${i+1}/${count}: '${workerName}' (Global: ${globalWorkerId}, Local: ${localWorkerId})`);
+            
             const workerSettings = JSON.parse(JSON.stringify(baseSettings));
             
             // Ensure profile exists and set worker name
@@ -48,55 +133,59 @@ export class CollaborativeManager extends EventEmitter {
                 if (workerAgent) {
                     const workerInfo = {
                         name: workerName,
-                        id: workerId,
+                        id: globalWorkerId,
+                        localId: localWorkerId,
+                        leader: leaderName,
                         agent: workerAgent,
                         settings: workerSettings,
                         status: 'spawned',
                         currentTask: null
                     };
                     
+                    // Add to both global map and leader's pool
                     this.workerBots.set(workerName, workerInfo);
+                    leaderPool.workers.set(workerName, workerInfo);
                     spawnedBots.push(workerInfo);
                     
                     // Register with control panel
                     this.kodecraftManager.controlPanel.registerAgent(workerAgent);
                     
-                    console.log(`Worker bot '${workerName}' spawned successfully`);
+                    console.log(`Worker bot '${workerName}' spawned for leader '${leaderName}' (Global ID: ${globalWorkerId}, Local ID: ${localWorkerId})`);
                     this.emit('workerSpawned', workerInfo);
                 } else {
-                    console.error(`Failed to create worker bot '${workerName}'`);
+                    console.error(`Failed to create worker bot '${workerName}' for leader '${leaderName}'`);
                 }
             } catch (error) {
-                console.error(`Error spawning worker bot '${workerName}':`, error);
+                console.error(`Error spawning worker bot '${workerName}' for leader '${leaderName}':`, error);
             }
         }
         
+        console.log(`Spawn complete for '${leaderName}': ${spawnedBots.length}/${count} workers created successfully`);
         return spawnedBots;
     }
 
-    /**
-     * Get list of all worker bots
-     * @returns {Array} Array of worker bot info
-     */
-    getWorkerBots() {
+    getWorkerBots(leaderName = null) {
+        if (leaderName) {
+            const leaderPool = this.leaderWorkerPools.get(leaderName);
+            return leaderPool ? Array.from(leaderPool.workers.values()) : [];
+        }
         return Array.from(this.workerBots.values());
     }
-
-    /**
-     * Get a specific worker bot by name
-     * @param {string} workerName - Name of the worker bot
-     * @returns {Object|null} Worker bot info or null if not found
-     */
+    
     getWorkerBot(workerName) {
         return this.workerBots.get(workerName);
     }
+    
+    getLeaderWorkers(leaderName) {
+        const leaderWorkers = this.leaderWorkerPools.get(leaderName) || [];
+        return leaderWorkers;
+    }
 
-    /**
-     * Start a collaborative wall building task
-     * @param {Array} workers - Array of worker bot names
-     * @param {Object} wallSpec - Wall specification with start, end coordinates and material
-     * @returns {string} Task ID
-     */
+    getLeaderWorkerCount(leaderName) {
+        const leaderWorkers = this.leaderWorkerPools.get(leaderName) || [];
+        return leaderWorkers.length;
+    }
+
     startCollaborativeWallTask(workers, wallSpec) {
         const taskId = `wall_task_${++this.taskIdCounter}`;
         
@@ -128,12 +217,6 @@ export class CollaborativeManager extends EventEmitter {
         return taskId;
     }
 
-    /**
-     * Split wall building work between workers
-     * @param {Array} workers - Array of worker names
-     * @param {Object} wallSpec - Wall specification
-     * @returns {Array} Array of work assignments
-     */
     _splitWallWork(workers, wallSpec) {
         const { start, end, height = 3, material = 'stone' } = wallSpec;
         const assignments = [];
@@ -169,11 +252,6 @@ export class CollaborativeManager extends EventEmitter {
         return assignments;
     }
 
-    /**
-     * Assign a wall section to a specific worker
-     * @param {Object} worker - Worker bot info
-     * @param {Object} assignment - Work assignment
-     */
     _assignWallSection(worker, assignment) {
         const { section } = assignment;
         const commands = this._generateWallCommands(section);
@@ -181,22 +259,14 @@ export class CollaborativeManager extends EventEmitter {
         console.log(`Assigning wall section to ${worker.name}:`, section);
         
         // Send commands to the worker bot
-        // This is a simplified approach - in practice, you might want to use the bot's command system
         if (worker.agent.process && worker.agent.process.process) {
             const message = `Build wall section from (${section.start.x},${section.start.y},${section.start.z}) to (${section.end.x},${section.end.y},${section.end.z}) using ${section.material}`;
             
-            // Send message to worker bot (this will be processed by the bot's message handler)
             setTimeout(() => {
                 this._sendMessageToWorker(worker.name, message);
             }, 1000); // Small delay to ensure bot is ready
         }
     }
-
-    /**
-     * Generate building commands for a wall section
-     * @param {Object} section - Wall section specification
-     * @returns {Array} Array of building commands
-     */
     _generateWallCommands(section) {
         const commands = [];
         const { start, end, material } = section;
@@ -206,52 +276,57 @@ export class CollaborativeManager extends EventEmitter {
         
         return commands;
     }
-
-    /**
-     * Send a message to a specific worker bot
-     * @param {string} workerName - Name of the worker bot
-     * @param {string} message - Message to send
-     */
-    _sendMessageToWorker(workerName, message) {
-        const controlPanel = this.kodecraftManager.controlPanel;
-        if (controlPanel && controlPanel.agentConnections[workerName]) {
-            const conn = controlPanel.agentConnections[workerName];
-            if (conn.socket) {
-                conn.socket.emit('send-message', workerName, message);
-                console.log(`Sent message to ${workerName}: ${message}`);
-            } else {
-                console.warn(`Worker ${workerName} not connected to control panel`);
-            }
-        }
-    }
-
-    /**
-     * Public method to send message to worker (for Kid coordination)
-     * @param {string} workerName - Name of the worker bot
-     * @param {string} message - Message to send
-     */
-    sendMessageToWorker(workerName, message) {
-        // Validate worker is ready before sending task
-        if (!this.isWorkerReady(workerName)) {
-            console.warn(`[Worker Validation] ${workerName} not ready for message. Connection status: ${!!this.kodecraftManager?.controlPanel?.agentConnections?.[workerName]}`);
+    _sendMessageToWorker(workerName, message, leaderName = null) {
+        const workerInfo = this.workerBots.get(workerName);
+        if (workerInfo && leaderName && workerInfo.leader !== leaderName) {
+            console.warn(`[Access Control] Leader '${leaderName}' cannot send message to worker '${workerName}' owned by '${workerInfo.leader}'`);
             return false;
         }
         
-        console.log(`[Kid Coordination] Sending task to ${workerName}: ${message} (validated ready)`);
-        this._sendMessageToWorker(workerName, message);
-        return true;
+        const controlPanel = this.kodecraftManager.controlPanel;
+        if (!controlPanel || !controlPanel.agentConnections[workerName]) {
+            console.warn(`[Connection] No connection found for worker '${workerName}'`);
+            return false;
+        }
+        
+        const conn = controlPanel.agentConnections[workerName];
+        if (!conn.socket) {
+            console.warn(`[Socket] No socket connection for worker '${workerName}'`);
+            return false;
+        }
+        
+        if (!conn.in_game) {
+            console.warn(`[Game State] Worker '${workerName}' not in game yet`);
+            return false;
+        }
+        
+        try {
+            conn.socket.emit('send-message', workerName, message);
+            console.log(`[Message] Successfully sent to '${workerName}': ${message.substring(0, 50)}...`);
+            return true;
+        } catch (error) {
+            console.error(`[Send Error] Failed to send message to '${workerName}':`, error.message);
+            return false;
+        }
     }
 
-    /**
-     * Create improved building task that handles foundation blocks
-     * @param {string} workerName - Name of the worker bot  
-     * @param {Object} section - Wall section with start, end coordinates
-     * @param {string} material - Block material to use
-     */
+
+    sendMessageToWorker(workerName, message, leaderName = null) {
+        if (!this.isWorkerReady(workerName)) {
+            const workerInfo = this.workerBots.get(workerName);
+            const connectionExists = !!this.kodecraftManager?.controlPanel?.agentConnections?.[workerName];
+            const inGame = connectionExists && this.kodecraftManager.controlPanel.agentConnections[workerName].in_game;
+            
+            console.warn(`[Worker Validation] ${workerName} not ready for message. Leader: ${workerInfo?.leader || 'unknown'}, Connection: ${connectionExists}, InGame: ${inGame}`);
+            return false;
+        }
+        
+        return this._sendMessageToWorker(workerName, message, leaderName);
+    }
+
     sendImprovedBuildTask(workerName, section, material = 'cobblestone') {
         // Validate worker is ready before sending task
         if (!this.isWorkerReady(workerName)) {
-            console.warn(`[Worker Validation] ${workerName} not ready for task assignment. Skipping.`);
             return false;
         }
         
@@ -260,14 +335,12 @@ export class CollaborativeManager extends EventEmitter {
         // Create a task that builds foundation first, then upper layers
         const buildTask = `Build wall section from (${start.x},${start.y},${start.z}) to (${end.x},${end.y},${end.z}) using ${material}. Build foundation layer first (y=${start.y}), then upper layers. If a block fails to place due to "nothing to place on", place a support block below it first. When finished, say "Task complete for ${workerName}".`;
         
-        console.log(`[Improved Building] Sending enhanced task to ${workerName} (validated ready)`);
         this._sendMessageToWorker(workerName, buildTask);
 
         // Set up completion timeout (2 minutes per task)
         setTimeout(() => {
             const worker = this.workerBots.get(workerName);
             if (worker && worker.currentTask) {
-                console.log(`[Auto-Complete] ${workerName} task timeout reached, marking as complete`);
                 this.markWorkerComplete(workerName, worker.currentTask);
             }
         }, 120000); // 2 minutes
@@ -275,11 +348,6 @@ export class CollaborativeManager extends EventEmitter {
         return true;
     }
 
-    /**
-     * Teleport workers to a specific location (near the main bot)
-     * @param {Array} workerNames - Names of workers to teleport
-     * @param {Object} location - Target location {x, y, z}
-     */
     teleportWorkersToLocation(workerNames, location) {
         console.log(`Teleporting ${workerNames.length} workers to location:`, location);
         
@@ -298,12 +366,6 @@ export class CollaborativeManager extends EventEmitter {
             }, index * 500); // Stagger the commands to avoid conflicts
         });
     }
-
-    /**
-     * Check if a worker is fully ready (connected, logged in, and spawned)
-     * @param {string} workerName - Name of worker to check
-     * @returns {boolean} True if worker is ready
-     */
     isWorkerReady(workerName) {
         const controlPanel = this.kodecraftManager.controlPanel;
         if (!controlPanel || !controlPanel.agentConnections[workerName]) {
@@ -311,21 +373,43 @@ export class CollaborativeManager extends EventEmitter {
         }
         
         const conn = controlPanel.agentConnections[workerName];
-        // Worker is ready if it has a socket connection and is marked as in_game
         return conn.socket && conn.in_game;
     }
 
-    /**
-     * Wait for workers to be ready, then teleport them
-     * @param {Array} workerNames - Names of workers to teleport
-     * @param {Object} location - Target location {x, y, z}
-     * @param {number} maxWaitTime - Maximum time to wait in milliseconds (default 30s)
-     */
-    teleportWorkersToLocationWithRetry(workerNames, location, maxWaitTime = 30000) {
-        console.log(`Waiting for ${workerNames.length} workers to be ready, then teleporting to:`, location);
-        
+    async waitForWorkerReadiness(workerName, maxWaitTime = 15000) {
         const startTime = Date.now();
-        const checkInterval = 1000; // Check every second
+        const checkInterval = 500;
+        
+        return new Promise((resolve) => {
+            const checkReadiness = () => {
+                const elapsed = Date.now() - startTime;
+                
+                if (this.isWorkerReady(workerName)) {
+                    console.log(`[Readiness] Worker '${workerName}' is ready after ${elapsed}ms`);
+                    resolve(true);
+                    return;
+                }
+                
+                if (elapsed > maxWaitTime) {
+                    console.warn(`[Timeout] Worker '${workerName}' not ready after ${elapsed}ms`);
+                    resolve(false);
+                    return;
+                }
+                
+                setTimeout(checkReadiness, checkInterval);
+            };
+            
+            checkReadiness();
+        });
+    }
+
+
+
+
+
+    teleportWorkersToLocationWithRetry(workerNames, location, maxWaitTime = 30000) {
+        const startTime = Date.now();
+        const checkInterval = 2000; // Check every 2 seconds (reduced frequency)
         
         const teleportedWorkers = new Set(); // Track already teleported workers
         
@@ -337,10 +421,9 @@ export class CollaborativeManager extends EventEmitter {
             const readyWorkers = workerNames.filter(name => this.isWorkerReady(name));
             const notReadyWorkers = workerNames.filter(name => !this.isWorkerReady(name));
             
-            console.log(`Status check (${Math.floor(elapsedTime/1000)}s): Ready: ${readyWorkers.length}/${workerNames.length} [${readyWorkers.join(', ')}]`);
-            
-            if (notReadyWorkers.length > 0) {
-                console.log(`Still waiting for: ${notReadyWorkers.join(', ')}`);
+            // Only log every 10 seconds to reduce spam
+            if (Math.floor(elapsedTime/1000) % 10 === 0) {
+                console.log(`Workers ready: ${readyWorkers.length}/${workerNames.length}`);
             }
             
             // Teleport any workers that are ready and haven't been teleported yet
@@ -354,71 +437,91 @@ export class CollaborativeManager extends EventEmitter {
             if (notReadyWorkers.length > 0 && elapsedTime < maxWaitTime) {
                 setTimeout(waitAndTeleport, checkInterval);
             } else if (notReadyWorkers.length > 0) {
-                console.log(`Timeout reached. ${notReadyWorkers.length} workers never became ready: ${notReadyWorkers.join(', ')}`);
-            } else {
-                console.log(`All workers are ready and teleported!`);
+                // Silently timeout - workers who aren't ready will be handled gracefully
             }
         };
         
         // Start checking immediately
         waitAndTeleport();
     }
-    
-    /**
-     * Teleport only the ready workers immediately
-     * @param {Array} readyWorkerNames - Names of ready workers
-     * @param {Object} location - Target location
-     */
+
     teleportReadyWorkers(readyWorkerNames, location) {
         readyWorkerNames.forEach((workerName, index) => {
-            const offsetX = (index - Math.floor(readyWorkerNames.length / 2)) * 2;
+            const offsetX = (index - Math.floor(readyWorkerNames.length / 2)) * 4; // Even more spacing
             const targetX = Math.floor(location.x + offsetX);
-            const targetY = Math.floor(location.y);
-            const targetZ = Math.floor(location.z + 1);
+            const targetY = Math.floor(location.y + 1); // One block higher to avoid ground conflicts
+            const targetZ = Math.floor(location.z + 3); // Further from build area
             
-            const teleportCommand = `!goToCoordinates(${targetX}, ${targetY}, ${targetZ}, 1)`;
-            console.log(`Teleporting ready worker ${workerName}: ${teleportCommand}`);
+            // Use a more reliable teleportation approach
+            const safeCommand = `Go to coordinates (${targetX}, ${targetY}, ${targetZ}) and wait there for further instructions. Move carefully and avoid obstacles.`;
             
-            // Send teleport command immediately (worker is ready)
+            // Send command with longer delay for stability
             setTimeout(() => {
-                this._sendMessageToWorker(workerName, teleportCommand);
-            }, index * 200); // Small stagger to prevent conflicts
+                this._sendMessageToWorker(workerName, safeCommand);
+            }, index * 500); // Longer stagger for better stability
         });
     }
-
-    /**
-     * Stop all worker bots
-     */
-    stopAllWorkers() {
-        console.log('Stopping all worker bots');
-        
-        for (const [workerName, workerInfo] of this.workerBots) {
-            try {
-                this.agentHandler.stopAgent(workerName);
-                workerInfo.status = 'stopped';
-                console.log(`Stopped worker bot: ${workerName}`);
-            } catch (error) {
-                console.error(`Error stopping worker bot ${workerName}:`, error);
+    stopAllWorkers(leaderName = null) {
+        if (leaderName) {
+            console.log(`Stopping worker bots for leader '${leaderName}'`);
+            const leaderPool = this.leaderWorkerPools.get(leaderName);
+            if (leaderPool) {
+                for (const [workerName, workerInfo] of leaderPool.workers) {
+                    try {
+                        this.agentHandler.stopAgent(workerName);
+                        workerInfo.status = 'stopped';
+                        // Remove from global map as well
+                        this.workerBots.delete(workerName);
+                    } catch (error) {
+                        console.error(`Error stopping worker ${workerName}:`, error);
+                    }
+                }
+                leaderPool.workers.clear();
+                leaderPool.workerCount = 0;
+                this.emit('leaderWorkersStopped', leaderName);
             }
+        } else {
+            console.log('Stopping all worker bots');
+            
+            for (const [workerName, workerInfo] of this.workerBots) {
+                try {
+                    this.agentHandler.stopAgent(workerName);
+                    workerInfo.status = 'stopped';
+                } catch (error) {
+                    console.error(`Error stopping worker ${workerName}:`, error);
+                }
+            }
+            
+            this.workerBots.clear();
+            this.leaderWorkerPools.clear();
+            this.globalWorkerCount = 0;
+            this.emit('allWorkersStopped');
         }
-        
-        // Clear worker bots map
-        this.workerBots.clear();
-        this.workerCount = 0;
-        
-        this.emit('allWorkersStopped');
     }
 
-    /**
-     * Get status of all workers
-     * @returns {Object} Status summary
-     */
-    getStatus() {
-        const workers = Array.from(this.workerBots.values()).map(worker => ({
-            name: worker.name,
-            status: worker.status,
-            currentTask: worker.currentTask
-        }));
+
+    getStatus(leaderName = null) {
+        let workers;
+        let totalWorkers;
+        
+        if (leaderName) {
+            const leaderWorkers = this.getLeaderWorkers(leaderName);
+            workers = leaderWorkers.map(worker => ({
+                name: worker.name,
+                status: worker.status,
+                currentTask: worker.currentTask,
+                leader: worker.leader
+            }));
+            totalWorkers = leaderWorkers.length;
+        } else {
+            workers = Array.from(this.workerBots.values()).map(worker => ({
+                name: worker.name,
+                status: worker.status,
+                currentTask: worker.currentTask,
+                leader: worker.leader || 'Unknown'
+            }));
+            totalWorkers = this.workerBots.size;
+        }
         
         const tasks = Array.from(this.activeTasks.values()).map(task => ({
             id: task.id,
@@ -428,18 +531,15 @@ export class CollaborativeManager extends EventEmitter {
         }));
         
         return {
-            totalWorkers: this.workerBots.size,
+            totalWorkers,
             workers,
             activeTasks: tasks.length,
-            tasks
+            tasks,
+            leaderName: leaderName || 'All'
         };
     }
 
-    /**
-     * Mark a worker as completed for a task and check if all workers are done
-     * @param {string} workerName - Name of the worker
-     * @param {string} taskId - ID of the task
-     */
+
     markWorkerComplete(workerName, taskId) {
         const worker = this.workerBots.get(workerName);
         if (!worker) return;
@@ -464,7 +564,7 @@ export class CollaborativeManager extends EventEmitter {
                         taskId: taskId,
                         type: task.type,
                         totalWorkers: task.workers.length,
-                        message: `🏗️ Construction complete! All ${task.workers.length} workers have finished building the ${task.type}.`,
+                        message: `Construction complete! All ${task.workers.length} workers have finished building the ${task.type}.`,
                         structure: task.type,
                         workersInvolved: task.workers
                     });
@@ -475,17 +575,27 @@ export class CollaborativeManager extends EventEmitter {
         }
     }
 
-    /**
-     * Auto-detect completion by monitoring worker chat messages
-     * @param {string} workerName - Name of the worker
-     * @param {string} message - Message from worker
-     */
     detectWorkerCompletion(workerName, message) {
         const worker = this.workerBots.get(workerName);
         if (!worker || !worker.currentTask) return;
 
-        // Look for completion keywords in worker messages
         const lower = message.toLowerCase();
+        
+        // Check for errors that need repair
+        const errorKeywords = [
+            'error', 'failed', 'cannot', 'stuck', 'broke', 'broken',
+            'vec3', 'undefined', 'null', 'exception'
+        ];
+        
+        const hasError = errorKeywords.some(keyword => lower.includes(keyword));
+        
+        if (hasError) {
+            console.log(`[Error Detection] ${workerName} encountered error: "${message}"`);
+            this.retryWorkerTaskWithRepair(workerName, worker.currentTask);
+            return;
+        }
+        
+        // Look for completion keywords in worker messages
         const completionKeywords = [
             'complete', 'finished', 'done', 'built', 'construction finished',
             'task complete', 'build complete', 'structure complete',
@@ -498,5 +608,26 @@ export class CollaborativeManager extends EventEmitter {
             console.log(`[Completion Detection] ${workerName} reported completion: "${message}"`);
             this.markWorkerComplete(workerName, worker.currentTask);
         }
+    }
+
+    retryWorkerTaskWithRepair(workerName, taskId) {
+        const task = this.activeTasks.get(taskId);
+        if (!task) return;
+
+        console.log(`[Repair Retry] Retrying ${workerName}'s task with enhanced repair logic`);
+        
+        // Enhanced instruction with explicit repair commands
+        const repairInstruction = `REPAIR AND RETRY: ${task.instruction}
+
+CRITICAL: If you encounter ANY errors:
+1. Stop immediately
+2. Check for broken blocks around your work area
+3. Repair any missing stone, oak_planks, or glass blocks
+4. Then continue with the original task
+5. Use !repairAction instead of !newAction for all building
+
+If you get Vec3 errors or undefined errors, use simple coordinate variables instead of complex objects.`;
+
+        this.sendMessageToWorker(workerName, repairInstruction);
     }
 }

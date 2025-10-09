@@ -661,7 +661,8 @@ RESPOND WITH CODE ONLY - no explanations, no functions, no extra text.`;
                     await agent.sendCollaborativeCommand('teleportWorkers', {
                         workers: allWorkers.map(w => w.name),
                         location: { x: currentPos.x, y: currentPos.y, z: currentPos.z },
-                        useRetry: true
+                        useRetry: true,
+                        leaderName: agent.name
                     });
                 }
                 

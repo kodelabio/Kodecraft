@@ -117,7 +117,11 @@ export class KodecraftControlPanel {
             settings: agentInfo.settings,
             in_game: false,
             process: agentInfo.process,
+            registered_at: new Date()
         };
+        
+        // Log registration for debugging
+        console.log(`Agent ${agentInfo.name} registered at ${new Date().toISOString()}`);
     }
 
     handleAgentOffline(agentName) {
@@ -171,6 +175,10 @@ export class KodecraftControlPanel {
             conn.socket = socket;
             conn.in_game = true;
             curAgentName = agentName;
+            
+            // Log successful login for debugging Boss worker issues
+            console.log(`Agent ${agentName} successfully logged in and set in_game=true`);
+            
             this.sendAgentList();
         });
 
@@ -354,7 +362,7 @@ export class KodecraftControlPanel {
                 let result;
                 switch (command) {
                     case 'spawn':
-                        result = collaborativeManager.spawnWorkerBots(data.count, data.baseSettings, data.leaderName);
+                        result = await collaborativeManager.spawnWorkerBots(data.count, data.baseSettings, data.leaderName);
                         
                         // If spawn location provided, teleport workers there after a delay
                         if (data.spawnLocation && result.length > 0) {
@@ -387,12 +395,15 @@ export class KodecraftControlPanel {
                         break;
 
                     case 'teleportWorkers':
-                        const workers = collaborativeManager.getWorkerBots();
+                        const teleportLeader = data.leaderName || agentName;
+                        const workers = data.workers ? 
+                            data.workers.map(name => ({ name })) :
+                            collaborativeManager.getWorkerBots(teleportLeader);
                         const workerNames = workers.map(w => w.name);
                         if (data.useRetry) {
-                            collaborativeManager.teleportWorkersToLocationWithRetry(workerNames, data.location);
+                            collaborativeManager.teleportWorkersToLocationWithRetry(workerNames, data.location, teleportLeader);
                         } else {
-                            collaborativeManager.teleportWorkersToLocation(workerNames, data.location);
+                            collaborativeManager.teleportWorkersToLocation(workerNames, data.location, teleportLeader);
                         }
                         socket.emit(`collab-response-${requestId}`, {
                             success: true,

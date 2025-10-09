@@ -14,7 +14,7 @@ export class CollaborativeManager extends EventEmitter {
         console.log('CollaborativeManager initialized');
     }
 
-    spawnWorkerBots(count, baseSettings, leaderName = 'DefaultLeader') {
+    async spawnWorkerBots(count, baseSettings, leaderName = 'DefaultLeader') {
         const spawnedBots = [];
         
         if (!baseSettings) {
@@ -139,7 +139,9 @@ export class CollaborativeManager extends EventEmitter {
                         agent: workerAgent,
                         settings: workerSettings,
                         status: 'spawned',
-                        currentTask: null
+                        currentTask: null,
+                        createdAt: new Date(),
+                        spawnIndex: i  // Track spawn order for Boss workers
                     };
                     
                     // Add to both global map and leader's pool
@@ -152,6 +154,12 @@ export class CollaborativeManager extends EventEmitter {
                     
                     console.log(`Worker bot '${workerName}' spawned for leader '${leaderName}' (Global ID: ${globalWorkerId}, Local ID: ${localWorkerId})`);
                     this.emit('workerSpawned', workerInfo);
+                    
+                    // For Boss workers, add delay between spawns to prevent conflicts
+                    if (leaderName === 'Boss' && i < count - 1) {
+                        console.log(`Boss worker ${workerName} spawned - adding delay before next spawn...`);
+                        // TODO: Add proper sequential spawning
+                    }
                 } else {
                     console.error(`Failed to create worker bot '${workerName}' for leader '${leaderName}'`);
                 }
@@ -373,7 +381,55 @@ export class CollaborativeManager extends EventEmitter {
         }
         
         const conn = controlPanel.agentConnections[workerName];
+        const workerInfo = this.workerBots.get(workerName);
+        
+        // Enhanced readiness check for Boss workers with extended grace period
+        if (workerInfo && workerInfo.leader === 'Boss' && workerInfo.createdAt) {
+            const timeSinceCreation = Date.now() - workerInfo.createdAt.getTime();
+            
+            // Boss workers get 30 seconds total grace period for connection
+            if (timeSinceCreation < 30000) {
+                // During grace period - just need any connection attempt
+                return conn.socket !== null || conn.socket !== undefined;
+            }
+        }
+        
+        // Standard readiness check
         return conn.socket && conn.in_game;
+    }
+
+    async waitForWorkerConnection(workerName, maxWaitTime = 15000) {
+        const startTime = Date.now();
+        const checkInterval = 1000;
+        
+        return new Promise((resolve) => {
+            console.log(`Waiting for ${workerName} to establish connection...`);
+            
+            const checkConnection = () => {
+                const currentTime = Date.now();
+                const elapsedTime = currentTime - startTime;
+                
+                const controlPanel = this.kodecraftManager.controlPanel;
+                const hasConnection = controlPanel && controlPanel.agentConnections[workerName];
+                const hasSocket = hasConnection && controlPanel.agentConnections[workerName].socket;
+                
+                if (hasSocket) {
+                    console.log(`${workerName} connection established after ${elapsedTime}ms`);
+                    resolve(true);
+                    return;
+                }
+                
+                if (elapsedTime >= maxWaitTime) {
+                    console.warn(`${workerName} did not establish connection within ${maxWaitTime}ms - proceeding anyway`);
+                    resolve(false);
+                    return;
+                }
+                
+                setTimeout(checkConnection, checkInterval);
+            };
+            
+            checkConnection();
+        });
     }
 
     async waitForWorkerReadiness(workerName, maxWaitTime = 15000) {

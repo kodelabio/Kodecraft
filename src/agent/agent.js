@@ -912,7 +912,7 @@ Example workflow:
     }
 
     
-     //Create wall tasks dynamically based on worker count
+     //Create wall tasks dynamically based on worker count - Improved with foundation and decorations
 
     _createWallTasks(baseX, baseY, baseZ, workerCount, dimensions = null, material = 'cobblestone') {
         const wallLength = dimensions && dimensions.length ? dimensions.length : 20;
@@ -924,9 +924,10 @@ Example workflow:
             const startX = baseX + (i * sectionLength);
             const endX = Math.min(baseX + ((i + 1) * sectionLength) - 1, baseX + wallLength - 1);
             
+            // Enhanced wall building with proper foundation, crenellations, and lighting
             tasks.push({
-                summary: `Wall section ${i + 1}`,
-                instruction: `Build wall section from (${startX},${baseY},${baseZ}) to (${endX},${baseY + wallHeight - 1},${baseZ}) using ${material}. Build foundation first if needed. Work with the team!`
+                summary: `Enhanced wall section ${i + 1} (x=${startX} to x=${endX})`,
+                instruction: `Build enhanced wall section with repair: !repairAction("Step 1: Build foundation by placing stone blocks from x=${startX} to x=${endX} at y=${baseY - 1}, z=${baseZ}. Step 2: Build main wall using ${material} from x=${startX} to x=${endX}, y=${baseY} to y=${baseY + wallHeight - 2}, z=${baseZ}. Step 3: Add battlements (crenellations) at top - place ${material} blocks every other position at y=${baseY + wallHeight - 1}. Step 4: Add arrow slits - create 1-block windows every 3 blocks at y=${baseY + 2}. Step 5: Place torches every 5 blocks for lighting at y=${baseY + wallHeight - 1}. Step 6: Add buttresses for support - place stone blocks extending 2 blocks out every 7 blocks. Use await skills.placeBlock() for each placement. Build foundation first, then walls bottom to top.") When complete, say 'Task complete for enhanced wall section ${i + 1}'.`
             });
         }
         
@@ -934,144 +935,138 @@ Example workflow:
     }
 
     
-     // Create house tasks dynamically based on worker count
+     // Create house tasks dynamically based on worker count - Now builds a 2-room house with decorations
 
     _createHouseTasks(baseX, baseY, baseZ, workerCount) {
         // Generate a unique task ID for this building session
         const taskId = `build_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         
+        // New 2-room house design: 16x11 total (Room 1: 7x11, Room 2: 9x11) with shared middle wall
         const allComponents = [
             {
                 id: `${taskId}_foundation`,
                 name: "foundation",
-                summary: "Foundation construction", 
-                instruction: `Build foundation with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Use await skills.placeBlock() for each block placement.") When finished, say 'Task complete for foundation'.`
+                summary: "Foundation for 2-room house", 
+                instruction: `Build foundation with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 16x11 area. For x from ${baseX} to ${baseX + 15} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 176-block foundation for our 2-room house. Use await skills.placeBlock(bot, 'stone') for each block placement.") When finished, say 'Task complete for foundation'.`
             },
             {
-                id: `${taskId}_north_wall`,
-                name: "north_wall",
-                summary: "North wall", 
-                instruction: `Build north wall with repair: !repairAction("Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for north_wall'.`
+                id: `${taskId}_exterior_walls`,
+                name: "exterior_walls",
+                summary: "Exterior walls with front door", 
+                instruction: `Build exterior walls with repair: !repairAction("Build North wall (front): place oak_planks from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip exactly 2 blocks at x=${baseX + 7}, y=${baseY + 1} and y=${baseY + 2} for main door. Build South wall (back): place oak_planks from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip single blocks at x=${baseX + 2}, x=${baseX + 8}, x=${baseX + 13}, y=${baseY + 2} for windows. Build East wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 15}. Skip single block at z=${baseZ + 5}, y=${baseY + 2} for window. Build West wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip single block at z=${baseZ + 5}, y=${baseY + 2} for window. Use await skills.placeBlock(bot, 'oak_planks') for each wall block placement.") When finished, say 'Task complete for exterior_walls'.`
             },
             {
-                id: `${taskId}_south_wall`,
-                name: "south_wall",
-                summary: "South wall with windows", 
-                instruction: `Build south wall with repair: !repairAction("Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 7},${baseY + 2},${baseZ + 10}). Use await skills.placeBlock() for each block placement.") When finished, say 'Task complete for south_wall'.`
+                id: `${taskId}_room_separator`,
+                name: "room_separator",
+                summary: "Interior wall separating rooms", 
+                instruction: `Build room separator with repair: !repairAction("Build interior wall to separate the rooms: place oak_planks from z=${baseZ + 1} to z=${baseZ + 9}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 7}. Skip exactly 2 blocks at z=${baseZ + 5}, y=${baseY + 1} and y=${baseY + 2} for connecting door between rooms. This creates Room 1 (living room) on the left and Room 2 (bedroom) on the right. Use await skills.placeBlock(bot, 'oak_planks') for each wall block placement.") When finished, say 'Task complete for room_separator'.`
             },
             {
-                id: `${taskId}_east_wall`,
-                name: "east_wall",
-                summary: "East wall with windows", 
-                instruction: `Build east wall with repair: !repairAction("Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for east_wall'.`
-            },
-            {
-                id: `${taskId}_west_wall`,
-                name: "west_wall",
-                summary: "West wall with windows", 
-                instruction: `Build west wall with repair: !repairAction("Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When finished, say 'Task complete for west_wall'.`
+                id: `${taskId}_doors_windows`,
+                name: "doors_windows",
+                summary: "Install doors and windows", 
+                instruction: `Install doors and windows with repair: !repairAction("Place oak_door at main entrance (${baseX + 7},${baseY + 1},${baseZ}). Place oak_door between rooms (${baseX + 7},${baseY + 1},${baseZ + 5}). Place glass blocks at all windows: South wall windows (${baseX + 2},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 13},${baseY + 2},${baseZ + 10}). East wall window (${baseX + 15},${baseY + 2},${baseZ + 5}). West wall window (${baseX},${baseY + 2},${baseZ + 5}). Use await skills.placeBlock(bot, 'oak_door') for doors and await skills.placeBlock(bot, 'glass') for windows.") When finished, say 'Task complete for doors_windows'.`
             },
             {
                 id: `${taskId}_roof`,
                 name: "roof",
                 summary: "Roof construction", 
-                instruction: `Build roof with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Use await skills.placeBlock() for each roof block. No stairs needed - just build directly.") When finished, say 'Task complete for roof'.`
+                instruction: `Build roof with repair: !repairAction("Build roof by placing oak_planks from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. This covers both rooms with a unified roof. Use await skills.placeBlock(bot, 'oak_planks') for each roof block.") When finished, say 'Task complete for roof'.`
+            },
+            {
+                id: `${taskId}_lighting`,
+                name: "lighting",
+                summary: "Interior and exterior wall lighting", 
+                instruction: `Install wall lighting with repair: !repairAction("Place wall-mounted torches AWAY from windows: Room 1 (living room) - place torch on north wall at (${baseX + 3},${baseY + 2},${baseZ + 1}) facing south, torch on east interior wall at (${baseX + 6},${baseY + 2},${baseZ + 3}) facing west. Room 2 (bedroom) - place torch on north wall at (${baseX + 9},${baseY + 2},${baseZ + 1}) facing south, torch on west interior wall at (${baseX + 8},${baseY + 2},${baseZ + 7}) facing east. Exterior entrance - place torch on exterior north wall at (${baseX + 6},${baseY + 3},${baseZ}) facing north. Use await skills.placeBlock(bot, 'torch') for wall-mounted torches with proper facing direction.") When finished, say 'Task complete for lighting'.`
+            },
+            {
+                id: `${taskId}_furnishings`,
+                name: "furnishings",
+                summary: "Furniture and decorations", 
+                instruction: `Add furniture and decorations with repair: !repairAction("Room 1 (Living room) furniture: Place crafting_table at (${baseX + 2},${baseY + 1},${baseZ + 2}), furnace at (${baseX + 2},${baseY + 1},${baseZ + 3}), chest at (${baseX + 5},${baseY + 1},${baseZ + 2}), oak_stairs as chairs at (${baseX + 4},${baseY + 1},${baseZ + 6}), (${baseX + 3},${baseY + 1},${baseZ + 6}). Room 2 (Bedroom) furniture: Place red_bed at (${baseX + 10},${baseY + 1},${baseZ + 3}), chest at (${baseX + 13},${baseY + 1},${baseZ + 2}), bookshelf at (${baseX + 10},${baseY + 1},${baseZ + 8}), oak_stairs as desk chair at (${baseX + 12},${baseY + 1},${baseZ + 6}). Use specific furniture block names with await skills.placeBlock() for each furniture placement.") When finished, say 'Task complete for furnishings'.`
             }
         ];
         
-        //  distribute work based on worker count
+        //  distribute work based on worker count for 2-room house
         if (workerCount === 1) {
             return [{
-                id: `${taskId}_complete_house`,
-                summary: "Complete house with decorations",
-                instruction: `Build complete house with repair: !repairAction("Step 1: Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. Step 2: Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Step 3: Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 8}, y=${baseY + 2} for window. Step 4: Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 5: Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 6: Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Step 7: Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Step 8: Place glass at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}), (${baseX + 8},${baseY + 2},${baseZ + 10}). Step 9: Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Step 10: Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}) and (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for complete_house'.`
+                id: `${taskId}_complete_2room_house`,
+                summary: "Complete 2-room house with decorations",
+                instruction: `Build complete 2-room house with repair: !repairAction("Step 1: Build foundation covering 16x11 area. For x from ${baseX} to ${baseX + 15} and z from ${baseZ} to ${baseZ + 10}, place stone at y=${baseY}. Step 2: Build exterior walls using oak_planks - North wall from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}, skip 2-block door opening at (${baseX + 7},${baseY + 1},${baseZ}) and (${baseX + 7},${baseY + 2},${baseZ}). South wall from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}, skip windows at x=${baseX + 2}, x=${baseX + 8}, x=${baseX + 13}. East wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 15}, skip window at z=${baseZ + 5}. West wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}, skip window at z=${baseZ + 5}. Step 3: Build room separator at x=${baseX + 7}, from z=${baseZ + 1} to z=${baseZ + 9}, y=${baseY + 1} to y=${baseY + 3} using oak_planks, skip 2-block door opening at (${baseX + 7},${baseY + 1},${baseZ + 5}) and (${baseX + 7},${baseY + 2},${baseZ + 5}). Step 4: Install doors and windows - main door at (${baseX + 7},${baseY + 1},${baseZ}), room door at (${baseX + 7},${baseY + 1},${baseZ + 5}), glass at windows (${baseX + 2},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 13},${baseY + 2},${baseZ + 10}), (${baseX + 15},${baseY + 2},${baseZ + 5}), (${baseX},${baseY + 2},${baseZ + 5}). Step 5: Build roof from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4} using oak_planks. Step 6: Add wall lighting AWAY from windows - place wall-mounted torches: Room 1 torch on north wall at (${baseX + 3},${baseY + 2},${baseZ + 1}) facing south, Room 1 torch on east interior wall at (${baseX + 6},${baseY + 2},${baseZ + 3}) facing west, Room 2 torch on north wall at (${baseX + 9},${baseY + 2},${baseZ + 1}) facing south, Room 2 torch on west interior wall at (${baseX + 8},${baseY + 2},${baseZ + 7}) facing east, exterior torch at (${baseX + 6},${baseY + 3},${baseZ}) facing north. Step 7: Add furniture - Living room: crafting_table at (${baseX + 2},${baseY + 1},${baseZ + 2}), furnace at (${baseX + 2},${baseY + 1},${baseZ + 3}), chest at (${baseX + 5},${baseY + 1},${baseZ + 2}), oak_stairs chairs at (${baseX + 4},${baseY + 1},${baseZ + 6}), (${baseX + 3},${baseY + 1},${baseZ + 6}). Bedroom: red_bed at (${baseX + 10},${baseY + 1},${baseZ + 3}), chest at (${baseX + 13},${baseY + 1},${baseZ + 2}), bookshelf at (${baseX + 10},${baseY + 1},${baseZ + 8}), oak_stairs chair at (${baseX + 12},${baseY + 1},${baseZ + 6}). Use await skills.placeBlock(bot, 'stone') for foundation, await skills.placeBlock(bot, 'oak_planks') for walls/roof, await skills.placeBlock(bot, 'oak_door') for doors, await skills.placeBlock(bot, 'glass') for windows, await skills.placeBlock(bot, 'torch') for lighting, and specific furniture block names.") When complete, say 'Task complete for complete_2room_house'.`
             }];
             } else if (workerCount === 2) {
             return [
                 {
-                    id: `${taskId}_foundation_ns_walls`,
-                    summary: "Foundation, North/South walls, and door",
-                    instruction: `Build foundation and walls with repair: !repairAction("Step 1: Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. Step 2: Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Step 3: Build South wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip block at x=${baseX + 8}, y=${baseY + 2} for window. Step 4: Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Step 5: Place glass at window (${baseX + 8},${baseY + 2},${baseZ + 10}). Step 6: Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}) and (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for foundation_ns_walls'.`
+                    id: `${taskId}_foundation_north_south`,
+                    summary: "Foundation + North & South walls (balanced workload)",
+                    instruction: `Build foundation and major walls with repair: !repairAction("Step 1: Build complete 16x11 foundation by placing stone blocks from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY}. Step 2: Build North wall (front) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ} using oak_planks, skip 2-block door openings - Room 1: skip (${baseX + 4},${baseY + 1},${baseZ}) and (${baseX + 4},${baseY + 2},${baseZ}), Room 2: skip (${baseX + 11},${baseY + 1},${baseZ}) and (${baseX + 11},${baseY + 2},${baseZ}). Step 3: Build South wall (back) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10} using oak_planks, skip single-block window openings at x=${baseX + 2} y=${baseY + 2}, x=${baseX + 8} y=${baseY + 2}, x=${baseX + 13} y=${baseY + 2}. Use await skills.placeBlock(bot, 'stone') for foundation and await skills.placeBlock(bot, 'oak_planks') for walls.") When complete, say 'Task complete for foundation_north_south'.`
                 },
                 {
-                    id: `${taskId}_ew_walls_roof`,
-                    summary: "East/West walls, roof, and windows",
-                    instruction: `Build walls and roof with repair: !repairAction("Step 1: Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 2: Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Step 3: Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Step 4: Place glass at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Step 5: Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Step 6: Place wall torches at (${baseX + 1},${baseY + 2},${baseZ + 1}) and (${baseX + 9},${baseY + 2},${baseZ + 9}). Use await skills.placeBlock() only.") When complete, say 'Task complete for ew_walls_roof'.`
+                    id: `${taskId}_remaining_walls_roof_decorations`,
+                    summary: "Side walls + Interior + Roof + All decorations (balanced workload)",
+                    instruction: `Complete house structure and decorations with repair: !repairAction("Step 1: Build East wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 15} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Build West wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Step 2: Build interior wall separator at x=${baseX + 7}, from z=${baseZ + 1} to z=${baseZ + 9}, y=${baseY + 1} to y=${baseY + 3} using oak_planks, skip 2-block interior door opening - skip (${baseX + 7},${baseY + 1},${baseZ + 5}) and (${baseX + 7},${baseY + 2},${baseZ + 5}). Step 3: Build complete roof from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4} using oak_planks. Step 4: Install exterior doors - Room 1 door at (${baseX + 4},${baseY + 1},${baseZ}), Room 2 door at (${baseX + 11},${baseY + 1},${baseZ}), interior connecting door at (${baseX + 7},${baseY + 1},${baseZ + 5}). Step 5: Install all window glass - South wall: (${baseX + 2},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 13},${baseY + 2},${baseZ + 10}). Side walls: (${baseX + 15},${baseY + 2},${baseZ + 5}), (${baseX},${baseY + 2},${baseZ + 5}). Step 6: Add all wall torches AWAY from windows - Room 1: North wall torch at (${baseX + 3},${baseY + 2},${baseZ + 1}), East interior wall torch at (${baseX + 6},${baseY + 2},${baseZ + 3}). Room 2: North wall torch at (${baseX + 9},${baseY + 2},${baseZ + 1}), West interior wall torch at (${baseX + 8},${baseY + 2},${baseZ + 7}). Exterior: (${baseX + 6},${baseY + 3},${baseZ}). Step 7: Add all furniture with specific coordinates - Living room: crafting_table at (${baseX + 2},${baseY + 1},${baseZ + 2}), furnace at (${baseX + 2},${baseY + 1},${baseZ + 3}), chest at (${baseX + 5},${baseY + 1},${baseZ + 2}), oak_stairs chairs at (${baseX + 4},${baseY + 1},${baseZ + 6}) and (${baseX + 3},${baseY + 1},${baseZ + 6}). Bedroom: red_bed at (${baseX + 10},${baseY + 1},${baseZ + 3}), chest at (${baseX + 13},${baseY + 1},${baseZ + 2}), bookshelf at (${baseX + 10},${baseY + 1},${baseZ + 8}), oak_stairs chair at (${baseX + 12},${baseY + 1},${baseZ + 6}). IMPORTANT: Enter rooms using doors only - DO NOT break wall blocks for access. Use await skills.placeBlock(bot, 'oak_planks') for walls/roof, await skills.placeBlock(bot, 'oak_door') for doors, await skills.placeBlock(bot, 'glass') for windows, await skills.placeBlock(bot, 'torch') for lighting.") When complete, say 'Task complete for remaining_walls_roof_decorations'.`
                 }
             ];
             } else if (workerCount === 3) {
-
             return [
                 {
-                    id: `${taskId}_foundation_north`,
-                    summary: "Foundation, North wall, and door",
-                    instruction: `Build foundation and wall with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Then build North wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Finally place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Use await skills.placeBlock() for each block.") When complete, say 'Task complete for foundation_north'.`
+                    id: `${taskId}_foundation_north_wall`,
+                    summary: "Foundation + North wall (balanced workload)",
+                    instruction: `Build foundation and north wall with repair: !repairAction("Step 1: Build complete 16x11 foundation by placing stone blocks from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY}. Step 2: Build North wall (front) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ} using oak_planks, skip 2-block door openings - Room 1: skip (${baseX + 4},${baseY + 1},${baseZ}) and (${baseX + 4},${baseY + 2},${baseZ}), Room 2: skip (${baseX + 11},${baseY + 1},${baseZ}) and (${baseX + 11},${baseY + 2},${baseZ}). Use await skills.placeBlock(bot, 'stone') for foundation and await skills.placeBlock(bot, 'oak_planks') for walls.") When complete, say 'Task complete for foundation_north_wall'.`
                 },
                 {
-                    id: `${taskId}_south_east_walls`,
-                    summary: "South/East walls and windows",
-                    instruction: `Build walls with repair: !repairAction("Build South wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 8}, y=${baseY + 2} for windows. Build East wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at all windows: (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for south_east_walls'.`
+                    id: `${taskId}_south_east_west_walls`,
+                    summary: "South + East + West walls (balanced workload)",
+                    instruction: `Build remaining exterior walls with repair: !repairAction("Step 1: Build South wall (back) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10} using oak_planks, skip single-block window openings at x=${baseX + 2} y=${baseY + 2}, x=${baseX + 8} y=${baseY + 2}, x=${baseX + 13} y=${baseY + 2}. Step 2: Build East wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 15} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Step 3: Build West wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Use await skills.placeBlock(bot, 'oak_planks') for all walls.") When complete, say 'Task complete for south_east_west_walls'.`
                 },
                 {
-                    id: `${taskId}_west_roof_lighting`,
-                    summary: "West wall, roof, and lighting",
-                    instruction: `Build west wall and simple roof: !repairAction("Build West wall - place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place glass at windows: (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}). Use await skills.placeBlock() only.") When complete, say 'Task complete for west_roof_lighting'.`
+                    id: `${taskId}_interior_roof_decorations`,
+                    summary: "Interior + Roof + Doors + Windows + Decorations (balanced workload)",
+                    instruction: `Complete interior and all decorations with repair: !repairAction("Step 1: Build interior wall separator at x=${baseX + 7}, from z=${baseZ + 1} to z=${baseZ + 9}, y=${baseY + 1} to y=${baseY + 3} using oak_planks, skip 2-block interior door opening - skip (${baseX + 7},${baseY + 1},${baseZ + 5}) and (${baseX + 7},${baseY + 2},${baseZ + 5}). Step 2: Build complete roof from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4} using oak_planks. Step 3: Install exterior doors - Room 1 door at (${baseX + 4},${baseY + 1},${baseZ}), Room 2 door at (${baseX + 11},${baseY + 1},${baseZ}), interior connecting door at (${baseX + 7},${baseY + 1},${baseZ + 5}). Step 4: Install all window glass - South wall: (${baseX + 2},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 13},${baseY + 2},${baseZ + 10}). Side walls: (${baseX + 15},${baseY + 2},${baseZ + 5}), (${baseX},${baseY + 2},${baseZ + 5}). Step 5: Install wall torches AWAY from windows - Room 1: North wall torch at (${baseX + 3},${baseY + 2},${baseZ + 1}), East interior wall torch at (${baseX + 6},${baseY + 2},${baseZ + 3}). Room 2: North wall torch at (${baseX + 9},${baseY + 2},${baseZ + 1}), West interior wall torch at (${baseX + 8},${baseY + 2},${baseZ + 7}). Exterior: (${baseX + 6},${baseY + 3},${baseZ}). Step 6: ENTER ROOMS USING DOORS ONLY - Use Room 1 door at (${baseX + 4},${baseY + 1},${baseZ}) to enter living room, use interior door at (${baseX + 7},${baseY + 1},${baseZ + 5}) to move between rooms, use Room 2 door at (${baseX + 11},${baseY + 1},${baseZ}) to enter bedroom. NEVER break wall blocks for access. Add furniture with specific coordinates - Living room: crafting_table at (${baseX + 2},${baseY + 1},${baseZ + 2}), furnace at (${baseX + 2},${baseY + 1},${baseZ + 3}), chest at (${baseX + 5},${baseY + 1},${baseZ + 2}), oak_stairs chairs at (${baseX + 4},${baseY + 1},${baseZ + 6}) and (${baseX + 3},${baseY + 1},${baseZ + 6}). Bedroom: red_bed at (${baseX + 10},${baseY + 1},${baseZ + 3}), chest at (${baseX + 13},${baseY + 1},${baseZ + 2}), bookshelf at (${baseX + 10},${baseY + 1},${baseZ + 8}), oak_stairs chair at (${baseX + 12},${baseY + 1},${baseZ + 6}). Use await skills.placeBlock(bot, 'oak_planks') for walls/roof, await skills.placeBlock(bot, 'oak_door') for doors, await skills.placeBlock(bot, 'glass') for windows, await skills.placeBlock(bot, 'torch') for lighting.") When complete, say 'Task complete for interior_roof_decorations'.`
                 }
             ];
         } else if (workerCount === 4) {
-            
             return [
                 {
                     id: `${taskId}_foundation_only`,
-                    summary: "Foundation construction",
-                    instruction: `Build foundation with repair: !repairAction("Build complete foundation by placing stone blocks covering the entire 11x11 area. For x from ${baseX} to ${baseX + 10} and z from ${baseZ} to ${baseZ + 10}, place stone at each coordinate at y=${baseY}. This creates a solid 121-block foundation. Use await skills.placeBlock() for each block.") When complete, say 'Task complete for foundation_only'.`
+                    summary: "Foundation only (balanced workload)",
+                    instruction: `Build foundation with repair: !repairAction("Build complete 16x11 foundation by placing stone blocks from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY}. This creates a solid 176-block foundation for our 2-room house. Use await skills.placeBlock(bot, 'stone') for each block placement.") When complete, say 'Task complete for foundation_only'.`
                 },
                 {
-                    id: `${taskId}_ns_walls_door`,
-                    summary: "North/South walls and door",
-                    instruction: `Build walls with repair: !repairAction("Build North wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door. Skip blocks at x=${baseX + 2} and x=${baseX + 8}, y=${baseY + 2} for windows. Build South wall: place oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10}. Skip blocks at x=${baseX + 3} and x=${baseX + 8}, y=${baseY + 2} for windows. Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Place glass at windows: (${baseX + 2},${baseY + 2},${baseZ}), (${baseX + 8},${baseY + 2},${baseZ}), (${baseX + 3},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for ns_walls_door'.`
+                    id: `${taskId}_north_south_walls`,
+                    summary: "North & South walls (balanced workload)",
+                    instruction: `Build north and south walls with repair: !repairAction("Step 1: Build North wall (front) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ} using oak_planks, skip 2-block door openings - Room 1: skip (${baseX + 4},${baseY + 1},${baseZ}) and (${baseX + 4},${baseY + 2},${baseZ}), Room 2: skip (${baseX + 11},${baseY + 1},${baseZ}) and (${baseX + 11},${baseY + 2},${baseZ}). Step 2: Build South wall (back) from x=${baseX} to x=${baseX + 15}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ + 10} using oak_planks, skip single-block window openings at x=${baseX + 2} y=${baseY + 2}, x=${baseX + 8} y=${baseY + 2}, x=${baseX + 13} y=${baseY + 2}. Use await skills.placeBlock(bot, 'oak_planks') for all walls.") When complete, say 'Task complete for north_south_walls'.`
                 },
                 {
-                    id: `${taskId}_ew_walls_windows`,
-                    summary: "East/West walls and windows",
-                    instruction: `Build walls with repair: !repairAction("Build East wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Build West wall: place oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at all windows: (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}), (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for ew_walls_windows'.`
+                    id: `${taskId}_east_west_interior`,
+                    summary: "East & West walls + Interior wall (balanced workload)",
+                    instruction: `Build side walls and interior with repair: !repairAction("Step 1: Build East wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 15} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Step 2: Build West wall from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX} using oak_planks, skip single-block window opening at z=${baseZ + 5} y=${baseY + 2}. Step 3: Build interior wall separator at x=${baseX + 7}, from z=${baseZ + 1} to z=${baseZ + 9}, y=${baseY + 1} to y=${baseY + 3} using oak_planks, skip door opening at z=${baseZ + 5}. Use await skills.placeBlock(bot, 'oak_planks') for all walls.") When complete, say 'Task complete for east_west_interior'.`
                 },
                 {
-                    id: `${taskId}_roof_lighting`,
-                    summary: "Roof and lighting",
-                    instruction: `Build simple roof with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}), (${baseX + 1},${baseY + 2},${baseZ + 4}), (${baseX + 9},${baseY + 2},${baseZ + 6}). Use await skills.placeBlock() only.") When complete, say 'Task complete for roof_lighting'.`
+                    id: `${taskId}_roof_doors_windows_decorations`,
+                    summary: "Roof + Doors + Windows + All decorations (balanced workload)",
+                    instruction: `Complete roof and all finishing work with repair: !repairAction("Step 1: Build complete roof from x=${baseX} to x=${baseX + 15}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4} using oak_planks. Step 2: Install exterior doors - Room 1 door at (${baseX + 4},${baseY + 1},${baseZ}), Room 2 door at (${baseX + 11},${baseY + 1},${baseZ}), interior connecting door at (${baseX + 7},${baseY + 1},${baseZ + 5}). Step 3: Install all window glass - South wall: (${baseX + 2},${baseY + 2},${baseZ + 10}), (${baseX + 8},${baseY + 2},${baseZ + 10}), (${baseX + 13},${baseY + 2},${baseZ + 10}). Side walls: (${baseX + 15},${baseY + 2},${baseZ + 5}), (${baseX},${baseY + 2},${baseZ + 5}). Step 4: Install wall torches AWAY from windows - Room 1: North wall torch at (${baseX + 3},${baseY + 2},${baseZ + 1}), East interior wall torch at (${baseX + 6},${baseY + 2},${baseZ + 3}). Room 2: North wall torch at (${baseX + 9},${baseY + 2},${baseZ + 1}), West interior wall torch at (${baseX + 8},${baseY + 2},${baseZ + 7}). Exterior: (${baseX + 6},${baseY + 3},${baseZ}). Step 5: Add all furniture with specific coordinates - Living room: crafting_table at (${baseX + 2},${baseY + 1},${baseZ + 2}), furnace at (${baseX + 2},${baseY + 1},${baseZ + 3}), chest at (${baseX + 5},${baseY + 1},${baseZ + 2}), oak_stairs chairs at (${baseX + 4},${baseY + 1},${baseZ + 6}) and (${baseX + 3},${baseY + 1},${baseZ + 6}). Bedroom: red_bed at (${baseX + 10},${baseY + 1},${baseZ + 3}), chest at (${baseX + 13},${baseY + 1},${baseZ + 2}), bookshelf at (${baseX + 10},${baseY + 1},${baseZ + 8}), oak_stairs chair at (${baseX + 12},${baseY + 1},${baseZ + 6}). IMPORTANT: Enter rooms using doors only - DO NOT break wall blocks for access. Use await skills.placeBlock(bot, 'oak_planks') for roof, await skills.placeBlock(bot, 'oak_door') for doors, await skills.placeBlock(bot, 'glass') for windows, await skills.placeBlock(bot, 'torch') for lighting.") When complete, say 'Task complete for roof_doors_windows_decorations'.`
                 }
             ];
-        } else { // 5 or more workers
-            const decoratedTasks = [
-                allComponents[0],
-                {
-                    id: `${taskId}_north_wall_door`,
-                    name: "north_wall_door",
-                    summary: "North wall and door",
-                    instruction: `Build wall and door with repair: !repairAction("Build North wall by placing oak_planks from x=${baseX} to x=${baseX + 10}, y=${baseY + 1} to y=${baseY + 3}, z=${baseZ}. Skip blocks at x=${baseX + 5}, y=${baseY + 1} and y=${baseY + 2} for door opening. Skip blocks at x=${baseX + 2} and x=${baseX + 8}, y=${baseY + 2} for windows. Place oak_door at (${baseX + 5},${baseY + 1},${baseZ}). Place glass blocks at (${baseX + 2},${baseY + 2},${baseZ}), (${baseX + 8},${baseY + 2},${baseZ}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for north_wall_door'.`
-                },
-                allComponents[2],
-                {
-                    id: `${taskId}_east_wall_window`,
-                    name: "east_wall_window",
-                    summary: "East wall and window",
-                    instruction: `Build wall and window with repair: !repairAction("Build East wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX + 10}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX + 10},${baseY + 2},${baseZ + 3}), (${baseX + 10},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for east_wall_window'.`
-                },
-                {
-                    id: `${taskId}_west_wall_window`,
-                    name: "west_wall_window",
-                    summary: "West wall and window",
-                    instruction: `Build wall and window with repair: !repairAction("Build West wall by placing oak_planks from z=${baseZ} to z=${baseZ + 10}, y=${baseY + 1} to y=${baseY + 3}, x=${baseX}. Skip blocks at z=${baseZ + 3} and z=${baseZ + 7}, y=${baseY + 2} for windows. Place glass blocks at (${baseX},${baseY + 2},${baseZ + 3}), (${baseX},${baseY + 2},${baseZ + 7}). Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for west_wall_window'.`
-                },
-                {
-                    id: `${taskId}_roof_lighting_final`,
-                    name: "roof_lighting",
-                    summary: "Roof and lighting",
-                    instruction: `Build simple roof and lighting with repair: !repairAction("Build simple roof by placing oak_planks from x=${baseX} to x=${baseX + 10}, z=${baseZ} to z=${baseZ + 10} at y=${baseY + 4}. Place bed at (${baseX + 7},${baseY + 1},${baseZ + 7}). Place wall torches inside house at (${baseX + 3},${baseY + 2},${baseZ + 1}), (${baseX + 7},${baseY + 2},${baseZ + 1}), (${baseX + 1},${baseY + 2},${baseZ + 4}), (${baseX + 9},${baseY + 2},${baseZ + 6}). Use await skills.placeBlock() only.") When complete, say 'Task complete for roof_lighting_final'.`
-                }
+        } else if (workerCount === 5) {
+            return [
+                allComponents[0], // Foundation
+                allComponents[1], // Exterior walls
+                allComponents[2], // Room separator
+                allComponents[3], // Doors and windows
+                allComponents[4]  // Roof
             ];
-            return decoratedTasks.slice(0, workerCount);
+        } else if (workerCount === 6) {
+            return [
+                allComponents[0], // Foundation
+                allComponents[1], // Exterior walls
+                allComponents[2], // Room separator
+                allComponents[3], // Doors and windows
+                allComponents[4], // Roof
+                allComponents[5]  // Lighting
+            ];
+        } else { // 7 or more workers - use all components for fully specialized 2-room house
+            return allComponents; // Return all specialized tasks
         }
     }
 
@@ -1084,8 +1079,8 @@ Example workflow:
         
         const plans = {
             house: {
-                description: `Building a ${structureType} with ${workerCount} workers at (${baseX},${baseY},${baseZ})`,
-                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 10, y: baseY + 4, z: baseZ + 10 } },
+                description: `Building a 2-room ${structureType} with ${workerCount} workers at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 15, y: baseY + 4, z: baseZ + 10 } },
                 tasks: this._createHouseTasks(baseX, baseY, baseZ, workerCount)
             },
             wall: {
@@ -1094,30 +1089,56 @@ Example workflow:
                 tasks: this._createWallTasks(baseX, baseY, baseZ, workerCount, dimensions, material)
             },
             tower: {
-                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
-                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 5, y: baseY + 15, z: baseZ + 5 } },
+                description: `Building a wider ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 7, y: baseY + 16, z: baseZ + 7 } },
                 tasks: [
                     {
-                        summary: "Tower base construction", 
-                        instruction: `Build the base of a tower from (${baseX},${baseY},${baseZ}) to (${baseX + 5},${baseY + 7},${baseZ + 5}) using stone. Hollow out the interior. Work with the team!`
+                        summary: "Tower foundation and base layers", 
+                        instruction: `Build tower foundation and base with repair: !repairAction("Step 1: Build foundation by placing stone blocks from x=${baseX} to x=${baseX + 7}, z=${baseZ} to z=${baseZ + 7} at y=${baseY}. Step 2: Build solid base walls from y=${baseY + 1} to y=${baseY + 4} - make exterior walls with stone, leave interior 6x6 area hollow for rooms. Step 3: Build floor at y=${baseY + 4} with stone. Add ladder access: place ladder at (${baseX + 3},${baseY + 1},${baseZ}) up to y=${baseY + 4}. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for tower foundation and base'.`
                     },
                     {
-                        summary: "Tower top construction", 
-                        instruction: `Build the top of a tower from (${baseX},${baseY + 8},${baseZ}) to (${baseX + 5},${baseY + 15},${baseZ + 5}) using stone. Add windows. Work with the team!`
+                        summary: "Tower middle section with rooms", 
+                        instruction: `Build tower middle section with repair: !repairAction("Step 1: Build walls from y=${baseY + 5} to y=${baseY + 10} - stone exterior walls, hollow 6x6 interior. Step 2: Add windows at y=${baseY + 6} and y=${baseY + 9}: place glass blocks at (${baseX},${baseY + 6},${baseZ + 3}), (${baseX + 7},${baseY + 6},${baseZ + 3}), (${baseX + 3},${baseY + 6},${baseZ}), (${baseX + 3},${baseY + 6},${baseZ + 7}). Step 3: Build floor at y=${baseY + 10} with stone. Step 4: Continue ladder from y=${baseY + 5} to y=${baseY + 10}. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for tower middle section'.`
+                    },
+                    {
+                        summary: "Tower top section and battlements", 
+                        instruction: `Build tower top with repair: !repairAction("Step 1: Build walls from y=${baseY + 11} to y=${baseY + 15} - stone exterior walls, hollow interior. Step 2: Add more windows at y=${baseY + 13}: place glass at (${baseX + 1},${baseY + 13},${baseZ}), (${baseX + 5},${baseY + 13},${baseZ}), (${baseX},${baseY + 13},${baseZ + 1}), (${baseX},${baseY + 13},${baseZ + 5}), (${baseX + 7},${baseY + 13},${baseZ + 1}), (${baseX + 7},${baseY + 13},${baseZ + 5}), (${baseX + 1},${baseY + 13},${baseZ + 7}), (${baseX + 5},${baseY + 13},${baseZ + 7}). Step 3: Build battlements at y=${baseY + 16} - place stone blocks every other position around perimeter for crenellations. Step 4: Complete ladder to top. Step 5: Place torches for lighting inside at y=${baseY + 6}, y=${baseY + 11}, y=${baseY + 15}. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for tower top and battlements'.`
                     }
                 ]
             },
             bridge: {
-                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
-                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 20, y: baseY + 3, z: baseZ + 5 } },
+                description: `Building a sturdy ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 20, y: baseY + 5, z: baseZ + 5 } },
                 tasks: [
                     {
-                        summary: "Bridge support pillars", 
-                        instruction: `Build support pillars for a bridge at positions (${baseX},${baseY},${baseZ}) and (${baseX + 20},${baseY},${baseZ + 5}). Make them 5 blocks tall using stone. Work with the team!`
+                        summary: "Bridge foundation and support pillars", 
+                        instruction: `Build bridge foundation with repair: !repairAction("Step 1: Build foundation pillars - place stone blocks from y=${baseY - 2} to y=${baseY + 2} at positions (${baseX},${baseY},${baseZ}), (${baseX},${baseY},${baseZ + 5}), (${baseX + 10},${baseY},${baseZ}), (${baseX + 10},${baseY},${baseZ + 5}), (${baseX + 20},${baseY},${baseZ}), (${baseX + 20},${baseY},${baseZ + 5}). Step 2: Create 3x3 pillar bases for stability. Use await skills.placeBlock() for each block.") When complete, say 'Task complete for bridge foundation'.`
                     },
                     {
-                        summary: "Bridge deck construction", 
-                        instruction: `Build the bridge deck from (${baseX},${baseY + 2},${baseZ}) to (${baseX + 20},${baseY + 2},${baseZ + 5}) using oak_planks. Work with the team!`
+                        summary: "Bridge deck and railings", 
+                        instruction: `Build bridge deck with repair: !repairAction("Step 1: Build bridge deck from x=${baseX} to x=${baseX + 20}, z=${baseZ} to z=${baseZ + 5} at y=${baseY + 3} using oak_planks. Step 2: Add safety railings - place oak_fence from x=${baseX} to x=${baseX + 20} at y=${baseY + 4} and y=${baseY + 5} along z=${baseZ} and z=${baseZ + 5} edges. Step 3: Add torches every 5 blocks along the railings for lighting. Step 4: Place pressure plates at both bridge entrances for activation. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for bridge deck and railings'.`
+                    },
+                    {
+                        summary: "Bridge arch supports and decorations", 
+                        instruction: `Add bridge supports with repair: !repairAction("Step 1: Build arch supports under the bridge using stone_stairs from y=${baseY + 1} to y=${baseY + 2} at x=${baseX + 5}, x=${baseX + 10}, x=${baseX + 15}. Step 2: Add decorative stone brick accents on the pillars. Step 3: Place additional torches under bridge for better lighting. Step 4: Add signs at bridge entrance with bridge name or directions. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for bridge supports and decorations'.`
+                    }
+                ]
+            },
+            castle: {
+                description: `Building a ${structureType} at (${baseX},${baseY},${baseZ})`,
+                area: { start: { x: baseX, y: baseY, z: baseZ }, end: { x: baseX + 25, y: baseY + 12, z: baseZ + 25 } },
+                tasks: [
+                    {
+                        summary: "Castle outer walls and foundation", 
+                        instruction: `Build castle foundation with repair: !repairAction("Step 1: Build foundation from x=${baseX} to x=${baseX + 25}, z=${baseZ} to z=${baseZ + 25} at y=${baseY} using stone. Step 2: Build outer walls - place stone blocks from y=${baseY + 1} to y=${baseY + 8} around perimeter, leave spaces for gatehouse at x=${baseX + 12} to x=${baseX + 13}, z=${baseZ}. Step 3: Build corner towers - 5x5 towers at corners from y=${baseY + 1} to y=${baseY + 12}. Use await skills.placeBlock() for each block.") When complete, say 'Task complete for castle foundation and walls'.`
+                    },
+                    {
+                        summary: "Castle gatehouse and interior", 
+                        instruction: `Build castle interior with repair: !repairAction("Step 1: Build gatehouse - create 4x4 entrance structure at front with portcullis opening. Step 2: Build keep (central tower) - 7x7 structure in center from y=${baseY + 1} to y=${baseY + 15}. Step 3: Add courtyard features - well at center, barracks buildings, stables along walls. Step 4: Install iron_door for gatehouse with redstone mechanism. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for castle gatehouse and interior'.`
+                    },
+                    {
+                        summary: "Castle battlements and decorations", 
+                        instruction: `Complete castle with repair: !repairAction("Step 1: Add battlements (crenellations) to all walls and towers at top levels. Step 2: Install arrow slits (windows) in walls at strategic points. Step 3: Add lighting - torches on walls, glowstone in towers. Step 4: Build drawbridge mechanism with redstone. Step 5: Add banners and decorative elements. Step 6: Place chests in towers for storage, beds in keep for garrison. Use await skills.placeBlock() for each placement.") When complete, say 'Task complete for castle battlements and decorations'.`
                     }
                 ]
             }

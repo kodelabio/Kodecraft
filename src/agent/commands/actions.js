@@ -541,9 +541,11 @@ RESPOND WITH CODE ONLY - no explanations, no functions, no extra text.`;
                 
                 // Handle default values and parse dimensions
                 if (dimensions === 'default dimensions' || dimensions === 'default') {
-                    dimensions = structure_type === 'house' ? '10 blocks length, 10 blocks width, 3 blocks height' :
-                                structure_type === 'wall' ? '20 blocks length, 3 blocks height' :
-                                structure_type === 'tower' ? '5 blocks length, 5 blocks width, 10 blocks height' :
+                    dimensions = structure_type === 'house' ? '16 blocks length, 11 blocks width, 4 blocks height' :
+                                structure_type === 'wall' ? '20 blocks length, 4 blocks height' :
+                                structure_type === 'tower' ? '8 blocks length, 8 blocks width, 16 blocks height' :
+                                structure_type === 'bridge' ? '20 blocks length, 6 blocks width, 5 blocks height' :
+                                structure_type === 'castle' ? '25 blocks length, 25 blocks width, 12 blocks height' :
                                 '10 blocks length, 3 blocks height';
                 }
                 

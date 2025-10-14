@@ -1,0 +1,289 @@
+{
+  "name": "Kodecraft Bot Control via Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": "webhook",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [200, 300],
+      "webhookId": "your-telegram-webhook-id",
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram API"
+        }
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message.text }}",
+              "operation": "startsWith",
+              "value2": "/"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [400, 300],
+      "id": "is-command",
+      "name": "Is Command?"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:8080/command",
+        "options": {
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "requestMethod": "POST",
+        "jsonParameters": true,
+        "bodyParametersJson": "={\n  \"user\": \"{{ $json.message.from.username || $json.message.from.first_name }}\",\n  \"command\": \"{{ $json.message.text }}\",\n  \"bot\": \"{{ $json.message.text.includes('boss') ? 'Boss' : 'Kid' }}\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 200],
+      "id": "send-command",
+      "name": "Send Command to Bot"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "=🤖 Command sent to {{ $node[\"Send Command to Bot\"].json.bot }}!\n\nCommand ID: {{ $node[\"Send Command to Bot\"].json.commandId }}\n\nI'll notify you when there's a response!"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [800, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram API"
+        }
+      },
+      "id": "confirm-command",
+      "name": "Confirm Command Sent"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.schedule",
+      "typeVersion": 1,
+      "position": [200, 600],
+      "id": "poll-schedule",
+      "name": "Poll Every 10s"
+    },
+    {
+      "parameters": {
+        "url": "=http://localhost:8080/updates?since={{ $node[\"Get Last Timestamp\"].json.lastTimestamp || 0 }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [600, 600],
+      "id": "get-updates",
+      "name": "Get Bot Updates"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "last_update_timestamp"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [400, 600],
+      "credentials": {
+        "redis": {
+          "id": "2",
+          "name": "Redis"
+        }
+      },
+      "id": "get-last-timestamp",
+      "name": "Get Last Timestamp"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process bot updates and format for Telegram\nconst updates = $input.all()[0].json.updates || [];\nconst results = [];\n\nfor (const update of updates) {\n  // Only send important updates\n  if (['milestone', 'response', 'worker_assignment', 'error'].includes(update.type)) {\n    \n    let emoji = '🤖';\n    switch(update.type) {\n      case 'milestone': emoji = '🏗️'; break;\n      case 'response': emoji = '💬'; break;\n      case 'worker_assignment': emoji = '👥'; break;\n      case 'error': emoji = '❌'; break;\n    }\n    \n    results.push({\n      message: `${emoji} **${update.from}**: ${update.message}`,\n      timestamp: update.ts,\n      type: update.type,\n      bot: update.from\n    });\n  }\n}\n\n// Store latest timestamp for next poll\nif (updates.length > 0) {\n  const latestTimestamp = Math.max(...updates.map(u => u.ts));\n  results.push({\n    storeTimestamp: latestTimestamp,\n    updateCount: results.length\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [800, 600],
+      "id": "process-updates",
+      "name": "Process Updates"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "last_update_timestamp",
+        "value": "={{ $json.storeTimestamp }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1000, 700],
+      "credentials": {
+        "redis": {
+          "id": "2", 
+          "name": "Redis"
+        }
+      },
+      "id": "store-timestamp",
+      "name": "Store Timestamp"
+    },
+    {
+      "parameters": {
+        "chatId": "your-telegram-chat-id",
+        "text": "={{ $json.message }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [1000, 500],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram API"
+        }
+      },
+      "id": "send-update",
+      "name": "Send Update to Telegram"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "❓ Unknown command. Try:\n\n/kid build house\n/kid build tower\n/boss assign workers\n/kid status\n\nOr send any Minecraft command starting with /"
+      },
+      "type": "n8n-nodes-base.telegram", 
+      "typeVersion": 1.1,
+      "position": [600, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "1",
+          "name": "Telegram API"
+        }
+      },
+      "id": "unknown-command",
+      "name": "Unknown Command Response"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Is Command?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Command?": {
+      "main": [
+        [
+          {
+            "node": "Send Command to Bot",
+            "type": "main", 
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unknown Command Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Command to Bot": {
+      "main": [
+        [
+          {
+            "node": "Confirm Command Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Every 10s": {
+      "main": [
+        [
+          {
+            "node": "Get Last Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Last Timestamp": {
+      "main": [
+        [
+          {
+            "node": "Get Bot Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Bot Updates": {
+      "main": [
+        [
+          {
+            "node": "Process Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Updates": {
+      "main": [
+        [
+          {
+            "node": "Send Update to Telegram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Store Timestamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "id": "kodecraft",
+      "name": "kodecraft"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "versionId": "1"
+}

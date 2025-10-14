@@ -1,7 +1,7 @@
 const settings = {
     "minecraft_version": "1.21.4", // supports up to 1.21.4
     "host": "127.0.0.1", 
-    "port": 55916,
+    "port": 55965,
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI

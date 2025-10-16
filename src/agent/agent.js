@@ -16,6 +16,7 @@ import { serverProxy } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { say } from './speak.js';
+import { agentRegistry } from './agent_registry.js';
 
 export class Agent {
     async start(load_mem=false, init_message=null, count_id=0) {
@@ -52,6 +53,9 @@ export class Agent {
 
         console.log(this.name, 'logging into minecraft...');
         this.bot = initBot(this.name);
+
+        // Register this agent and its bot in the global registry
+        agentRegistry.registerAgent(this.name, this);
 
         initModes(this);
 

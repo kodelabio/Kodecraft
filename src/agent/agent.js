@@ -16,6 +16,12 @@ import { serverProxy } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { say } from './speak.js';
+import { ExternalAPI } from './external_api.js';
+// Use global fetch (Node.js 18+) or import if needed
+const fetch = globalThis.fetch || (async (...args) => {
+    const { default: nodeFetch } = await import('node-fetch');
+    return nodeFetch(...args);
+});
 
 export class Agent {
     async start(load_mem = false, init_message = null, count_id = 0) {
@@ -27,13 +33,36 @@ export class Agent {
         this.prompter = new Prompter(this, settings.profile);
         this.name = this.prompter.getName();
         console.log(`Initializing agent ${this.name}...`);
-        this.history = new History(this);
-        this.coder = new Coder(this);
+        
+        // Only initialize brain components if not in external mode
+        if (settings.brain_mode !== 'external') {
+            this.history = new History(this);
+            this.coder = new Coder(this);
+            this.self_prompter = new SelfPrompter(this);
+            convoManager.initAgent(this);
+            await this.prompter.initExamples();
+        } else {
+            console.log('External brain mode enabled - skipping internal AI components');
+            // Create minimal history for action logging only
+            this.history = { 
+                add: () => {}, 
+                save: () => {}, 
+                load: () => null,
+                memory: ''
+            };
+            // Create dummy self_prompter to prevent errors in modes.js
+            this.self_prompter = {
+                isActive: () => false,
+                stopLoop: () => {},
+                shouldInterrupt: () => false,
+                handleUserPromptedCmd: () => {},
+                update: () => {},
+                stop: () => {}
+            };
+        }
+        
         this.npc = new NPCContoller(this);
         this.memory_bank = new MemoryBank();
-        this.self_prompter = new SelfPrompter(this);
-        convoManager.initAgent(this);
-        await this.prompter.initExamples();
 
         // load mem first before doing task
         let save_data = null;
@@ -82,7 +111,12 @@ export class Agent {
                 console.log(`${this.name} spawned.`);
                 this.clearBotLogs();
 
-                this._setupEventHandlers(save_data, init_message);
+                // Setup event handlers based on brain mode
+                if (settings.brain_mode === 'external') {
+                    this._setupExternalMode(save_data, init_message);
+                } else {
+                    this._setupEventHandlers(save_data, init_message);
+                }
                 this.startEvents();
 
                 if (!load_mem) {
@@ -214,6 +248,19 @@ export class Agent {
     }
 
     async handleMessage(source, message, max_responses = null) {
+        // In external brain mode, only allow system messages for action results
+        if (settings.brain_mode === 'external') {
+            if (source === 'system') {
+                // Log system messages (like action results) but don't process
+                console.log('System message in external mode:', message);
+                return false;
+            }
+            
+            // All other messages should come through the API, not chat handlers
+            console.log('Ignoring message in external brain mode:', source, message);
+            return false;
+        }
+        
         await this.checkTaskDone();
         if (!source || !message) {
             console.warn('Received empty message from', source);
@@ -472,7 +519,9 @@ export class Agent {
 
     async update(delta) {
         await this.bot.modes.update();
-        this.self_prompter.update(delta);
+        if (this.self_prompter) {
+            this.self_prompter.update(delta);
+        }
         await this.checkTaskDone();
     }
 
@@ -482,6 +531,10 @@ export class Agent {
 
 
     cleanKill(msg = 'Killing agent process...', code = 1) {
+        if (this.externalAPI) {
+            this.externalAPI.stop();
+        }
+        
         this.history.add('system', msg);
         this.bot.chat(code > 1 ? 'Restarting.' : 'Exiting.');
         this.history.save();
@@ -502,5 +555,108 @@ export class Agent {
 
     killAll() {
         serverProxy.shutdown();
+    }
+
+    // New method for external brain mode setup
+    async _setupExternalMode(save_data, init_message) {
+        console.log('Setting up external brain mode...');
+        
+        // Start the REST API server
+        this.externalAPI = new ExternalAPI(this);
+        const apiPort = settings.external_api_port || 3001;
+        await this.externalAPI.start(apiPort);
+        
+        // Setup chat forwarder to n8n webhook
+        this.setupChatForwarder();
+        
+        // Disable auto-eat and other brain-dependent behaviors
+        this.bot.autoEat.options = {
+            priority: 'foodPoints',
+            startAt: 14,
+            bannedFood: ["rotten_flesh", "spider_eye", "poisonous_potato", "pufferfish", "chicken"]
+        };
+        
+        // Send simple greeting in external mode
+        console.log('External brain mode initialized');
+        await this.openChat(`Hello! I am ${this.name}.`);
+    }
+
+    // New method for chat forwarding
+    setupChatForwarder() {
+        const webhookUrl = settings.n8n_webhook_url || process.env.N8N_WEBHOOK_URL;
+        
+        if (!webhookUrl) {
+            console.warn('No n8n webhook URL configured for chat forwarding');
+            return;
+        }
+
+        console.log('Setting up chat forwarder to:', webhookUrl);
+        
+        this.bot.on('chat', async (username, message) => {
+            // Skip own messages and system messages
+            if (username === this.name) return;
+            
+            // Skip if not in external brain mode
+            if (settings.brain_mode !== 'external') return;
+            
+            // Ignore certain system messages
+            const ignore_messages = [
+                "Set own game mode to",
+                "Set the time to", 
+                "Set the difficulty to",
+                "Teleported ",
+                "Set the weather to",
+                "Gamerule "
+            ];
+            
+            if (ignore_messages.some((m) => message.startsWith(m))) return;
+            
+            try {
+                const payload = {
+                    source: 'ingame',
+                    username: username,
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    agent_name: this.name
+                };
+                
+                console.log(`Forwarding chat to n8n: ${username}: ${message}`);
+                
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+            } catch (error) {
+                console.error('Failed to forward chat to n8n:', error);
+            }
+        });
+
+        // Also handle whispers
+        this.bot.on('whisper', async (username, message) => {
+            if (username === this.name || settings.brain_mode !== 'external') return;
+            
+            try {
+                const payload = {
+                    source: 'ingame_whisper',
+                    username: username, 
+                    message: message,
+                    timestamp: new Date().toISOString(),
+                    agent_name: this.name
+                };
+                
+                console.log(`Forwarding whisper to n8n: ${username}: ${message}`);
+                
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+            } catch (error) {
+                console.error('Failed to forward whisper to n8n:', error);
+            }
+        });
     }
 }

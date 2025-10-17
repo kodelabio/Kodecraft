@@ -56,6 +56,9 @@ export async function loadConfig() {
     if (process.env.MAX_MESSAGES) envConfig.max_messages = process.env.MAX_MESSAGES;
     if (process.env.NUM_EXAMPLES) envConfig.num_examples = process.env.NUM_EXAMPLES;
     if (process.env.LOG_ALL) envConfig.log_all_prompts = process.env.LOG_ALL;
+    if (process.env.BRAIN_MODE) envConfig.brain_mode = process.env.BRAIN_MODE;
+    if (process.env.EXTERNAL_API_PORT) envConfig.external_api_port = process.env.EXTERNAL_API_PORT;
+    if (process.env.N8N_WEBHOOK_URL) envConfig.n8n_webhook_url = process.env.N8N_WEBHOOK_URL;
 
     // 4. Merge: default < env < cli
     return {

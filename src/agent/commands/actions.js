@@ -33,14 +33,25 @@ export const actionsList = [
             'prompt': { type: 'string', description: 'A natural language prompt to guide code generation. Make a detailed step-by-step plan.' }
         },
         perform: async function(agent, prompt) {
-            // just ignore prompt - it is now in context in chat history
+            // Check if coding is allowed
             if (!settings.allow_insecure_coding) { 
                 agent.openChat('newAction is disabled. Enable with allow_insecure_coding=true in settings.js');
                 return "newAction not allowed! Code writing is disabled in settings. Notify the user.";
             }
+
+            // In external brain mode, newAction should NOT generate code locally
+            // Instead, it should be handled by the external brain (n8n workflow)
+            if (settings.brain_mode === 'external') {
+                return `EXTERNAL_BRAIN_TASK: ${prompt}`;
+            }
+
+            // Internal mode: standard code generation process
             let result = "";
             const actionFn = async () => {
                 try {
+                    if (!agent.coder) {
+                        throw new Error('Coder component not available');
+                    }
                     result = await agent.coder.generateCode(agent.history);
                     console.log("[Kodelab] Example of generated code:", result)
                 } catch (e) {

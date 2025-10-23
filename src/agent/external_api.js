@@ -61,7 +61,8 @@ export class ExternalAPI {
         // Combat and interaction
         this.app.post('/api/agent/attack', this.handleAttack.bind(this));
         this.app.post('/api/agent/attackPlayer', this.handleAttackPlayer.bind(this));
-        this.app.post('/api/agent/follow', this.handleFollow.bind(this));
+
+        this.app.post('/api/agent/followPlayer', this.handleFollowPlayer.bind(this));
         this.app.post('/api/agent/defendSelf', this.handleDefendSelf.bind(this));
         
         // Location memory
@@ -105,6 +106,9 @@ export class ExternalAPI {
         // Goal management
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
+        
+        // Building plan execution
+        this.app.post('/api/agent/executeBuildingPlan', this.handleExecuteBuildingPlan.bind(this));
         
         // Health check
         this.app.get('/api/health', (req, res) => {
@@ -883,6 +887,16 @@ export class ExternalAPI {
             if (result && result.includes('not allowed')) {
                 return res.status(403).json({ error: result, code: 'newaction_disabled' });
             }
+
+            // Check if this is an external brain task that needs smart handling
+            if (result && result.includes('EXTERNAL_BRAIN_TASK:')) {
+                return res.json({ 
+                    success: true, 
+                    message: result,
+                    external_brain_task: true,
+                    task_prompt: prompt
+                });
+            }
             
             res.json({ success: true, message: result || 'Executing custom action' });
         } catch (error) {
@@ -1032,7 +1046,9 @@ export class ExternalAPI {
         }
     }
 
-    async handleFollow(req, res) {
+
+
+    async handleFollowPlayer(req, res) {
         try {
             const { player, distance = 3 } = req.body;
             
@@ -1049,7 +1065,7 @@ export class ExternalAPI {
             
             res.json({ success: true, message: result || `Following ${player}` });
         } catch (error) {
-            this.handleError(res, error, 'follow');
+            this.handleError(res, error, 'followPlayer');
         }
     }
 
@@ -1110,10 +1126,51 @@ export class ExternalAPI {
         }
     }
 
+    async handleExecuteBuildingPlan(req, res) {
+        try {
+            const { userMessage } = req.body;
+            
+            if (!userMessage) {
+                return res.status(400).json({ 
+                    error: 'No user message provided' 
+                });
+            }
+            
+            console.log(`\nExecuting building request: ${userMessage}`);
+            
+            try {
+                // Use the actual !newAction command - this calls generateCode() which creates and executes JavaScript
+                const result = await this.botInstance.handleCommand(`!newAction("${userMessage}")`);
+                
+                res.json({
+                    success: true,
+                    userMessage: userMessage,
+                    executionResult: result,
+                    message: `Successfully processed building request`
+                });
+                
+            } catch (executionError) {
+                console.error('Error executing newAction:', executionError);
+                res.status(500).json({ 
+                    error: 'Failed to execute building request',
+                    details: executionError.message
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error in building request processing:', error);
+            res.status(500).json({ 
+                error: 'Failed to process building request',
+                details: error.message 
+            });
+        }
+    }
+
     handleError(res, error, action) {
         console.error(`External API error in ${action}:`, error);
         
-        if (this.agent.actions.executing) {
+        // Check if agent is busy
+        if (this.agent.actions && this.agent.actions.executing) {
             return res.status(409).json({ 
                 error: 'Agent is busy with another action', 
                 code: 'busy',
@@ -1121,9 +1178,20 @@ export class ExternalAPI {
             });
         }
         
+        // Handle external brain mode specific errors
+        if (error.message && error.message.includes('coder')) {
+            return res.status(400).json({
+                error: 'External brain mode: complex actions should be handled by the workflow AI brain',
+                code: 'external_brain_required',
+                details: 'This action requires the external AI brain to break it down into simpler commands'
+            });
+        }
+        
+        // Generic error response
         res.status(500).json({ 
             error: 'Internal server error', 
             code: 'internal_error',
+            action: action,
             details: error.message 
         });
     }

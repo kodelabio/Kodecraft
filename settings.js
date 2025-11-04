@@ -9,7 +9,7 @@ const settings = {
     
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
-        "./profiles/kid.json",
+        "./profiles/jainesh.json",
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
@@ -45,11 +45,6 @@ const settings = {
     "narrate_behavior": true, // chat simple automatic actions ('Picking up item!')
     "chat_bot_messages": true, // publicly chat messages to other bots
     "log_all_prompts": false, // log ALL prompts to file
-    
-    // External brain mode configuration
-    "brain_mode": "external", // "internal" (default) or "external" (n8n mode)
-    "external_api_port": 3001, // Port for REST API server
-    // n8n_webhook_url: 'https://5ae3440a98f2.ngrok-free.app/webhook-test/webhook/ingame', // n8n webhook for chat processing
 }
 
 export default settings;

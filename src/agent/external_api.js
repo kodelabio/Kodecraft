@@ -110,6 +110,9 @@ export class ExternalAPI {
         // Building plan execution
         this.app.post('/api/agent/executeBuildingPlan', this.handleExecuteBuildingPlan.bind(this));
         
+        // Intelligent code execution
+        this.app.post('/api/agent/executeGeneratedCode', this.handleExecuteGeneratedCode.bind(this));
+        
         // Health check
         this.app.get('/api/health', (req, res) => {
             res.json({ status: 'ok' });
@@ -1136,32 +1139,90 @@ export class ExternalAPI {
                 });
             }
             
-            console.log(`\nExecuting building request: ${userMessage}`);
+            console.log(`\n=== BUILDING REQUEST RECEIVED ===`);
+            console.log(`Request: ${userMessage}`);
+            console.log(`Bot connected: ${this.agent.bot.player ? 'Yes' : 'No'}`);
+            console.log(`Bot position: ${this.agent.bot.player ? this.agent.bot.player.position : 'Unknown'}`);
+            console.log(`Agent actions executing: ${this.agent.actions ? this.agent.actions.executing : 'Unknown'}`);
+            
+            // Temporarily override external brain mode to allow smart AI processing
+            const originalBrainMode = this.agent.settings?.brain_mode;
             
             try {
-                // Use the actual !newAction command - this calls generateCode() which creates and executes JavaScript
-                const result = await this.botInstance.handleCommand(`!newAction("${userMessage}")`);
+                // Switch to internal brain mode temporarily to enable smart AI code generation
+                if (this.agent.settings) {
+                    console.log('Temporarily switching to internal brain mode for smart AI processing');
+                    this.agent.settings.brain_mode = 'internal';
+                }
+                
+                // Add the building request to agent history for AI context
+                this.agent.history.add('user', userMessage);
+                
+                // Use newAction - this allows the AI to be smart about the request
+                // The AI can analyze if it's possible, suggest alternatives, choose appropriate skills, etc.
+                console.log('Executing smart newAction command...');
+                
+                const command = `!newAction("${userMessage.replace(/"/g, '\\"')}")`;
+                const result = await executeCommand(this.agent, command);
+                
+                // Restore original brain mode
+                if (this.agent.settings) {
+                    console.log('Restoring original brain mode:', originalBrainMode);
+                    this.agent.settings.brain_mode = originalBrainMode;
+                }
+                
+                console.log('Smart AI result:', result);
+                
+                console.log('=== SMART AI EXECUTION COMPLETED ===');
+                console.log(`Result: ${result}`);
+                
+                // Check if the AI execution was successful
+                const success = result && 
+                    !result.includes('Error generating code') && 
+                    !result.includes('newAction not allowed') &&
+                    !result.includes('Code generation failed') &&
+                    result !== 'newAction not allowed! Code writing is disabled in settings. Notify the user.';
+                
+                // Check if bot is still connected and get current status
+                const botStatus = {
+                    connected: this.agent.bot.player ? true : false,
+                    position: this.agent.bot.player ? this.agent.bot.player.position : null,
+                    health: this.agent.bot.player ? this.agent.bot.player.health : null,
+                    gamemode: this.agent.bot.player ? this.agent.bot.player.gameMode : null
+                };
                 
                 res.json({
-                    success: true,
+                    success: success,
                     userMessage: userMessage,
                     executionResult: result,
-                    message: `Successfully processed building request`
+                    botStatus: botStatus,
+                    message: success ? 
+                        `Smart AI successfully analyzed and executed building request` : 
+                        `AI processed request but encountered issues: ${result}`
                 });
                 
             } catch (executionError) {
-                console.error('Error executing newAction:', executionError);
+                // Always restore original brain mode, even on error
+                if (this.agent.settings) {
+                    console.log('Restoring brain mode after error:', originalBrainMode);
+                    this.agent.settings.brain_mode = originalBrainMode;
+                }
+                console.error('Error executing building request:', executionError);
+                console.error('Stack trace:', executionError.stack);
                 res.status(500).json({ 
                     error: 'Failed to execute building request',
-                    details: executionError.message
+                    details: executionError.message,
+                    stack: executionError.stack
                 });
             }
             
         } catch (error) {
             console.error('Error in building request processing:', error);
+            console.error('Stack trace:', error.stack);
             res.status(500).json({ 
                 error: 'Failed to process building request',
-                details: error.message 
+                details: error.message,
+                stack: error.stack
             });
         }
     }
@@ -1194,6 +1255,291 @@ export class ExternalAPI {
             action: action,
             details: error.message 
         });
+    }
+
+    async handleExecuteStructuredPlan(req, res) {
+        try {
+            const { userMessage } = req.body;
+            
+            if (!userMessage) {
+                return res.status(400).json({ 
+                    error: 'No user message provided' 
+                });
+            }
+            
+            console.log(`\nExecuting building request via newAction: ${userMessage}`);
+            
+            // Use the original newAction approach, but bypass external brain mode limitation
+            // by temporarily switching to internal mode for code generation
+            const originalBrainMode = this.agent.settings?.brain_mode;
+            
+            try {
+                // Temporarily enable internal brain mode to allow code generation
+                if (this.agent.settings) {
+                    this.agent.settings.brain_mode = 'internal';
+                }
+                
+                // Add the building request to the agent's history for context
+                this.agent.history.add('user', userMessage);
+                
+                // Use the newAction command which will now generate and execute code
+                const command = `!newAction("${userMessage.replace(/"/g, '\\"')}")`;
+                const result = await executeCommand(this.agent, command);
+                
+                console.log('NewAction execution result:', result);
+                
+                // Restore original brain mode
+                if (this.agent.settings) {
+                    this.agent.settings.brain_mode = originalBrainMode;
+                }
+                
+                // Parse the result to determine success
+                const success = result && !result.includes('error') && !result.includes('failed') && !result.includes('Error generating code');
+                
+                res.json({
+                    success: success,
+                    userMessage: userMessage,
+                    executionResult: result,
+                    message: success ? 'Building request executed successfully' : 'Building request encountered issues',
+                    brainMode: 'internal_override'
+                });
+                
+            } catch (executionError) {
+                // Restore original brain mode even if there was an error
+                if (this.agent.settings) {
+                    this.agent.settings.brain_mode = originalBrainMode;
+                }
+                
+                console.error('Error executing newAction:', executionError);
+                res.status(500).json({ 
+                    error: 'Failed to execute building request',
+                    details: executionError.message
+                });
+            }
+            
+        } catch (error) {
+            console.error('Error in building request processing:', error);
+            res.status(500).json({ 
+                error: 'Failed to process building request',
+                details: error.message 
+            });
+        }
+    }
+
+    async handleExecuteGeneratedCode(req, res) {
+        try {
+            const { 
+                userMessage, 
+                codeInstructions, 
+                analysis, 
+                chatId, 
+                playerName, 
+                source,
+                // Legacy support 
+                code
+            } = req.body;
+            
+            console.log('=== INTELLIGENT CODE EXECUTION REQUEST ===');
+            console.log('User Message:', userMessage);
+            console.log('Code Instructions:', typeof codeInstructions === 'string' ? 
+                codeInstructions.substring(0, 200) + '...' : 
+                JSON.stringify(codeInstructions));
+            console.log('Analysis:', analysis);
+            console.log('Chat ID:', chatId);
+            
+            console.log('Full request body:', JSON.stringify(req.body, null, 2));
+            
+            // Be flexible with userMessage - try to infer from available data
+            let finalUserMessage = userMessage;
+            if (!finalUserMessage && analysis && analysis.analysis) {
+                // Try to extract user intent from the analysis
+                finalUserMessage = analysis.analysis;
+                console.log('No userMessage provided, using analysis as fallback:', finalUserMessage.substring(0, 100));
+            } else if (!finalUserMessage && codeInstructions) {
+                // Last resort: use the code instructions to infer the request
+                const instructions = Array.isArray(codeInstructions) ? codeInstructions.join(' ') : codeInstructions;
+                finalUserMessage = `Execute task: ${instructions.substring(0, 200)}`;
+                console.log('No userMessage provided, using codeInstructions as fallback:', finalUserMessage.substring(0, 100));
+            }
+            
+            if (!finalUserMessage) {
+                return res.status(400).json({ 
+                    error: 'Unable to determine user request - no userMessage, analysis, or codeInstructions provided',
+                    receivedBody: req.body,
+                    receivedKeys: Object.keys(req.body || {})
+                });
+            }
+
+            // Use the same intelligent code generation system as internal mode
+            // This includes skill selection, prompt building, and code generation
+            const result = await this.executeIntelligentCode(finalUserMessage, codeInstructions, analysis);
+            
+            res.json({ 
+                success: true, 
+                message: result.message || 'Task completed successfully',
+                executionResult: result.output,
+                userMessage: finalUserMessage,
+                chatId: chatId,
+                playerName: playerName,
+                source: source
+            });
+        } catch (error) {
+            console.error('Error in intelligent code execution:', error);
+            console.error('Error stack:', error.stack);
+            res.status(500).json({ 
+                success: false,
+                error: 'Code execution failed',
+                details: error.message,
+                userMessage: finalUserMessage || userMessage || req.body.userMessage || 'Unknown request',
+                requestBody: req.body
+            });
+        }
+    }
+
+    async executeIntelligentCode(userMessage, codeInstructions, analysis) {
+        console.log('=== STARTING INTELLIGENT CODE EXECUTION ===');
+        console.log('User Message:', userMessage);
+        console.log('Code Instructions:', codeInstructions);
+        
+        // Temporarily switch to internal mode to enable code execution
+        const originalBrainMode = this.agent.settings?.brain_mode;
+        const originalCodeExecution = this.agent.settings?.allow_code_execution;
+        
+        try {
+            // Force internal mode temporarily
+            if (this.agent.settings) {
+                console.log('Switching to internal mode for code execution...');
+                this.agent.settings.brain_mode = 'internal';
+                this.agent.settings.allow_code_execution = true;
+            }
+            
+            // Add user message to history for context
+            if (this.agent.history) {
+                this.agent.history.add('user', userMessage);
+            }
+            
+            // Use newAction with forced internal mode
+            console.log('Executing newAction command...');
+            const command = `!newAction("${userMessage.replace(/"/g, '\\"')}")`;
+            const { executeCommand } = await import('./commands/index.js');
+            const result = await executeCommand(this.agent, command);
+            
+            console.log('Code execution result:', result);
+            
+            // Check if execution was successful
+            const success = result && 
+                !result.includes('Error') && 
+                !result.includes('failed') && 
+                !result.includes('not allowed') &&
+                result !== 'EXTERNAL_BRAIN_TASK:';
+            
+            if (success) {
+                return {
+                    message: `Task executed successfully: ${userMessage}`,
+                    output: result || 'Code executed successfully'
+                };
+            } else {
+                // If newAction didn't work, try direct code execution if we have codeInstructions
+                if (codeInstructions && typeof codeInstructions === 'string') {
+                    console.log('Trying direct code execution...');
+                    const directResult = await this.executeGeneratedCode(codeInstructions, userMessage);
+                    return {
+                        message: `Task executed via direct code: ${userMessage}`,
+                        output: directResult.output || 'Code executed directly'
+                    };
+                } else {
+                    return {
+                        message: `Task processed: ${userMessage}`,
+                        output: result || 'Task completed with limitations'
+                    };
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error in code execution:', error);
+            console.error('Error stack:', error.stack);
+            
+            return {
+                message: `Task failed: ${userMessage}`,
+                output: `Error: ${error.message}`,
+                error: true
+            };
+            
+        } finally {
+            // Always restore original settings
+            if (this.agent.settings) {
+                console.log('Restoring original settings...');
+                this.agent.settings.brain_mode = originalBrainMode;
+                this.agent.settings.allow_code_execution = originalCodeExecution;
+            }
+        }
+    }
+
+    async executeGeneratedCode(code, userMessage) {
+        // Import required modules dynamically
+        const { makeCompartment, lockdown } = await import('./library/lockdown.js');
+        const skills = await import('./library/skills.js');
+        const world = await import('./library/world.js');
+        const { Vec3 } = await import('vec3');
+        
+        lockdown();
+        
+        // Clean and prepare the code (same as internal coder.js)
+        let cleanCode = code.trim();
+        
+        // Remove code block markers if present
+        if (cleanCode.startsWith('```javascript') || cleanCode.startsWith('```js')) {
+            cleanCode = cleanCode.split('\n').slice(1, -1).join('\n');
+        } else if (cleanCode.startsWith('```')) {
+            cleanCode = cleanCode.split('\n').slice(1, -1).join('\n');
+        }
+        
+        // Replace console.log with skills.log
+        cleanCode = cleanCode.replaceAll('console.log(', 'log(bot,');
+        cleanCode = cleanCode.replaceAll('log("', 'log(bot,"');
+        
+        // Add interrupt checks (same as internal system)
+        cleanCode = cleanCode.replaceAll(';\n', '; if(bot.interrupt_code) {log(bot, "Code interrupted.");return;}\n');
+        
+        console.log('Clean code to execute:', cleanCode);
+        
+        // Wrap in execution template (same as execTemplate.js)
+        const wrappedCode = `
+        (async (bot) => {
+            try {
+                ${cleanCode}
+                log(bot, 'Code execution completed.');
+            } catch (error) {
+                log(bot, 'Code execution error: ' + error.toString());
+                throw error;
+            }
+        })`;
+        
+        // Create secure compartment (same as internal mode)
+        const compartment = makeCompartment({
+            skills: skills,
+            log: skills.log,
+            world: world,
+            Vec3: Vec3,
+        });
+        
+        const mainFn = compartment.evaluate(wrappedCode);
+        
+        // Execute with action management
+        let result = "";
+        const actionFn = async () => {
+            await mainFn(this.agent.bot);
+            result = this.agent.actions.getBotOutputSummary() || 'Code executed successfully';
+        };
+        
+        await this.agent.actions.runAction('action:executeCode', actionFn, {
+            timeout: this.agent.settings?.code_timeout_mins || -1
+        });
+        
+        return {
+            message: `Executed: ${userMessage}`,
+            output: result
+        };
     }
 
     start(port = 3001) {

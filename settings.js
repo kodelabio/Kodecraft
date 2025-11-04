@@ -9,7 +9,7 @@ const settings = {
     
     "base_profile": "survival", // survival, creative, or god_mode
     "profiles": [
-        "./profiles/jainesh.json",
+        "./profiles/kid.json",
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
@@ -45,6 +45,12 @@ const settings = {
     "narrate_behavior": true, // chat simple automatic actions ('Picking up item!')
     "chat_bot_messages": true, // publicly chat messages to other bots
     "log_all_prompts": false, // log ALL prompts to file
+
+        // External brain mode configuration
+    "brain_mode": "external", // "internal" or "external" (for n8n integration)
+    "external_api_port": 3001, // Port for REST API when in external mode
+    "external_mode_allow_chat": false, // Allow basic in-game chat commands in external mode (for testing)
+    // "n8n_webhook_url": "http://localhost:5678/webhook/kodecraft-chat", // Webhook URL to forward chat messages to n8n
 }
 
 export default settings;

@@ -33,6 +33,8 @@ export class Agent {
         this.prompter = new Prompter(this, settings.profile);
         this.name = this.prompter.getName();
         console.log(`Initializing agent ${this.name}...`);
+        this.history = new History(this);
+        this.coder = new Coder(this);
         
         // Only initialize brain components if not in external mode
         if (settings.brain_mode !== 'external') {
@@ -63,6 +65,10 @@ export class Agent {
         
         this.npc = new NPCContoller(this);
         this.memory_bank = new MemoryBank();
+
+        this.self_prompter = new SelfPrompter(this);
+        convoManager.initAgent(this);
+        await this.prompter.initExamples();
 
         // load mem first before doing task
         let save_data = null;
@@ -110,7 +116,7 @@ export class Agent {
 
                 console.log(`${this.name} spawned.`);
                 this.clearBotLogs();
-
+                           this._setupEventHandlers(save_data, init_message);
                 // Setup event handlers based on brain mode
                 if (settings.brain_mode === 'external') {
                     this._setupExternalMode(save_data, init_message);
@@ -248,7 +254,7 @@ export class Agent {
     }
 
     async handleMessage(source, message, max_responses = null) {
-        // In external brain mode, only allow system messages for action results
+        // In external brain mode, handle messages selectively
         if (settings.brain_mode === 'external') {
             if (source === 'system') {
                 // Log system messages (like action results) but don't process
@@ -256,9 +262,30 @@ export class Agent {
                 return false;
             }
             
-            // All other messages should come through the API, not chat handlers
-            console.log('Ignoring message in external brain mode:', source, message);
-            return false;
+            // Allow direct commands from authorized users (bypass AI processing)
+            if (source === 'chat' && settings.external_mode_allow_chat) {
+                // Check if user is authorized (if only_chat_with is set)
+                if (settings.only_chat_with.length > 0) {
+                    const username = message.split(':')[0]; // Extract username from "username: message"
+                    if (!settings.only_chat_with.includes(username)) {
+                        console.log(`Ignoring chat from unauthorized user in external mode: ${username}`);
+                        return false;
+                    }
+                }
+                
+                // Allow basic commands to work for testing (no AI processing)
+                if (message.includes('!') || message.toLowerCase().includes('hello') || message.toLowerCase().includes('help')) {
+                    console.log('Processing authorized command in external mode:', message);
+                    // Continue to normal processing but skip AI
+                } else {
+                    console.log('Ignoring non-command message in external mode:', message);
+                    return false;
+                }
+            } else {
+                // All other messages should come through the API
+                console.log('Ignoring message in external brain mode:', source, message);
+                return false;
+            }
         }
         
         await this.checkTaskDone();

@@ -40,8 +40,8 @@ export const actionsList = [
             }
 
             // In external brain mode, newAction should NOT generate code locally
-            // Instead, it should be handled by the external brain (n8n workflow)
-            if (settings.brain_mode === 'external') {
+            // Unless forced by API call (via _forceInternalMode flag)
+            if (settings.brain_mode === 'external' && !agent._forceInternalMode) {
                 return `EXTERNAL_BRAIN_TASK: ${prompt}`;
             }
 

@@ -271,29 +271,12 @@ export class MultiBotManager {
             const task = tasks[i];
             const worker = workers[i % workers.length]; // Round-robin assignment
             
-            // IMPROVED: More explicit coordination instructions
-            const coordinatedTask = `COORDINATED BUILD TASK ${i + 1}/${tasks.length}:
-${task}
+            // Simple task assignment - let the external_api.js coordinate fix handle everything
+            const coordinatedTask = `${task}
 
-CRITICAL COORDINATION RULES:
-1. Build at my current position using world.getPosition(bot) - no specific coordinates
-2. You are working with ${workers.length - 1} other workers on the SAME structure
-3. Start building from your current position and work outward
-4. Your specific task: ${task}
-5. NEVER move to different coordinates - build where you are positioned
-6. Use simple for loops with skills.placeBlock() - do NOT use world.isClearPath()
-7. Just place blocks directly - no path checking or collision detection needed
-8. Use world.getPosition(bot) to get your current position, then build relative to that
-
-BUILDING INSTRUCTIONS:
-- Get position: const position = world.getPosition(bot);
-- Use simple loops: for (let x = position.x; x < position.x + length; x++)
-- Place blocks directly: await skills.placeBlock(bot, 'block_type', x, y, z);
-- Do NOT use world.isClearPath() or any path checking functions
-
-Working with: ${workers.map(w => w.name).filter(name => name !== worker.name).join(', ')}`;
+Build at your current position. You are worker ${i + 1} of ${tasks.length} working on: "${buildSession.buildRequest}"`;
             
-            console.log(`🔧 Sending coordinate-safe task to ${worker.name}: Building at current position`);
+            console.log(`🔧 Sending task to ${worker.name}: ${task.substring(0, 50)}...`);
             try {
                 // Send coordinated task to worker
                 const response = await fetch(`http://localhost:${worker.port}/api/agent/newAction`, {

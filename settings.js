@@ -7,7 +7,7 @@ const settings = {
     // the mindserver manages all agents and hosts the UI
     "mindserver_port": 8080,
     
-    "base_profile": "survival", // survival, creative, or god_mode
+    "base_profile": "creative", // survival, creative, or god_mode
     "profiles": [
         "./profiles/kid.json",
         // "./profiles/kodelab_beta.json",
@@ -48,8 +48,9 @@ const settings = {
 
         // External brain mode configuration
     "brain_mode": "external", // "internal" or "external" (for n8n integration)
-    "external_api_port": 3001, // Port for REST API when in external mode
+    "external_api_port": 4001, // Port for REST API when in external mode
     "external_mode_allow_chat": false, // Allow basic in-game chat commands in external mode (for testing)
+    "multibot_base_port": 4000, // Base port for multibot workers (4001, 4002, 4003, etc.)
     // "n8n_webhook_url": "http://localhost:5678/webhook/kodecraft-chat", // Webhook URL to forward chat messages to n8n
 }
 

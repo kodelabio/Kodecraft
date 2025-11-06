@@ -92,7 +92,11 @@ export class Agent {
 
         this.bot.on('login', () => {
             console.log(this.name, 'logged in!');
-            serverProxy.login();
+            
+            // Only login to MindServer if in external brain mode
+            if (settings.brain_mode === 'external') {
+                serverProxy.login();
+            }
 
             // Set skin for profile, requires Fabric Tailor. (https://modrinth.com/mod/fabrictailor)
             if (this.prompter.profile.skin)
@@ -181,13 +185,16 @@ export class Agent {
 
         this.respondFunc = respondFunc;
 
-        this.bot.on('whisper', respondFunc);
+        // Skip chat listeners for worker bots - they should only respond to API commands
+        if (!settings.is_worker_bot) {
+            this.bot.on('whisper', respondFunc);
 
-        this.bot.on('chat', (username, message) => {
-            if (serverProxy.getNumOtherAgents() > 0) return;
-            // only respond to open chat messages when there are no other agents
-            respondFunc(username, message);
-        });
+            this.bot.on('chat', (username, message) => {
+                if (serverProxy.getNumOtherAgents() > 0) return;
+                // only respond to open chat messages when there are no other agents
+                respondFunc(username, message);
+            });
+        }
 
         // Set up auto-eat
         this.bot.autoEat.options = {
@@ -216,7 +223,10 @@ export class Agent {
             await this.handleMessage('system', init_message, 2);
         }
         else {
-            this.openChat("Hello world! I am " + this.name);
+            // Only send greeting if not a worker bot
+            if (!settings.is_worker_bot) {
+                this.openChat("Hello world! I am " + this.name);
+            }
         }
     }
 
@@ -439,6 +449,12 @@ export class Agent {
     }
 
     async openChat(message) {
+        // Worker bots should not chat - they only respond to API commands
+        if (settings.is_worker_bot) {
+            console.log(`[Worker ${this.name}] Silenced chat: ${message}`);
+            return;
+        }
+        
         let to_translate = message;
         let remaining = '';
         let command_name = containsCommand(message);
@@ -590,7 +606,7 @@ export class Agent {
         
         // Start the REST API server
         this.externalAPI = new ExternalAPI(this);
-        const apiPort = settings.external_api_port || 3001;
+        const apiPort = settings.external_api_port || 4001;
         await this.externalAPI.start(apiPort);
         
         // Setup chat forwarder to n8n webhook
@@ -605,7 +621,9 @@ export class Agent {
         
         // Send simple greeting in external mode
         console.log('External brain mode initialized');
-        await this.openChat(`Hello! I am ${this.name}.`);
+        if (!settings.is_worker_bot) {
+            await this.openChat(`Hello! I am ${this.name}.`);
+        }
     }
 
     // New method for chat forwarding

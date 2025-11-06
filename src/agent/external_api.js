@@ -6,12 +6,16 @@ import { getCommand, executeCommand } from './commands/index.js';
 import settings from '../../settings.js';
 import { History } from './history.js';
 import { Coder } from './coder.js';
+import { MultiBotManager } from './multibot_manager.js';
 
 export class ExternalAPI {
     constructor(agent) {
         this.agent = agent;
         this.app = express();
         this.app.use(express.json());
+        
+        // Initialize multi-bot manager
+        this.multiBotManager = new MultiBotManager(agent);
         
         // CORS for n8n
         this.app.use((req, res, next) => {
@@ -108,6 +112,14 @@ export class ExternalAPI {
         // Goal management
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
+        
+        // Multi-bot management
+        this.app.post('/api/multibot/spawnWorkers', this.handleSpawnWorkers.bind(this));
+        this.app.post('/api/multibot/coordinateBuild', this.handleCoordinateBuild.bind(this));
+        this.app.post('/api/multibot/assignTasks', this.handleAssignTasks.bind(this));
+        this.app.post('/api/multibot/teleportWorkers', this.handleTeleportWorkers.bind(this));
+        this.app.get('/api/multibot/status', this.handleMultiBotStatus.bind(this));
+        this.app.post('/api/multibot/stopWorkers', this.handleStopWorkers.bind(this));
         
         // Health check
         this.app.get('/api/health', (req, res) => {
@@ -1202,7 +1214,161 @@ export class ExternalAPI {
         });
     }
 
-    start(port = 3001) {
+    // Multi-bot management handlers
+    async handleSpawnWorkers(req, res) {
+        try {
+            const { count, leaderName } = req.body;
+            
+            if (!count || typeof count !== 'number' || count <= 0) {
+                return res.status(400).json({ 
+                    error: 'count parameter must be a positive number' 
+                });
+            }
+            
+            if (count > 10) {
+                return res.status(400).json({ 
+                    error: 'Maximum 10 workers allowed per request' 
+                });
+            }
+            
+            const workers = await this.multiBotManager.spawnWorkers(
+                count, 
+                leaderName || this.agent.name || 'Leader'
+            );
+            
+            res.json({
+                success: true,
+                workers,
+                message: `Spawned ${workers.length} workers successfully`,
+                totalWorkers: this.multiBotManager.workers.size
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'spawnWorkers');
+        }
+    }
+
+    async handleCoordinateBuild(req, res) {
+        try {
+            const { buildRequest, workerCount } = req.body;
+            
+            if (!buildRequest || typeof buildRequest !== 'string') {
+                return res.status(400).json({ 
+                    error: 'buildRequest parameter required' 
+                });
+            }
+            
+            if (!workerCount || typeof workerCount !== 'number' || workerCount <= 0) {
+                return res.status(400).json({ 
+                    error: 'workerCount parameter must be a positive number' 
+                });
+            }
+            
+            const coordination = await this.multiBotManager.coordinateCollaborativeBuild(
+                buildRequest,
+                workerCount
+            );
+            
+            res.json({
+                success: true,
+                ...coordination
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'coordinateBuild');
+        }
+    }
+
+    async handleAssignTasks(req, res) {
+        try {
+            const { sessionId, taskBreakdown } = req.body;
+            
+            if (!sessionId) {
+                return res.status(400).json({ 
+                    error: 'sessionId parameter required' 
+                });
+            }
+            
+            if (!taskBreakdown) {
+                return res.status(400).json({ 
+                    error: 'taskBreakdown parameter required' 
+                });
+            }
+            
+            const assignments = await this.multiBotManager.assignTasksToWorkers(
+                sessionId,
+                taskBreakdown
+            );
+            
+            res.json({
+                success: true,
+                assignments,
+                message: `Assigned ${assignments.length} tasks to workers`
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'assignTasks');
+        }
+    }
+
+    async handleTeleportWorkers(req, res) {
+        try {
+            const { sessionId, position } = req.body;
+            
+            if (!sessionId) {
+                return res.status(400).json({ 
+                    error: 'sessionId parameter required' 
+                });
+            }
+            
+            if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number') {
+                return res.status(400).json({ 
+                    error: 'position parameter must contain x, y, z coordinates' 
+                });
+            }
+            
+            const results = await this.multiBotManager.teleportWorkers(sessionId, position);
+            
+            res.json({
+                success: true,
+                teleportResults: results,
+                message: `Teleported workers to position (${position.x}, ${position.y}, ${position.z})`
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'teleportWorkers');
+        }
+    }
+
+    async handleMultiBotStatus(req, res) {
+        try {
+            const status = this.multiBotManager.getStatus();
+            
+            res.json({
+                success: true,
+                ...status
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'multiBotStatus');
+        }
+    }
+
+    async handleStopWorkers(req, res) {
+        try {
+            const result = await this.multiBotManager.stopAllWorkers();
+            
+            res.json({
+                success: true,
+                ...result
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'stopWorkers');
+        }
+    }
+
+    start(port = 4001) {
         return new Promise((resolve) => {
             this.server = this.app.listen(port, () => {
                 console.log(`API server running on port ${port}`);

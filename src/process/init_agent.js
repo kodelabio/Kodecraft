@@ -40,6 +40,7 @@ const argv = yargs(args)
 (async () => {
     try {
         console.log('Connecting to MindServer');
+        await new Promise(resolve => setTimeout(resolve, 1000));
         await serverProxy.connect(argv.name, argv.port);
         console.log('Starting agent');
         const agent = new Agent();

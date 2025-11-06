@@ -49,6 +49,7 @@ export async function loadConfig() {
     // 3. ENV vars
     const envConfig = {};
     if (process.env.MINECRAFT_PORT) envConfig.port = process.env.MINECRAFT_PORT;
+    if (process.env.MINECRAFT_SERVER) envConfig.host = process.env.MINECRAFT_SERVER;
     if (process.env.MINDSERVER_PORT) envConfig.mindserver_port = process.env.MINDSERVER_PORT;
     if (process.env.PROFILES) envConfig.profiles = JSON.parse(process.env.PROFILES);
     if (process.env.INSECURE_CODING) envConfig.allow_insecure_coding = true;

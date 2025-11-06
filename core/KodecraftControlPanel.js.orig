@@ -36,15 +36,11 @@ export class KodecraftControlPanel {
 
         this.io.on('connection', (socket) => this.handleSocket(socket));
 
-        //const host = this.config.host_public ? '0.0.0.0' : 'localhost';
-        const host = '0.0.0.0';
+        const host = this.config.host_public ? '0.0.0.0' : 'localhost';
         const port = this.config.mindserver_port || 8080;
 
-        return new Promise((resolve) => {
-            this.server.listen(port, host, () => {
-                console.log(`KodecraftDashboard running on http://${host}:${port}`);
-                resolve();
-            });
+        this.server.listen(port, host, () => {
+            console.log(`KodecraftDashboard running on http://${host}:${port}`);
         });
     }
 

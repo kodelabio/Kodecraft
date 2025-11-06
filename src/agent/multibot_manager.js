@@ -276,15 +276,24 @@ export class MultiBotManager {
 ${task}
 
 CRITICAL COORDINATION RULES:
-1. Build ONLY at coordinates: x=${buildCoordinates.x}, y=${buildCoordinates.y}, z=${buildCoordinates.z}
+1. Build at my current position using world.getPosition(bot) - no specific coordinates
 2. You are working with ${workers.length - 1} other workers on the SAME structure
-3. Start building from the shared base coordinates and work outward
+3. Start building from your current position and work outward
 4. Your specific task: ${task}
-5. NEVER build at different coordinates - all workers must contribute to ONE structure
-6. Check what other workers have built before placing blocks to avoid conflicts
+5. NEVER move to different coordinates - build where you are positioned
+6. Use simple for loops with skills.placeBlock() - do NOT use world.isClearPath()
+7. Just place blocks directly - no path checking or collision detection needed
+8. Use world.getPosition(bot) to get your current position, then build relative to that
+
+BUILDING INSTRUCTIONS:
+- Get position: const position = world.getPosition(bot);
+- Use simple loops: for (let x = position.x; x < position.x + length; x++)
+- Place blocks directly: await skills.placeBlock(bot, 'block_type', x, y, z);
+- Do NOT use world.isClearPath() or any path checking functions
 
 Working with: ${workers.map(w => w.name).filter(name => name !== worker.name).join(', ')}`;
             
+            console.log(`🔧 Sending coordinate-safe task to ${worker.name}: Building at current position`);
             try {
                 // Send coordinated task to worker
                 const response = await fetch(`http://localhost:${worker.port}/api/agent/newAction`, {
@@ -305,13 +314,24 @@ Working with: ${workers.map(w => w.name).filter(name => name !== worker.name).jo
                         workerInfo.buildCoordinates = buildCoordinates;
                     }
                     
+                    // Safely extract message from response
+                    let responseMessage = 'Task assigned successfully';
+                    if (result && typeof result === 'object') {
+                        responseMessage = result.message || result.error || JSON.stringify(result);
+                    } else if (typeof result === 'string') {
+                        responseMessage = result;
+                    }
+                    
                     assignments.push({
                         worker: worker.name,
                         task: task,
                         coordinatedTask: coordinatedTask.substring(0, 200) + '...',
                         buildCoordinates: buildCoordinates,
                         status: 'assigned',
-                        result: result.message
+                        result: responseMessage,
+                        prompt_modified: result?.prompt_modified || false,
+                        original_prompt: result?.original_prompt || coordinatedTask,
+                        modified_prompt: result?.modified_prompt || coordinatedTask
                     });
                 } else {
                     console.error(`Failed to assign task to ${worker.name}:`, await response.text());

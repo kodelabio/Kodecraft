@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "Kodecraft",
   "nodes": [
     {
       "parameters": {
@@ -13,14 +13,14 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -3312,
-        -6256
+        1904,
+        2096
       ],
-      "id": "c0ec6997-bcd3-4d31-aa44-e2f70776f2cc",
+      "id": "446d2141-ab8d-4937-8870-5aa8e2f5feeb",
       "webhookId": "370e7291-9b82-4082-9db8-af47faa89cb7",
       "credentials": {
         "telegramApi": {
-          "id": "Jq6wosORWBGbVRZE",
+          "id": "DJUqMSuN8PYQPPoL",
           "name": "Telegram account"
         }
       }
@@ -33,15 +33,15 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3792,
-        -6240
+        1424,
+        2112
       ],
-      "id": "992136f2-7fae-4037-aa8d-76d8d835d7e2"
+      "id": "3173045d-0044-403a-9d89-f0449b4fa14e"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/stop",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/stop",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -56,16 +56,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -784
+        -2304,
+        7568
       ],
-      "id": "011ab44b-bad4-4667-b337-7a2f3bc0dfab",
+      "id": "571f89a7-60de-4f57-b65b-6536f2a4b2bb",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/multibot/spawn",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/multibot/spawn",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -83,16 +83,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -624
+        -2304,
+        7728
       ],
-      "id": "e1cf3fbc-29af-4cdf-801d-97245107b01b",
+      "id": "97f64166-972d-4f3d-8e3b-2916810098a1",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://localhost:4001/api/multibot/coordinateBuild",
+        "method": "=POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/coordinateBuild",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -130,15 +130,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -4032,
-        -5488
+        1184,
+        2864
       ],
-      "id": "4dda0b14-73a7-4ea4-b3a0-8ee993aa3e14",
+      "id": "f52b142e-7d74-459e-bb80-dd80edf1796b",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/multibot/status",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/multibot/status",
         "options": {
           "timeout": 10000
         }
@@ -147,43 +147,43 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -304
+        -2304,
+        8048
       ],
-      "id": "b21a95ec-7fa6-463b-826f-8e38bade3b02",
+      "id": "012a1182-f966-4073-95f6-31c804a24316",
       "continueOnFail": true
     },
     {
       "parameters": {
         "amount": 10
       },
-      "id": "bf8bc104-83fc-4592-bfca-1596211abd6a",
+      "id": "146ca443-8f76-4f02-a19f-5ab5beec5279",
       "name": "Wait for Workers Init",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -5888,
-        -5536
+        -672,
+        2816
       ],
       "webhookId": "1219d699-b6bf-4fb0-8182-08565f16026c"
     },
     {
       "parameters": {
-        "jsCode": "// Reset worker states by calling endGoal on each worker\nconst sessionId = $input.first().json.sessionId;\n\nif (!sessionId) {\n  console.log('No sessionId found, skipping worker reset');\n  return [{ json: { message: 'No workers to reset', sessionId } }];\n}\n\ntry {\n  // First get worker status to find active workers\n  const statusResponse = await $request({\n    method: 'GET',\n    url: 'http://localhost:4001/api/multibot/status',\n    headers: { 'Content-Type': 'application/json' },\n    json: true\n  });\n  \n  const workers = statusResponse.workers || [];\n  \n  console.log(`Resetting ${workers.length} workers...`);\n  \n  // Reset each worker by calling endGoal\n  const resetPromises = workers.map(async (worker) => {\n    try {\n      await $request({\n        method: 'POST',\n        url: `http://localhost:${worker.port}/api/agent/endGoal`,\n        headers: { 'Content-Type': 'application/json' },\n        body: {},\n        json: true\n      });\n      \n      console.log(`Reset worker ${worker.name} successfully`);\n      return { worker: worker.name, status: 'reset' };\n    } catch (error) {\n      console.log(`Error resetting worker ${worker.name}:`, error.message);\n      return { worker: worker.name, status: 'error', error: error.message };\n    }\n  });\n  \n  const results = await Promise.all(resetPromises);\n  \n  return [{\n    json: {\n      message: `Reset ${workers.length} workers`,\n      sessionId,\n      workers: results,\n      success: true\n    }\n  }];\n  \n} catch (error) {\n  console.log('Error in worker reset:', error.message);\n  return [{\n    json: {\n      message: 'Error during worker reset',\n      error: error.message,\n      sessionId,\n      success: false\n    }\n  }];\n}"
+        "jsCode": "// Reset worker states by calling endGoal on each worker\nconst sessionId = $input.first().json.sessionId;\n\nif (!sessionId) {\n  console.log('No sessionId found, skipping worker reset');\n  return [{ json: { message: 'No workers to reset', sessionId } }];\n}\n\ntry {\n  // First get worker status to find active workers\n  const statusResponse = await $request({\n    method: 'GET',\n    url: '{{$env.KODECRAFT_SERVER_URL}}/api/multibot/status',\n    headers: { 'Content-Type': 'application/json' },\n    json: true\n  });\n  \n  const workers = statusResponse.workers || [];\n  \n  console.log(`Resetting ${workers.length} workers...`);\n  \n  // Reset each worker by calling endGoal\n  const resetPromises = workers.map(async (worker) => {\n    try {\n      await $request({\n        method: 'POST',\n        url: `http://localhost:${worker.port}/api/agent/endGoal`,\n        headers: { 'Content-Type': 'application/json' },\n        body: {},\n        json: true\n      });\n      \n      console.log(`Reset worker ${worker.name} successfully`);\n      return { worker: worker.name, status: 'reset' };\n    } catch (error) {\n      console.log(`Error resetting worker ${worker.name}:`, error.message);\n      return { worker: worker.name, status: 'error', error: error.message };\n    }\n  });\n  \n  const results = await Promise.all(resetPromises);\n  \n  return [{\n    json: {\n      message: `Reset ${workers.length} workers`,\n      sessionId,\n      workers: results,\n      success: true\n    }\n  }];\n  \n} catch (error) {\n  console.log('Error in worker reset:', error.message);\n  return [{\n    json: {\n      message: 'Error during worker reset',\n      error: error.message,\n      sessionId,\n      success: false\n    }\n  }];\n}"
       },
       "name": "Reset Worker States",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -5360,
-        -5568
+        -144,
+        2784
       ],
-      "id": "ef7c38bd-1357-4269-9f0e-06b4c387dd36"
+      "id": "f15fd536-a9c9-45a8-b362-5c7a2b700a73"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/multibot/assignTasks",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/multibot/assignTasks",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -225,16 +225,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -112
+        -2304,
+        8240
       ],
-      "id": "a7e58885-b297-4346-bb75-7e3749068f9d",
+      "id": "e76885e1-f8bc-47f3-9d2e-49d26331c8f2",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/multibot/stop",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/multibot/stop",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -249,15 +249,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        48
+        -2304,
+        8400
       ],
-      "id": "330b419a-42ea-4905-ae73-f64b6bccc477",
+      "id": "21eaf3f1-7180-4abe-8d1d-0ec0a9bcf137",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/multibot/workers",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/multibot/workers",
         "options": {
           "timeout": 10000
         }
@@ -266,16 +266,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        208
+        -2304,
+        8560
       ],
-      "id": "a099acdb-b194-4646-b573-76bbe7b4e3dd",
+      "id": "79e365b8-2932-4c98-9e11-2f449a8e95e0",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/endGoal",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/endGoal",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -290,16 +290,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -960
+        -2304,
+        7392
       ],
-      "id": "4945f86b-fbc2-4591-bb5a-23521c575604",
+      "id": "2cea4082-abcb-430e-af7d-661620d47768",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/clearChat",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/clearChat",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -314,16 +314,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1296
+        -2304,
+        7056
       ],
-      "id": "80889fcf-ad8b-48f3-abe7-7662fa5ed817",
+      "id": "28229d62-0dca-4722-b2a8-85406902fbb7",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/restart",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/restart",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -338,16 +338,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1456
+        -2304,
+        6896
       ],
-      "id": "259988a0-daa8-4649-9472-711d64049162",
+      "id": "8754947e-f2a4-4544-b3d2-86be9895b6bd",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/endConversation",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/endConversation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -365,16 +365,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1632
+        -2304,
+        6720
       ],
-      "id": "0a1106f6-ead5-4614-8951-0f6ddda399f4",
+      "id": "df4adb39-2e35-4978-a8ab-f798b635dc67",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/startConversation",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/startConversation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -396,16 +396,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1808
+        -2304,
+        6544
       ],
-      "id": "2859570c-2340-48ce-84ca-e1d771f722d3",
+      "id": "0d22f809-595b-4502-b072-e9c652076ee8",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/lookAtPosition",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPosition",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -431,16 +431,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1968
+        -2304,
+        6384
       ],
-      "id": "8ef2a1e1-c552-4744-92e5-9228a40c8fe7",
+      "id": "837393fe-62be-4ebc-9d00-bcafa871377f",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/lookAtPlayer",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPlayer",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -462,23 +462,23 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2128
+        -2304,
+        6224
       ],
-      "id": "c3f9d7da-c168-47da-acf6-89f260f1aa76",
+      "id": "093ab0f1-c863-4ba3-9270-b13ed7dec82b",
       "continueOnFail": true
     },
     {
       "parameters": {
         "jsCode": "// Execute Building Plan - Determine execution path (newAction vs multibot)\nconst input = $input.first().json;\n\n// Get conversation context from Route by Intent node\nlet conversationData = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    conversationData = routeResult.first().json || {};\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e);\n}\n\n// Extract the building request from Smart Building Planner AI Agent output\nlet buildingRequest = '';\nlet executionType = 'single';\nlet apiEndpoint = 'newAction';\nlet workerCount = 1;\nlet taskDivision = null;\n\n// The Smart Building Planner already refined the prompt, extract it\ntry {\n  const content = input.output || input.building_plan || input.message || '';\n  \n  // Try to extract JSON from AI Agent output\n  const jsonMatch = content.match(/```json\\s*([\\s\\S]*?)```/) || content.match(/{[\\s\\S]*}/);\n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]);\n    buildingRequest = parsed.buildingRequest || parsed.userMessage || content;\n    executionType = parsed.executionType || 'single';\n    \n    // Extract taskDivision data from Smart Building Planner\n    taskDivision = parsed.taskDivision || null;\n    \n    // Use the original intent to determine the correct endpoint\n    if (parsed.apiEndpoint) {\n      apiEndpoint = parsed.apiEndpoint;\n    } else if (conversationData.intent === 'collaborativeBuild') {\n      apiEndpoint = 'collaborativeBuild';\n      executionType = 'multibot';\n    } else {\n      apiEndpoint = 'newAction';\n    }\n    workerCount = parsed.workerCount || conversationData.params?.workerCount || 1;\n  } else {\n    // Use content directly if no JSON\n    buildingRequest = content;\n    \n    // Check if this was a multibot request from original context\n    if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n      executionType = 'multibot';\n      apiEndpoint = 'collaborativeBuild';\n      workerCount = conversationData.params?.workerCount || 3;\n    }\n  }\n} catch (e) {\n  console.log('Failed to parse Smart Building Planner output, using raw content:', e);\n  buildingRequest = input.output || input.building_plan || input.message || '';\n  // Check original intent for multibot\n  if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n    executionType = 'multibot';\n    apiEndpoint = 'collaborativeBuild';\n    workerCount = conversationData.params?.workerCount || 3;\n  }\n}\n\n// Final override check: if original intent was collaborativeBuild, ensure we use multibot path\nif (conversationData.intent === 'collaborativeBuild' && executionType !== 'multibot') {\n  executionType = 'multibot';\n  apiEndpoint = 'collaborativeBuild';\n  workerCount = conversationData.params?.workerCount || 3;\n}\n\n// Validate we have a building request\nif (!buildingRequest || buildingRequest.trim() === '') {\n  return {\n    json: {\n      success: false,\n      error: 'No building request found',\n      details: 'Smart Building Planner did not provide a valid building request',\n      chatId: conversationData.chatId || 'unknown',\n      playerName: conversationData.playerName || 'User',\n      source: conversationData.source || 'telegram'\n    }\n  };\n}\n\n// Convert taskDivision object to array format expected by multibot API\nlet taskBreakdown = null;\nif (taskDivision && typeof taskDivision === 'object') {\n  taskBreakdown = Object.entries(taskDivision).map(([worker, task]) => \n    `${worker}: ${task}`\n  );\n}\n\n// Return data for appropriate execution path\nreturn {\n  json: {\n    userMessage: buildingRequest,\n    buildRequest: buildingRequest,\n    executionType: executionType,\n    apiEndpoint: apiEndpoint,\n    workerCount: workerCount,\n    taskDivision: taskDivision,\n    taskBreakdown: taskBreakdown,\n    success: true,\n    message: `${executionType === 'multibot' ? 'Multibot' : 'Single bot'} building request ready: ${buildingRequest.substring(0, 50)}...`,\n    chatId: conversationData.chatId || 'unknown',\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    params: {\n      buildRequest: buildingRequest,\n      workerCount: workerCount,\n      taskDivision: taskDivision,\n      taskBreakdown: taskBreakdown\n    }\n  }\n};\n"
       },
-      "id": "3629a186-7456-49e4-8fe5-c074be0e60b9",
+      "id": "f70534f1-928d-4f8e-93d9-bd2bca2b051f",
       "name": "Execute Building Plan",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -4336,
-        -5280
+        880,
+        3072
       ]
     },
     {
@@ -510,15 +510,15 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -4000,
-        -5280
+        1216,
+        3072
       ],
-      "id": "9bec0a22-690d-424e-ad96-ad8a2771fe38"
+      "id": "43fc348f-9885-46a6-b8c1-d6f447d905f1"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/newAction",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/newAction",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -538,29 +538,29 @@
           ]
         },
         "options": {
-          "timeout": 60000
+          "timeout": 600000
         }
       },
-      "id": "37de5b6e-29ce-477a-b101-ad1f28f76e9e",
+      "id": "be0bcf95-3348-4d42-98ce-8489745a3be9",
       "name": "Execute Building API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -3664,
-        -5280
+        1552,
+        3072
       ]
     },
     {
       "parameters": {
         "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nlet conversationData = {};\ntry {\n  const buildingPlanResult = $('Execute Building Plan');\n  if (buildingPlanResult && buildingPlanResult.first && buildingPlanResult.first()) {\n    conversationData = buildingPlanResult.first().json || {};\n    console.log('Retrieved conversation data from Execute Building Plan:', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n  }\n} catch (e) {\n  console.log('Could not get Execute Building Plan data:', e);\n}\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult\n    }\n  }\n};"
       },
-      "id": "0e25597a-5af6-45c6-8dbf-92dd5a670db0",
+      "id": "d5ab60cf-1fc9-4195-bc6a-0c3dde5c690e",
       "name": "Format Building Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3376,
-        -5216
+        1840,
+        3136
       ]
     },
     {
@@ -589,13 +589,13 @@
         },
         "options": {}
       },
-      "id": "666c9edc-228b-4960-bd83-be5c1a818d82",
+      "id": "d5f52869-821f-49aa-a76f-0a39c99433bb",
       "name": "Building Plan Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -4528,
-        -4752
+        688,
+        3600
       ]
     },
     {
@@ -606,19 +606,19 @@
           "systemMessage": "You are the Universal Task Planner for Kodecraft AI. You can handle any player request in Minecraft.\n\nCORE PHILOSOPHY:\n- The Kodecraft AI has unlimited capabilities and creativity\n- Never limit what can be accomplished - trust the AI's abilities\n- Any task imaginable can be executed using Minecraft's systems\n- Complex, creative, and unique requests are welcomed and encouraged\n\nUNIVERSAL TASK CATEGORIES:\nBUILDING & CONSTRUCTION: Houses, castles, cities, spaceships, computers, art, monuments, replicas\nRESOURCE GATHERING: Mining operations, farming systems, mob farms, resource collection\nAUTOMATION & REDSTONE: Machines, circuits, automated systems, complex contraptions\nEXPLORATION & NAVIGATION: Mapping, pathfinding, discovering structures, traveling\nCOMBAT & DEFENSE: Fighting mobs, PvP, building defenses, creating weapons\nCRAFTING & PRODUCTION: Item creation, mass production, complex recipes\nSPECIALIZED TASKS: Pixel art, music, games, recreations, experiments\n\nEXECUTION DECISION LOGIC:\n\nnewAction (Single Bot Execution):\n- For tasks WITHOUT any worker/bot/spawning/helper mentions\n- Examples: \"build a spaceship\", \"create a farm\", \"mine diamonds\", \"make a computer\", \"build pixel art\"\n- The AI can handle massive, complex tasks independently\n\ncollaborative (Multi-Worker Execution):\n- For ANY request mentioning workers, bots, spawning, helpers, builders, collaboration, or team\n- Single worker: \"spawn 1 builder\", \"use 1 bot\", \"get 1 helper\", \"1 worker to build\", \"spawn builder\", \"create 1 bot\"\n- Multiple workers: \"build X with N workers\", \"use 3 bots to create Y\", \"spawn helpers for Z\"\n- Keywords to detect: spawn, worker, bot, helper, builder, collaborate, team, multiple, together\n- Must specify or derive exact worker count from the request\n- ALWAYS use multibot system when ANY worker count is mentioned (even 1)\n- NEVER use single bot execution when workers are explicitly requested\n\nINTELLIGENT TASK DIVISION (for collaborative mode):\nAnalyze the task type and divide logically:\n\nCONSTRUCTION PROJECTS:\n- Divide by sections, floors, or structural components\n- Each worker gets distinct area with clear boundaries\n\nRESOURCE GATHERING:\n- Divide by resource types, locations, or quantities\n- Each worker focuses on specific materials or areas\n\nAUTOMATION SYSTEMS:\n- Divide by subsystems, components, or functions\n- Each worker builds interconnected parts\n\nEXPLORATION TASKS:\n- Divide by directions, distances, or objectives\n- Each worker covers different territories or goals\n\nTASK ENHANCEMENT ENGINE:\nTransform any basic request into detailed, executable specifications:\n\n- \"build a farm\" → \"Automated wheat farm (20x15 blocks) with water irrigation, hopper collection system, and storage chests\"\n- \"mine diamonds\" → \"Deep mining expedition to Y-level 11-16, establishing mining tunnels, torch lighting, and safety protocols\"\n- \"create redstone computer\" → \"Functional calculator using redstone circuits with input mechanisms, processing logic, and output display\"\n- \"make pixel art\" → \"Large-scale pixel art recreation (64x64 blocks) using concrete blocks with accurate color mapping and detail work\"\n\nRESPONSE FORMATS:\n\nSingle Bot Execution (Default):\n```json\n{\n  \"buildingRequest\": \"[Detailed enhanced task with specifics, materials, dimensions, objectives]\",\n  \"executionType\": \"single\",\n  \"apiEndpoint\": \"newAction\",\n  \"taskCategory\": \"[building|mining|farming|automation|exploration|combat|crafting|specialized]\",\n  \"complexity\": \"[simple|medium|complex|expert]\"\n}\n```\n\nMulti-Worker Collaborative:\n```json\n{\n  \"buildingRequest\": \"[Enhanced detailed task description]\",\n  \"executionType\": \"multibot\",\n  \"apiEndpoint\": \"collaborativeBuild\",\n  \"workerCount\": [user specified number],\n  \"taskDivision\": {\n    \"Worker1\": \"[Specific subtask with clear objectives and scope]\",\n    \"Worker2\": \"[Different subtask that complements Worker1]\",\n    \"Worker3\": \"[Additional subtask that completes the overall goal]\"\n  },\n  \"coordinationStrategy\": \"[spatial-sections|resource-types|time-sequence|component-based]\"\n}\n```\n\nUNIVERSAL EXAMPLES:\n\n\"build a house\" → Single bot, enhanced to detailed home\n\"spawn 1 builder to build a car\" → Multi-bot with 1 worker (collaborative system)\n\"create a castle with 4 workers\" → Multi-bot with structural division\n\"mine 1000 diamonds\" → Single bot, enhanced mining operation\n\"set up farms using 2 bots\" → Multi-bot with crop specialization\n\"build computer with 3 helpers\" → Multi-bot with component division\n\"make pixel art of Einstein\" → Single bot, enhanced artistic project\n\"defend base with multiple bots\" → Multi-bot with defense coordination\n\"explore 10,000 blocks with team\" → Multi-bot with directional division\n\nCRITICAL EXCELLENCE STANDARDS:\n- ALWAYS enhance requests with creative details and specifics\n- NEVER underestimate the AI's capabilities across all domains\n- Include realistic objectives, methods, and materials\n- For multi-bot: ensure clear, logical task separation\n- Make tasks exciting and detailed, not basic\n- Trust the AI to handle any complexity and scale\n- Adapt to ANY player request - building is just one possibility"
         }
       },
-      "id": "319fe15a-429e-47d1-b02d-779aecc22fae",
+      "id": "401624f3-c3f9-4235-b3f8-e3d0047b177e",
       "name": "Smart Building Planner",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -5008,
-        -4752
+        208,
+        3600
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/useDoor",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/useDoor",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -644,16 +644,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2288
+        -2304,
+        6064
       ],
-      "id": "1737fad1-7fda-4635-9e47-5d0754ff3ccb",
+      "id": "faebc004-5352-4b48-b6ce-f4f288208c6e",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/goToBed",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/goToBed",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -668,16 +668,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2464
+        -2304,
+        5888
       ],
-      "id": "9708c6b5-ddf0-465c-8b26-68f34973bda5",
+      "id": "f624967b-418c-4916-a01c-ff837212e84d",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/stay",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/stay",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -695,16 +695,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2624
+        -2304,
+        5728
       ],
-      "id": "b4eb24db-ca91-4462-814b-f332629fbf41",
+      "id": "31112f12-f61f-4f0a-a790-a6e3f9dd8561",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/setMode",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/setMode",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -726,15 +726,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2784
+        -2304,
+        5568
       ],
-      "id": "cf6e2cb5-e04f-4893-b056-5acdd69d631f",
+      "id": "028a6aff-beb9-4a5d-b065-7ef950d9afd7",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/inventory",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
         "options": {
           "timeout": 5000
         }
@@ -743,15 +743,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2944
+        -2304,
+        5408
       ],
-      "id": "2fae66b5-8da8-47a1-9673-dade2843d9de",
+      "id": "6a98eb07-38fd-4482-950f-669efc341c53",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/stats",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/stats",
         "options": {
           "timeout": 5000
         }
@@ -760,15 +760,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3104
+        -2304,
+        5248
       ],
-      "id": "3b42b8ef-84f9-47a5-a652-ec3de508613f",
+      "id": "62144292-bb2e-4d0d-b0e2-0a0cf20d192c",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/getCraftingPlan?item={{ encodeURIComponent($json.params.item) }}&quantity={{ $json.params.quantity || 1 }}",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/getCraftingPlan?item={{ encodeURIComponent($json.params.item) }}&quantity={{ $json.params.quantity || 1 }}",
         "options": {
           "timeout": 10000
         }
@@ -777,15 +777,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3264
+        -2304,
+        5088
       ],
-      "id": "e9d7214a-8295-4624-b7ee-5d960b1eaae5",
+      "id": "be8f6436-a32a-4f34-863b-1a44bf09819b",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/modes",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/modes",
         "options": {
           "timeout": 5000
         }
@@ -794,15 +794,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3424
+        -2304,
+        4928
       ],
-      "id": "d54e07f4-b1f5-492b-83f6-f58120dea407",
+      "id": "29c5b467-de3b-41c7-9691-d73577471809",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/entities",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
         "options": {
           "timeout": 10000
         }
@@ -811,15 +811,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3584
+        -2304,
+        4768
       ],
-      "id": "a08c88d6-a52e-4ab2-b76e-dae11f5dab3d",
+      "id": "098113ba-5b37-40bd-8fc0-26c813a52349",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/craftable",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/craftable",
         "options": {
           "timeout": 10000
         }
@@ -828,15 +828,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3744
+        -2304,
+        4608
       ],
-      "id": "5fc2e6ee-24ba-433e-93f8-d580ce60213d",
+      "id": "da9692dc-b0d0-49dc-a27e-09daebfefe09",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/nearbyBlocks",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/nearbyBlocks",
         "options": {
           "timeout": 10000
         }
@@ -845,15 +845,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3904
+        -2304,
+        4448
       ],
-      "id": "d01d0033-a73d-4153-ae9d-507f64e3ff2d",
+      "id": "d17fc5e7-333e-427a-a109-acd8ae1e7835",
       "continueOnFail": true
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/savedPlaces",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/savedPlaces",
         "options": {
           "timeout": 5000
         }
@@ -862,16 +862,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4064
+        -2304,
+        4288
       ],
-      "id": "556e5484-15d4-4a22-9704-18adf28bd2eb",
+      "id": "e05df400-cead-4a55-b3fe-89b79982dfc2",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/goToRememberedPlace",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/goToRememberedPlace",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -889,16 +889,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4240
+        -2304,
+        4112
       ],
-      "id": "4208bce2-64d0-4fcd-8319-e55de8012350",
+      "id": "0f823ab1-9e56-4ec9-a52c-bd3550630df8",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/rememberHere",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/rememberHere",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -916,16 +916,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4400
+        -2304,
+        3952
       ],
-      "id": "dda93835-3e6e-4f43-966c-d1b53609b240",
+      "id": "3693d48c-7ebc-4e65-8103-12426e956d64",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/defendSelf",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/defendSelf",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -943,16 +943,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4560
+        -2304,
+        3792
       ],
-      "id": "eaac6543-ff64-47f3-8f87-6cf1cb647508",
+      "id": "9af3ca8f-6e05-4686-9d75-28e7d582717b",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/attackPlayer",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/attackPlayer",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -970,16 +970,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4720
+        -2304,
+        3632
       ],
-      "id": "d84b6763-093a-47ce-bf6d-410347319f42",
+      "id": "04d18e6e-fb7b-42a6-b5f8-cf92e72e733a",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/clearFurnace",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/clearFurnace",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -994,16 +994,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4864
+        -2304,
+        3488
       ],
-      "id": "c0fd92dc-ed2d-4bb6-ae59-b0351cbea99f",
+      "id": "2bfbe9fa-f96e-49bc-8e52-c387a4a70aa6",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/smelt",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/smelt",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1025,16 +1025,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5024
+        -2304,
+        3328
       ],
-      "id": "63d26672-408b-4b92-af88-b7a70b3e7f43",
+      "id": "2dd43687-03d1-4ee5-b4e1-7325e7446b06",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/craft",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/craft",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1056,16 +1056,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5168
+        -2304,
+        3184
       ],
-      "id": "bc11d64a-0f86-40f8-a8a0-63f2326d333e",
+      "id": "fbc49dce-5c37-4b31-8792-101f859659e0",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/viewChest",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/viewChest",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1091,16 +1091,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5328
+        -2304,
+        3024
       ],
-      "id": "5efcbff0-48f3-45e2-aa8c-24ec57e3aec4",
+      "id": "4defdc3d-dced-40be-b19e-85817e370d12",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/takeFromChest",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/takeFromChest",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1134,16 +1134,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5488
+        -2304,
+        2864
       ],
-      "id": "6301996d-95a3-4485-8621-cfbb815f7f57",
+      "id": "31235c0b-c490-410c-8c9d-44c502382efd",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/putInChest",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/putInChest",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1177,16 +1177,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5632
+        -2304,
+        2720
       ],
-      "id": "cabe2dc6-cf9d-43f9-a128-c8ee996b0d99",
+      "id": "2c9b5b52-74b0-4a58-a1dd-ce7e6ecb123d",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/givePlayer",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/givePlayer",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1212,16 +1212,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5792
+        -2304,
+        2560
       ],
-      "id": "36f347d0-8529-422b-8031-f39047c22d05",
+      "id": "40b1de56-d18b-483a-ad50-a3edb3646896",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/consume",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/consume",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1243,16 +1243,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5936
+        -2304,
+        2416
       ],
-      "id": "719b1ccb-f318-4672-85da-2ffc157e8fc3",
+      "id": "8bb0b525-a710-4d4e-b9f5-da5f20555c17",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/discard",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/discard",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1274,16 +1274,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -6080
+        -2304,
+        2272
       ],
-      "id": "2530da7f-b9d2-4b75-9f48-6d54c647bf47",
+      "id": "54c104cf-ebb2-49f3-972c-6ccbce871748",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/equip",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/equip",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1301,16 +1301,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6192
+        -2448,
+        2160
       ],
-      "id": "3cb5a460-db93-43bc-969f-337c8c760441",
+      "id": "833286ae-620d-4d2c-a778-f17ea49701ed",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/activate",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/activate",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1336,16 +1336,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6336
+        -2448,
+        2016
       ],
-      "id": "7bdafe7a-a64d-4bc7-80a6-799b6e7edeff",
+      "id": "03703d16-0ee8-4034-a73f-3356de621e2b",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/digDown",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/digDown",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1363,16 +1363,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6480
+        -2448,
+        1872
       ],
-      "id": "8a0983f8-ef7f-45aa-bd3f-c21a64b89a88",
+      "id": "4d76596a-2d4a-4daa-ad49-8047e55819a0",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/place",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/place",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1406,16 +1406,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6624
+        -2448,
+        1728
       ],
-      "id": "9d92a7fd-89b5-431d-8529-42c42207ec16",
+      "id": "ff3baa1b-80b8-4f39-bcd2-a062ecb380af",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/collect",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/collect",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1437,16 +1437,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7472,
-        -6736
+        -2256,
+        1616
       ],
-      "id": "665e2936-7d7a-46b1-9025-ba80a43b1e1a",
+      "id": "fc13a6da-e52a-4d0f-af28-d7de93f3f692",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/searchForEntity",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForEntity",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1468,16 +1468,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7472,
-        -6880
+        -2256,
+        1472
       ],
-      "id": "36ec7016-d28b-4865-9058-25ccbba548e2",
+      "id": "5387ce77-fe71-48fd-bc81-1ed64d0985d3",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/searchForBlock",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForBlock",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1499,16 +1499,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7024
+        -2240,
+        1328
       ],
-      "id": "3ea594f6-c83e-4dac-bea7-e03632d7f4cf",
+      "id": "5da1719c-4df4-43d1-9f61-1918e0609d92",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/moveAway",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/moveAway",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1526,16 +1526,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7168
+        -2240,
+        1184
       ],
-      "id": "63cf45c0-3297-4246-9153-6ab31835a8af",
+      "id": "7cc4034a-beda-4b8b-baf3-f92dabe04548",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/followPlayer",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/followPlayer",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1557,16 +1557,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7312
+        -2240,
+        1040
       ],
-      "id": "9137ec5d-307b-4a9d-a247-abe1050abc04",
+      "id": "5f97314c-7f2d-42b2-b0c6-004029c7a2ba",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/goToPlayer",
+        "url": "{{$env.KODECRAFT_SERVER_URL}}/api/agent/goToPlayer",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1588,16 +1588,16 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7456
+        -2240,
+        896
       ],
-      "id": "d05129a0-33ed-4953-9c17-38d5312e92a6",
+      "id": "15ea667b-975c-429e-b4aa-de03eace636d",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/agent/move",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/move",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -1627,10 +1627,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7600
+        -2240,
+        752
       ],
-      "id": "5747d68b-2aa7-4e1f-b2cf-184ec1159c54",
+      "id": "bb785dff-e801-4c1f-a8fd-067bd58fa2e0",
       "continueOnFail": true
     },
     {
@@ -2841,10 +2841,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
       "position": [
-        -9616,
-        -7152
+        -4400,
+        1200
       ],
-      "id": "22b5540a-1a76-44a5-a8ce-5cc2588c9866"
+      "id": "a84f7b22-c01a-4660-9602-23b3bcb7e788"
     },
     {
       "parameters": {
@@ -2858,15 +2858,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -5472,
-        -8112
+        -256,
+        240
       ],
-      "id": "19263a00-88a4-4344-9a17-a3eb4f7ecbe5",
+      "id": "57e5ee2a-06bc-46c5-a628-df7686511157",
       "webhookId": "clarification-webhook-id",
       "credentials": {
         "telegramApi": {
-          "id": "Jq6wosORWBGbVRZE",
-          "name": "Telegram account"
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
         }
       }
     },
@@ -2899,10 +2899,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -6112,
-        -7872
+        -896,
+        480
       ],
-      "id": "5e1b960f-5857-471d-847f-17569394e419"
+      "id": "22b26543-2cb3-45b3-8d60-4dd7e89d7035"
     },
     {
       "parameters": {
@@ -2912,10 +2912,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6592,
-        -8080
+        -1376,
+        272
       ],
-      "id": "15f057fa-1ff2-4223-b891-37eeac932dbb"
+      "id": "cbbc2e96-a4ab-493c-b163-94b73303e777"
     },
     {
       "parameters": {
@@ -2925,10 +2925,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -7632,
-        -8064
+        -2416,
+        288
       ],
-      "id": "6dab25fc-33ae-467f-af27-6b961e51f622"
+      "id": "7c0b380f-42d0-45c8-9d15-513174d25ae1"
     },
     {
       "parameters": {
@@ -3014,10 +3014,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -7904,
-        -8064
+        -2688,
+        288
       ],
-      "id": "2a8ba2cd-2f4d-478f-a2c9-b247f8958c6f"
+      "id": "21bb8402-cd86-4e22-8bdc-a1fd96b19768"
     },
     {
       "parameters": {
@@ -3027,14 +3027,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8080,
-        -8064
+        -2864,
+        288
       ],
-      "id": "2b3dda42-b9ea-42b8-bdf0-1c687a17eb61"
+      "id": "d18ceec7-ea29-4a66-b4fe-8596e5de2607"
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/entities",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
         "options": {
           "timeout": 5000
         }
@@ -3043,10 +3043,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -8240,
-        -8064
+        -3024,
+        288
       ],
-      "id": "b981f328-7750-4552-bb91-09adcfd35515",
+      "id": "83a67380-aee9-4142-b831-1cf81782e6ce",
       "continueOnFail": true
     },
     {
@@ -3057,14 +3057,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8432,
-        -8064
+        -3216,
+        288
       ],
-      "id": "640a72ba-ca33-4cd6-af31-15ac99b4d8cc"
+      "id": "a14be6a4-edcf-4046-9159-9e2cdef1fec8"
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/inventory",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
         "options": {
           "timeout": 5000
         }
@@ -3073,10 +3073,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -8656,
-        -8064
+        -3440,
+        288
       ],
-      "id": "a0375a43-8e4d-4998-8841-3d6045feafc0",
+      "id": "3e0f45b8-3507-40b7-a36e-306b10d9c3b6",
       "continueOnFail": true
     },
     {
@@ -3087,14 +3087,14 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8912,
-        -8064
+        -3696,
+        288
       ],
-      "id": "509a0894-22d8-498c-a82e-48cc1aa8d9b7"
+      "id": "70964293-a338-46dd-9b28-4cf39f4dc053"
     },
     {
       "parameters": {
-        "url": "http://localhost:4001/api/agent/status",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
         "options": {
           "timeout": 5000
         }
@@ -3103,10 +3103,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -9136,
-        -8064
+        -3920,
+        288
       ],
-      "id": "c824a304-f5c3-4905-84e9-fe54882f15c3",
+      "id": "f6e31b06-ef18-479b-bfc2-524ef1fd5b0f",
       "continueOnFail": true
     },
     {
@@ -3117,10 +3117,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -9392,
-        -8064
+        -4176,
+        288
       ],
-      "id": "8f255435-6831-4599-8212-4a8d5315e961"
+      "id": "cad4daeb-b430-40b3-80b1-e90211eee38e"
     },
     {
       "parameters": {
@@ -3133,15 +3133,15 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.1,
       "position": [
-        -9648,
-        -8064
+        -4432,
+        288
       ],
       "webhookId": "telegram-kodecraft-bot",
-      "id": "3360439b-816f-46ae-ac4d-5d00da923ca5",
+      "id": "849e2d92-ee32-474c-a548-af170ae5d9e3",
       "credentials": {
         "telegramApi": {
-          "id": "Jq6wosORWBGbVRZE",
-          "name": "Telegram account"
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
         }
       }
     },
@@ -3150,19 +3150,16 @@
         "promptType": "define",
         "text": "={{ $json.message }}\n\nCRITICAL INTENT CLASSIFICATION REMINDER:\n- If user mentions spawning workers + building task: USE \"collaborativeBuild\"\n- If user only wants workers (no building): USE \"spawnWorkers\"\n- Examples: \"spawn workers to build house\" = collaborativeBuild, \"spawn 3 workers\" = spawnWorkers\n\nCONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? 'CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? 'CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
         "options": {
-          "systemMessage": "={{ $json.systemPrompt || 'You are an intelligent Minecraft AI bot with unlimited creative capabilities. You can handle any request through advanced AI-powered code generation. Always respond with valid JSON in the format: {\"intent\": \"intentName\", \"params\": {}, \"response\": \"Brief response\"}. CRITICAL MULTIBOT INTENT CLASSIFICATION: If user mentions BOTH spawning workers AND building something, use \"collaborativeBuild\" intent (NOT spawnWorkers). Use \"spawnWorkers\" only when they want workers without a building task. Examples: \"spawn workers to build X\" → collaborativeBuild, \"spawn 3 workers\" → spawnWorkers.' }}",
-          "conversationState": "={{ $json.conversationState || 'initial' }}",
-          "needsClarification": "={{ $json.needsClarification || false }}",
-          "clarificationCount": "={{ $json.clarificationCount || 0 }}"
+          "systemMessage": "={{ $json.systemPrompt || 'You are an intelligent Minecraft AI bot with unlimited creative capabilities. You can handle any request through advanced AI-powered code generation. Always respond with valid JSON in the format: {\"intent\": \"intentName\", \"params\": {}, \"response\": \"Brief response\"}. CRITICAL MULTIBOT INTENT CLASSIFICATION: If user mentions BOTH spawning workers AND building something, use \"collaborativeBuild\" intent (NOT spawnWorkers). Use \"spawnWorkers\" only when they want workers without a building task. Examples: \"spawn workers to build X\" → collaborativeBuild, \"spawn 3 workers\" → spawnWorkers.' }}"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -7104,
-        -8064
+        -1888,
+        288
       ],
-      "id": "86ed981c-5605-4558-82f2-b1d5727f8a97",
+      "id": "53fe7f8d-7ad8-44d8-8aba-06b45f5f3dc0",
       "name": "AI Agent1"
     },
     {
@@ -3170,20 +3167,20 @@
         "sessionIdType": "customKey",
         "sessionKey": "ConversationId",
         "collectionName": "history",
-        "databaseName": "minecraft"
+        "databaseName": "Minecraft"
       },
       "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
       "typeVersion": 1,
       "position": [
-        -7072,
-        -7904
+        -1808,
+        480
       ],
-      "id": "b182ab86-f1ff-4e77-aa7c-3d593eec47db",
+      "id": "80f0b286-997f-4f74-b98c-e3c8dfcd1e1e",
       "name": "MongoDB Chat Memory",
       "credentials": {
         "mongoDb": {
-          "id": "POjYdbm10yqYAwJD",
-          "name": "MongoDB account"
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
         }
       }
     },
@@ -3191,23 +3188,23 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "gpt-4o-mini",
+          "value": "gpt-4o",
           "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
+          "cachedResultName": "gpt-4o"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -7280,
-        -7888
+        -2064,
+        464
       ],
-      "id": "3f5fa58c-de46-4fdc-a5ef-a5ea4798786c",
+      "id": "7a0a51cb-e079-471f-8de1-d5972ab20ec5",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "yUO5S1pgKJnk2iom",
+          "id": "bcAk6fZ6KgqKAt8K",
           "name": "OpenAi account"
         }
       }
@@ -3216,23 +3213,23 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "gpt-4o-mini",
+          "value": "gpt-4o",
           "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
+          "cachedResultName": "gpt-4o"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -5152,
-        -4544
+        64,
+        3808
       ],
-      "id": "a1f0ea25-e0f8-4897-af9d-58fb1bfbb233",
+      "id": "c56d5951-5ce6-4c68-8744-f4a2ad68a9b1",
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "yUO5S1pgKJnk2iom",
+          "id": "bcAk6fZ6KgqKAt8K",
           "name": "OpenAi account"
         }
       }
@@ -3247,15 +3244,15 @@
       "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
       "typeVersion": 1,
       "position": [
-        -5008,
-        -4544
+        208,
+        3808
       ],
-      "id": "397a13a5-b42b-4c7f-acb2-66af7b8669d4",
+      "id": "9055d123-f511-423b-bd63-659f9f8378eb",
       "name": "MongoDB Chat Memory1",
       "credentials": {
         "mongoDb": {
-          "id": "POjYdbm10yqYAwJD",
-          "name": "MongoDB account"
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
         }
       }
     }
@@ -4481,15 +4478,15 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "c9515de6-c56f-46e4-915f-eaf5373c27b9",
+  "versionId": "25837a4f-2343-453c-a359-3f74122d576f",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "926c5f2b62401768ca8a1a68bb4e4a816e506c0ed73f177f4da8b56b49a57234"
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
-  "id": "5v4QZvlFZCKFlDaH",
+  "id": "eDsx55b0Oc9H4aur",
   "tags": []
 }

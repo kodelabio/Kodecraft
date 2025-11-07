@@ -894,6 +894,22 @@ export class ExternalAPI {
 
             console.log(`[API] Received newAction: ${prompt.substring(0, 50)}...`);
 
+            // For testing: If this is a building request, force hardcoded location
+            let modifiedPrompt = prompt;
+            if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place') || prompt.toLowerCase().includes('construct')) {
+                console.log('[API] Building request detected - using hardcoded test location');
+                // Remove any coordinate references and use hardcoded location
+                modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+                modifiedPrompt = modifiedPrompt.replace(/at coordinates? \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+                modifiedPrompt = modifiedPrompt.replace(/at position \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+                modifiedPrompt = modifiedPrompt.replace(/at location \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+                // Also add explicit instruction to build at current position
+                if (!modifiedPrompt.toLowerCase().includes('current position')) {
+                    modifiedPrompt += ' at my current position';
+                }
+                console.log(`[API] Modified prompt: ${modifiedPrompt}`);
+            }
+
             // Store original brain mode and components
             const originalBrainMode = settings.brain_mode;
             const originalHistory = this.agent.history;
@@ -910,10 +926,10 @@ export class ExternalAPI {
                 
                 this.agent.history = new History(this.agent);
                 this.agent.coder = new Coder(this.agent);
-                this.agent.history.add('user', prompt);
+                this.agent.history.add('user', modifiedPrompt);
                 
                 // Execute newAction command (will now use internal code generation)
-                const command = `!newAction("${prompt}")`;
+                const command = `!newAction("${modifiedPrompt}")`;
                 const result = await executeCommand(this.agent, command);
                 
                 // Check if coding is disabled
@@ -941,7 +957,9 @@ export class ExternalAPI {
                 res.json({ 
                     success: true, 
                     message: result || 'Custom action executed successfully',
-                    prompt: prompt,
+                    original_prompt: prompt,
+                    modified_prompt: modifiedPrompt,
+                    prompt_modified: modifiedPrompt !== prompt,
                     brain_mode_used: 'internal',
                     generated_code: true
                 });

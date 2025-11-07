@@ -22,20 +22,20 @@ services:
       timeout: 10s
       retries: 10
 
-  app:
-    build: .
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: node main.js
-    ports:
-      - "3000-3003:3000-3003"
-    depends_on:
-      minecraft-server:
-        condition: service_healthy
-    environment:
-      MINECRAFT_SERVER: "minecraft-server"
-      MINECRAFT_PORT: "55916"
+#  app:
+#    build: .
+#    working_dir: /app
+#    volumes:
+#      - .:/app
+#    command: node main.js
+#    ports:
+#      - "3000-3003:3000-3003"
+#    depends_on:
+#      minecraft-server:
+#        condition: service_healthy
+#    environment:
+#      MINECRAFT_SERVER: "minecraft-server"
+#      MINECRAFT_PORT: "55916"
 
   viaproxy:
     image: ghcr.io/viaversion/viaproxy:latest

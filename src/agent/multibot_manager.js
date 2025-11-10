@@ -130,7 +130,7 @@ export class MultiBotManager {
         }
         
         // Wait for workers to initialize
-        await this.waitForWorkersReady(spawnedWorkers.map(w => w.name));
+        await this.waitForWorkersReady(spawnedWorkers.map(w => w.name), 45000); // Increased timeout
         
         return spawnedWorkers;
     }

@@ -894,11 +894,11 @@ export class ExternalAPI {
 
             console.log(`[API] Received newAction: ${prompt.substring(0, 50)}...`);
 
-            // For testing: If this is a building request, force hardcoded location
+            // For building requests, apply coordinate replacement
             let modifiedPrompt = prompt;
             if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place') || prompt.toLowerCase().includes('construct')) {
-                console.log('[API] Building request detected - using hardcoded test location');
-                // Remove any coordinate references and use hardcoded location
+                console.log('[API] Building request detected - using coordinate replacement');
+                // Remove any coordinate references and use current position
                 modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
                 modifiedPrompt = modifiedPrompt.replace(/at coordinates? \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
                 modifiedPrompt = modifiedPrompt.replace(/at position \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
@@ -910,20 +910,88 @@ export class ExternalAPI {
                 console.log(`[API] Modified prompt: ${modifiedPrompt}`);
             }
 
+            // Check if this agent is a worker bot (internal brain mode)
+            const isWorkerBot = this.agent.isWorkerBot || this.agent.workerName || 
+                               (this.agent.name && (this.agent.name.includes('Worker') || this.agent.name.includes('worker')));
+            const isInternalMode = settings.brain_mode === 'internal' || isWorkerBot;
+            
+            if (isWorkerBot || isInternalMode) {
+                console.log(`[API] Worker bot detected (${this.agent.name}) - forwarding to internal AI`);
+                console.log(`[API] Worker bot details: isWorkerBot=${isWorkerBot}, isInternalMode=${isInternalMode}`);
+                console.log(`[API] Agent components: history=${!!this.agent.history}, coder=${!!this.agent.coder}, prompter=${!!this.agent.prompter}`);
+                
+                // For worker bots: Forward directly to internal AI system
+                try {
+                    // Ensure agent has necessary components
+                    if (!this.agent.history) {
+                        console.log('[API] Creating missing History component for worker');
+                        this.agent.history = new History(this.agent);
+                    }
+                    
+                    if (!this.agent.coder) {
+                        console.log('[API] Creating missing Coder component for worker');
+                        this.agent.coder = new Coder(this.agent);
+                    }
+                    
+                    // Use the worker's internal handleMessage system to process the task
+                    console.log(`[API] Forwarding to ${this.agent.name} handleMessage: "${modifiedPrompt.substring(0, 100)}..."`);
+                    const messageHandled = await this.agent.handleMessage('system', modifiedPrompt, 1);
+                    
+                    if (messageHandled) {
+                        console.log(`[API] Worker ${this.agent.name} processed task internally - command executed: ${messageHandled}`);
+                        res.json({ 
+                            success: true, 
+                            message: 'Task forwarded to internal AI and executed',
+                            original_prompt: prompt,
+                            modified_prompt: modifiedPrompt,
+                            prompt_modified: modifiedPrompt !== prompt,
+                            brain_mode_used: 'internal',
+                            worker_bot: true,
+                            forwarded_to_ai: true,
+                            command_executed: messageHandled
+                        });
+                    } else {
+                        console.log(`[API] Worker ${this.agent.name} did not process task - no response generated`);
+                        res.json({ 
+                            success: true, 
+                            message: 'Task forwarded to internal AI but no response generated',
+                            original_prompt: prompt,
+                            modified_prompt: modifiedPrompt,
+                            prompt_modified: modifiedPrompt !== prompt,
+                            brain_mode_used: 'internal',
+                            worker_bot: true,
+                            forwarded_to_ai: true,
+                            command_executed: false
+                        });
+                    }
+                    return;
+                    
+                } catch (error) {
+                    console.error(`[API] Error forwarding to internal AI for ${this.agent.name}:`, error);
+                    return res.status(500).json({ 
+                        error: 'Failed to forward task to internal AI',
+                        details: error.message,
+                        code: 'internal_ai_forward_failed'
+                    });
+                }
+            }
+
+            // For leader bots or external brain mode: Use the original approach
+            console.log(`[API] Leader bot detected (${this.agent.name}) - using external brain mode approach`);
+
             // Store original brain mode and components
             const originalBrainMode = settings.brain_mode;
             const originalHistory = this.agent.history;
             const originalCoder = this.agent.coder;
             
             try {
-                // Force internal brain mode to enable code generation
+                // Force internal brain mode to enable code generation for leader
                 settings.brain_mode = 'internal';
                 
                 // Add a flag to bypass external brain mode check in newAction
                 this.agent._forceInternalMode = true;
                 
                 // Create proper instances for code generation
-                
                 this.agent.history = new History(this.agent);
                 this.agent.coder = new Coder(this.agent);
                 this.agent.history.add('user', modifiedPrompt);
@@ -953,7 +1021,7 @@ export class ExternalAPI {
                 }
                 
                 // Success case
-                console.log(`[API] Task executed successfully`);
+                console.log(`[API] Task executed successfully for leader bot`);
                 res.json({ 
                     success: true, 
                     message: result || 'Custom action executed successfully',
@@ -961,7 +1029,8 @@ export class ExternalAPI {
                     modified_prompt: modifiedPrompt,
                     prompt_modified: modifiedPrompt !== prompt,
                     brain_mode_used: 'internal',
-                    generated_code: true
+                    generated_code: true,
+                    leader_bot: true
                 });
                 
             } finally {

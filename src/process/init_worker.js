@@ -80,6 +80,11 @@ const argv = yargs(args)
         
         // Create and start agent in internal mode
         const agent = new Agent();
+        
+        // Set worker flag before starting
+        agent.isWorkerBot = true;
+        agent.workerName = argv.name;
+        
         await agent.start(argv.load_memory, argv.init_message, argv.count_id);
         
         // Start API server for the worker

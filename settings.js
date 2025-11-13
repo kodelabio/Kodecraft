@@ -47,11 +47,12 @@ const settings = {
     "log_all_prompts": false, // log ALL prompts to file
 
         // External brain mode configuration
-    "brain_mode": "external", // "internal" or "external" (for n8n integration)
-    "external_api_port": 4001, // Port for REST API when in external mode
-    "external_mode_allow_chat": false, // Allow basic in-game chat commands in external mode (for testing)
-    "multibot_base_port": 4000, // Base port for multibot workers (4001, 4002, 4003, etc.)
-    // "n8n_webhook_url": "http://localhost:5678/webhook/kodecraft-chat", // Webhook URL to forward chat messages to n8n
+    // External brain mode configuration
+    "brain_mode": process.env.BRAIN_MODE || "external",
+    "external_api_port": parseInt(process.env.EXTERNAL_API_PORT || "4001"),
+    "external_mode_allow_chat": process.env.EXTERNAL_MODE_ALLOW_CHAT === "true" || false,
+    "multibot_base_port": parseInt(process.env.MULTIBOT_BASE_PORT || "4000"),
+    "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/worker-complete",
 }
 
 export default settings;

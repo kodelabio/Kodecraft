@@ -2,6 +2,8 @@
 
 # Kill any existing processes
 pkill -f "Xvfb :99" 2>/dev/null
+pkill -f "node src/process/init_worker.js" 2>/dev/null
+pkill -f "node src/process/init_agent.js" 2>/dev/null
 pkill -f "node main.js" 2>/dev/null
 
 # Wait a moment for processes to terminate

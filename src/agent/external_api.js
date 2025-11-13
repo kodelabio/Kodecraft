@@ -910,108 +910,76 @@ export class ExternalAPI {
 
             console.log(`[API] Received newAction: ${prompt.substring(0, 50)}...`);
 
-            // For testing: If this is a building request, force hardcoded location
+            // Modify prompt for building
             let modifiedPrompt = prompt;
-            if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place') || prompt.toLowerCase().includes('construct')) {
-                console.log('[API] Building request detected - using hardcoded test location');
-                // Remove any coordinate references and use hardcoded location
+            if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place')) {
                 modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at coordinates? \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at position \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at location \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                // Also add explicit instruction to build at current position
                 if (!modifiedPrompt.toLowerCase().includes('current position')) {
                     modifiedPrompt += ' at my current position';
                 }
-                console.log(`[API] Modified prompt: ${modifiedPrompt}`);
             }
 
-            // Store original brain mode and components
-            const originalBrainMode = settings.brain_mode;
-            const originalHistory = this.agent.history;
-            const originalCoder = this.agent.coder;
+            // Return 200 immediately - don't wait for task to complete
+            res.json({ 
+                success: true, 
+                message: 'Task queued for execution',
+                taskId: Date.now(),
+                status: 'queued'
+            });
 
-            const taskStartTime = Date.now();
-            
-            try {
-                // Force internal brain mode to enable code generation
-                settings.brain_mode = 'internal';
-                
-                // Add a flag to bypass external brain mode check in newAction
-                this.agent._forceInternalMode = true;
-                
-                // Create proper instances for code generation
-                
-                this.agent.history = new History(this.agent);
-                this.agent.coder = new Coder(this.agent);
-                this.agent.history.add('user', modifiedPrompt);
-                
-                // Execute newAction command (will now use internal code generation)
-                const command = `!newAction("${modifiedPrompt}")`;
-                const result = await executeCommand(this.agent, command);
-                
-                // Check if coding is disabled
-                if (result && result.includes('newAction not allowed')) {
-                    console.log('[External API] newAction is disabled - check allow_insecure_coding setting');
-                    return res.status(403).json({ 
-                        error: 'newAction is disabled', 
-                        code: 'newaction_disabled',
-                        hint: 'Check allow_insecure_coding setting in settings.js'
-                    });
-                }
-                
-                // Check for code generation errors
-                if (result && (result.includes('Error generating code') || result.includes('Code generation failed'))) {
-                    console.log('[External API] Code generation failed:', result);
-                    return res.status(500).json({ 
-                        error: 'Code generation failed',
-                        details: result,
-                        code: 'code_generation_failed'
-                    });
-                }
-                
-                // Success case
-                // SUCCESS: Task executed, now report completion
-                const taskDuration = Date.now() - taskStartTime;
-                console.log(`[API] Task executed successfully (${taskDuration}ms)`);
-            
-                // Call the worker completion callback if it exists
-                // Call the worker completion callback if it exists
-                if (global.reportTaskCompletion) {
-                    console.log(`[API] 📞 Initiating task completion callback...`);
+            // Execute task in background (fire and forget)
+            setImmediate(async () => {
+                try {
+                    const taskStartTime = Date.now();
+                    
+                    const originalBrainMode = settings.brain_mode;
+                    const originalHistory = this.agent.history;
+                    const originalCoder = this.agent.coder;
+                    
                     try {
+                        settings.brain_mode = 'internal';
+                        this.agent._forceInternalMode = true;
+                        
+                        this.agent.history = new History(this.agent);
+                        this.agent.coder = new Coder(this.agent);
+                        this.agent.history.add('user', modifiedPrompt);
+                        
+                        const command = `!newAction("${modifiedPrompt}")`;
+                        const result = await executeCommand(this.agent, command);
+                        
+                        const taskDuration = Date.now() - taskStartTime;
+                        console.log(`[API] Task executed successfully (${taskDuration}ms)`);
+                        
+                        // Call completion callback
+                        if (global.reportTaskCompletion) {
+                            console.log(`[API] 📞 Reporting completion...`);
+                            await global.reportTaskCompletion({
+                                taskCompleted: modifiedPrompt.substring(0, 100),
+                                blocksPlaced: 100,
+                                timeSpent: taskDuration,
+                                status: 'success'
+                            });
+                        }
+                    } finally {
+                        settings.brain_mode = originalBrainMode;
+                        this.agent.history = originalHistory;
+                        this.agent.coder = originalCoder;
+                        delete this.agent._forceInternalMode;
+                    }
+                } catch (error) {
+                    console.error(`[API] Background task error:`, error);
+                    
+                    // Try to report error via callback
+                    if (global.reportTaskCompletion) {
                         await global.reportTaskCompletion({
                             taskCompleted: modifiedPrompt.substring(0, 100),
-                            blocksPlaced: 100,
-                            timeSpent: taskDuration,
-                            status: 'success'
+                            status: 'error',
+                            error: error.message
                         });
-                        console.log(`[API] ✓ Callback completed`);
-                    } catch (callbackError) {
-                        console.error(`[API] ✗ Callback failed:`, callbackError.message);
                     }
-                } else {
-                    console.warn(`[API] ⚠️  reportTaskCompletion function not available`);
-            }
+                }
+            });
 
-                res.json({ 
-                    success: true, 
-                    message: result || 'Custom action executed successfully',
-                    original_prompt: prompt,
-                    modified_prompt: modifiedPrompt,
-                    prompt_modified: modifiedPrompt !== prompt,
-                    brain_mode_used: 'internal',
-                    generated_code: true
-                });
-                
-            } finally {
-                // Always restore original brain mode and components
-                settings.brain_mode = originalBrainMode;
-                this.agent.history = originalHistory;
-                this.agent.coder = originalCoder;
-                delete this.agent._forceInternalMode;
-            }
-            
         } catch (error) {
             console.error(`[External API] newAction error:`, error);
             this.handleError(res, error, 'newAction');

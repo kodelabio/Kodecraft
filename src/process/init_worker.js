@@ -38,6 +38,11 @@ const argv = yargs(args)
         default: 0,
         description: 'unique count ID for the worker'
     })
+    .option('session_id', {
+        alias: 's',
+        type: 'string',
+        description: 'build session ID'
+    })
     .option('webhook', {
         alias: 'w',
         type: 'string',
@@ -49,7 +54,7 @@ const argv = yargs(args)
 global.workerConfig = {
     name: argv.name,
     port: argv.port,
-    sessionId: argv.count_id,
+    sessionId: argv.session_id,
     callbackWebhookUrl: argv.webhook,
     taskStartTime: null
 };

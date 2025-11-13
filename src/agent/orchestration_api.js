@@ -26,8 +26,8 @@ export class OrchestrationAPI {
             let args = ['src/process/init_worker.js', name];
             args.push('-n', name);
             args.push('-p', port);
-            args.push('-c', sessionId);
-            
+            args.push('-s', sessionId);
+
             
             // Pass callback URL if provided
             if (callbackWebhookUrl) {
@@ -374,7 +374,7 @@ export class OrchestrationAPI {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: taskPrompt }),
-                timeout: 300000
+                timeout: 900000
             });
 
             console.log(`   Response status: ${response.status}`);

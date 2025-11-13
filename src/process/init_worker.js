@@ -38,11 +38,90 @@ const argv = yargs(args)
         default: 0,
         description: 'unique count ID for the worker'
     })
+    .option('webhook', {
+        alias: 'w',
+        type: 'string',
+        description: 'callback webhook URL for task completion'
+    })
     .argv;
+
+// Store callback info globally for use when tasks complete
+global.workerConfig = {
+    name: argv.name,
+    port: argv.port,
+    sessionId: argv.count_id,
+    callbackWebhookUrl: argv.webhook,
+    taskStartTime: null
+};
+
+// Function to report task completion
+async function reportTaskCompletion(result) {
+    const { callbackWebhookUrl, name, sessionId } = global.workerConfig;
+    
+    if (!callbackWebhookUrl) {
+        console.warn('⚠️  No callback webhook URL configured');
+        return;
+    }
+    
+    try {
+        console.log(`📞 Reporting task completion for ${name}`);
+        console.log(`   Webhook URL: ${callbackWebhookUrl}`);
+        console.log(`   Session ID: ${sessionId}`);
+        console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
+        
+        const startTime = Date.now();
+        
+        const response = await fetch(callbackWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionId: sessionId,
+                workerName: name,
+                status: 'completed',
+                result: result || {
+                    taskCompleted: 'Task executed',
+                    blocksPlaced: 0,
+                    timeSpent: Date.now() - (global.workerConfig.taskStartTime || Date.now())
+                },
+                completionTime: new Date().toISOString()
+            })
+        });
+        
+        const callbackDuration = Date.now() - startTime;
+        
+        if (response.ok) {
+            const responseBody = await response.text();
+            console.log(`✓ Task completion reported successfully`);
+            console.log(`   Response status: ${response.status}`);
+            console.log(`   Response time: ${callbackDuration}ms`);
+            console.log(`   Response body: ${responseBody.substring(0, 200)}`);
+        } else {
+            const errorBody = await response.text();
+            console.error(`✗ Failed to report completion`);
+            console.error(`   Response status: ${response.status}`);
+            console.error(`   Response time: ${callbackDuration}ms`);
+            console.error(`   Error body: ${errorBody.substring(0, 200)}`);
+        }
+    } catch (error) {
+        console.error(`✗ Error reporting task completion:`);
+        console.error(`   Error type: ${error.name}`);
+        console.error(`   Error message: ${error.message}`);
+        console.error(`   Error code: ${error.code}`);
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error(`   ⚠️  Network error - webhook URL may be unreachable`);
+            console.error(`   URL: ${global.workerConfig.callbackWebhookUrl}`);
+        }
+    }
+}
+
+// Make it globally available
+global.reportTaskCompletion = reportTaskCompletion;
 
 (async () => {
     try {
         console.log(`Starting worker ${argv.name} in internal brain mode`);
+        console.log(`📞 Callback webhook: ${argv.webhook || 'not set'}`);
         
         // Initialize the agent settings from root settings
         const workerSettings = { ...rootSettings };

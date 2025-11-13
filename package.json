@@ -38,7 +38,7 @@
     },
     "scripts": {
         "postinstall": "patch-package",
-        "kodecraft": "node main.js",
+        "kodecraft": "node --env-file=.env main.js",
         "install:safe": "npm install --no-optional",
         "install:force": "npm install --force"
     },

@@ -1,12 +1,15 @@
-// src/agent/external_api.js
 // REST API server for n8n integration when BRAIN_MODE=external
 
 import express from 'express';
+import axios from 'axios';
 import { getCommand, executeCommand } from './commands/index.js';
 import settings from '../../settings.js';
-import { History } from './history.js';
-import { Coder } from './coder.js';
 import { MultiBotManager } from './multibot_manager.js';
+import { distributeCode } from './code_distributor.js';
+import { makeCompartment } from './library/lockdown.js';
+import * as skills from './library/skills.js';
+import * as world from './library/world.js';
+import { Vec3 } from 'vec3';
 
 export class ExternalAPI {
     constructor(agent) {
@@ -93,6 +96,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/goToBed', this.handleGoToBed.bind(this));
         this.app.post('/api/agent/useDoor', this.handleUseDoor.bind(this));
         this.app.post('/api/agent/newAction', this.handleNewAction.bind(this));
+        this.app.post('/api/agent/executeCode', this.handleExecuteCode.bind(this));
         
         // Communication
         this.app.post('/api/agent/chat', this.handleChat.bind(this));
@@ -112,19 +116,16 @@ export class ExternalAPI {
         // Goal management
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
+
+        // Multi-bot management endpoints (Solution A: Centralized Code Generation)
+        this.app.post('/api/multibot/collaborativeBuild', this.handleCollaborativeBuild.bind(this));
+        this.app.post('/api/multibot/stop', this.handleStopWorkers.bind(this));
         
-        // Multi-bot management
-        this.app.post('/api/multibot/spawnWorkers', this.handleSpawnWorkers.bind(this));
-        this.app.post('/api/multibot/coordinateBuild', this.handleCoordinateBuild.bind(this));
-        this.app.post('/api/multibot/assignTasks', this.handleAssignTasks.bind(this));
-        this.app.post('/api/multibot/teleportWorkers', this.handleTeleportWorkers.bind(this));
-        this.app.get('/api/multibot/status', this.handleMultiBotStatus.bind(this));
-        this.app.post('/api/multibot/stopWorkers', this.handleStopWorkers.bind(this));
-        
-        // Health check
+        // Health check & debugging
         this.app.get('/api/health', (req, res) => {
             res.json({ status: 'ok' });
         });
+        this.app.get('/api/agent/debug', this.handleDebug.bind(this));
     }
 
     async handleMove(req, res) {
@@ -887,162 +888,82 @@ export class ExternalAPI {
     async handleNewAction(req, res) {
         try {
             const { prompt } = req.body;
-            
+
             if (!prompt) {
                 return res.status(400).json({ error: 'prompt parameter required' });
             }
 
             console.log(`[API] Received newAction: ${prompt.substring(0, 50)}...`);
 
-            // For building requests, apply coordinate replacement
             let modifiedPrompt = prompt;
-            if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place') || prompt.toLowerCase().includes('construct')) {
-                console.log('[API] Building request detected - using coordinate replacement');
-                // Remove any coordinate references and use current position
-                modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at coordinates? \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at position \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                modifiedPrompt = modifiedPrompt.replace(/at location \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                // Also add explicit instruction to build at current position
-                if (!modifiedPrompt.toLowerCase().includes('current position')) {
-                    modifiedPrompt += ' at my current position';
-                }
-                console.log(`[API] Modified prompt: ${modifiedPrompt}`);
-            }
+            // if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place') || prompt.toLowerCase().includes('construct')) {
+            //     console.log('[API] Building request detected - using coordinate replacement');
+            //     modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+            //     modifiedPrompt = modifiedPrompt.replace(/at coordinates? \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+            //     modifiedPrompt = modifiedPrompt.replace(/at position \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+            //     modifiedPrompt = modifiedPrompt.replace(/at location \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
+            //     if (!modifiedPrompt.toLowerCase().includes('current position')) {
+            //         modifiedPrompt += ' at my current position';
+            //     }
+            //     console.log(`[API] Modified prompt: ${modifiedPrompt}`);
+            // }
 
-            // Check if this agent is a worker bot (internal brain mode)
-            const isWorkerBot = this.agent.isWorkerBot || this.agent.workerName || 
-                               (this.agent.name && (this.agent.name.includes('Worker') || this.agent.name.includes('worker')));
-            const isInternalMode = settings.brain_mode === 'internal' || isWorkerBot;
+            // console.log(`Executing newAction with prompt length: ${modifiedPrompt.length}`);
+            // console.log(`Prompt preview: ${modifiedPrompt.substring(0, 100)}...`);
+            // console.log(`Agent has coder: ${!!this.agent.coder}`);
+            // console.log(`Agent has history: ${!!this.agent.history}`);
             
-            if (isWorkerBot || isInternalMode) {
-                console.log(`[API] Worker bot detected (${this.agent.name}) - forwarding to internal AI`);
-                console.log(`[API] Worker bot details: isWorkerBot=${isWorkerBot}, isInternalMode=${isInternalMode}`);
-                console.log(`[API] Agent components: history=${!!this.agent.history}, coder=${!!this.agent.coder}, prompter=${!!this.agent.prompter}`);
-                
-                // For worker bots: Forward directly to internal AI system
-                try {
-                    // Ensure agent has necessary components
-                    if (!this.agent.history) {
-                        console.log('[API] Creating missing History component for worker');
-                        this.agent.history = new History(this.agent);
-                    }
-                    
-                    if (!this.agent.coder) {
-                        console.log('[API] Creating missing Coder component for worker');
-                        this.agent.coder = new Coder(this.agent);
-                    }
-                    
-                    // Use the worker's internal handleMessage system to process the task
-                    console.log(`[API] Forwarding to ${this.agent.name} handleMessage: "${modifiedPrompt.substring(0, 100)}..."`);
-                    const messageHandled = await this.agent.handleMessage('system', modifiedPrompt, 1);
-                    
-                    if (messageHandled) {
-                        console.log(`[API] Worker ${this.agent.name} processed task internally - command executed: ${messageHandled}`);
-                        res.json({ 
-                            success: true, 
-                            message: 'Task forwarded to internal AI and executed',
-                            original_prompt: prompt,
-                            modified_prompt: modifiedPrompt,
-                            prompt_modified: modifiedPrompt !== prompt,
-                            brain_mode_used: 'internal',
-                            worker_bot: true,
-                            forwarded_to_ai: true,
-                            command_executed: messageHandled
-                        });
-                    } else {
-                        console.log(`[API] Worker ${this.agent.name} did not process task - no response generated`);
-                        res.json({ 
-                            success: true, 
-                            message: 'Task forwarded to internal AI but no response generated',
-                            original_prompt: prompt,
-                            modified_prompt: modifiedPrompt,
-                            prompt_modified: modifiedPrompt !== prompt,
-                            brain_mode_used: 'internal',
-                            worker_bot: true,
-                            forwarded_to_ai: true,
-                            command_executed: false
-                        });
-                    }
-                    return;
-                    
-                } catch (error) {
-                    console.error(`[API] Error forwarding to internal AI for ${this.agent.name}:`, error);
-                    return res.status(500).json({ 
-                        error: 'Failed to forward task to internal AI',
-                        details: error.message,
-                        code: 'internal_ai_forward_failed'
-                    });
-                }
-            }
-
-            // For leader bots or external brain mode: Use the original approach
-            console.log(`[API] Leader bot detected (${this.agent.name}) - using external brain mode approach`);
-
-            // Store original brain mode and components
-            const originalBrainMode = settings.brain_mode;
-            const originalHistory = this.agent.history;
-            const originalCoder = this.agent.coder;
+            // Add the prompt to history to provide context for code generation
+            this.agent.history.add('user', `Please ${modifiedPrompt}`);
             
+            // Force internal mode for API calls to bypass external brain restrictions
+            const originalForceInternalMode = this.agent._forceInternalMode;
+            this.agent._forceInternalMode = true;
+            
+            console.log(`Calling newAction command directly...`);
             try {
-                // Force internal brain mode to enable code generation for leader
-                settings.brain_mode = 'internal';
+                // Call the newAction command directly instead of using executeCommand
+                // to avoid quote escaping issues with very long prompts
+                const newActionCommand = getCommand('!newAction');
+                if (!newActionCommand) {
+                    throw new Error('newAction command not found');
+                }
                 
-                // Add a flag to bypass external brain mode check in newAction
-                this.agent._forceInternalMode = true;
+                const result = await newActionCommand.perform(this.agent, modifiedPrompt);
+                console.log(`executeCommand result: ${result ? result.substring(0, 100) : 'null'}`);
                 
-                // Create proper instances for code generation
-                this.agent.history = new History(this.agent);
-                this.agent.coder = new Coder(this.agent);
-                this.agent.history.add('user', modifiedPrompt);
-                
-                // Execute newAction command (will now use internal code generation)
-                const command = `!newAction("${modifiedPrompt}")`;
-                const result = await executeCommand(this.agent, command);
-                
-                // Check if coding is disabled
                 if (result && result.includes('newAction not allowed')) {
-                    console.log('[External API] newAction is disabled - check allow_insecure_coding setting');
-                    return res.status(403).json({ 
-                        error: 'newAction is disabled', 
+                    return res.status(403).json({
+                        error: 'newAction is disabled',
                         code: 'newaction_disabled',
                         hint: 'Check allow_insecure_coding setting in settings.js'
                     });
                 }
-                
-                // Check for code generation errors
+
                 if (result && (result.includes('Error generating code') || result.includes('Code generation failed'))) {
-                    console.log('[External API] Code generation failed:', result);
-                    return res.status(500).json({ 
+                    console.error(`Code generation failed: ${result}`);
+                    return res.status(500).json({
                         error: 'Code generation failed',
                         details: result,
                         code: 'code_generation_failed'
                     });
                 }
-                
-                // Success case
-                console.log(`[API] Task executed successfully for leader bot`);
-                res.json({ 
-                    success: true, 
+
+                console.log(`newAction completed successfully`);
+                res.json({
+                    success: true,
                     message: result || 'Custom action executed successfully',
                     original_prompt: prompt,
                     modified_prompt: modifiedPrompt,
                     prompt_modified: modifiedPrompt !== prompt,
-                    brain_mode_used: 'internal',
-                    generated_code: true,
-                    leader_bot: true
+                    brain_mode_used: 'internal_forced'
                 });
-                
             } finally {
-                // Always restore original brain mode and components
-                settings.brain_mode = originalBrainMode;
-                this.agent.history = originalHistory;
-                this.agent.coder = originalCoder;
-                delete this.agent._forceInternalMode;
+                // Always restore original force internal mode setting
+                this.agent._forceInternalMode = originalForceInternalMode;
             }
-            
         } catch (error) {
-            console.error(`[External API] newAction error:`, error);
+            console.error(`newAction error:`, error);
             this.handleError(res, error, 'newAction');
         }
     }
@@ -1271,6 +1192,425 @@ export class ExternalAPI {
 
 
 
+    async handleCollaborativeBuild(req, res) {
+        try {
+            const { 
+                prompt,           // n8n sends 'prompt' instead of 'buildRequest'
+                buildRequest,     // Keep backward compatibility
+                workerCount = 3, 
+                sessionId = null, // n8n sends sessionId for tracking
+                leaderPosition = null, 
+                buildCoordinates = null,
+                singleWorkerMode = false 
+            } = req.body;
+            
+            // Use prompt or buildRequest (n8n compatibility)
+            const actualBuildRequest = prompt || buildRequest;
+            
+            if (!actualBuildRequest) {
+                return res.status(400).json({ error: 'prompt or buildRequest parameter required' });
+            }
+
+            console.log(`Collaborative build request: ${actualBuildRequest.substring(0, 50)}... (${workerCount} workers, session: ${sessionId || 'auto'})`);
+
+            // For single worker mode or workerCount=1, use regular newAction
+            if (singleWorkerMode || workerCount === 1) {
+                console.log(`Single worker mode detected, using newAction instead`);
+                return this.handleNewAction({ body: { prompt: actualBuildRequest } }, res);
+            }
+
+            // Get leader's actual position if not provided
+            let actualLeaderPosition = leaderPosition;
+            if (!actualLeaderPosition && this.agent.bot && this.agent.bot.entity) {
+                actualLeaderPosition = {
+                    x: Math.floor(this.agent.bot.entity.position.x),
+                    y: Math.floor(this.agent.bot.entity.position.y),
+                    z: Math.floor(this.agent.bot.entity.position.z)
+                };
+                console.log(`Using leader's current position:`, actualLeaderPosition);
+            }
+
+            // Define build area
+            const buildArea = buildCoordinates || {
+                minX: (actualLeaderPosition?.x || 0),
+                maxX: (actualLeaderPosition?.x || 0) + 20,
+                minY: (actualLeaderPosition?.y || 64),
+                maxY: (actualLeaderPosition?.y || 64) + 10,
+                minZ: (actualLeaderPosition?.z || 0),
+                maxZ: (actualLeaderPosition?.z || 0) + 20
+            };
+
+            console.log(`Build area:`, buildArea);
+
+            // Step 1: Leader generates master code using AI (WITHOUT EXECUTING IT)
+            console.log(`Leader generating master code (not executing).`);
+            const codeGenStart = Date.now();
+
+            if (!this.agent.coder) {
+                throw new Error('Leader bot does not have coder module available');
+            }
+            if (!this.agent.history) {
+                throw new Error('Leader bot does not have history module available');
+            }
+
+            // Prepare code generation context - add to agent history
+            const codePrompt = `${actualBuildRequest}\n\nBuild in the area: x[${buildArea.minX} to ${buildArea.maxX}], y[${buildArea.minY} to ${buildArea.maxY}], z[${buildArea.minZ} to ${buildArea.maxZ}]`;
+            
+            // Add prompt to history for context
+            this.agent.history.add('user', `Please ${codePrompt}`);
+            
+            // Generate code using leader's AI WITHOUT executing it
+            const masterCode = await this.agent.coder.generateCodeOnly(this.agent.history);
+            const codeGenTime = Date.now() - codeGenStart;
+            
+            if (!masterCode) {
+                throw new Error('Failed to generate master code');
+            }
+            console.log(`Master code generated in ${codeGenTime}ms (${masterCode.length} chars)`);
+            console.log(`Master code preview: ${masterCode.substring(0, 150)}...`);
+
+            // Step 2: Extract actual build dimensions from generated code
+            const actualBuildArea = this.extractBuildDimensions(masterCode, buildArea);
+            console.log(`Actual build dimensions:`, actualBuildArea);
+
+            // Step 3: Distribute code to workers with coordinate filtering
+            console.log(`Distributing code to ${workerCount} workers...`);
+            const workerPrefix = `${this.agent.name}Worker`;
+            
+            const distribution = distributeCode(masterCode, workerCount, actualBuildArea, workerPrefix);
+            
+            console.log(`Code distributed to ${distribution.workers.length} workers using ${distribution.strategy} strategy`);
+            
+            // Step 4: Spawn workers
+            console.log(`Spawning ${workerCount} workers for session ${sessionId || 'auto-generated'}`);
+            const spawnResult = await this.multiBotManager.spawnWorkers(workerCount, sessionId);
+            
+            if (!spawnResult.success) {
+                console.error(`Worker spawn failed:`, spawnResult.error);
+                return res.status(500).json({ 
+                    error: 'Failed to spawn workers',
+                    details: spawnResult.error,
+                    code: 'worker_spawn_failed'
+                });
+            }
+
+            console.log(`Successfully spawned ${spawnResult.spawnedCount}/${workerCount} workers`);
+
+            // Create worker name to port mapping
+            const workerPortMap = {};
+            for (const worker of spawnResult.workers) {
+                workerPortMap[worker.name] = worker.port;
+            }
+            console.log(`Worker port mapping:`, workerPortMap);
+
+            // Wait for workers to initialize
+            console.log(`Waiting 5 seconds for worker initialization...`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            // Step 5: Send executable code to workers via /api/agent/executeCode
+            console.log(`Sending executable code to ${distribution.workers.length} workers...`);
+            const executionPromises = [];
+            const executionResults = [];
+
+            // Stagger worker starts to reduce initial pathfinding conflicts
+            let workerIndex = 0;
+            for (const workerAssignment of distribution.workers) {
+                // Add delay between worker starts (0ms, 2s, 4s, etc.)
+                const startDelay = workerIndex * 2000;
+                workerIndex++;
+                const workerPort = workerPortMap[workerAssignment.workerId];
+                
+                if (!workerPort) {
+                    console.error(`No port found for ${workerAssignment.workerId}`);
+                    executionResults.push({
+                        workerId: workerAssignment.workerId,
+                        success: false,
+                        bounds: workerAssignment.bounds,
+                        error: 'Worker port not found'
+                    });
+                    continue;
+                }
+                
+                const workerUrl = `http://localhost:${workerPort}/api/agent/executeCode`;
+                
+                console.log(`Sending code to ${workerAssignment.workerId} (port ${workerPort}) after ${startDelay}ms delay, bounds:`, workerAssignment.bounds);
+                
+                // Wrap in promise with delay
+                const promise = new Promise(resolve => setTimeout(resolve, startDelay))
+                .then(() => axios.post(workerUrl, {
+                    code: workerAssignment.code,
+                    bounds: workerAssignment.bounds,
+                    description: `Collaborative build: ${actualBuildRequest.substring(0, 40)}...`
+                }))
+                .then(response => {
+                    console.log(`${workerAssignment.workerId} execution started successfully`);
+                    executionResults.push({
+                        workerId: workerAssignment.workerId,
+                        success: true,
+                        bounds: workerAssignment.bounds,
+                        response: response.data
+                    });
+                })
+                .catch(error => {
+                    console.error(`${workerAssignment.workerId} execution failed:`, error.message);
+                    executionResults.push({
+                        workerId: workerAssignment.workerId,
+                        success: false,
+                        bounds: workerAssignment.bounds,
+                        error: error.message
+                    });
+                });
+                
+                executionPromises.push(promise);
+            }
+
+            // Wait for all workers to start executing
+            await Promise.all(executionPromises);
+
+            const successCount = executionResults.filter(r => r.success).length;
+            const failureCount = executionResults.filter(r => !r.success).length;
+
+            console.log(`Execution dispatch complete: ${successCount} succeeded, ${failureCount} failed`);
+
+            // Success response with detailed metrics
+            res.json({ 
+                success: true, 
+                message: `Collaborative build completed with ${spawnResult.spawnedCount} workers.`,
+                approach: 'Centralized Code Generation',
+                sessionId: spawnResult.sessionId,
+                workersSpawned: spawnResult.spawnedCount,
+                workersRequested: workerCount,
+                workersExecuting: successCount,
+                workersFailed: failureCount,
+                buildRequest: actualBuildRequest,
+                buildArea: buildArea,
+                strategy: distribution.strategy,
+                codeGenerationTimeMs: codeGenTime,
+                masterCodeLength: masterCode.length,
+                executionResults: executionResults,
+                workers: spawnResult.workers.map((w, i) => ({
+                    ...w,
+                    bounds: distribution.workers[i]?.bounds,
+                    codeLength: distribution.workers[i]?.code.length
+                }))
+            });
+
+        } catch (error) {
+            console.error(`Collaborative build error:`, error);
+            // Cleanup workers on error
+            if (this.multiBotManager) {
+                await this.multiBotManager.stopWorkers().catch(console.error);
+            }
+            this.handleError(res, error, 'collaborativeBuild');
+        }
+    }
+
+
+     // Extract actual build dimensions from generated code
+     // Pares startX, startZ, width, depth, height from the code
+     
+    extractBuildDimensions(code, fallbackArea) {
+        try {
+            // Try to extract dimensions from code using regex
+            const startXMatch = code.match(/const\s+startX\s*=\s*(-?\d+)/);
+            const startYMatch = code.match(/const\s+startY\s*=\s*(-?\d+)/);
+            const startZMatch = code.match(/const\s+startZ\s*=\s*(-?\d+)/);
+            const widthMatch = code.match(/const\s+width\s*=\s*(\d+)/);
+            const depthMatch = code.match(/const\s+depth\s*=\s*(\d+)/);
+            const heightMatch = code.match(/const\s+height\s*=\s*(\d+)/);
+
+            if (startXMatch && widthMatch && startZMatch && depthMatch) {
+                const startX = parseInt(startXMatch[1]);
+                const startZ = parseInt(startZMatch[1]);
+                const width = parseInt(widthMatch[1]);
+                const depth = parseInt(depthMatch[1]);
+                const startY = startYMatch ? parseInt(startYMatch[1]) : fallbackArea.minY;
+                const height = heightMatch ? parseInt(heightMatch[1]) : (fallbackArea.maxY - fallbackArea.minY);
+
+                return {
+                    minX: startX,
+                    maxX: startX + width - 1,
+                    minY: startY,
+                    maxY: startY + height - 1,
+                    minZ: startZ,
+                    maxZ: startZ + depth - 1
+                };
+            }
+        } catch (error) {
+            console.warn(`Failed to extract build dimensions from code:`, error.message);
+        }
+
+        // Fallback to original build area
+        console.log(`Using fallback build area`);
+        return fallbackArea;
+    }
+
+    // Add missing multibot management endpoints
+
+
+    async handleStopWorkers(req, res) {
+        try {
+            console.log(`Stopping all workers`);
+            const result = await this.multiBotManager.stopWorkers();
+            
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(500).json({ 
+                    error: 'Failed to stop workers',
+                    details: result.errors,
+                    code: 'stop_failed'
+                });
+            }
+        } catch (error) {
+            this.handleError(res, error, 'stopWorkers');
+        }
+    }
+
+    async handleExecuteCode(req, res) {
+        try {
+            const { code, bounds, metadata } = req.body;
+            
+            if (!code) {
+                return res.status(400).json({ error: 'code parameter required' });
+            }
+
+            const workerName = this.agent.name || 'Worker';
+            console.log(`[${workerName}] Executing pre-generated code`);
+            
+            if (metadata?.buildRequest) {
+                console.log(`[${workerName}] Build request: ${metadata.buildRequest.substring(0, 50)}...`);
+            }
+            
+            if (bounds) {
+                console.log(`[${workerName}] Assigned bounds:`, 
+                    `X(${bounds.minX}-${bounds.maxX})`,
+                    `Y(${bounds.minY}-${bounds.maxY})`, 
+                    `Z(${bounds.minZ}-${bounds.maxZ})`);
+            }
+
+            // Log bot status for debugging
+            if (this.agent.bot && this.agent.bot.modes) {
+                const isCheatMode = this.agent.bot.modes.isOn('cheat');
+                console.log(`[${workerName}] Game mode: ${this.agent.bot.game.gameMode}`);
+                console.log(`[${workerName}] Cheat mode: ${isCheatMode ? 'ON (instant /setblock)' : 'OFF (physical placement)'}`);
+                console.log(`[${workerName}] Starting position: (${Math.floor(this.agent.bot.entity.position.x)}, ${Math.floor(this.agent.bot.entity.position.y)}, ${Math.floor(this.agent.bot.entity.position.z)})`);
+            }
+
+            // Create filtered skills object if bounds are provided
+            let filteredSkills = skills;
+            if (bounds) {
+                const originalPlaceBlock = skills.placeBlock;
+                filteredSkills = {
+                    ...skills,
+                    placeBlock: async function(bot, blockType, x, y, z, ...args) {
+                        // Check if coordinates are within worker's bounds
+                        if (x >= bounds.minX && x <= bounds.maxX &&
+                            y >= bounds.minY && y <= bounds.maxY &&
+                            z >= bounds.minZ && z <= bounds.maxZ) {
+                            // Coordinates are in range - place the block
+                            const result = await originalPlaceBlock(bot, blockType, x, y, z, ...args);
+                            
+                            // Add small delay to reduce pathfinding conflicts between workers
+                            // This allows time for navigation to complete before next block
+                            await new Promise(resolve => setTimeout(resolve, 300));
+                            
+                            return result;
+                        }
+                        // Coordinates are outside range - skip silently
+                        return false;
+                    }
+                };
+            }
+
+            // Execute code in sandboxed environment
+            const compartment = makeCompartment({
+                skills: filteredSkills,
+                world,
+                Vec3,
+                log: (bot, msg) => {
+                    // Reduce log spam - only log important messages or periodically
+                    const shouldLog = msg.includes('Worker initialized') || 
+                                     msg.includes('Worker completed') ||
+                                     msg.includes('Error') ||
+                                     Math.random() < 0.02; // 2% of other logs
+                    if (shouldLog) {
+                        console.log(`[${workerName}]`, msg);
+                    }
+                }
+            });
+
+            console.log(`[${workerName}] Starting code execution...`);
+            const startTime = Date.now();
+            
+            const mainFn = compartment.evaluate(code);
+            await mainFn(this.agent.bot);
+
+            const duration = Date.now() - startTime;
+            console.log(`[${workerName}] Code execution complete in ${(duration / 1000).toFixed(1)}s`);
+            
+            res.json({ 
+                success: true,
+                worker: workerName,
+                bounds,
+                metadata,
+                executionTime: duration,
+                message: 'Code executed successfully'
+            });
+            
+        } catch (error) {
+            const workerName = this.agent.name || 'Worker';
+            console.error(`[${workerName}] Code execution failed:`, error.message);
+            console.error(`[${workerName}] Stack:`, error.stack);
+            
+            res.status(500).json({ 
+                success: false, 
+                error: error.message,
+                worker: workerName,
+                stack: error.stack
+            });
+        }
+    }
+
+    async handleDebug(req, res) {
+        try {
+            const botPos = this.agent.bot?.entity?.position;
+            
+            res.json({
+                name: this.agent.name,
+                isWorker: this.agent.isWorkerBot || false,
+                hasCoder: !!this.agent.coder,
+                hasHistory: !!this.agent.history,
+                cheatMode: this.agent.bot?.modes?.isOn('cheat') || false,
+                currentAction: this.agent.actions?.currentActionLabel || 'idle',
+                isExecuting: this.agent.actions?.executing || false,
+                position: botPos ? {
+                    x: Math.floor(botPos.x),
+                    y: Math.floor(botPos.y),
+                    z: Math.floor(botPos.z)
+                } : null,
+                health: this.agent.bot?.health,
+                gameMode: this.agent.bot?.game?.gameMode,
+                status: 'operational'
+            });
+        } catch (error) {
+            this.handleError(res, error, 'debug');
+        }
+    }
+
+    async start(port) {
+        return new Promise((resolve, reject) => {
+            this.server = this.app.listen(port, (err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    console.log(`Server started on port ${port}`);
+                    resolve();
+                }
+            });
+        });
+    }
+
     handleError(res, error, action) {
         console.error(`External API error in ${action}:`, error);
         
@@ -1298,169 +1638,6 @@ export class ExternalAPI {
             code: 'internal_error',
             action: action,
             details: error.message 
-        });
-    }
-
-    // Multi-bot management handlers
-    async handleSpawnWorkers(req, res) {
-        try {
-            const { count, leaderName } = req.body;
-            
-            if (!count || typeof count !== 'number' || count <= 0) {
-                return res.status(400).json({ 
-                    error: 'count parameter must be a positive number' 
-                });
-            }
-            
-            if (count > 10) {
-                return res.status(400).json({ 
-                    error: 'Maximum 10 workers allowed per request' 
-                });
-            }
-            
-            const workers = await this.multiBotManager.spawnWorkers(
-                count, 
-                leaderName || this.agent.name || 'Leader'
-            );
-            
-            res.json({
-                success: true,
-                workers,
-                message: `Spawned ${workers.length} workers successfully`,
-                totalWorkers: this.multiBotManager.workers.size
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'spawnWorkers');
-        }
-    }
-
-    async handleCoordinateBuild(req, res) {
-        try {
-            const { buildRequest, workerCount } = req.body;
-            
-            if (!buildRequest || typeof buildRequest !== 'string') {
-                return res.status(400).json({ 
-                    error: 'buildRequest parameter required' 
-                });
-            }
-            
-            if (!workerCount || typeof workerCount !== 'number' || workerCount <= 0) {
-                return res.status(400).json({ 
-                    error: 'workerCount parameter must be a positive number' 
-                });
-            }
-            
-            const coordination = await this.multiBotManager.coordinateCollaborativeBuild(
-                buildRequest,
-                workerCount
-            );
-            
-            res.json({
-                success: true,
-                ...coordination
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'coordinateBuild');
-        }
-    }
-
-    async handleAssignTasks(req, res) {
-        try {
-            const { sessionId, taskBreakdown } = req.body;
-            
-            if (!sessionId) {
-                return res.status(400).json({ 
-                    error: 'sessionId parameter required' 
-                });
-            }
-            
-            if (!taskBreakdown) {
-                return res.status(400).json({ 
-                    error: 'taskBreakdown parameter required' 
-                });
-            }
-            
-            const assignments = await this.multiBotManager.assignTasksToWorkers(
-                sessionId,
-                taskBreakdown
-            );
-            
-            res.json({
-                success: true,
-                assignments,
-                message: `Assigned ${assignments.length} tasks to workers`
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'assignTasks');
-        }
-    }
-
-    async handleTeleportWorkers(req, res) {
-        try {
-            const { sessionId, position } = req.body;
-            
-            if (!sessionId) {
-                return res.status(400).json({ 
-                    error: 'sessionId parameter required' 
-                });
-            }
-            
-            if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number') {
-                return res.status(400).json({ 
-                    error: 'position parameter must contain x, y, z coordinates' 
-                });
-            }
-            
-            const results = await this.multiBotManager.teleportWorkers(sessionId, position);
-            
-            res.json({
-                success: true,
-                teleportResults: results,
-                message: `Teleported workers to position (${position.x}, ${position.y}, ${position.z})`
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'teleportWorkers');
-        }
-    }
-
-    async handleMultiBotStatus(req, res) {
-        try {
-            const status = this.multiBotManager.getStatus();
-            
-            res.json({
-                success: true,
-                ...status
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'multiBotStatus');
-        }
-    }
-
-    async handleStopWorkers(req, res) {
-        try {
-            const result = await this.multiBotManager.stopAllWorkers();
-            
-            res.json({
-                success: true,
-                ...result
-            });
-            
-        } catch (error) {
-            this.handleError(res, error, 'stopWorkers');
-        }
-    }
-
-    start(port = 4001) {
-        return new Promise((resolve) => {
-            this.server = this.app.listen(port, () => {
-                console.log(`API server running on port ${port}`);
-                resolve();
-            });
         });
     }
 

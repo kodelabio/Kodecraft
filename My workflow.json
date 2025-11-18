@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "chatId": "={{ String($json.chatId) }}",
-        "text": "={{ $json.text || 'Missing text content' }}",
+        "chatId": "={{ $('Telegram Bot').item.json.message.chat.id }}",
+        "text": "={{ $json.executionResult.message }}",
         "additionalFields": {
           "parse_mode": "HTML"
         }
@@ -13,10 +13,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -3312,
-        -6256
+        -3408,
+        1552
       ],
-      "id": "c0ec6997-bcd3-4d31-aa44-e2f70776f2cc",
+      "id": "e6016bc0-b729-4188-9854-530451cdcb5b",
       "webhookId": "370e7291-9b82-4082-9db8-af47faa89cb7",
       "credentials": {
         "telegramApi": {
@@ -33,10 +33,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3792,
-        -6240
+        -3888,
+        1568
       ],
-      "id": "992136f2-7fae-4037-aa8d-76d8d835d7e2"
+      "id": "82ecfa57-1fd4-492a-8e14-7192dad2dc3f"
     },
     {
       "parameters": {
@@ -56,10 +56,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -784
+        -7632,
+        7024
       ],
-      "id": "011ab44b-bad4-4667-b337-7a2f3bc0dfab",
+      "id": "9dab8625-9778-441b-b9d0-064d57950dd2",
       "continueOnFail": true
     },
     {
@@ -83,57 +83,43 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -624
+        -7632,
+        7184
       ],
-      "id": "e1cf3fbc-29af-4cdf-801d-97245107b01b",
+      "id": "fa853a94-c39a-4364-9c39-9c87fe9ed95e",
       "continueOnFail": true
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://localhost:4001/api/multibot/coordinateBuild",
+        "url": "http://localhost:4001/api/multibot/collaborativeBuild",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
             {
-              "name": "buildRequest",
-              "value": "={{ $json.params.buildRequest }}"
+              "name": "prompt",
+              "value": "={{ $('Parse JSON Response').first().json.refinedPrompt }}"
             },
             {
               "name": "workerCount",
-              "value": "={{ $json.params.workerCount || 3 }}"
+              "value": "={{ $('Parse JSON Response').first().json.workerCount || 3 }}"
             },
             {
-              "name": "leaderPosition",
-              "value": "={{ $json.botStatus && $json.botStatus.position ? $json.botStatus.position : { x: 0, y: 64, z: 0 } }}"
-            },
-            {
-              "name": "buildCoordinates",
-              "value": "={{ $json.params.buildCoordinates || null }}"
-            },
-            {
-              "name": "taskDivision",
-              "value": "={{ $json.params.taskDivision || null }}"
-            },
-            {
-              "name": "singleWorkerMode",
-              "value": "={{ ($json.params.workerCount || 3) === 1 }}"
+              "name": "sessionId",
+              "value": "={{ Date.now().toString() }}"
             }
           ]
         },
-        "options": {
-          "timeout": 120000
-        }
+        "options": {}
       },
       "name": "Execute CollaborativeBuild",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -4032,
-        -5488
+        -4128,
+        2320
       ],
-      "id": "4dda0b14-73a7-4ea4-b3a0-8ee993aa3e14",
+      "id": "e1498446-6850-4567-96ab-0aebedbce9de",
       "continueOnFail": true
     },
     {
@@ -147,38 +133,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -304
+        -7632,
+        7504
       ],
-      "id": "b21a95ec-7fa6-463b-826f-8e38bade3b02",
+      "id": "03f8ad0a-39ab-4aec-803b-08a093d76a9d",
       "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "amount": 10
-      },
-      "id": "bf8bc104-83fc-4592-bfca-1596211abd6a",
-      "name": "Wait for Workers Init",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -5888,
-        -5536
-      ],
-      "webhookId": "1219d699-b6bf-4fb0-8182-08565f16026c"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Reset worker states by calling endGoal on each worker\nconst sessionId = $input.first().json.sessionId;\n\nif (!sessionId) {\n  console.log('No sessionId found, skipping worker reset');\n  return [{ json: { message: 'No workers to reset', sessionId } }];\n}\n\ntry {\n  // First get worker status to find active workers\n  const statusResponse = await $request({\n    method: 'GET',\n    url: 'http://localhost:4001/api/multibot/status',\n    headers: { 'Content-Type': 'application/json' },\n    json: true\n  });\n  \n  const workers = statusResponse.workers || [];\n  \n  console.log(`Resetting ${workers.length} workers...`);\n  \n  // Reset each worker by calling endGoal\n  const resetPromises = workers.map(async (worker) => {\n    try {\n      await $request({\n        method: 'POST',\n        url: `http://localhost:${worker.port}/api/agent/endGoal`,\n        headers: { 'Content-Type': 'application/json' },\n        body: {},\n        json: true\n      });\n      \n      console.log(`Reset worker ${worker.name} successfully`);\n      return { worker: worker.name, status: 'reset' };\n    } catch (error) {\n      console.log(`Error resetting worker ${worker.name}:`, error.message);\n      return { worker: worker.name, status: 'error', error: error.message };\n    }\n  });\n  \n  const results = await Promise.all(resetPromises);\n  \n  return [{\n    json: {\n      message: `Reset ${workers.length} workers`,\n      sessionId,\n      workers: results,\n      success: true\n    }\n  }];\n  \n} catch (error) {\n  console.log('Error in worker reset:', error.message);\n  return [{\n    json: {\n      message: 'Error during worker reset',\n      error: error.message,\n      sessionId,\n      success: false\n    }\n  }];\n}"
-      },
-      "name": "Reset Worker States",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -5360,
-        -5568
-      ],
-      "id": "ef7c38bd-1357-4269-9f0e-06b4c387dd36"
     },
     {
       "parameters": {
@@ -225,10 +184,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -112
+        -7632,
+        7728
       ],
-      "id": "a7e58885-b297-4346-bb75-7e3749068f9d",
+      "id": "2b4579ee-ee73-4e21-8467-1158d7ffc91c",
       "continueOnFail": true
     },
     {
@@ -249,10 +208,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        48
+        -7632,
+        7888
       ],
-      "id": "330b419a-42ea-4905-ae73-f64b6bccc477",
+      "id": "95e23a32-e7ca-478f-a8d3-2734643ab3a9",
       "continueOnFail": true
     },
     {
@@ -266,10 +225,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        208
+        -7632,
+        8048
       ],
-      "id": "a099acdb-b194-4646-b573-76bbe7b4e3dd",
+      "id": "fb9b5021-22c3-4117-97f2-369fab54362a",
       "continueOnFail": true
     },
     {
@@ -290,10 +249,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -960
+        -7632,
+        6848
       ],
-      "id": "4945f86b-fbc2-4591-bb5a-23521c575604",
+      "id": "ac21cd78-b839-4f08-bebe-1192f76d1056",
       "continueOnFail": true
     },
     {
@@ -314,10 +273,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1296
+        -7632,
+        6512
       ],
-      "id": "80889fcf-ad8b-48f3-abe7-7662fa5ed817",
+      "id": "cb106adf-155f-4f77-8be8-ca81a4ce77a7",
       "continueOnFail": true
     },
     {
@@ -338,10 +297,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1456
+        -7632,
+        6352
       ],
-      "id": "259988a0-daa8-4649-9472-711d64049162",
+      "id": "415811bb-5f97-4120-ab3f-363d7e82bcd1",
       "continueOnFail": true
     },
     {
@@ -365,10 +324,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1632
+        -7632,
+        6176
       ],
-      "id": "0a1106f6-ead5-4614-8951-0f6ddda399f4",
+      "id": "8160bba2-01d2-4263-8663-2466711b2812",
       "continueOnFail": true
     },
     {
@@ -396,10 +355,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1808
+        -7632,
+        6000
       ],
-      "id": "2859570c-2340-48ce-84ca-e1d771f722d3",
+      "id": "48876559-bd3b-4e2d-84a9-5822d0ac8bdf",
       "continueOnFail": true
     },
     {
@@ -431,10 +390,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -1968
+        -7632,
+        5840
       ],
-      "id": "8ef2a1e1-c552-4744-92e5-9228a40c8fe7",
+      "id": "5f540732-56b9-4244-8b89-b64992620073",
       "continueOnFail": true
     },
     {
@@ -462,24 +421,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2128
+        -7632,
+        5680
       ],
-      "id": "c3f9d7da-c168-47da-acf6-89f260f1aa76",
+      "id": "7691247e-dc3a-4d0a-94fb-396937a465b9",
       "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// Execute Building Plan - Determine execution path (newAction vs multibot)\nconst input = $input.first().json;\n\n// Get conversation context from Route by Intent node\nlet conversationData = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    conversationData = routeResult.first().json || {};\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e);\n}\n\n// Extract the building request from Smart Building Planner AI Agent output\nlet buildingRequest = '';\nlet executionType = 'single';\nlet apiEndpoint = 'newAction';\nlet workerCount = 1;\nlet taskDivision = null;\n\n// The Smart Building Planner already refined the prompt, extract it\ntry {\n  const content = input.output || input.building_plan || input.message || '';\n  \n  // Try to extract JSON from AI Agent output\n  const jsonMatch = content.match(/```json\\s*([\\s\\S]*?)```/) || content.match(/{[\\s\\S]*}/);\n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]);\n    buildingRequest = parsed.buildingRequest || parsed.userMessage || content;\n    executionType = parsed.executionType || 'single';\n    \n    // Extract taskDivision data from Smart Building Planner\n    taskDivision = parsed.taskDivision || null;\n    \n    // Use the original intent to determine the correct endpoint\n    if (parsed.apiEndpoint) {\n      apiEndpoint = parsed.apiEndpoint;\n    } else if (conversationData.intent === 'collaborativeBuild') {\n      apiEndpoint = 'collaborativeBuild';\n      executionType = 'multibot';\n    } else {\n      apiEndpoint = 'newAction';\n    }\n    workerCount = parsed.workerCount || conversationData.params?.workerCount || 1;\n  } else {\n    // Use content directly if no JSON\n    buildingRequest = content;\n    \n    // Check if this was a multibot request from original context\n    if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n      executionType = 'multibot';\n      apiEndpoint = 'collaborativeBuild';\n      workerCount = conversationData.params?.workerCount || 3;\n    }\n  }\n} catch (e) {\n  console.log('Failed to parse Smart Building Planner output, using raw content:', e);\n  buildingRequest = input.output || input.building_plan || input.message || '';\n  // Check original intent for multibot\n  if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n    executionType = 'multibot';\n    apiEndpoint = 'collaborativeBuild';\n    workerCount = conversationData.params?.workerCount || 3;\n  }\n}\n\n// Final override check: if original intent was collaborativeBuild, ensure we use multibot path\nif (conversationData.intent === 'collaborativeBuild' && executionType !== 'multibot') {\n  executionType = 'multibot';\n  apiEndpoint = 'collaborativeBuild';\n  workerCount = conversationData.params?.workerCount || 3;\n}\n\n// Validate we have a building request\nif (!buildingRequest || buildingRequest.trim() === '') {\n  return {\n    json: {\n      success: false,\n      error: 'No building request found',\n      details: 'Smart Building Planner did not provide a valid building request',\n      chatId: conversationData.chatId || 'unknown',\n      playerName: conversationData.playerName || 'User',\n      source: conversationData.source || 'telegram'\n    }\n  };\n}\n\n// Convert taskDivision object to array format expected by multibot API\nlet taskBreakdown = null;\nif (taskDivision && typeof taskDivision === 'object') {\n  taskBreakdown = Object.entries(taskDivision).map(([worker, task]) => \n    `${worker}: ${task}`\n  );\n}\n\n// Return data for appropriate execution path\nreturn {\n  json: {\n    userMessage: buildingRequest,\n    buildRequest: buildingRequest,\n    executionType: executionType,\n    apiEndpoint: apiEndpoint,\n    workerCount: workerCount,\n    taskDivision: taskDivision,\n    taskBreakdown: taskBreakdown,\n    success: true,\n    message: `${executionType === 'multibot' ? 'Multibot' : 'Single bot'} building request ready: ${buildingRequest.substring(0, 50)}...`,\n    chatId: conversationData.chatId || 'unknown',\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    params: {\n      buildRequest: buildingRequest,\n      workerCount: workerCount,\n      taskDivision: taskDivision,\n      taskBreakdown: taskBreakdown\n    }\n  }\n};\n"
-      },
-      "id": "3629a186-7456-49e4-8fe5-c074be0e60b9",
-      "name": "Execute Building Plan",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -4336,
-        -5280
-      ]
     },
     {
       "parameters": {
@@ -492,9 +438,9 @@
           },
           "conditions": [
             {
-              "id": "multibot-route",
+              "id": "check-execution-type",
               "leftValue": "={{ $json.executionType }}",
-              "rightValue": "multibot",
+              "rightValue": "collaborativeBuild",
               "operator": {
                 "type": "string",
                 "operation": "equals",
@@ -510,10 +456,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -4000,
-        -5280
+        -4096,
+        2528
       ],
-      "id": "9bec0a22-690d-424e-ad96-ad8a2771fe38"
+      "id": "78d116bc-fa0d-4c8a-a182-07ee60961071"
     },
     {
       "parameters": {
@@ -533,7 +479,7 @@
           "parameters": [
             {
               "name": "prompt",
-              "value": "={{ $json.userMessage }}"
+              "value": "={{ $('Parse JSON Response').first().json.refinedPrompt }}"
             }
           ]
         },
@@ -541,78 +487,56 @@
           "timeout": 60000
         }
       },
-      "id": "37de5b6e-29ce-477a-b101-ad1f28f76e9e",
+      "id": "167e4f73-e52d-4fc7-b0b9-ce39cfb22eb9",
       "name": "Execute Building API Call",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -3664,
-        -5280
+        -3760,
+        2528
       ]
     },
     {
       "parameters": {
-        "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nlet conversationData = {};\ntry {\n  const buildingPlanResult = $('Execute Building Plan');\n  if (buildingPlanResult && buildingPlanResult.first && buildingPlanResult.first()) {\n    conversationData = buildingPlanResult.first().json || {};\n    console.log('Retrieved conversation data from Execute Building Plan:', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n  }\n} catch (e) {\n  console.log('Could not get Execute Building Plan data:', e);\n}\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult\n    }\n  }\n};"
+        "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Route by Intent node\nlet conversationData = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    conversationData = routeResult.first().json || {};\n    console.log('Retrieved conversation data from Route by Intent:', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e);\n}\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult\n    }\n  }\n};"
       },
-      "id": "0e25597a-5af6-45c6-8dbf-92dd5a670db0",
+      "id": "d5ee3fae-8da6-42af-b9ce-e5b5dbc6a232",
       "name": "Format Building Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3376,
-        -5216
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "building-plan-assignment",
-              "name": "building_plan",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "task-type-assignment",
-              "name": "task_type",
-              "value": "smart_building",
-              "type": "string"
-            },
-            {
-              "id": "message-assignment",
-              "name": "message",
-              "value": "Smart building plan created: {{ $json.output }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "666c9edc-228b-4960-bd83-be5c1a818d82",
-      "name": "Building Plan Result",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -4528,
-        -4752
+        -3472,
+        2592
       ]
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.params.prompt || $json.params.buildRequest }}\n\nORIGINAL INTENT: {{ $json.intent }}\nCONTEXT: {{ $json.params.workerCount ? 'Collaborative execution with ' + $json.params.workerCount + ' workers requested' : 'Single bot execution request' }}\n\nAnalyze this player request and follow the ORIGINAL INTENT strictly.\n\nCRITICAL INTENT-BASED RULES:\n\nIf ORIGINAL INTENT = \"newAction\":\n- ALWAYS create single bot execution (executionType: \"single\", apiEndpoint: \"newAction\")\n- Simply create and output a clear, detailed prompt describing the task\n- Do NOT divide the task or create workers\n- This prompt will be handled by the leader bot for execution\n- IGNORE any worker-related text in the prompt - if intent is newAction, use single bot\n\nIf ORIGINAL INTENT = \"collaborativeBuild\":\n- ALWAYS use collaborative system (executionType: \"multibot\", apiEndpoint: \"collaborativeBuild\")\n- Use the worker count from params if available\n- If worker count = 1: Generate the full task prompt (no division) but still use multibot system\n- If worker count > 1: Divide the overall task into multiple coordinated subtasks\n- Ensure each subtask aligns with the global goal and can be executed independently\n- Each worker gets a contextually linked portion that maintains consistent objective\n\nUNIVERSAL CAPABILITIES:\n- Handle ANY type of player command - not just building\n- Adapt to infinite possibilities: farming, mining, combat, exploration, redstone, automation, etc.\n- Never restrict to predefined categories\n- Trust the AI's unlimited creative and technical capabilities\n\nOUTPUT REQUIREMENTS: Always return valid JSON matching these formats exactly.",
+        "text": "=request : {{ $json.params.task || $json.params.buildRequest || $json.params.structure || $json.params.prompt  }} \nworkers: {{ $json.params.numberOfWorkers || $json.params.workers }}",
         "options": {
-          "systemMessage": "You are the Universal Task Planner for Kodecraft AI. You MUST respect the original intent classification.\n\nCRITICAL RULE: The intent has already been determined by the Parse AI Response node. You MUST follow it exactly:\n- If intent = \"newAction\": ALWAYS use single bot execution, NEVER multibot\n- If intent = \"collaborativeBuild\": ALWAYS use multibot execution\n\nCORE PHILOSOPHY:\n- The Kodecraft AI has unlimited capabilities and creativity\n- Never limit what can be accomplished - trust the AI's abilities\n- Any task imaginable can be executed using Minecraft's systems\n- Complex, creative, and unique requests are welcomed and encouraged\n\nUNIVERSAL TASK CATEGORIES:\nBUILDING & CONSTRUCTION: Houses, castles, cities, spaceships, computers, art, monuments, replicas\nRESOURCE GATHERING: Mining operations, farming systems, mob farms, resource collection\nAUTOMATION & REDSTONE: Machines, circuits, automated systems, complex contraptions\nEXPLORATION & NAVIGATION: Mapping, pathfinding, discovering structures, traveling\nCOMBAT & DEFENSE: Fighting mobs, PvP, building defenses, creating weapons\nCRAFTING & PRODUCTION: Item creation, mass production, complex recipes\nSPECIALIZED TASKS: Pixel art, music, games, recreations, experiments\n\nINTENT-BASED EXECUTION:\n\nnewAction (Single Bot Execution):\n- REQUIRED when original intent = \"newAction\"\n- The Parse AI Response determined this does NOT need workers\n- NEVER override this decision - always use single bot\n- Examples: \"build a spaceship\", \"create a farm\", \"mine diamonds\", \"make a computer\"\n- The AI can handle massive, complex tasks independently\n- Even if text mentions numbers or sizes, use single bot if intent is newAction\n\ncollaborativeBuild (Multi-Worker Execution):\n- REQUIRED when original intent = \"collaborativeBuild\"\n- The Parse AI Response determined this needs multiple workers\n- ALWAYS use multibot system when intent is collaborativeBuild\n- Use the specified worker count from the original request\n- Divide tasks logically based on worker count\n\nINTELLIGENT TASK DIVISION (for collaborative mode only):\nAnalyze the task type and divide logically:\n\nCONSTRUCTION PROJECTS:\n- Divide by sections, floors, or structural components\n- Each worker gets distinct area with clear boundaries\n\nRESOURCE GATHERING:\n- Divide by resource types, locations, or quantities\n- Each worker focuses on specific materials or areas\n\nAUTOMATION SYSTEMS:\n- Divide by subsystems, components, or functions\n- Each worker builds interconnected parts\n\nEXPLORATION TASKS:\n- Divide by directions, distances, or objectives\n- Each worker covers different territories or goals\n\nTASK ENHANCEMENT ENGINE:\nTransform any basic request into detailed, executable specifications:\n\n- \"build a farm\" → \"Automated wheat farm (20x15 blocks) with water irrigation, hopper collection system, and storage chests\"\n- \"mine diamonds\" → \"Deep mining expedition to Y-level 11-16, establishing mining tunnels, torch lighting, and safety protocols\"\n- \"create redstone computer\" → \"Functional calculator using redstone circuits with input mechanisms, processing logic, and output display\"\n- \"make pixel art\" → \"Large-scale pixel art recreation (64x64 blocks) using concrete blocks with accurate color mapping and detail work\"\n\nRESPONSE FORMATS:\n\nSingle Bot Execution (when intent = \"newAction\"):\n```json\n{\n  \"buildingRequest\": \"[Detailed enhanced task with specifics, materials, dimensions, objectives]\",\n  \"executionType\": \"single\",\n  \"apiEndpoint\": \"newAction\",\n  \"taskCategory\": \"[building|mining|farming|automation|exploration|combat|crafting|specialized]\",\n  \"complexity\": \"[simple|medium|complex|expert]\"\n}\n```\n\nMulti-Worker Collaborative (when intent = \"collaborativeBuild\"):\n```json\n{\n  \"buildingRequest\": \"[Enhanced detailed task description]\",\n  \"executionType\": \"multibot\",\n  \"apiEndpoint\": \"collaborativeBuild\",\n  \"workerCount\": [user specified number],\n  \"taskDivision\": {\n    \"Worker1\": \"[Specific subtask with clear objectives and scope]\",\n    \"Worker2\": \"[Different subtask that complements Worker1]\",\n    \"Worker3\": \"[Additional subtask that completes the overall goal]\"\n  },\n  \"coordinationStrategy\": \"[spatial-sections|resource-types|time-sequence|component-based]\"\n}\n```\n\nCRITICAL EXAMPLES:\n\nUser: \"Build a 10x5 wall\" → Intent: newAction → ALWAYS use single bot\nUser: \"Build wall with 2 workers\" → Intent: collaborativeBuild → ALWAYS use multibot\nUser: \"Create farm\" → Intent: newAction → ALWAYS use single bot\nUser: \"Spawn 1 builder to make house\" → Intent: collaborativeBuild → ALWAYS use multibot\n\nCRITICAL EXCELLENCE STANDARDS:\n- ALWAYS respect the original intent classification above all else\n- NEVER override the intent decision made by Parse AI Response\n- ALWAYS enhance requests with creative details and specifics\n- NEVER underestimate the AI's capabilities across all domains\n- Include realistic objectives, methods, and materials\n- For multi-bot: ensure clear, logical task separation\n- Make tasks exciting and detailed, not basic\n- Trust the AI to handle any complexity and scale\n- Adapt to ANY player request - building is just one possibility"
+          "systemMessage": "You are the Minecraft Task Enhancement AI for Kodecraft.\nYou will receive two parameters:\n\nrequest → string (the user’s build or action request)\n\nworkers → number (may be null, undefined, or missing)\n\nYou must enhance the request and return structured JSON.\n\nLOGIC (SIMPLE & STRICT)\n1. If workers is provided (workers >= 1)(STRICT):\nexecutionType = \"collaborativeBuild\"\nworkerCount = workers\n\n2. If workers is missing, empty, or zero:\nexecutionType = \"newAction\"\n(no workerCount field in output)\n\nNo text-based worker detection.\nNo intent inference.\nOnly use the passed workers value.\n\nREFINED PROMPT GUIDELINES\n\nEnhance the request by making it detailed and actionable:\n\nAdd structure dimensions\n\nAdd materials\n\nAdd features (windows, doors, rooms, roof types, etc.)\n\nStay consistent with Minecraft building conventions\n\nKeep scale appropriate to the original request\n\nDo not invent extra bots or workers.\n\nOUTPUT FORMAT (STRICT)\n\nAlways return valid JSON:\n\nIf workers is provided (≥1):\n{\n  \"refinedPrompt\": \"<enhanced request>\",\n  \"executionType\": \"collaborativeBuild\",\n  \"workerCount\": <workers>\n}\n\nIf workers is missing or null:\n{\n  \"refinedPrompt\": \"<enhanced request>\",\n  \"executionType\": \"newAction\"\n}\n\nEXAMPLES\nInput:\nrequest: \"build a house\"\nworkers: null\n\nOutput:\n{\n  \"refinedPrompt\": \"Build a compact wooden house (10x8 blocks) with glass windows, a stone foundation, a wooden door, and a sloped roof.\",\n  \"executionType\": \"newAction\"\n}\n\nInput:\nrequest: \"build a house\"\nworkers: 2\n\nOutput:\n{\n  \"refinedPrompt\": \"Build a compact wooden house (10x8 blocks) with glass windows, a stone foundation, a wooden door, and a sloped roof.\",\n  \"executionType\": \"collaborativeBuild\",\n  \"workerCount\": 2\n}\n\nInput:\nrequest: \"make a castle\"\nworkers: 5\n\nOutput:\n{\n  \"refinedPrompt\": \"Construct a fortified medieval stone castle (25x25 blocks) with corner towers, a central keep, battlements, and a surrounding moat.\",\n  \"executionType\": \"collaborativeBuild\",\n  \"workerCount\": 5\n}\n\nInput:\nrequest: \"build a house\"\nworkers: 1\n\nOutput:\n{\n  \"refinedPrompt\": \"Build a compact wooden house (10x8 blocks) with glass windows, a stone foundation, a wooden door, and a sloped roof.\",\n  \"executionType\": \"collaborativeBuild\",\n  \"workerCount\": 1\n}"
         }
       },
-      "id": "319fe15a-429e-47d1-b02d-779aecc22fae",
+      "id": "26ae1c01-7580-423f-8391-67368f21ba8d",
       "name": "Smart Building Planner",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -5008,
-        -4752
+        -5120,
+        3056
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse Smart Building Planner JSON Response\nconst input = $input.first().json;\n\nconsole.log('=== PARSE SMART BUILDING PLANNER ===');\nconsole.log('Raw AI Response:', JSON.stringify(input, null, 2));\n\n// Get the AI response output\nlet aiResponse = input.output || input.text || input.response || '';\nconsole.log('AI Response Text:', aiResponse);\n\n// Try to parse JSON from the AI response\nlet parsedData = null;\ntry {\n  // Clean up the response - sometimes AI adds extra text\n  let jsonText = aiResponse.trim();\n  \n  // Look for JSON block in the response\n  const jsonStart = jsonText.indexOf('{');\n  const jsonEnd = jsonText.lastIndexOf('}');\n  \n  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {\n    jsonText = jsonText.substring(jsonStart, jsonEnd + 1);\n  }\n  \n  console.log('Extracted JSON text:', jsonText);\n  parsedData = JSON.parse(jsonText);\n  console.log('Parsed JSON successfully:', parsedData);\n  \n} catch (e) {\n  console.log('Failed to parse JSON, treating as plain text:', e.message);\n  // Fallback: treat as plain text and determine execution type\n  parsedData = {\n    refinedPrompt: aiResponse,\n    executionType: 'single' // default to single bot execution\n  };\n}\n\n// Validate the parsed data\nif (!parsedData.refinedPrompt) {\n  parsedData.refinedPrompt = aiResponse || 'No prompt provided';\n}\n\nif (!parsedData.executionType) {\n  parsedData.executionType = 'single';\n}\n\n// Ensure valid execution type\nif (parsedData.executionType !== 'collaborativeBuild' && parsedData.executionType !== 'newAction') {\n  parsedData.executionType = 'newAction';\n}\n\nconsole.log('Final parsed data:', parsedData);\n\n// Get conversation context from Route by Intent\nlet conversationData = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    conversationData = routeResult.first().json || {};\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e);\n}\n\n// Return the parsed data with conversation context\nreturn {\n  json: {\n    refinedPrompt: parsedData.refinedPrompt,\n    executionType: parsedData.executionType,\n    chatId: conversationData.chatId || 'unknown',\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    originalRequest: conversationData.params?.prompt || conversationData.params?.buildRequest || '',\n    workerCount: parsedData.workerCount || conversationData.params?.workerCount || 3,\n    params: {\n      buildRequest: parsedData.refinedPrompt,\n      workerCount: parsedData.workerCount || conversationData.params?.workerCount || 3,\n      prompt: parsedData.refinedPrompt\n    }\n  }\n};"
+      },
+      "id": "16e19fad-f2d6-4b06-b093-d9d62795b48a",
+      "name": "Parse JSON Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4672,
+        3024
       ]
     },
     {
@@ -644,10 +568,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2288
+        -7632,
+        5520
       ],
-      "id": "1737fad1-7fda-4635-9e47-5d0754ff3ccb",
+      "id": "351c423b-d392-401d-bf1a-9fec7c80500c",
       "continueOnFail": true
     },
     {
@@ -668,10 +592,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2464
+        -7632,
+        5344
       ],
-      "id": "9708c6b5-ddf0-465c-8b26-68f34973bda5",
+      "id": "884df5da-0e6c-471e-a145-48a69298fcbd",
       "continueOnFail": true
     },
     {
@@ -695,10 +619,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2624
+        -7632,
+        5184
       ],
-      "id": "b4eb24db-ca91-4462-814b-f332629fbf41",
+      "id": "5f653b96-9b7d-4eeb-86fb-bbdf754f1843",
       "continueOnFail": true
     },
     {
@@ -726,10 +650,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2784
+        -7632,
+        5024
       ],
-      "id": "cf6e2cb5-e04f-4893-b056-5acdd69d631f",
+      "id": "c901e02d-2e00-49d9-8c5b-a6bbe41f31aa",
       "continueOnFail": true
     },
     {
@@ -743,10 +667,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -2944
+        -7632,
+        4864
       ],
-      "id": "2fae66b5-8da8-47a1-9673-dade2843d9de",
+      "id": "597d6540-6aa2-4d4c-a905-f9dd4f9c43f3",
       "continueOnFail": true
     },
     {
@@ -760,10 +684,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3104
+        -7632,
+        4704
       ],
-      "id": "3b42b8ef-84f9-47a5-a652-ec3de508613f",
+      "id": "c17544c2-bd16-4bf4-90bb-978002be4b1e",
       "continueOnFail": true
     },
     {
@@ -777,10 +701,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3264
+        -7632,
+        4544
       ],
-      "id": "e9d7214a-8295-4624-b7ee-5d960b1eaae5",
+      "id": "4748cdb8-e4f6-43e6-9fbc-aa369ebef047",
       "continueOnFail": true
     },
     {
@@ -794,10 +718,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3424
+        -7632,
+        4384
       ],
-      "id": "d54e07f4-b1f5-492b-83f6-f58120dea407",
+      "id": "807c876f-af90-4a0b-aedc-9b9ed828c1a6",
       "continueOnFail": true
     },
     {
@@ -811,10 +735,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3584
+        -7632,
+        4224
       ],
-      "id": "a08c88d6-a52e-4ab2-b76e-dae11f5dab3d",
+      "id": "45af3525-f38f-4dec-859e-fb412a903206",
       "continueOnFail": true
     },
     {
@@ -828,10 +752,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3744
+        -7632,
+        4064
       ],
-      "id": "5fc2e6ee-24ba-433e-93f8-d580ce60213d",
+      "id": "29f1854e-5b15-4701-be59-6b4811ed4680",
       "continueOnFail": true
     },
     {
@@ -845,10 +769,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -3904
+        -7632,
+        3904
       ],
-      "id": "d01d0033-a73d-4153-ae9d-507f64e3ff2d",
+      "id": "09896399-004a-4251-9487-e0009305d707",
       "continueOnFail": true
     },
     {
@@ -862,10 +786,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4064
+        -7632,
+        3744
       ],
-      "id": "556e5484-15d4-4a22-9704-18adf28bd2eb",
+      "id": "204905b5-68a2-4b9c-bbe6-b02723a132f6",
       "continueOnFail": true
     },
     {
@@ -889,10 +813,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4240
+        -7632,
+        3568
       ],
-      "id": "4208bce2-64d0-4fcd-8319-e55de8012350",
+      "id": "9d26af26-0ace-4829-923f-102a0843c5e8",
       "continueOnFail": true
     },
     {
@@ -916,10 +840,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4400
+        -7632,
+        3408
       ],
-      "id": "dda93835-3e6e-4f43-966c-d1b53609b240",
+      "id": "4a48cc40-88e0-42d3-a9df-18306c99c2b3",
       "continueOnFail": true
     },
     {
@@ -943,10 +867,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4560
+        -7632,
+        3248
       ],
-      "id": "eaac6543-ff64-47f3-8f87-6cf1cb647508",
+      "id": "d9c29a37-5094-40e8-84cf-1f4219e1aa03",
       "continueOnFail": true
     },
     {
@@ -970,10 +894,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4720
+        -7632,
+        3088
       ],
-      "id": "d84b6763-093a-47ce-bf6d-410347319f42",
+      "id": "4c6e8800-dbae-478b-86b9-3d8fe9044d6e",
       "continueOnFail": true
     },
     {
@@ -994,10 +918,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -4864
+        -7632,
+        2944
       ],
-      "id": "c0fd92dc-ed2d-4bb6-ae59-b0351cbea99f",
+      "id": "a8bcfdfa-1c9b-42c1-a4cf-12311ed32a63",
       "continueOnFail": true
     },
     {
@@ -1025,10 +949,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5024
+        -7632,
+        2784
       ],
-      "id": "63d26672-408b-4b92-af88-b7a70b3e7f43",
+      "id": "6a9e3543-ff8b-49e9-9bb7-0fbef861ada1",
       "continueOnFail": true
     },
     {
@@ -1056,10 +980,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5168
+        -7632,
+        2640
       ],
-      "id": "bc11d64a-0f86-40f8-a8a0-63f2326d333e",
+      "id": "fad3e189-0b3e-4f67-9828-829c3c2db695",
       "continueOnFail": true
     },
     {
@@ -1091,10 +1015,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5328
+        -7632,
+        2480
       ],
-      "id": "5efcbff0-48f3-45e2-aa8c-24ec57e3aec4",
+      "id": "911cdc9c-ea7b-4a7f-9d99-1cee26c72c60",
       "continueOnFail": true
     },
     {
@@ -1134,10 +1058,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5488
+        -7632,
+        2320
       ],
-      "id": "6301996d-95a3-4485-8621-cfbb815f7f57",
+      "id": "1ee9d9df-fe92-4550-8557-0ef8b023258e",
       "continueOnFail": true
     },
     {
@@ -1177,10 +1101,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5632
+        -7632,
+        2176
       ],
-      "id": "cabe2dc6-cf9d-43f9-a128-c8ee996b0d99",
+      "id": "246ca194-caa9-4b1f-b6e7-cc41d76c9998",
       "continueOnFail": true
     },
     {
@@ -1212,10 +1136,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5792
+        -7632,
+        2016
       ],
-      "id": "36f347d0-8529-422b-8031-f39047c22d05",
+      "id": "fd3729de-6b28-43c4-98c2-1d478550b6f2",
       "continueOnFail": true
     },
     {
@@ -1243,10 +1167,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -5936
+        -7632,
+        1872
       ],
-      "id": "719b1ccb-f318-4672-85da-2ffc157e8fc3",
+      "id": "0ec94684-06b6-4739-8c6c-5ac32ae0fac0",
       "continueOnFail": true
     },
     {
@@ -1274,10 +1198,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7520,
-        -6080
+        -7632,
+        1728
       ],
-      "id": "2530da7f-b9d2-4b75-9f48-6d54c647bf47",
+      "id": "537f860a-2daa-4f07-b189-cfe03f3a9371",
       "continueOnFail": true
     },
     {
@@ -1301,10 +1225,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6192
+        -7776,
+        1616
       ],
-      "id": "3cb5a460-db93-43bc-969f-337c8c760441",
+      "id": "4fe056a1-881d-4cc7-ba0a-c183794804aa",
       "continueOnFail": true
     },
     {
@@ -1336,10 +1260,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6336
+        -7776,
+        1472
       ],
-      "id": "7bdafe7a-a64d-4bc7-80a6-799b6e7edeff",
+      "id": "841177a9-68e6-441e-900d-9afb193990dd",
       "continueOnFail": true
     },
     {
@@ -1363,10 +1287,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6480
+        -7776,
+        1328
       ],
-      "id": "8a0983f8-ef7f-45aa-bd3f-c21a64b89a88",
+      "id": "c141f646-a51f-479e-89cf-e33bf8546ef7",
       "continueOnFail": true
     },
     {
@@ -1406,10 +1330,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7664,
-        -6624
+        -7776,
+        1184
       ],
-      "id": "9d92a7fd-89b5-431d-8529-42c42207ec16",
+      "id": "a5d4f11d-37f6-406b-bd66-812cdccc13e3",
       "continueOnFail": true
     },
     {
@@ -1437,10 +1361,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7472,
-        -6736
+        -7584,
+        1072
       ],
-      "id": "665e2936-7d7a-46b1-9025-ba80a43b1e1a",
+      "id": "00a8ffa4-fd00-4f79-99e2-14b48de231fa",
       "continueOnFail": true
     },
     {
@@ -1468,10 +1392,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7472,
-        -6880
+        -7584,
+        928
       ],
-      "id": "36ec7016-d28b-4865-9058-25ccbba548e2",
+      "id": "875e6093-988d-434e-a979-2214ca5bd8b1",
       "continueOnFail": true
     },
     {
@@ -1499,10 +1423,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7024
+        -7568,
+        784
       ],
-      "id": "3ea594f6-c83e-4dac-bea7-e03632d7f4cf",
+      "id": "e879f5b9-bbdc-4e03-b083-2ad933c2cb52",
       "continueOnFail": true
     },
     {
@@ -1526,10 +1450,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7168
+        -7568,
+        640
       ],
-      "id": "63cf45c0-3297-4246-9153-6ab31835a8af",
+      "id": "6c6d5035-279f-45b0-826c-f553a3af5769",
       "continueOnFail": true
     },
     {
@@ -1557,10 +1481,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7312
+        -7568,
+        496
       ],
-      "id": "9137ec5d-307b-4a9d-a247-abe1050abc04",
+      "id": "867ae96e-398d-408a-ba8a-917feee8d761",
       "continueOnFail": true
     },
     {
@@ -1588,10 +1512,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7456
+        -7568,
+        352
       ],
-      "id": "d05129a0-33ed-4953-9c17-38d5312e92a6",
+      "id": "2426bf32-2be9-41cf-ba1a-f8490d6bb707",
       "continueOnFail": true
     },
     {
@@ -1627,10 +1551,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -7456,
-        -7600
+        -7568,
+        208
       ],
-      "id": "5747d68b-2aa7-4e1f-b2cf-184ec1159c54",
+      "id": "f59a80a1-66eb-4da1-8b43-9a6aa40e86ac",
       "continueOnFail": true
     },
     {
@@ -2841,10 +2765,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
       "position": [
-        -9616,
-        -7152
+        -9728,
+        656
       ],
-      "id": "22b5540a-1a76-44a5-a8ce-5cc2588c9866"
+      "id": "d08f47e5-9a7f-4e12-9536-f7c86ea5f623"
     },
     {
       "parameters": {
@@ -2858,10 +2782,10 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -5472,
-        -8112
+        -5584,
+        -320
       ],
-      "id": "19263a00-88a4-4344-9a17-a3eb4f7ecbe5",
+      "id": "b5b535f3-1c43-40f7-a3a0-654999862982",
       "webhookId": "clarification-webhook-id",
       "credentials": {
         "telegramApi": {
@@ -2899,10 +2823,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -6112,
-        -7872
+        -6224,
+        -80
       ],
-      "id": "5e1b960f-5857-471d-847f-17569394e419"
+      "id": "c1801663-d046-41a4-b44e-968ffe0bbf56"
     },
     {
       "parameters": {
@@ -2912,10 +2836,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -6592,
-        -8080
+        -6704,
+        -288
       ],
-      "id": "15f057fa-1ff2-4223-b891-37eeac932dbb"
+      "id": "7aa09319-076b-4acc-8e44-35ab3058a509"
     },
     {
       "parameters": {
@@ -2925,10 +2849,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -7632,
-        -8064
+        -7744,
+        -272
       ],
-      "id": "6dab25fc-33ae-467f-af27-6b961e51f622"
+      "id": "87dfb069-1a32-4646-aabe-c53c18f827d2"
     },
     {
       "parameters": {
@@ -3014,10 +2938,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -7904,
-        -8064
+        -8016,
+        -272
       ],
-      "id": "2a8ba2cd-2f4d-478f-a2c9-b247f8958c6f"
+      "id": "6e2ccba7-b83d-4a85-8d34-8576fef8a42f"
     },
     {
       "parameters": {
@@ -3027,10 +2951,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8080,
-        -8064
+        -8192,
+        -272
       ],
-      "id": "2b3dda42-b9ea-42b8-bdf0-1c687a17eb61"
+      "id": "5b7f2e5b-cad9-49de-b71f-26841c35df5a"
     },
     {
       "parameters": {
@@ -3043,10 +2967,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -8240,
-        -8064
+        -8352,
+        -272
       ],
-      "id": "b981f328-7750-4552-bb91-09adcfd35515",
+      "id": "6b35d93b-9045-4d8e-afce-192fe8be4489",
       "continueOnFail": true
     },
     {
@@ -3057,10 +2981,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8432,
-        -8064
+        -8544,
+        -272
       ],
-      "id": "640a72ba-ca33-4cd6-af31-15ac99b4d8cc"
+      "id": "4cd6e6af-e8db-4d37-8c94-6d92b0cd2176"
     },
     {
       "parameters": {
@@ -3073,10 +2997,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -8656,
-        -8064
+        -8768,
+        -272
       ],
-      "id": "a0375a43-8e4d-4998-8841-3d6045feafc0",
+      "id": "60a057d7-9a4e-4043-849a-ed2af30620fe",
       "continueOnFail": true
     },
     {
@@ -3087,10 +3011,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -8912,
-        -8064
+        -9024,
+        -272
       ],
-      "id": "509a0894-22d8-498c-a82e-48cc1aa8d9b7"
+      "id": "68fd6235-1a20-469d-9548-3883e996d41a"
     },
     {
       "parameters": {
@@ -3103,10 +3027,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -9136,
-        -8064
+        -9248,
+        -272
       ],
-      "id": "c824a304-f5c3-4905-84e9-fe54882f15c3",
+      "id": "4b64635f-0498-4780-ad72-c7dbf2a4fa01",
       "continueOnFail": true
     },
     {
@@ -3117,10 +3041,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -9392,
-        -8064
+        -9504,
+        -272
       ],
-      "id": "8f255435-6831-4599-8212-4a8d5315e961"
+      "id": "390b59db-cda8-45c3-9bce-038c638bd6da"
     },
     {
       "parameters": {
@@ -3133,11 +3057,11 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.1,
       "position": [
-        -9648,
-        -8064
+        -9760,
+        -272
       ],
       "webhookId": "telegram-kodecraft-bot",
-      "id": "3360439b-816f-46ae-ac4d-5d00da923ca5",
+      "id": "b5bf3d27-419e-4987-996b-59d45ca52977",
       "credentials": {
         "telegramApi": {
           "id": "Jq6wosORWBGbVRZE",
@@ -3148,21 +3072,18 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.message }}\n\nCRITICAL INTENT CLASSIFICATION REMINDER:\n- If user mentions spawning workers + building task: USE \"collaborativeBuild\"\n- If user only wants workers (no building): USE \"spawnWorkers\"\n- Examples: \"spawn workers to build house\" = collaborativeBuild, \"spawn 3 workers\" = spawnWorkers\n\nCONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? 'CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? 'CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
+        "text": "={{ $json.message }}\n\nCONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? 'CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? 'CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
         "options": {
-          "systemMessage": "={{ $json.systemPrompt || 'You are an intelligent Minecraft AI bot with unlimited creative capabilities. You can handle any request through advanced AI-powered code generation. Always respond with valid JSON in the format: {\"intent\": \"intentName\", \"params\": {}, \"response\": \"Brief response\"}. CRITICAL MULTIBOT INTENT CLASSIFICATION: If user mentions BOTH spawning workers AND building something, use \"collaborativeBuild\" intent (NOT spawnWorkers). Use \"spawnWorkers\" only when they want workers without a building task. Examples: \"spawn workers to build X\" → collaborativeBuild, \"spawn 3 workers\" → spawnWorkers.' }}",
-          "conversationState": "={{ $json.conversationState || 'initial' }}",
-          "needsClarification": "={{ $json.needsClarification || false }}",
-          "clarificationCount": "={{ $json.clarificationCount || 0 }}"
+          "systemMessage": "={{ $json.systemPrompt }} 'You are an intelligent Minecraft AI bot with unlimited creative capabilities. You can handle any request through advanced AI-powered code generation. Always respond with valid JSON in the format: {\"intent\": \"intentName\", \"params\": {}, \"response\": \"Brief response\"}. CRITICAL MULTIBOT INTENT CLASSIFICATION: If user mentions BOTH spawning workers AND building something, use \"collaborativeBuild\" intent (NOT spawnWorkers). Use \"spawnWorkers\" only when they want workers without a building task. Examples: \"spawn workers to build X\" → collaborativeBuild, \"spawn 3 workers\" → spawnWorkers."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2.2,
       "position": [
-        -7104,
-        -8064
+        -7216,
+        -272
       ],
-      "id": "86ed981c-5605-4558-82f2-b1d5727f8a97",
+      "id": "939b598b-f023-4565-9b00-759c6312d4d9",
       "name": "AI Agent1"
     },
     {
@@ -3175,10 +3096,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
       "typeVersion": 1,
       "position": [
-        -7072,
-        -7904
+        -7184,
+        -112
       ],
-      "id": "b182ab86-f1ff-4e77-aa7c-3d593eec47db",
+      "id": "a0bcb248-fa65-4a36-8887-a5c57a71283f",
       "name": "MongoDB Chat Memory",
       "credentials": {
         "mongoDb": {
@@ -3200,10 +3121,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -7280,
-        -7888
+        -7392,
+        -96
       ],
-      "id": "3f5fa58c-de46-4fdc-a5ef-a5ea4798786c",
+      "id": "0b6f3035-3ecd-42d7-9532-d1a629416127",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -3225,10 +3146,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        -5152,
-        -4544
+        -5264,
+        3264
       ],
-      "id": "a1f0ea25-e0f8-4897-af9d-58fb1bfbb233",
+      "id": "4d7eeca8-80b1-4856-866b-afea24a55d69",
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
@@ -3247,10 +3168,10 @@
       "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
       "typeVersion": 1,
       "position": [
-        -5008,
-        -4544
+        -5120,
+        3264
       ],
-      "id": "397a13a5-b42b-4c7f-acb2-66af7b8669d4",
+      "id": "96dc54de-38e0-4f79-a264-6675f76796a5",
       "name": "MongoDB Chat Memory1",
       "credentials": {
         "mongoDb": {
@@ -3311,39 +3232,6 @@
         [
           {
             "node": "Format Result",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Execute CollaborativeBuild": {
-      "main": [
-        [
-          {
-            "node": "Wait for Workers Init",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait for Workers Init": {
-      "main": [
-        [
-          {
-            "node": "Reset Worker States",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Reset Worker States": {
-      "main": [
-        [
-          {
-            "node": "Execute AssignTasks",
             "type": "main",
             "index": 0
           }
@@ -3471,17 +3359,6 @@
         ]
       ]
     },
-    "Execute Building Plan": {
-      "main": [
-        [
-          {
-            "node": "Route Building Execution",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Route Building Execution": {
       "main": [
         [
@@ -3500,22 +3377,22 @@
         ]
       ]
     },
-    "Building Plan Result": {
+    "Smart Building Planner": {
       "main": [
         [
           {
-            "node": "Execute Building Plan",
+            "node": "Parse JSON Response",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Smart Building Planner": {
+    "Parse JSON Response": {
       "main": [
         [
           {
-            "node": "Building Plan Result",
+            "node": "Route Building Execution",
             "type": "main",
             "index": 0
           }
@@ -4479,13 +4356,24 @@
           }
         ]
       ]
+    },
+    "Execute CollaborativeBuild": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "c9515de6-c56f-46e4-915f-eaf5373c27b9",
+  "versionId": "9c38735d-36d1-449c-854b-0eed640dc161",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "926c5f2b62401768ca8a1a68bb4e4a816e506c0ed73f177f4da8b56b49a57234"

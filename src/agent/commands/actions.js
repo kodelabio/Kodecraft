@@ -46,19 +46,31 @@ export const actionsList = [
             }
 
             // Internal mode: standard code generation process
+            console.log(`[newAction] Starting code generation for prompt: ${prompt.substring(0, 50)}...`);
             let result = "";
             const actionFn = async () => {
                 try {
                     if (!agent.coder) {
+                        console.error('[newAction] ERROR: Coder component not available');
                         throw new Error('Coder component not available');
                     }
+                    
+                    console.log('[newAction] Coder available, adding to history...');
+                    // Add the prompt to history before code generation
+                    agent.history.add('system', `New action requested: ${prompt}`);
+                    
+                    console.log('[newAction] Calling coder.generateCode...');
                     result = await agent.coder.generateCode(agent.history);
+                    console.log("[newAction] Code generation completed");
                     console.log("[Kodelab] Example of generated code:", result)
                 } catch (e) {
+                    console.error('[newAction] Code generation error:', e);
                     result = 'Error generating code: ' + e.toString();
                 }
             };
+            console.log('[newAction] Running action...');
             await agent.actions.runAction('action:newAction', actionFn, {timeout: settings.code_timeout_mins});
+            console.log(`[newAction] Action completed, result length: ${result.length}`);
             return result;
         }
     },

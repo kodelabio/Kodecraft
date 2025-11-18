@@ -24,6 +24,68 @@ export class Coder {
         mkdirSync('.' + this.fp, { recursive: true });
     }
 
+    // Generate code WITHOUT executing it (for collaborative builds)
+    async generateCodeOnly(agent_history) {
+        lockdown();
+        // this message history is transient and only maintained in this function
+        let messages = agent_history.getHistory(); 
+        messages.push({role: 'system', content: 'Code generation started. Write code in codeblock in your response:'});
+
+        const MAX_ATTEMPTS = 5;
+        const MAX_NO_CODE = 3;
+
+        let code = null;
+        let no_code_failures = 0;
+        for (let i=0; i<MAX_ATTEMPTS; i++) {
+            if (this.agent.bot.interrupt_code)
+                return null;
+            const messages_copy = JSON.parse(JSON.stringify(messages));
+            let res = await this.agent.prompter.promptCoding(messages_copy);
+            if (this.agent.bot.interrupt_code)
+                return null;
+            let contains_code = res.indexOf('```') !== -1;
+            if (!contains_code) {
+                if (res.indexOf('!newAction') !== -1) {
+                    messages.push({
+                        role: 'assistant', 
+                        content: res.substring(0, res.indexOf('!newAction'))
+                    });
+                    continue; // using newaction will continue the loop
+                }
+                
+                if (no_code_failures >= MAX_NO_CODE) {
+                    console.warn("Action failed, agent would not write code.");
+                    return null;
+                }
+                messages.push({
+                    role: 'system', 
+                    content: 'Error: no code provided. Write code in codeblock in your response. ``` // example ```'}
+                );
+                console.warn("No code block generated. Trying again.");
+                no_code_failures++;
+                continue;
+            }
+            code = res.substring(res.indexOf('```')+3, res.lastIndexOf('```'));
+            
+            // Sanitize and lint the code
+            const sanitizedCode = this._sanitizeCode(code);
+            const result = await this._stageCode(sanitizedCode);
+            const lintResult = await this._lintCode(result.src_lint_copy);
+            
+            if (lintResult) {
+                const message = 'Error: Code lint error:'+'\n'+lintResult+'\nPlease try again.';
+                console.warn("Linting error:"+'\n'+lintResult+'\n');
+                messages.push({ role: 'system', content: message });
+                continue;
+            }
+            
+            // Return the sanitized code WITHOUT executing it
+            console.log('Code generated successfully (not executed)');
+            return sanitizedCode;
+        }
+        return null;
+    }
+
     async generateCode(agent_history) {
         this.agent.bot.modes.pause('unstuck');
         lockdown();

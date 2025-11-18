@@ -1,619 +1,212 @@
-// src/agent/multibot_manager.js
-// Multi-bot coordination system for external brain mode
+// Multi-bot manager for spawning and coordinating worker bots
 
-import { AgentProcess } from '../process/agent_process.js';
 import { spawn } from 'child_process';
-import { EventEmitter } from 'events';
+import { join } from 'path';
+import axios from 'axios';
 import settings from '../../settings.js';
-
-// Worker process class that runs workers in internal brain mode
-class WorkerProcess extends EventEmitter {
-    constructor(name, port) {
-        super();
-        this.name = name;
-        this.port = port;
-        this.running = false;
-    }
-
-    async start(load_memory = false, init_message = null, count_id = 0) {
-        this.running = true;
-        this.count_id = count_id;
-
-        // Start worker with internal brain mode (no MindServer connection)
-        let args = ['src/process/init_worker.js', this.name];
-        args.push('-n', this.name);
-        args.push('-p', this.port);
-        args.push('-c', count_id);
-        if (load_memory) {
-            args.push('-l', load_memory);
-        }
-        if (init_message) {
-            args.push('-m', init_message);
-        }
-
-        const workerProcess = spawn('node', args, {
-            stdio: 'inherit',
-            stderr: 'inherit',
-        });
-        
-        let last_restart = Date.now();
-        workerProcess.on('exit', (code, signal) => {
-            console.log(`Worker ${this.name} process exited with code ${code} and signal ${signal}`);
-            this.running = false;
-            this.emit('exit', this.name);
-            
-            if (code > 1) {
-                console.log(`Ending worker task`);
-                return;
-            }
-
-            if (code !== 0 && signal !== 'SIGINT') {
-                // Worker must run for at least 5 seconds before restarting
-                if (Date.now() - last_restart < 5000) {
-                    console.error(`Worker process exited too quickly and will not be restarted.`);
-                    return;
-                }
-                console.log(`Restarting worker ${this.name}...`);
-                this.start(true, 'Worker process restarted.', this.count_id);
-                last_restart = Date.now();
-            }
-        });
-    
-        workerProcess.on('error', (err) => {
-            console.error(`Worker ${this.name} process error:`, err);
-        });
-
-        this.process = workerProcess;
-        
-        // Give the worker a moment to start
-        await new Promise(resolve => setTimeout(resolve, 2000));
-    }
-
-    stop() {
-        if (!this.running) return;
-        this.process.kill('SIGINT');
-    }
-}
 
 export class MultiBotManager {
     constructor(leaderAgent) {
         this.leaderAgent = leaderAgent;
-        this.workers = new Map(); // workerName -> { process, port, status, currentTask }
-        this.nextWorkerPort = settings.multibot_base_port + 2; // Start from 4002 (4001 is leader)
-        this.taskQueue = [];
-        this.buildSessions = new Map(); // sessionId -> { workers, tasks, status }
+        this.workers = new Map(); // workerName -> {process, port, status}
+        this.basePort = settings.multibot_base_port || 4000;
+        this.nextPort = this.basePort + 2; // Leader uses basePort+1
+        this.sessionId = null;
     }
 
-    // Spawn worker bots with AI-driven coordination
-    async spawnWorkers(count, leaderName = 'Leader') {
-        console.log(`MultiBotManager: Spawning ${count} workers for leader ${leaderName}`);
-        
+    
+    // Spawn multiple worker bots for collaborative tasks
+
+    async spawnWorkers(workerCount = 3, sessionId = null) {
+        this.sessionId = sessionId || `session_${Date.now()}`;
+        console.log(`[MultiBotManager] Spawning ${workerCount} workers for session ${this.sessionId}`);
+
+        const spawnPromises = [];
         const spawnedWorkers = [];
-        
-        for (let i = 0; i < count; i++) {
-            const workerName = `${leaderName}Worker${i + 1}`;
-            const workerPort = this.nextWorkerPort++;
-            
-            try {
-                // Create worker process - workers use internal brain mode
-                const workerProcess = new WorkerProcess(workerName, workerPort);
-                
-                // Start worker with internal brain mode and unique count_id
-                await workerProcess.start(false, `Hello, I am ${workerName}. Ready to work!`, i + 1);
-                
-                // Store worker info
-                this.workers.set(workerName, {
-                    process: workerProcess,
-                    port: workerPort,
-                    status: 'spawning',
-                    currentTask: null,
-                    spawnTime: Date.now()
-                });
-                
-                spawnedWorkers.push({
-                    name: workerName,
-                    port: workerPort,
-                    status: 'spawning'
-                });
-                
-                console.log(`Worker ${workerName} spawning on port ${workerPort}`);
-                
-                // Set up process exit handler
-                workerProcess.on('exit', (name) => {
-                    console.log(`Worker ${name} process exited`);
-                    this.workers.delete(name);
-                });
-                
-            } catch (error) {
-                console.error(`Failed to spawn worker ${workerName}:`, error);
-            }
-        }
-        
-        // Wait for workers to initialize
-        await this.waitForWorkersReady(spawnedWorkers.map(w => w.name), 45000); // Increased timeout
-        
-        return spawnedWorkers;
-    }
 
-    // Wait for workers to be ready (with timeout)
-    async waitForWorkersReady(workerNames, timeoutMs = 30000) {
-        console.log(`Waiting for ${workerNames.length} workers to be ready...`);
-        
-        const startTime = Date.now();
-        const checkInterval = 1000;
-        
-        while (Date.now() - startTime < timeoutMs) {
-            let allReady = true;
-            
-            for (const workerName of workerNames) {
-                const worker = this.workers.get(workerName);
-                if (!worker || worker.status === 'spawning') {
-                    // Try to ping worker API to check if ready
-                    try {
-                        const response = await fetch(`http://localhost:${worker.port}/api/health`, {
-                            method: 'GET',
-                            timeout: 2000
-                        });
-                        
-                        if (response.ok) {
-                            worker.status = 'ready';
-                            console.log(`Worker ${workerName} is ready on port ${worker.port}`);
-                        } else {
-                            allReady = false;
-                        }
-                    } catch (error) {
-                        allReady = false;
-                    }
-                }
-            }
-            
-            if (allReady) {
-                console.log(`All ${workerNames.length} workers are ready!`);
-                return true;
-            }
-            
-            await new Promise(resolve => setTimeout(resolve, checkInterval));
-        }
-        
-        console.warn(`Timeout waiting for workers to be ready. Proceeding anyway...`);
-        return false;
-    }
-
-    // Coordinate collaborative building with AI-driven task distribution
-    async coordinateCollaborativeBuild(buildRequest, workerCount, sessionId = null) {
-        console.log(`Starting collaborative build: "${buildRequest}" with ${workerCount} workers`);
-        
-        if (!sessionId) {
-            sessionId = `build_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        }
-        
-        // Get available workers or spawn new ones
-        const availableWorkers = Array.from(this.workers.entries())
-            .filter(([name, worker]) => worker.status === 'ready')
-            .map(([name, worker]) => ({ name, port: worker.port }));
-        
-        let assignedWorkers = [];
-        
-        if (availableWorkers.length >= workerCount) {
-            // Use existing workers
-            assignedWorkers = availableWorkers.slice(0, workerCount);
-            console.log(`Using ${workerCount} existing workers`);
-        } else {
-            // Spawn additional workers
-            const leaderName = this.leaderAgent.name || 'Leader';
-            const neededWorkers = workerCount - availableWorkers.length;
-            console.log(`Spawning ${neededWorkers} additional workers`);
-            
-            const newWorkers = await this.spawnWorkers(neededWorkers, leaderName);
-            assignedWorkers = [...availableWorkers, ...newWorkers];
-        }
-        
-        // Create build session
-        const buildSession = {
-            sessionId,
-            buildRequest,
-            workers: assignedWorkers,
-            tasks: [],
-            status: 'planning',
-            startTime: Date.now()
-        };
-        
-        this.buildSessions.set(sessionId, buildSession);
-        
-        // Get leader bot position for coordination
-        const leaderPosition = await this.getLeaderPosition();
-        
-        return {
-            sessionId,
-            workers: assignedWorkers,
-            leaderPosition,
-            status: 'workers_ready',
-            message: `${assignedWorkers.length} workers ready for collaborative build: "${buildRequest}"`
-        };
-    }
-
-    // Assign AI-generated tasks to workers
-    async assignTasksToWorkers(sessionId, taskBreakdown) {
-        console.log(`Assigning tasks for session ${sessionId}`);
-        
-        const buildSession = this.buildSessions.get(sessionId);
-        if (!buildSession) {
-            throw new Error(`Build session ${sessionId} not found`);
-        }
-        
-        const tasks = Array.isArray(taskBreakdown) ? taskBreakdown : [taskBreakdown];
-        const workers = buildSession.workers;
-        
-        if (tasks.length > workers.length) {
-            console.warn(`More tasks (${tasks.length}) than workers (${workers.length}). Some workers will get multiple tasks.`);
-        }
-        
-        // Get the current leader position for shared building coordinates
-        const leaderPosition = await this.getLeaderPosition();
-        
-        // Check for conflicts with existing builds (optional MongoDB integration)
-        const buildCoordinates = await this.checkAndReserveBuildLocation(leaderPosition, sessionId, buildSession.buildRequest);
-        
-        console.log(`Building at verified coordinates: ${buildCoordinates.x}, ${buildCoordinates.y}, ${buildCoordinates.z}`);
-        
-        const assignments = [];
-        
-        // FIXED: Ensure workers coordinate on the same structure
-        console.log(`Coordinating ${workers.length} workers for: "${buildSession.buildRequest}"`);
-        
-        // First, teleport all workers to the build site for coordination
-        await this.teleportWorkers(sessionId, buildCoordinates);
-        
-        // Wait a moment for workers to reach position
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        for (let i = 0; i < tasks.length; i++) {
-            const task = tasks[i];
-            const worker = workers[i % workers.length]; // Round-robin assignment
-            
-            // Simple task assignment - let the external_api.js coordinate fix handle everything
-            const coordinatedTask = `${task}
-
-Build at your current position. You are worker ${i + 1} of ${tasks.length} working on: "${buildSession.buildRequest}"`;
-            
-            console.log(`🔧 Sending task to ${worker.name}: ${task.substring(0, 50)}...`);
-            try {
-                // Send coordinated task to worker
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/newAction`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: coordinatedTask })
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    console.log(`✓ Coordinated task assigned to ${worker.name}: ${task.substring(0, 40)}...`);
-                    
-                    // Update worker status
-                    const workerInfo = this.workers.get(worker.name);
-                    if (workerInfo) {
-                        workerInfo.status = 'working';
-                        workerInfo.currentTask = task;
-                        workerInfo.buildCoordinates = buildCoordinates;
-                    }
-                    
-                    // Safely extract message from response
-                    let responseMessage = 'Task assigned successfully';
-                    if (result && typeof result === 'object') {
-                        responseMessage = result.message || result.error || JSON.stringify(result);
-                    } else if (typeof result === 'string') {
-                        responseMessage = result;
-                    }
-                    
-                    assignments.push({
-                        worker: worker.name,
-                        task: task,
-                        coordinatedTask: coordinatedTask.substring(0, 200) + '...',
-                        buildCoordinates: buildCoordinates,
-                        status: 'assigned',
-                        result: responseMessage,
-                        prompt_modified: result?.prompt_modified || false,
-                        original_prompt: result?.original_prompt || coordinatedTask,
-                        modified_prompt: result?.modified_prompt || coordinatedTask
-                    });
-                } else {
-                    console.error(`Failed to assign task to ${worker.name}:`, await response.text());
-                    assignments.push({
-                        worker: worker.name,
-                        task,
-                        status: 'failed',
-                        error: 'API call failed'
-                    });
-                }
-                
-                // Small delay between assignments to avoid overwhelming workers
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-            } catch (error) {
-                console.error(`Error assigning task to ${worker.name}:`, error);
-                assignments.push({
-                    worker: worker.name,
-                    task,
-                    status: 'failed',
-                    error: error.message
-                });
-            }
-        }
-        
-        // Update build session
-        buildSession.tasks = assignments;
-        buildSession.status = 'executing';
-        
-        return assignments;
-    }
-
-    // Get status of all workers and current build sessions
-    getStatus() {
-        const workers = Array.from(this.workers.entries()).map(([name, worker]) => ({
-            name,
-            port: worker.port,
-            status: worker.status,
-            currentTask: worker.currentTask ? worker.currentTask.substring(0, 100) + '...' : null,
-            uptime: Date.now() - worker.spawnTime
-        }));
-        
-        const buildSessions = Array.from(this.buildSessions.entries()).map(([id, session]) => ({
-            sessionId: id,
-            buildRequest: session.buildRequest,
-            workers: session.workers.length,
-            tasks: session.tasks.length,
-            status: session.status,
-            runtime: Date.now() - session.startTime
-        }));
-        
-        return {
-            totalWorkers: this.workers.size,
-            workers,
-            activeBuildSessions: this.buildSessions.size,
-            buildSessions,
-            nextPort: this.nextWorkerPort
-        };
-    }
-
-    // Get leader bot position
-    async getLeaderPosition() {
-        try {
-            if (this.leaderAgent.bot && this.leaderAgent.bot.entity) {
-                const pos = this.leaderAgent.bot.entity.position;
-                return {
-                    x: Math.floor(pos.x),
-                    y: Math.floor(pos.y), 
-                    z: Math.floor(pos.z)
-                };
-            }
-        } catch (error) {
-            console.error('Error getting leader position:', error);
-        }
-        
-        return { x: 0, y: 64, z: 0 }; // Default position
-    }
-
-    // Teleport workers to build location
-    async teleportWorkers(sessionId, position) {
-        const buildSession = this.buildSessions.get(sessionId);
-        if (!buildSession) {
-            throw new Error(`Build session ${sessionId} not found`);
-        }
-        
         const results = [];
         
-        // FIXED: All workers go to the SAME position for coordination
-        // Instead of random spreading, use a tight formation around the build site
-        for (let i = 0; i < buildSession.workers.length; i++) {
-            const worker = buildSession.workers[i];
+        // Spawn workers sequentially to avoid resource conflicts
+        for (let i = 1; i <= workerCount; i++) {
+            const workerName = `${this.leaderAgent.name}Worker${i}`;
+            const workerPort = this.nextPort++;
+            
             try {
-                // Tight formation: workers positioned in a small circle around the build site
-                const angle = (i / buildSession.workers.length) * 2 * Math.PI;
-                const radius = Math.min(3, buildSession.workers.length); // Max 3 block radius
+                console.log(`[MultiBotManager] Spawning worker ${i}/${workerCount}: ${workerName}`);
+                const result = await this.spawnSingleWorker(workerName, workerPort);
+                results.push(result);
+                spawnedWorkers.push({ name: workerName, port: workerPort });
                 
-                const targetPos = {
-                    x: Math.floor(position.x + Math.cos(angle) * radius),
-                    y: position.y,
-                    z: Math.floor(position.z + Math.sin(angle) * radius)
-                };
-                
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(targetPos)
-                });
-                
-                if (response.ok) {
-                    results.push({ 
-                        worker: worker.name, 
-                        status: 'teleported',
-                        position: targetPos
-                    });
-                    console.log(`${worker.name} teleported to coordinated position: ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
-                } else {
-                    results.push({ worker: worker.name, status: 'failed' });
+                // Small delay between worker spawns to avoid conflicts
+                if (i < workerCount) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
                 }
-                
             } catch (error) {
-                console.error(`Failed to teleport ${worker.name}:`, error);
-                results.push({ worker: worker.name, status: 'error', error: error.message });
+                console.error(`[MultiBotManager] Failed to spawn ${workerName}:`, error);
+                results.push({ success: false, error: error.message });
             }
         }
-        
-        return results;
-    }
 
-    // Stop all workers
-    async stopAllWorkers() {
-        console.log(`Stopping ${this.workers.size} workers...`);
-        
-        for (const [name, worker] of this.workers) {
-            try {
-                worker.process.stop();
-                console.log(`Stopped worker ${name}`);
-            } catch (error) {
-                console.error(`Error stopping worker ${name}:`, error);
-            }
-        }
-        
-        this.workers.clear();
-        this.buildSessions.clear();
-        this.nextWorkerPort = settings.multibot_base_port + 2;
-        
-        return { message: 'All workers stopped', stopped: true };
-    }
-
-    // Check for build location conflicts and reserve new location if needed
-    async checkAndReserveBuildLocation(preferredLocation, sessionId, buildRequest) {
         try {
-            // For collaborative builds, we want workers to build together at the SAME location
-            // Only check for conflicts with other build sessions, not within the same session
+            const successfulWorkers = results.filter(r => r.success);
             
-            const minDistance = 30; // Reduced distance for better coordination
-            let buildLocation = { ...preferredLocation };
+            console.log(`[MultiBotManager] Successfully spawned ${successfulWorkers.length}/${workerCount} workers`);
             
-            // Simple conflict detection - only with OTHER sessions
-            const existingBuilds = this.getExistingBuildLocations().filter(
-                build => build.sessionId !== sessionId // Exclude current session
-            );
-            
-            // Check if location conflicts with OTHER builds
-            let attempts = 0;
-            while (attempts < 5) { // Reduced attempts for faster coordination
-                const hasConflict = existingBuilds.some(build => {
-                    const distance = Math.sqrt(
-                        Math.pow(buildLocation.x - build.x, 2) + 
-                        Math.pow(buildLocation.z - build.z, 2)
-                    );
-                    return distance < minDistance;
-                });
-                
-                if (!hasConflict) {
-                    break;
-                }
-                
-                // Move to a new location if conflict found with OTHER builds
-                const angle = (attempts * 72) * (Math.PI / 180); // 72 degrees for 5 attempts
-                buildLocation = {
-                    x: Math.floor(preferredLocation.x + Math.cos(angle) * minDistance),
-                    y: preferredLocation.y,
-                    z: Math.floor(preferredLocation.z + Math.sin(angle) * minDistance)
-                };
-                attempts++;
+            // Wait a bit for workers to fully initialize (bot spawning, etc.)
+            if (successfulWorkers.length > 0) {
+                console.log(`[MultiBotManager] Waiting 20 seconds for workers to fully initialize...`);
+                await new Promise(resolve => setTimeout(resolve, 20000));
             }
             
-            // Reserve this location for the current session
-            this.reserveBuildLocation(buildLocation, sessionId, buildRequest);
-            
-            console.log(`✓ Coordinated build location confirmed: x=${buildLocation.x}, y=${buildLocation.y}, z=${buildLocation.z} for session ${sessionId}`);
-            return buildLocation;
-            
+            return {
+                success: successfulWorkers.length > 0,
+                workers: successfulWorkers.map(w => w.worker),
+                sessionId: this.sessionId,
+                spawnedCount: successfulWorkers.length,
+                requestedCount: workerCount
+            };
         } catch (error) {
-            console.error('Error checking build location:', error);
-            return preferredLocation; // Fallback to preferred location
-        }
-    }
-    
-    // Get existing build locations (can be enhanced with MongoDB)
-    getExistingBuildLocations() {
-        // Simple in-memory storage for now
-        if (!global.multibotBuildLocations) {
-            global.multibotBuildLocations = [];
-        }
-        return global.multibotBuildLocations;
-    }
-    
-    // Reserve a build location
-    reserveBuildLocation(location, sessionId, buildRequest) {
-        if (!global.multibotBuildLocations) {
-            global.multibotBuildLocations = [];
-        }
-        
-        global.multibotBuildLocations.push({
-            x: location.x,
-            y: location.y,
-            z: location.z,
-            sessionId: sessionId,
-            buildRequest: buildRequest.substring(0, 100),
-            timestamp: Date.now(),
-            status: 'reserved'
-        });
-        
-        console.log(`Location reserved for session ${sessionId}: x=${location.x}, z=${location.z}`);
-    }
-    
-    // Clean up finished sessions
-    cleanupFinishedSessions() {
-        const currentTime = Date.now();
-        const maxSessionAge = 3600000; // 1 hour
-        
-        for (const [sessionId, session] of this.buildSessions) {
-            if (currentTime - session.startTime > maxSessionAge) {
-                console.log(`Cleaning up old build session: ${sessionId}`);
-                this.buildSessions.delete(sessionId);
-            }
-        }
-        
-        // Also clean up old location reservations
-        if (global.multibotBuildLocations) {
-            global.multibotBuildLocations = global.multibotBuildLocations.filter(
-                location => currentTime - location.timestamp < maxSessionAge
-            );
+            console.error(`[MultiBotManager] Error spawning workers:`, error);
+            return {
+                success: false,
+                error: error.message,
+                sessionId: this.sessionId,
+                workers: [],
+                spawnedCount: 0,
+                requestedCount: workerCount
+            };
         }
     }
 
-    // NEW: Coordinate worker synchronization for better collaboration
-    async synchronizeWorkers(sessionId) {
-        const buildSession = this.buildSessions.get(sessionId);
-        if (!buildSession) {
-            throw new Error(`Build session ${sessionId} not found`);
-        }
+    
+    // Spawn a single worker process
 
-        console.log(`🔄 Synchronizing ${buildSession.workers.length} workers for coordinated build...`);
-        
-        const syncResults = [];
-        
-        // Step 1: Stop any current actions to synchronize
-        for (const worker of buildSession.workers) {
-            try {
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/endGoal`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
-                });
+    async spawnSingleWorker(workerName, port) {
+        return new Promise((resolve) => {
+            console.log(`[MultiBotManager] Spawning worker ${workerName} on port ${port}`);
+
+            // Spawn worker process using init_worker.js
+            const workerProcess = spawn('node', [
+                join(process.cwd(), 'src/process/init_worker.js'),
+                '--name', workerName,
+                '--port', port.toString(),
+                '--load_memory', 'false',
+                '--init_message', `Hello, I am ${workerName}. Ready to work!`
+            ], {
+                stdio: ['pipe', 'pipe', 'pipe'], 
+                detached: false
+            });
+
+            const worker = {
+                name: workerName,
+                port: port,
+                process: workerProcess,
+                status: 'starting',
+                pid: workerProcess.pid
+            };
+
+            // Track worker
+            this.workers.set(workerName, worker);
+
+            // Handle worker process output
+            workerProcess.stdout.on('data', (data) => {
+                const output = data.toString().trim();
+                console.log(`[Worker ${workerName}] ${output}`);
                 
-                if (response.ok) {
-                    syncResults.push({ worker: worker.name, sync: 'ready' });
-                } else {
-                    syncResults.push({ worker: worker.name, sync: 'failed' });
+                // Check if worker is ready - multiple possible indicators
+                if (output.includes(`ready on port`) || 
+                    output.includes(`Worker ${workerName} ready`) ||
+                    output.includes(`API server running on port ${port}`) ||
+                    (output.includes('logged into') && worker.status === 'starting')) {
+                    worker.status = 'ready';
+                    console.log(`[MultiBotManager] Worker ${workerName} is READY on port ${port}`);
+                    resolve({ success: true, worker });
                 }
-            } catch (error) {
-                console.error(`Failed to sync ${worker.name}:`, error);
-                syncResults.push({ worker: worker.name, sync: 'error' });
-            }
-        }
+            });
 
-        // Step 2: Brief pause for synchronization
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        console.log(`✓ Worker synchronization completed for session ${sessionId}`);
-        return syncResults;
+            workerProcess.stderr.on('data', (data) => {
+                const error = data.toString().trim();
+                console.error(`[Worker ${workerName} ERROR] ${error}`);
+            });
+
+            workerProcess.on('error', (error) => {
+                console.error(`[MultiBotManager] Failed to spawn worker ${workerName}:`, error);
+                worker.status = 'failed';
+                this.workers.delete(workerName);
+                resolve({ success: false, error: error.message });
+            });
+
+            workerProcess.on('exit', (code) => {
+                console.log(`[MultiBotManager] Worker ${workerName} exited with code ${code}`);
+                worker.status = code === 0 ? 'stopped' : 'crashed';
+                if (worker.status === 'crashed') {
+                    this.workers.delete(workerName);
+                }
+            });
+
+            // Timeout for worker startup with fallback
+            setTimeout(() => {
+                if (worker.status === 'starting') {
+                    // Check if process is still alive - might be ready but detection failed
+                    if (workerProcess && !workerProcess.killed && workerProcess.exitCode === null) {
+                        console.warn(`[MultiBotManager] Worker ${workerName} timeout, but process alive. Marking as ready anyway.`);
+                        worker.status = 'ready';
+                        resolve({ success: true, worker });
+                    } else {
+                        console.error(`[MultiBotManager] Worker ${workerName} startup timeout - process not responding`);
+                        try {
+                            workerProcess.kill('SIGKILL');
+                        } catch (e) {}
+                        worker.status = 'timeout';
+                        this.workers.delete(workerName);
+                        resolve({ success: false, error: 'Worker startup timeout' });
+                    }
+                }
+            }, 60000); // 60 second timeout
+        });
     }
 
-    // NEW: Monitor build progress and coordinate workers
-    async monitorBuildProgress(sessionId) {
-        const buildSession = this.buildSessions.get(sessionId);
-        if (!buildSession) return;
+    
+    // Stop all worker processes (simplified - just kills processes)
 
-        // This could be enhanced to actually check block placements and coordinate
-        console.log(`📊 Monitoring build progress for session ${sessionId}...`);
+    async stopWorkers() {
+        console.log(`[MultiBotManager] Stopping ${this.workers.size} workers`);
         
-        // Update worker statuses
-        for (const worker of buildSession.workers) {
-            const workerInfo = this.workers.get(worker.name);
-            if (workerInfo && workerInfo.status === 'working') {
-                console.log(`  - ${worker.name}: Building ${workerInfo.currentTask?.substring(0, 30)}...`);
+        const stopped = [];
+        const errors = [];
+
+        for (const [workerName, worker] of this.workers.entries()) {
+            try {
+                console.log(`[MultiBotManager] Stopping worker ${workerName}`);
+                
+                // Kill the process
+                if (worker.process && !worker.process.killed) {
+                    worker.process.kill('SIGTERM');
+                    
+                    // Wait a bit then force kill if needed
+                    setTimeout(() => {
+                        if (!worker.process.killed) {
+                            worker.process.kill('SIGKILL');
+                        }
+                    }, 3000);
+                }
+
+                worker.status = 'stopped';
+                stopped.push(workerName);
+            } catch (error) {
+                console.error(`[MultiBotManager] Failed to stop worker ${workerName}:`, error);
+                errors.push(`Failed to stop ${workerName}: ${error.message}`);
             }
         }
+
+        // Clear workers map
+        this.workers.clear();
+        this.sessionId = null;
+
+        return {
+            success: stopped.length > 0,
+            stopped,
+            errors
+        };
     }
 }

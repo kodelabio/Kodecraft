@@ -2,6 +2,7 @@ import * as mc from "../../utils/mcdata.js";
 import * as world from "./world.js";
 import pf from 'mineflayer-pathfinder';
 import Vec3 from 'vec3';
+import settings from '../settings.js';
 
 
 export function log(bot, message) {
@@ -635,7 +636,11 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockType + '[half=upper]');
         if (blockType.includes('bed'))
             bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
-        log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
+        
+        // Don't log every setblock for workers to reduce spam
+        if (!settings.is_worker_bot || (x % 10 === 0 && y % 5 === 0 && z % 10 === 0)) {
+            log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
+        }
         return true;
     }
 

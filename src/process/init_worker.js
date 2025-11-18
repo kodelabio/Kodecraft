@@ -42,12 +42,13 @@ const argv = yargs(args)
 
 (async () => {
     try {
-        console.log(`Starting worker ${argv.name} in internal brain mode`);
+        console.log(`Starting ${argv.name} in internal brain mode`);
         
         // Initialize the agent settings from root settings
         const workerSettings = { ...rootSettings };
         workerSettings.brain_mode = 'internal'; // Force internal mode for workers
         workerSettings.render_bot_view = false; // Disable browser viewer for workers to avoid conflicts
+        workerSettings.base_profile = 'creative'; // Enable cheat mode for workers to place blocks in mid-air
         
         // Disable all chat interactions for workers - they should only respond to API commands
         workerSettings.narrate_behavior = false; // No automatic action narration
@@ -55,6 +56,7 @@ const argv = yargs(args)
         workerSettings.external_mode_allow_chat = false; // No chat commands
         workerSettings.only_chat_with = []; // Don't listen to anyone in chat
         workerSettings.is_worker_bot = true; // Flag to identify this as a worker bot
+        workerSettings.verbose_commands = false; // Reduce command output spam
         
         // Load and set the first profile (workers use the same profile as the leader)
         let profilePath = workerSettings.profiles[0];
@@ -87,12 +89,28 @@ const argv = yargs(args)
         
         await agent.start(argv.load_memory, argv.init_message, argv.count_id);
         
+        // Configure worker for collaborative building
+        if (agent.bot && agent.bot.modes) {
+            // Disable modes that interfere with collaborative building
+            agent.bot.modes.pause('unstuck'); // Prevent unstuck mode
+            agent.bot.modes.pause('elbow_room'); // Prevent workers from pushing each other away
+            agent.bot.modes.pause('self_preservation'); // Prevent defensive actions
+            
+            // Ensure cheat mode is OFF for physical placement
+            if (agent.bot.modes.isOn('cheat')) {
+                agent.bot.modes.setOn('cheat', false);
+                console.log(`${argv.name} Cheat mode disabled`);
+            } else {
+                console.log(`${argv.name} Physical block placement mode enabled`);
+            }
+        }
+        
         // Start API server for the worker
         console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
         const api = new ExternalAPI(agent);
         await api.start(argv.port);
         
-        console.log(`Worker ${argv.name} ready on port ${argv.port}`);
+        console.log(`${argv.name} ready on port ${argv.port}`);
         
     } catch (error) {
         console.error(`Failed to start worker ${argv.name}:`, error);

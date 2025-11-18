@@ -45,13 +45,6 @@ export class Agent {
             await this.prompter.initExamples();
         } else {
             console.log('External brain mode enabled - skipping internal AI components');
-            // Create minimal history for action logging only
-            this.history = { 
-                add: () => {}, 
-                save: () => {}, 
-                load: () => null,
-                memory: ''
-            };
             // Create dummy self_prompter to prevent errors in modes.js
             this.self_prompter = {
                 isActive: () => false,
@@ -158,7 +151,10 @@ export class Agent {
             "Set the difficulty to",
             "Teleported ",
             "Set the weather to",
-            "Gamerule "
+            "Gamerule ",
+            "Changed the block at",  // Ignore setblock feedback
+            "Placed",                 // Ignore placement messages
+            "[]"                      // Ignore empty bracket messages
         ];
 
         const respondFunc = async (username, message) => {
@@ -185,7 +181,7 @@ export class Agent {
 
         this.respondFunc = respondFunc;
 
-        // Skip chat listeners for worker bots - they should only respond to API commands
+        // Skip ALL chat listeners for worker bots - they should only respond to API commands
         if (!settings.is_worker_bot) {
             this.bot.on('whisper', respondFunc);
 
@@ -194,6 +190,9 @@ export class Agent {
                 // only respond to open chat messages when there are no other agents
                 respondFunc(username, message);
             });
+        } else {
+            // Workers: Completely ignore ALL chat to prevent spam processing
+            console.log(`[Worker ${this.name}] Chat listeners disabled - API-only mode`);
         }
 
         // Set up auto-eat

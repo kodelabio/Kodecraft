@@ -8,6 +8,7 @@ import { History } from './history.js';
 import { Coder } from './coder.js';
 //import { MultiBotManager } from './multibot_manager.js';
 import { OrchestrationAPI } from './orchestration_api.js';
+    
 
 export class ExternalAPI {
     constructor(agent) {
@@ -88,6 +89,7 @@ export class ExternalAPI {
         this.app.get('/api/agent/entities', this.handleEntities.bind(this));
         this.app.get('/api/agent/modes', this.handleModes.bind(this));
         this.app.get('/api/agent/getCraftingPlan', this.handleGetCraftingPlan.bind(this));
+        this.app.get('/api/agent/player-position', this.handleGetPlayerPosition.bind(this));
         
         // Mode management
         this.app.post('/api/agent/setMode', this.handleSetMode.bind(this));
@@ -136,6 +138,7 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/register-workers', this.handleOrchestrationRegisterWorkers.bind(this));
         this.app.post('/api/orchestration/reserve-location', this.handleOrchestrationReserveLocation.bind(this));
         this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
+        this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
         this.app.post('/api/orchestration/send-task', this.handleOrchestrationSendTask.bind(this));
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
@@ -143,16 +146,82 @@ export class ExternalAPI {
         // (← NEW SECTION ENDS HERE)
     }
 
+
+    // ✅ Helper method for null safety checks
+    getBotSafely() {
+        try {
+            if (!this.agent) return null;
+            if (!this.agent.bot) return null;
+            if (!this.agent.bot.entity) return null;
+            if (!this.agent.bot.entity.position) return null;
+            return this.agent.bot;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ✅ Helper method for coordinate validation and rounding
+    validateAndRoundCoordinates(x, y, z) {
+        if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
+            return 'x, y, z coordinates must be numbers';
+        }
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
+            return 'coordinates must be finite numbers (not Infinity or NaN)';
+        }
+        return {
+            x: Math.floor(x),
+            y: Math.floor(y),
+            z: Math.floor(z)
+        };
+    }
+
+    // ✅ Helper method for minDistance validation
+    validateMinDistance(minDistance) {
+        if (typeof minDistance !== 'number') {
+            return `minDistance must be a number, got ${typeof minDistance}`;
+        }
+        if (!Number.isFinite(minDistance)) {
+            return 'minDistance must be a finite number';
+        }
+        if (minDistance < 0) {
+            return 'minDistance must be non-negative';
+        }
+        return true;
+    }
+
+    // ✅ FIXED handleMove
     async handleMove(req, res) {
         try {
             const { x, y, z, direction, minDistance = 1 } = req.body;
             
+            const minDistanceValid = this.validateMinDistance(minDistance);
+            if (minDistanceValid !== true) {
+                return res.status(400).json({ 
+                    error: minDistanceValid,
+                    code: 'invalid_parameter'
+                });
+            }
+            
             let command;
             
-            // Handle directional movement
             if (direction && !x && !y && !z) {
-                // Use relative movement - convert direction to coordinates
-                const pos = this.agent.bot.entity.position;
+                const bot = this.getBotSafely();
+                if (!bot) {
+                    return res.status(503).json({ 
+                        error: 'Bot not initialized or disconnected',
+                        code: 'bot_unavailable'
+                    });
+                }
+
+                const validDirections = ['left', 'right', 'forward', 'back', 'north', 'south', 'east', 'west'];
+                if (!validDirections.includes(direction)) {
+                    return res.status(400).json({
+                        error: `Invalid direction: '${direction}'. Valid options: ${validDirections.join(', ')}`,
+                        code: 'invalid_direction'
+                    });
+                }
+
+                const pos = bot.entity.position;
                 const movements = {
                     'left': [-5, 0, 0],
                     'right': [5, 0, 0], 
@@ -164,125 +233,305 @@ export class ExternalAPI {
                     'west': [-5, 0, 0]
                 };
                 
-                const [dx, dy, dz] = movements[direction] || [0, 0, 0];
-                command = `!goToCoordinates(${pos.x + dx}, ${pos.y + dy}, ${pos.z + dz}, ${minDistance})`;
+                const [dx, dy, dz] = movements[direction];
+                const targetX = Math.floor(pos.x + dx);
+                const targetY = Math.floor(pos.y + dy);
+                const targetZ = Math.floor(pos.z + dz);
+                
+                command = `!goToCoordinates(${targetX}, ${targetY}, ${targetZ}, ${minDistance})`;
             }
-            // Handle coordinate movement
             else if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
-                command = `!goToCoordinates(${x}, ${y}, ${z}, ${minDistance})`;
+                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+                if (typeof coordValidation === 'string') {
+                    return res.status(400).json({ 
+                        error: coordValidation,
+                        code: 'invalid_coordinates'
+                    });
+                }
+                
+                command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, ${minDistance})`;
             }
             else {
-                return res.status(400).json({ error: 'Either provide direction OR x,y,z coordinates' });
+                return res.status(400).json({ 
+                    error: 'Either provide direction (left/right/forward/back/north/south/east/west) OR x,y,z coordinates',
+                    code: 'invalid_input'
+                });
             }
 
             const result = await executeCommand(this.agent, command);
             
-            if (result && result.includes('error') || result && result.includes('failed')) {
-                return res.status(422).json({ error: result, code: 'unreachable' });
+            if (!result || typeof result !== 'string' || result.length === 0) {
+                return res.status(503).json({ 
+                    error: 'Movement command failed or returned invalid result',
+                    code: 'command_failed'
+                });
             }
             
-            res.json({ success: true, message: result || `Moving ${direction || `to ${x}, ${y}, ${z}`}` });
+            const lowerResult = result.toLowerCase();
+            if (lowerResult.includes('error') || lowerResult.includes('unreachable') || lowerResult.includes('failed')) {
+                return res.status(422).json({ 
+                    error: result, 
+                    code: 'unreachable'
+                });
+            }
+            
+            const directionText = direction ? `to the ${direction}` : `to ${x}, ${y}, ${z}`;
+            const message = result || `Moving ${directionText}`;
+            
+            res.json({ 
+                success: true, 
+                message: message,
+                direction: direction || null,
+                coordinates: direction ? null : { x, y, z }
+            });
         } catch (error) {
             this.handleError(res, error, 'move');
         }
     }
 
+    
+
+    // ✅ FIXED handleGoToPlayer
     async handleGoToPlayer(req, res) {
         try {
             const { player, distance = 3 } = req.body;
             
-            if (!player) {
-                return res.status(400).json({ error: 'player parameter required' });
+            if (!player || typeof player !== 'string') {
+                return res.status(400).json({ 
+                    error: 'player parameter required and must be a string',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            const distanceValid = this.validateMinDistance(distance);
+            if (distanceValid !== true) {
+                return res.status(400).json({ 
+                    error: `distance parameter invalid: ${distanceValid}`,
+                    code: 'invalid_parameter'
+                });
             }
 
             const command = `!goToPlayer("${player}", ${distance})`;
             const result = await executeCommand(this.agent, command);
             
-            if (result && result.includes('not found')) {
-                return res.status(404).json({ error: result, code: 'player_not_found' });
+            if (!result || typeof result !== 'string') {
+                return res.status(503).json({ 
+                    error: 'Command execution failed',
+                    code: 'command_failed'
+                });
+            }
+
+            if (result.toLowerCase().includes('not found')) {
+                return res.status(404).json({ 
+                    error: result, 
+                    code: 'player_not_found' 
+                });
             }
             
-            res.json({ success: true, message: result || `Going to ${player}` });
+            res.json({ 
+                success: true, 
+                message: result || `Going to ${player}` 
+            });
         } catch (error) {
             this.handleError(res, error, 'goToPlayer');
         }
     }
 
+    // ✅ FIXED handleGoToCoordinates
     async handleGoToCoordinates(req, res) {
         try {
             const { x, y, z, closeness = 1 } = req.body;
             
-            if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
-                return res.status(400).json({ error: 'x, y, z coordinates must be numbers' });
+            const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+            if (typeof coordValidation === 'string') {
+                return res.status(400).json({ 
+                    error: coordValidation,
+                    code: 'invalid_coordinates'
+                });
             }
 
-            const command = `!goToCoordinates(${x}, ${y}, ${z}, ${closeness})`;
+            const closenessValid = this.validateMinDistance(closeness);
+            if (closenessValid !== true) {
+                return res.status(400).json({ 
+                    error: `closeness parameter invalid: ${closenessValid}`,
+                    code: 'invalid_parameter'
+                });
+            }
+
+            const command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, ${closeness})`;
             const result = await executeCommand(this.agent, command);
             
-            if (result && result.includes('error') || result && result.includes('failed')) {
-                return res.status(422).json({ error: result, code: 'unreachable' });
+            if (!result || typeof result !== 'string') {
+                return res.status(503).json({ 
+                    error: 'Command execution failed',
+                    code: 'command_failed'
+                });
+            }
+
+            if (result.toLowerCase().includes('error') || result.toLowerCase().includes('failed')) {
+                return res.status(422).json({ 
+                    error: result, 
+                    code: 'unreachable' 
+                });
             }
             
-            res.json({ success: true, message: result || `Moving to ${x}, ${y}, ${z}` });
+            res.json({ 
+                success: true, 
+                message: result || `Moving to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}` 
+            });
         } catch (error) {
             this.handleError(res, error, 'goToCoordinates');
         }
     }
 
+    // ✅ FIXED handleMoveAway
     async handleMoveAway(req, res) {
         try {
             const { distance = 5 } = req.body;
             
             if (typeof distance !== 'number' || distance <= 0) {
-                return res.status(400).json({ error: 'distance must be a positive number' });
+                return res.status(400).json({ 
+                    error: 'distance must be a positive number',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            if (!Number.isFinite(distance)) {
+                return res.status(400).json({ 
+                    error: 'distance must be a finite number',
+                    code: 'invalid_parameter'
+                });
             }
 
             const command = `!moveAway(${distance})`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || `Moved away ${distance} blocks` });
+            if (!result || typeof result !== 'string') {
+                return res.status(503).json({ 
+                    error: 'Command execution failed',
+                    code: 'command_failed'
+                });
+            }
+
+            res.json({ 
+                success: true, 
+                message: result || `Moved away ${distance} blocks` 
+            });
         } catch (error) {
             this.handleError(res, error, 'moveAway');
         }
     }
 
+    // ✅ FIXED handleSearchForBlock
     async handleSearchForBlock(req, res) {
         try {
             const { blockType, range = 64 } = req.body;
             
-            if (!blockType) {
-                return res.status(400).json({ error: 'blockType parameter required' });
+            if (!blockType || typeof blockType !== 'string') {
+                return res.status(400).json({ 
+                    error: 'blockType parameter required and must be a string',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            if (typeof range !== 'number' || range <= 0) {
+                return res.status(400).json({ 
+                    error: 'range must be a positive number',
+                    code: 'invalid_parameter'
+                });
             }
 
             const command = `!searchForBlock("${blockType}", ${range})`;
             const result = await executeCommand(this.agent, command);
             
-            if (result && result.includes('not found')) {
-                return res.status(404).json({ error: result, code: 'block_not_found' });
+            if (!result || typeof result !== 'string') {
+                return res.status(503).json({ 
+                    error: 'Command execution failed',
+                    code: 'command_failed'
+                });
+            }
+
+            // ✅ CHECK FOR PATHFINDING/NAVIGATION FAILURES
+            const lowerResult = result.toLowerCase();
+            if (lowerResult.includes('not found')) {
+                return res.status(404).json({ 
+                    error: result, 
+                    code: 'block_not_found' 
+                });
+            }
+
+            // ✅ NEW: Check for pathfinding errors
+            if (lowerResult.includes('pathfinding stopped') || 
+                lowerResult.includes('unreachable') || 
+                lowerResult.includes('took too long') ||
+                lowerResult.includes('failed')) {
+                return res.status(422).json({ 
+                    error: result, 
+                    code: 'unreachable'
+                });
             }
             
-            res.json({ success: true, message: result || `Searching for ${blockType}` });
+            res.json({ 
+                success: true, 
+                message: result || `Searching for ${blockType}` 
+            });
         } catch (error) {
             this.handleError(res, error, 'searchForBlock');
         }
     }
 
+    // ✅ FIXED handleSearchForEntity
     async handleSearchForEntity(req, res) {
         try {
             const { entityType, range = 64 } = req.body;
             
-            if (!entityType) {
-                return res.status(400).json({ error: 'entityType parameter required' });
+            if (!entityType || typeof entityType !== 'string') {
+                return res.status(400).json({ 
+                    error: 'entityType parameter required and must be a string',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            if (typeof range !== 'number' || range <= 0) {
+                return res.status(400).json({ 
+                    error: 'range must be a positive number',
+                    code: 'invalid_parameter'
+                });
             }
 
             const command = `!searchForEntity("${entityType}", ${range})`;
             const result = await executeCommand(this.agent, command);
             
-            if (result && result.includes('not found')) {
-                return res.status(404).json({ error: result, code: 'entity_not_found' });
+            if (!result || typeof result !== 'string') {
+                return res.status(503).json({ 
+                    error: 'Command execution failed',
+                    code: 'command_failed'
+                });
+            }
+
+            const lowerResult = result.toLowerCase();
+            if (lowerResult.includes('not found')) {
+                return res.status(404).json({ 
+                    error: result, 
+                    code: 'entity_not_found' 
+                });
+            }
+
+            // ✅ NEW: Check for pathfinding errors
+            if (lowerResult.includes('pathfinding stopped') || 
+                lowerResult.includes('unreachable') || 
+                lowerResult.includes('took too long') ||
+                lowerResult.includes('failed')) {
+                return res.status(422).json({ 
+                    error: result, 
+                    code: 'unreachable'
+                });
             }
             
-            res.json({ success: true, message: result || `Searching for ${entityType}` });
+            res.json({ 
+                success: true, 
+                message: result || `Searching for ${entityType}` 
+            });
         } catch (error) {
             this.handleError(res, error, 'searchForEntity');
         }
@@ -309,6 +558,7 @@ export class ExternalAPI {
         }
     }
 
+    // ✅ FIXED handlePlace
     async handlePlace(req, res) {
         try {
             const { material, x, y, z, face = 'top' } = req.body;
@@ -319,37 +569,47 @@ export class ExternalAPI {
 
             let result;
             
-            // If no coordinates provided, place at current location
             if (x === undefined || y === undefined || z === undefined || 
                 x === null || y === null || z === null ||
                 isNaN(x) || isNaN(y) || isNaN(z)) {
                 const command = `!placeHere("${material}")`;
                 result = await executeCommand(this.agent, command);
             } else {
-                // Validate coordinates are numbers
-                if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
-                    return res.status(400).json({ error: 'x, y, z coordinates must be numbers' });
+                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+                if (typeof coordValidation === 'string') {
+                    return res.status(400).json({ 
+                        error: coordValidation,
+                        code: 'invalid_coordinates'
+                    });
                 }
 
-                // Use placeHere for current location or direct skills call for specific coords
-                const botPos = this.agent.bot.entity.position;
-                const atCurrentLocation = Math.abs(botPos.x - x) < 1 && Math.abs(botPos.y - y) < 1 && Math.abs(botPos.z - z) < 1;
-                
-                if (atCurrentLocation) {
-                    const command = `!placeHere("${material}")`;
-                    result = await executeCommand(this.agent, command);
-                } else {
-                    // Directly call the placeBlock skill function instead of using newAction
-                    const skills = await import('./library/skills.js');
-                    const success = await skills.placeBlock(this.agent.bot, material, x, y, z, face);
-                    if (success) {
-                        result = `Placed ${material} at ${x}, ${y}, ${z}`;
+                const bot = this.getBotSafely();
+                if (bot) {
+                    const botPos = bot.entity.position;
+                    const atCurrentLocation = Math.abs(botPos.x - coordValidation.x) < 1 && 
+                                            Math.abs(botPos.y - coordValidation.y) < 1 && 
+                                            Math.abs(botPos.z - coordValidation.z) < 1;
+                    
+                    if (atCurrentLocation) {
+                        const command = `!placeHere("${material}")`;
+                        result = await executeCommand(this.agent, command);
                     } else {
-                        return res.status(422).json({ 
-                            error: `Failed to place ${material} at ${x}, ${y}, ${z}`, 
-                            code: 'placement_failed' 
-                        });
+                        const skills = await import('./library/skills.js');
+                        const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, face);
+                        if (success) {
+                            result = `Placed ${material} at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
+                        } else {
+                            return res.status(422).json({ 
+                                error: `Failed to place ${material} at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`, 
+                                code: 'placement_failed' 
+                            });
+                        }
                     }
+                } else {
+                    return res.status(503).json({
+                        error: 'Bot not available',
+                        code: 'bot_unavailable'
+                    });
                 }
             }
             
@@ -359,20 +619,55 @@ export class ExternalAPI {
         }
     }
 
+    // ✅ FIXED handleBreak
     async handleBreak(req, res) {
         try {
             const { x, y, z } = req.body;
             
-            if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
-                return res.status(400).json({ error: 'x, y, z coordinates must be numbers' });
+            const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+            if (typeof coordValidation === 'string') {
+                return res.status(400).json({ 
+                    error: coordValidation,
+                    code: 'invalid_coordinates'
+                });
             }
 
-            const command = `!newAction("Break block at ${x}, ${y}, ${z}")`;
+            const command = `!newAction("Break block at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}")`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || `Breaking block at ${x}, ${y}, ${z}` });
+            res.json({ 
+                success: true, 
+                message: result || `Breaking block at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}` 
+            });
         } catch (error) {
             this.handleError(res, error, 'break');
+        }
+    }
+
+    // ✅ FIXED handleUseDoor
+    async handleUseDoor(req, res) {
+        try {
+            const { x, y, z } = req.body;
+            
+            let command;
+            if (x !== undefined && y !== undefined && z !== undefined) {
+                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+                if (typeof coordValidation === 'string') {
+                    return res.status(400).json({ 
+                        error: coordValidation,
+                        code: 'invalid_coordinates'
+                    });
+                }
+                command = `!newAction("Use door at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}")`;
+            } else {
+                command = `!newAction("Use nearest door")`;
+            }
+            
+            const result = await executeCommand(this.agent, command);
+            
+            res.json({ success: true, message: result || 'Using door' });
+        } catch (error) {
+            this.handleError(res, error, 'useDoor');
         }
     }
 
@@ -828,6 +1123,50 @@ export class ExternalAPI {
         }
     }
 
+    async handleGetPlayerPosition(req, res) {
+        try {
+            const { playerName } = req.query;
+            
+            if (!playerName) {
+                return res.status(400).json({ error: 'playerName query parameter required' });
+            }
+
+            const player = this.agent.bot.players[playerName];
+            
+            if (!player || !player.entity) {
+                return res.status(404).json({ 
+                    error: `Player ${playerName} not found or not loaded`,
+                    code: 'player_not_found'
+                });
+            }
+
+            // Get bot's current status for context
+            const bot = this.agent.bot;
+            const statsCommand = getCommand('!stats');
+            const rawStats = await statsCommand.perform(this.agent);
+
+            res.json({
+                success: true,
+                playerName: playerName,
+                position: {
+                    x: player.entity.position.x,
+                    y: player.entity.position.y,
+                    z: player.entity.position.z
+                },
+                health: player.entity.health || 0,
+                hunger: bot.food,
+                gamemode: bot.game.gameMode,
+                current_action: this.agent.actions.currentActionLabel || 'Idle',
+                is_busy: this.agent.actions.executing,
+                time_of_day: bot.time.timeOfDay,
+                weather: bot.rainState > 0 ? 'rain' : 'clear',
+                raw_stats: rawStats
+            });
+        } catch (error) {
+            this.handleError(res, error, 'getPlayerPosition');
+        }
+    }
+
     async handleSetMode(req, res) {
         try {
             const { mode, enabled } = req.body;
@@ -881,24 +1220,6 @@ export class ExternalAPI {
         }
     }
 
-    async handleUseDoor(req, res) {
-        try {
-            const { x, y, z } = req.body;
-            
-            let command;
-            if (x !== undefined && y !== undefined && z !== undefined) {
-                command = `!newAction("Use door at ${x}, ${y}, ${z}")`;
-            } else {
-                command = `!newAction("Use nearest door")`;
-            }
-            
-            const result = await executeCommand(this.agent, command);
-            
-            res.json({ success: true, message: result || 'Using door' });
-        } catch (error) {
-            this.handleError(res, error, 'useDoor');
-        }
-    }
 
     async handleNewAction(req, res) {
         try {
@@ -1363,6 +1684,37 @@ export class ExternalAPI {
             
         } catch (error) {
             this.handleError(res, error, 'teleportWorkers');
+        }
+    }
+
+    /**
+     * Teleport workers to a player's location
+     * POST /api/orchestration/teleport-to-player
+     * Body: { sessionId, playerName }
+     */
+    async handleOrchestrationTeleportToPlayer(req, res) {
+        try {
+            const { sessionId, playerName } = req.body;
+
+            if (!sessionId || !playerName) {
+                return res.status(400).json({
+                    error: 'sessionId and playerName parameters required'
+                });
+            }
+
+            const result = await this.orchestration.teleportWorkersToPlayer(
+                sessionId,
+                playerName,
+                this.agent
+            );
+
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(404).json(result);
+            }
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationTeleportToPlayer');
         }
     }
 

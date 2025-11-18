@@ -1,778 +1,620 @@
-# n8n Orchestration Workflows Guide
+# n8n Workflows Guide - Complete Implementation
 
-## Architecture
+This guide contains detailed specifications for all n8n workflows that orchestrate multi-bot collaborative building in Kodecraft.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Workflow 1: WorkerComplete](#workflow-1-workercomplete)
+3. [Workflow 2: StartCollaborativeBuild](#workflow-2-startcollaborativebuild)
+4. [Workflow 3: SpawnWorkers](#workflow-3-spawnworkers)
+5. [Workflow 4: WaitAndRegister](#workflow-4-waitandregister)
+6. [Workflow 5: CoordinateBuild](#workflow-5-coordinatebuild)
+7. [Workflow 6: DistributeTasks](#workflow-6-distributetasks)
+8. [Workflow 7: MonitorProgress (Optional)](#workflow-7-monitorprogress-optional)
+9. [Testing](#testing)
+
+---
+
+## Overview
+
+The orchestration workflows coordinate multi-bot building through the following sequence:
 
 ```
-n8n Workflows (Orchestration Logic)
-    ↓ HTTP calls
-Leader Bot's ExternalAPI (port 4001)
-    ├─ /api/orchestration/spawn-worker
-    ├─ /api/orchestration/wait-workers
-    ├─ /api/orchestration/create-session
-    ├─ /api/orchestration/register-workers
-    ├─ /api/orchestration/reserve-location
-    ├─ /api/orchestration/teleport-workers
-    ├─ /api/orchestration/send-task
-    ├─ /api/orchestration/status
-    └─ /api/orchestration/stop-all
-    ↓
-Individual Worker Processes (ports 4002, 4003, 4004, ...)
-    ↓
-Workers call back to n8n webhooks when done
+StartCollaborativeBuild (webhook trigger)
+  ↓
+SpawnWorkers (create 3+ bot processes)
+  ↓
+WaitAndRegister (wait for workers to be ready)
+  ↓
+CoordinateBuild (position workers at build location)
+  ↓
+DistributeTasks (send specific tasks to each worker)
+  ↓
+Workers execute in parallel
+  ↓
+WorkerComplete (webhook receives completion callbacks)
 ```
 
 ---
 
-## Workflow 1: StartCollaborativeBuild (Main Entry Point)
+## Workflow 1: WorkerComplete
 
-**Trigger**: Webhook or Manual  
-**Purpose**: Initiate a collaborative build process
+**Purpose**: Receive task completion callbacks from workers
 
-### Workflow Nodes:
+**Trigger**: Webhook POST `/webhook/worker-complete`
 
+### Nodes
+
+**1. Webhook Trigger**
 ```
-┌─────────────────────────────────────┐
-│ Webhook Trigger                     │
-│ POST /webhook/start-build           │
-└────────────┬────────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────────┐
-│ Set Variables                       │
-│ - sessionId (unique)                │
-│ - buildRequest (from input)         │
-│ - workerCount (from input)          │
-│ - callbackUrl (n8n webhook)         │
-│ - leaderBotUrl                      │
-└────────────┬────────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────────┐
-│ Execute Workflow (Async)            │
-│ -> "SpawnWorkers"                   │
-│ - Pass: sessionId, workerCount,     │
-│         callbackUrl, leaderBotUrl   │
-└────────────┬────────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────────┐
-│ Save to Database                    │
-│ - Store session status as "pending" │
-│ - Save buildRequest, workerCount    │
-└────────────┬────────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────────┐
-│ HTTP Response (202 Accepted)        │
-│ - Return sessionId                  │
-│ - Return status: "build_started"    │
-└─────────────────────────────────────┘
+Method: POST
+Path: /webhook/worker-complete
+Authentication: None (or add if needed)
 ```
 
-#### Webhook Trigger Configuration:
+**2. Process Data (Optional Function Node)**
+```javascript
+// Extract completion data
+return {
+    sessionId: $json.body.sessionId,
+    workerName: $json.body.workerName,
+    status: $json.body.status,
+    result: $json.body.result,
+    completionTime: $json.body.completionTime,
+    taskCompleted: $json.body.result?.taskCompleted,
+    blocksPlaced: $json.body.result?.blocksPlaced,
+    timeSpent: $json.body.result?.timeSpent
+}
 ```
-Authentication: None
-HTTP Method: POST
+
+**3. Save to Database (Optional)**
+- Create entry in database table: `worker_completions`
+- Fields: sessionId, workerName, status, result, completionTime, timestamp
+
+**4. Send Response**
+```json
+{
+    "success": true,
+    "message": "Completion received",
+    "workerName": "{{ $json.workerName }}"
+}
+```
+
+### Expected Input
+
+```json
+{
+    "sessionId": "build_1763061958673",
+    "workerName": "Worker1",
+    "status": "completed",
+    "result": {
+        "taskCompleted": "Build first floor",
+        "blocksPlaced": 150,
+        "timeSpent": 252000
+    },
+    "completionTime": "2024-11-14T19:45:30.000Z"
+}
+```
+
+---
+
+## Workflow 2: StartCollaborativeBuild
+
+**Purpose**: Entry point for a build request - initiates entire orchestration
+
+**Trigger**: Webhook POST `/webhook/start-build`
+
+### Input Example
+
+```json
+{
+    "buildRequest": "Build a test wooden house",
+    "workerCount": 3,
+    "taskDivision": {
+        "Worker1": "Build the foundation and first floor",
+        "Worker2": "Build the second floor and roof",
+        "Worker3": "Add decorations and landscaping"
+    }
+}
+```
+
+### Nodes
+
+**1. Webhook Trigger**
+```
+Method: POST
 Path: /webhook/start-build
 ```
 
-#### Input JSON Example:
-```json
-{
-  "buildRequest": "Build a wooden house with a door and windows",
-  "workerCount": 3
+**2. Set Variables**
+```javascript
+return {
+    sessionId: "build_" + new Date().getTime(),
+    buildRequest: $json.body.buildRequest,
+    workerCount: $json.body.workerCount,
+    taskDivision: $json.body.taskDivision,
+    leaderBotUrl: "http://localhost:4001",
+    callbackUrl: "https://your-n8n-instance.com/webhook/kodecraft/worker-complete"
 }
 ```
 
-#### Set Variables Node:
-```javascript
-return {
-  sessionId: $env.SESSION_ID_PREFIX + "_" + new Date().getTime(),
-  buildRequest: $json.buildRequest,
-  workerCount: $json.workerCount || 3,
-  callbackUrl: $env.N8N_WEBHOOK_WORKER_COMPLETE,
-  leaderBotUrl: "http://localhost:4001",
-  leaderBotName: "Leader",
-  buildDate: new Date().toISOString()
+**3. Save to Database (Optional)**
+- Create session record with status: "pending"
+
+**4. Execute Workflow (Async)**
+```
+Workflow: SpawnWorkers
+Execute asynchronously: YES
+Pass variables:
+{
+    "sessionId": $json.sessionId,
+    "buildRequest": $json.buildRequest,
+    "workerCount": $json.workerCount,
+    "taskDivision": $json.taskDivision,
+    "leaderBotUrl": $json.leaderBotUrl,
+    "callbackUrl": $json.callbackUrl
+}
+```
+
+**5. Respond to Webhook**
+```json
+{
+    "sessionId": "{{ $json.sessionId }}",
+    "status": "build_started",
+    "message": "Build orchestration started",
+    "workerCount": {{ $json.workerCount }}
 }
 ```
 
 ---
 
-## Workflow 2: SpawnWorkers (Background Async)
+## Workflow 3: SpawnWorkers
 
-**Trigger**: Execute Workflow trigger  
-**Purpose**: Spawn multiple worker processes in parallel
+**Purpose**: Spawn multiple worker bot processes on different ports
 
-### Workflow Nodes:
+**Trigger**: Called from StartCollaborativeBuild
 
-```
-┌─────────────────────────────────────────────────┐
-│ Workflow Input (from StartCollaborativeBuild)   │
-│ - sessionId, workerCount, callbackUrl, etc.     │
-└────────────┬────────────────────────────────────┘
-             │
-             ↓
-┌─────────────────────────────────────────────────┐
-│ Loop (0 to workerCount - 1)                     │
-│ For each worker i:                              │
-└────────────┬────────────────────────────────────┘
-             │
-    ┌────────┴────────┐
-    │                 │
-    ↓                 ↓
-┌──────────────┐  ┌──────────────┐
-│ Set Variable │  │ Set Variable │
-│ workerName = │  │ workerPort = │
-│ Worker_i    │  │ 4002 + i     │
-└──────┬───────┘  └──────┬───────┘
-       │                 │
-       └────────┬────────┘
-                ↓
-        ┌─────────────────────┐
-        │ HTTP Request (Async)│
-        │ POST               │
-        │ /api/orchestration/│
-        │ spawn-worker       │
-        │                     │
-        │ Body: {             │
-        │  name: workerName,  │
-        │  port: workerPort,  │
-        │  sessionId,         │
-        │  callbackWebhookUrl │
-        │ }                   │
-        └────────┬────────────┘
-                 │
-                 ↓
-        ┌─────────────────────┐
-        │ Append to Array     │
-        │ spawnedWorkers[]    │
-        └────────┬────────────┘
-                 │
-         (loop continues)
+### Input
+
+```json
+{
+    "sessionId": "build_1763061958673",
+    "buildRequest": "Build a test wooden house",
+    "workerCount": 3,
+    "taskDivision": { ... },
+    "leaderBotUrl": "http://localhost:4001",
+    "callbackUrl": "https://your-n8n.com/webhook/kodecraft/worker-complete"
+}
 ```
 
-#### Loop Configuration:
-```
-From: 0
-To: $json.workerCount - 1
+### Nodes
+
+**1. Set Variables (Initialize)**
+```javascript
+return {
+    spawnedWorkers: [],
+    basePort: 4002
+}
 ```
 
-#### HTTP Request: Spawn Worker
+**2. Loop** 
+- From: 0
+- To: `$json.workerCount - 1`
+
+**Inside Loop:**
+
+**2a. Set Variable (Worker Info)**
+```javascript
+return {
+    workerIndex: $node['Loop'].json.index,
+    workerName: "Worker_" + ($node['Loop'].json.index + 1),
+    workerPort: 4002 + $node['Loop'].json.index
+}
+```
+
+**2b. HTTP POST: Spawn Worker**
 ```
 Method: POST
 URL: {{ $json.leaderBotUrl }}/api/orchestration/spawn-worker
-Headers:
-  Content-Type: application/json
+Headers: Content-Type: application/json
 
-Body (JSON):
+Body:
 {
-  "name": "{{ $json.workerName }}",
-  "port": {{ $json.workerPort }},
-  "sessionId": "{{ $json.sessionId }}",
-  "callbackWebhookUrl": "{{ $json.callbackUrl }}"
-}
-
-Response: Expect 202 Accepted
-```
-
-#### Set Variables (in loop):
-```javascript
-// After spawn request
-return {
-  workerName: "Worker_" + $node['Loop'].json.index,
-  workerPort: 4002 + $node['Loop'].json.index
+    "name": "{{ $json.workerName }}",
+    "port": {{ $json.workerPort }},
+    "sessionId": "{{ $json.sessionId }}",
+    "callbackWebhookUrl": "{{ $json.callbackUrl }}"
 }
 ```
 
-#### Append to Array (in loop):
+**2c. Append to Array**
 ```
-Array: spawnedWorkers (initialize as [])
+Array field: spawnedWorkers
 Item:
 {
-  "name": $json.workerName,
-  "port": $json.workerPort,
-  "status": "spawning"
+    "name": "{{ $json.workerName }}",
+    "port": {{ $json.workerPort }},
+    "status": "spawning"
+}
+```
+
+**3. Wait Node**
+- Duration: 2000ms (2 seconds for workers to initialize)
+
+**4. Execute Workflow (Async): WaitAndRegister**
+```
+Pass variables:
+{
+    "sessionId": $json.sessionId,
+    "spawnedWorkers": $json.spawnedWorkers,
+    "buildRequest": $json.buildRequest,
+    "leaderBotUrl": $json.leaderBotUrl,
+    "callbackUrl": $json.callbackUrl,
+    "workerCount": $json.workerCount,
+    "taskDivision": $json.taskDivision
 }
 ```
 
 ---
 
-## Workflow 3: WaitAndRegister (Wait for Workers Ready)
+## Workflow 4: WaitAndRegister
 
-**Trigger**: Execute Workflow (from SpawnWorkers when complete)  
-**Purpose**: Wait for all workers to be ready, then register them
+**Purpose**: Wait for workers to be ready and register them for the session
 
-### Workflow Nodes:
+**Trigger**: Called from SpawnWorkers
 
+### Nodes
+
+**1. HTTP POST: Create Session**
 ```
-┌──────────────────────────────────┐
-│ Input: spawnedWorkers[], etc.    │
-└────────────┬─────────────────────┘
-             │
-             ↓
-┌──────────────────────────────────┐
-│ HTTP Request                     │
-│ POST /api/orchestration/         │
-│     wait-workers                 │
-│                                   │
-│ Body: {                          │
-│  workers: spawnedWorkers,        │
-│  timeoutMs: 30000                │
-│ }                                │
-└────────────┬─────────────────────┘
-             │
-             ↓
-┌──────────────────────────────────┐
-│ IF: All workers ready?           │
-│    $json.allReady === true        │
-└────────────┬─────────────────────┘
-             │
-    ┌────────┴────────┐
-    │ YES             │ NO
-    ↓                 ↓
-┌─────────┐      ┌─────────┐
-│ Continue│      │ Log Warn│
-│         │      │ Continue│
-└────┬────┘      └────┬────┘
-     │                │
-     └────────┬───────┘
-              ↓
-┌──────────────────────────────────┐
-│ HTTP Request                     │
-│ POST /api/orchestration/         │
-│     register-workers             │
-│                                   │
-│ Body: {                          │
-│  sessionId,                      │
-│  workers: spawnedWorkers         │
-│ }                                │
-└────────────┬─────────────────────┘
-             │
-             ↓
-┌──────────────────────────────────┐
-│ Execute Workflow (Async)         │
-│ -> "CoordinateBuild"             │
-│ Pass: sessionId, workers, etc.   │
-└──────────────────────────────────┘
+Method: POST
+URL: {{ $json.leaderBotUrl }}/api/orchestration/create-session
+
+Body:
+{
+    "sessionId": "{{ $json.sessionId }}",
+    "buildRequest": "{{ $json.buildRequest }}",
+    "workerCount": {{ $json.workerCount }}
+}
 ```
 
-#### HTTP Request: Wait Workers
+**2. HTTP POST: Wait for Workers Ready**
 ```
 Method: POST
 URL: {{ $json.leaderBotUrl }}/api/orchestration/wait-workers
-Headers:
-  Content-Type: application/json
 
 Body:
 {
-  "workers": {{ JSON.stringify($json.spawnedWorkers) }},
-  "timeoutMs": 30000
+    "workers": {{ JSON.stringify($json.spawnedWorkers) }},
+    "timeoutMs": 30000
 }
 ```
 
-#### HTTP Request: Register Workers
+**3. IF Node: Check All Ready**
+```
+Condition: $json.allReady === true
+
+YES branch: Continue
+NO branch: Log warning but continue
+```
+
+**4. HTTP POST: Register Workers**
 ```
 Method: POST
 URL: {{ $json.leaderBotUrl }}/api/orchestration/register-workers
-Headers:
-  Content-Type: application/json
 
 Body:
 {
-  "sessionId": "{{ $json.sessionId }}",
-  "workers": {{ JSON.stringify($json.spawnedWorkers) }}
+    "sessionId": "{{ $json.sessionId }}",
+    "workers": {{ JSON.stringify($json.spawnedWorkers) }}
 }
+```
+
+**5. Function Node: Prepare Data**
+```javascript
+return {
+    sessionId: $json.sessionId,
+    spawnedWorkers: $json.spawnedWorkers,
+    buildRequest: $json.buildRequest,
+    leaderBotUrl: $json.leaderBotUrl,
+    callbackUrl: $json.callbackUrl,
+    workerCount: $json.workerCount,
+    taskDivision: $json.taskDivision
+}
+```
+
+**6. Execute Workflow (Async): CoordinateBuild**
+```
+Pass all variables
 ```
 
 ---
 
-## Workflow 4: CoordinateBuild (Position Workers)
+## Workflow 5: CoordinateBuild
 
-**Trigger**: Execute Workflow (from WaitAndRegister)  
-**Purpose**: Create session, reserve location, and position workers
+**Purpose**: Position workers at the build location and prepare for tasks
 
-### Workflow Nodes:
+**Trigger**: Called from WaitAndRegister
 
+### Nodes
+
+**1. HTTP POST: Get Leader Position**
 ```
-┌────────────────────────────────────┐
-│ Input: sessionId, buildRequest     │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ HTTP Request                       │
-│ POST /api/orchestration/           │
-│     create-session                 │
-│                                     │
-│ Body: {                            │
-│  sessionId,                        │
-│  buildRequest,                     │
-│  workerCount                       │
-│ }                                  │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ Get Leader Position                │
-│ HTTP GET /api/agent/status         │
-│ Extract position from response     │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ HTTP Request                       │
-│ POST /api/orchestration/           │
-│     reserve-location               │
-│                                     │
-│ Body: {                            │
-│  sessionId,                        │
-│  preferredLocation: {              │
-│    x, y, z (from leader position)  │
-│  },                                │
-│  minDistance: 30                   │
-│ }                                  │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ HTTP Request                       │
-│ POST /api/orchestration/           │
-│     teleport-workers               │
-│                                     │
-│ Body: {                            │
-│  sessionId,                        │
-│  buildLocation: (from response)    │
-│ }                                  │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ Wait 3 seconds                     │
-│ (workers need time to teleport)    │
-└────────────┬───────────────────────┘
-             │
-             ↓
-┌────────────────────────────────────┐
-│ Execute Workflow (Async)           │
-│ -> "DistributeTasks"               │
-│ Pass: sessionId, workers           │
-└────────────────────────────────────┘
+Method: GET
+URL: {{ $json.leaderBotUrl }}/api/agent/status
 ```
 
-#### Get Leader Position (HTTP GET):
-```
-URL: http://localhost:4001/api/agent/status
-
-Response will include position object
-```
-
-#### Set Variables (Extract Position):
+**2. Function Node: Extract Position**
 ```javascript
-// After GET /api/agent/status
 const status = $json;
 return {
-  leaderPosition: {
-    x: Math.floor(status.position.x),
-    y: Math.floor(status.position.y),
-    z: Math.floor(status.position.z)
-  }
+    leaderPosition: {
+        x: Math.floor(status.position?.x || 0),
+        y: Math.floor(status.position?.y || 64),
+        z: Math.floor(status.position?.z || 0)
+    }
 }
+```
+
+**3. HTTP POST: Reserve Location**
+```
+Method: POST
+URL: {{ $json.leaderBotUrl }}/api/orchestration/reserve-location
+
+Body:
+{
+    "sessionId": "{{ $json.sessionId }}",
+    "preferredLocation": {
+        "x": {{ $json.leaderPosition.x }},
+        "y": {{ $json.leaderPosition.y }},
+        "z": {{ $json.leaderPosition.z }}
+    },
+    "minDistance": 30
+}
+```
+
+**4. HTTP POST: Teleport Workers**
+```
+Method: POST
+URL: {{ $json.leaderBotUrl }}/api/orchestration/teleport-workers
+
+Body:
+{
+    "sessionId": "{{ $json.sessionId }}",
+    "buildLocation": {
+        "x": {{ $json.body.buildLocation.x }},
+        "y": {{ $json.body.buildLocation.y }},
+        "z": {{ $json.body.buildLocation.z }}
+    }
+}
+```
+
+**5. Wait Node**
+- Duration: 3000ms (3 seconds for teleportation)
+
+**6. Execute Workflow (Async): DistributeTasks**
+```
+Pass all variables
 ```
 
 ---
 
-## Workflow 5: DistributeTasks (Assign Work)
+## Workflow 6: DistributeTasks
 
-**Trigger**: Execute Workflow (from CoordinateBuild)  
-**Purpose**: Break down build request into tasks and assign to workers
+**Purpose**: Convert task divisions into individual tasks and send to each worker
 
-### Workflow Nodes:
+**Trigger**: Called from CoordinateBuild
 
-```
-┌───────────────────────────────┐
-│ Input: buildRequest, workers  │
-└────────────┬──────────────────┘
-             │
-             ↓
-┌───────────────────────────────┐
-│ Code Node: Break Down Tasks   │
-│ Split buildRequest into tasks │
-│ Create taskList based on      │
-│ worker count                  │
-└────────────┬──────────────────┘
-             │
-             ↓
-┌───────────────────────────────┐
-│ Loop: For each task           │
-│ Assign to worker (round-robin)│
-└────────────┬──────────────────┘
-             │
-    ┌────────┴────────┐
-    │                 │
-    ↓                 ↓
-┌──────────────┐  ┌──────────────┐
-│ Calc Worker  │  │ Build Task   │
-│ index =      │  │ Prompt with  │
-│ i % count    │  │ coordination │
-└──────┬───────┘  └──────┬───────┘
-       │                 │
-       └────────┬────────┘
-                ↓
-        ┌─────────────────────┐
-        │ HTTP Request (Async)│
-        │ POST               │
-        │ /api/orchestration/│
-        │ send-task          │
-        │                     │
-        │ Body: {             │
-        │  workerPort,        │
-        │  taskPrompt         │
-        │ }                   │
-        └────────┬────────────┘
-                 │
-                 ↓
-        ┌─────────────────────┐
-        │ Append to           │
-        │ assignedTasks[]     │
-        └────────┬────────────┘
-                 │
-         (loop continues)
-```
+### Nodes
 
-#### Code Node: Break Down Tasks
+**1. Function Node: Convert TaskDivision to Array**
 ```javascript
+const taskDivision = $json.body?.taskDivision || $json.taskDivision;
+
+return Object.entries(taskDivision).map(([key, value]) => ({
+    key: key,
+    value: value
+}));
+```
+
+**2. Function Node: Add Coordination to Tasks**
+```javascript
+const taskDivision = $json.taskDivision;
 const buildRequest = $json.buildRequest;
-const workerCount = $json.workers.length;
 
-// Simple task breakdown - can be enhanced with AI
-const baseTasks = [
-  "Prepare the building site and gather initial materials",
-  "Build the foundation and main structure",
-  "Complete walls and roof",
-  "Add doors, windows, and interior details"
-];
+const coordinatedTasks = {};
 
-// Repeat tasks if fewer than workers
-const tasks = [];
-for (let i = 0; i < workerCount; i++) {
-  tasks.push({
-    id: i,
-    task: baseTasks[i % baseTasks.length],
-    description: `${buildRequest} - Part ${i + 1}/${workerCount}`
-  });
-}
+Object.entries(taskDivision).forEach(([workerName, task]) => {
+    coordinatedTasks[workerName] = `Help build: ${buildRequest}
 
-return { tasks };
+Your specific contribution: ${task}
+
+Work together with nearby workers to create a cohesive structure. Position yourself strategically to connect your work with others.`;
+});
+
+return coordinatedTasks;
 ```
 
-#### Loop Configuration:
-```
-From: 0
-To: tasks.length - 1
-```
-
-#### Calculate Worker Index (Set Variable in loop):
+**3. Function Node: Build Worker Task List**
 ```javascript
-return {
-  workerIndex: $node['Loop'].json.index % $json.workers.length,
-  assignedWorker: $json.workers[$node['Loop'].json.index % $json.workers.length]
-}
+const coordinatedTaskDivision = $json.coordinatedTasks;
+const workers = $json.spawnedWorkers;
+
+const workerTaskList = workers.map((worker) => {
+    return {
+        workerName: worker.name,
+        port: worker.port,
+        task: coordinatedTaskDivision[worker.name],
+        status: worker.status
+    };
+});
+
+return workerTaskList;
 ```
 
-#### Build Task Prompt (Set Variable in loop):
-```javascript
-const task = $json.tasks[$node['Loop'].json.index];
-const worker = $json.assignedWorker;
+**4. Loop through workerTaskList**
+- Loop through array
 
-return {
-  taskPrompt: `${task.description}
+**Inside Loop:**
 
-You are worker ${$node['Loop'].json.index + 1} of ${$json.workers.length}.
-Work on: ${task.task}
-Coordinate with other workers at your location.
-Report back when done.`
-}
-```
-
-#### HTTP Request: Send Task
+**4a. HTTP POST: Send Task**
 ```
 Method: POST
 URL: {{ $json.leaderBotUrl }}/api/orchestration/send-task
-Headers:
-  Content-Type: application/json
 
 Body:
 {
-  "workerPort": {{ $json.assignedWorker.port }},
-  "taskPrompt": "{{ $json.taskPrompt }}"
+    "workerPort": {{ $json.port }},
+    "taskPrompt": "{{ $json.task }}"
 }
 ```
 
----
-
-## Workflow 6: WorkerComplete (Webhook for Build Completion)
-
-**Trigger**: Webhook  
-**Purpose**: Receive and process worker completion callbacks
-
-### Webhook Configuration:
+**4b. Append Results (Optional)**
 ```
-Authentication: None
-HTTP Method: POST
-Path: /webhook/worker-complete
-```
-
-### Workflow Nodes:
-
-```
-┌────────────────────────────────┐
-│ Webhook Trigger                │
-│ POST /webhook/worker-complete  │
-└────────────┬───────────────────┘
-             │
-             ↓
-┌────────────────────────────────┐
-│ Update Database                │
-│ - Find session by sessionId    │
-│ - Mark worker as completed     │
-│ - Increment completedWorkers   │
-└────────────┬───────────────────┘
-             │
-             ↓
-┌────────────────────────────────┐
-│ IF: All workers done?          │
-│    completedWorkers ===        │
-│    totalWorkers                │
-└────────────┬───────────────────┘
-             │
-    ┌────────┴────────┐
-    │ YES             │ NO
-    ↓                 ↓
-┌─────────┐      ┌─────────┐
-│ POST to │      │ Save    │
-│ n8n     │      │ progress│
-│ callback│      │         │
-│ URL     │      └─────────┘
-└────┬────┘
-     │
-     ↓
-┌────────────────────────────────┐
-│ Update Database                │
-│ Session status = "completed"   │
-│ Save results                   │
-└────────────────────────────────┘
-```
-
-#### Webhook Input:
-```json
-{
-  "sessionId": "build_123456",
-  "workerName": "Worker_1",
-  "status": "completed",
-  "result": {
-    "tasksCompleted": 5,
-    "blocksPlaced": 124,
-    "errors": []
-  },
-  "completionTime": "2024-01-15T10:30:00Z"
-}
-```
-
-#### Update Database (SQL/MongoDB):
-```
-UPDATE build_sessions 
-SET 
-  completed_workers = completed_workers + 1,
-  updated_at = NOW()
-WHERE session_id = $json.sessionId
-```
-
-#### IF Node Condition:
-```
-$json.completed_workers === $json.total_workers
+Array: taskResults
+Item: {{ $json }}
 ```
 
 ---
 
-## Workflow 7: MonitorProgress (Optional - Polling)
+## Workflow 7: MonitorProgress (Optional)
 
-**Trigger**: Cron (Every 30 seconds)  
-**Purpose**: Monitor ongoing builds and check for timeouts
+**Purpose**: Monitor ongoing builds and detect timeouts
 
-### Nodes:
+**Trigger**: Cron (every 30 seconds)
 
+### Nodes
+
+**1. Cron Trigger**
 ```
-┌──────────────────────┐
-│ Cron Trigger         │
-│ Every 30 seconds     │
-└────────────┬─────────┘
-             │
-             ↓
-┌──────────────────────┐
-│ Query Database       │
-│ Find sessions with   │
-│ status = "pending"   │
-└────────────┬─────────┘
-             │
-             ↓
-┌──────────────────────┐
-│ Loop: For each       │
-│ pending session      │
-└────────────┬─────────┘
-             │
-             ↓
-┌──────────────────────┐
-│ HTTP GET             │
-│ /api/orchestration/  │
-│ status               │
-└────────────┬─────────┘
-             │
-             ↓
-┌──────────────────────┐
-│ Check for timeouts   │
-│ > 30 minutes?        │
-└────────────┬─────────┘
-             │
-    ┌────────┴────────┐
-    │ YES             │ NO
-    ↓                 ↓
-┌─────────┐      ┌─────────┐
-│ Mark    │      │ Continue│
-│ Failed  │      │ monitoring
-│         │      │         │
-└─────────┘      └─────────┘
+Interval: Every 30 seconds
 ```
 
----
+**2. HTTP GET: Get Status**
+```
+URL: {{ $json.leaderBotUrl }}/api/orchestration/status
+```
 
-## Implementation Steps
-
-### Step 1: Add Files to Your Project
-1. Copy `orchestration_api.js` to `src/agent/`
-2. Merge `external_api_additions.js` into your existing `external_api.js`
-
-### Step 2: Update external_api.js
+**3. Function Node: Check Timeouts**
 ```javascript
-// Add import at top
-import { OrchestrationAPI } from './orchestration_api.js';
+const sessions = $json.sessions;
+const now = Date.now();
+const timeout = 1800000; // 30 minutes
 
-// In ExternalAPI constructor, replace:
-//     this.multiBotManager = new MultiBotManager(agent);
-// With:
-//     this.orchestration = new OrchestrationAPI(agent);
+const problematic = sessions.filter(s => {
+    return (now - s.startTime) > timeout && s.status === 'workers_assigned';
+});
 
-// In setupRoutes(), add the orchestration endpoints from external_api_additions.js
-
-// Add the handler methods from external_api_additions.js
+return {
+    checkTime: new Date().toISOString(),
+    totalSessions: sessions.length,
+    timedOut: problematic,
+    timedOutCount: problematic.length
+}
 ```
 
-### Step 3: Create n8n Workflows
-1. Create "StartCollaborativeBuild" workflow
-2. Create "SpawnWorkers" sub-workflow
-3. Create "WaitAndRegister" sub-workflow
-4. Create "CoordinateBuild" sub-workflow
-5. Create "DistributeTasks" sub-workflow
-6. Create "WorkerComplete" webhook workflow
-7. Create "MonitorProgress" cron workflow (optional)
+**4. IF: Any Timeouts?**
+```
+Condition: $json.timedOutCount > 0
 
-### Step 4: Test
+YES: Send alert (optional - email, Slack, etc)
+NO: Continue
+```
+
+---
+
+## Testing
+
+### Test Full Flow
+
 ```bash
-# Start your leader bot
-node src/process/init_leader.js
-
-# Test worker spawn via n8n webhook
-curl -X POST http://localhost:3000/webhook/start-build \
+# 1. Trigger the build
+curl -X POST http://localhost:5678/webhook/start-build \
   -H "Content-Type: application/json" \
   -d '{
-    "buildRequest": "Build a small house",
-    "workerCount": 3
-  }'
-```
-
----
-
-## Callback Webhook Format
-
-When workers complete tasks, they should call:
-
-```
-POST {{ n8nWebhookUrl }}/webhook/worker-complete
-
-{
-  "sessionId": "build_123456_abc",
-  "workerName": "Worker_1",
-  "workerPort": 4003,
-  "status": "completed",
-  "result": {
-    "taskCompleted": "Build foundation",
-    "blocksPlaced": 156,
-    "itemsUsed": ["wood_planks", "oak_log"],
-    "timeSpent": 1234
-  },
-  "completionTime": "2024-01-15T10:30:00Z"
-}
-```
-
----
-
-## Status Monitoring
-
-Check build progress with:
-
-```
-GET http://localhost:4001/api/orchestration/status
-
-Response:
-{
-  "totalWorkers": 3,
-  "readyWorkers": 3,
-  "activeSessions": 1,
-  "workers": [
-    {
-      "name": "Worker_1",
-      "port": 4003,
-      "status": "working",
-      "uptime": 45000
-    },
-    ...
-  ],
-  "sessions": [
-    {
-      "sessionId": "build_123456",
-      "buildRequest": "Build a house",
-      "status": "executing",
-      "workersAssigned": 3,
-      "buildLocation": { "x": 0, "y": 64, "z": 0 },
-      "runtime": 23000
+    "buildRequest": "Build a test wooden house",
+    "workerCount": 3,
+    "taskDivision": {
+      "Worker1": "Build the foundation and first floor",
+      "Worker2": "Build the second floor and roof",
+      "Worker3": "Add decorations and landscaping"
     }
-  ]
+  }'
+
+# 2. Check orchestration status
+curl http://localhost:4001/api/orchestration/status
+
+# 3. Watch logs
+tail -f main.log
+```
+
+### Expected Output
+
+**Build Success Sequence:**
+1. Workers spawn → "✓ Worker X process spawned"
+2. Workers ready → "✓ All 3 workers are ready!"
+3. Build location reserved → "✓ Location reserved"
+4. Workers teleported → "✓ undefined teleported to X, Y, Z"
+5. Tasks sent → "✓ Task sent successfully to port XXXX"
+6. Workers execute → "Executing code..."
+7. Tasks complete → "Code finished"
+8. Callbacks received → "✓ Task completion reported successfully"
+9. WorkerComplete webhook called → "Response status: 200"
+
+---
+
+## Variables Flow
+
+All variables passed through workflows:
+
+```javascript
+{
+    // Session Info
+    sessionId: "build_1763061958673",
+    buildRequest: "Build a test wooden house",
+    
+    // Configuration
+    leaderBotUrl: "http://localhost:4001",
+    callbackUrl: "https://your-n8n.com/webhook/kodecraft/worker-complete",
+    
+    // Worker Data
+    workerCount: 3,
+    spawnedWorkers: [
+        { name: "Worker_1", port: 4002 },
+        { name: "Worker_2", port: 4003 },
+        { name: "Worker_3", port: 4004 }
+    ],
+    
+    // Tasks
+    taskDivision: {
+        "Worker1": "Build foundation...",
+        "Worker2": "Build second floor...",
+        "Worker3": "Add decorations..."
+    }
 }
 ```
 
 ---
 
-## Cleanup
+## Troubleshooting
 
-After builds complete, call:
+| Issue | Solution |
+|-------|----------|
+| Workers not spawning | Check `ps aux \| grep node`, verify ports 4002-4004 available |
+| Tasks not executing | Check worker health: `curl http://localhost:4002/api/health` |
+| Callbacks not received | Verify callback URL is correct, check firewall |
+| Workers timeout | Increase timeout in WaitAndRegister (default: 30s) |
+| Session not created | Ensure sessionId is passed through all workflows |
 
-```
-POST http://localhost:4001/api/orchestration/stop-all
+---
 
-Response:
-{
-  "success": true,
-  "message": "All workers stopped"
-}
-```
+## Key Files
 
-Or stop individual workers:
-
-```
-POST http://localhost:4001/api/orchestration/stop-worker
-
-Body:
-{
-  "workerName": "Worker_1"
-}
-```
+- n8n workflows: Automatically saved in n8n instance
+- Leader bot: `src/process/init_leader.js`
+- Worker bot: `src/process/init_worker.js`
+- Orchestration API: `src/agent/orchestration_api.js`
+- External API: `src/agent/external_api.js`

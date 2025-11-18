@@ -410,6 +410,78 @@ export class OrchestrationAPI {
         }
     }
 
+   /**
+     * Teleport all workers to coordinated positions around build site
+     * Called by n8n to position workers
+     */
+    async teleportWorkers(sessionId, buildLocation) {
+        console.log(`ðŸš€ Teleporting workers to build location`);
+
+        const session = this.buildSessions.get(sessionId);
+        if (!session) {
+            return {
+                success: false,
+                error: `Build session ${sessionId} not found`
+            };
+        }
+
+        const workers = session.workers;
+        const results = [];
+
+        // Teleport each worker to a position around the build site
+        for (let i = 0; i < workers.length; i++) {
+            const worker = workers[i];
+            try {
+                // Calculate formation position (tight circle)
+                const angle = (i / workers.length) * 2 * Math.PI;
+                const radius = Math.min(3, workers.length);
+
+                const targetPos = {
+                    x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
+                    y: buildLocation.y,
+                    z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
+                };
+
+                const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(targetPos),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    results.push({
+                        workerName: worker.name,
+                        status: 'teleported',
+                        position: targetPos
+                    });
+                    console.log(`âœ“ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                } else {
+                    results.push({
+                        workerName: worker.name,
+                        status: 'failed',
+                        error: `HTTP ${response.status}`
+                    });
+                }
+            } catch (error) {
+                results.push({
+                    workerName: worker.name,
+                    status: 'error',
+                    error: error.message
+                });
+            }
+        }
+
+        return {
+            success: true,
+            sessionId: sessionId,
+            teleportResults: results,
+            buildLocation: buildLocation
+        };
+    }
+
+
+
     /**
      * Get current status of all workers and sessions
      * Called by n8n to monitor progress

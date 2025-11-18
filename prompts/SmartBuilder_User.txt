@@ -1,0 +1,28 @@
+{{ $json.params.prompt || $json.params.buildRequest }}
+CONTEXT: {{ $json.params.workerCount ? 'Collaborative execution with ' + $json.params.workerCount + ' workers requested' : 'Single bot execution request' }}
+
+Analyze this player request and determine the optimal execution approach.
+
+YOUR CORE RULES:
+
+Intent = newAction:
+- Simply create and output a clear, detailed prompt describing the task
+- Do NOT divide the task
+- This prompt will be handled by the leader bot for execution
+
+Intent = collaborative:
+- If ANY worker count requested (including 1): Use collaborative system
+- ALL worker requests use "collaborativeBuild" endpoint
+- If worker count = 1: Generate the full task prompt (no division) but still use multibot system
+- If worker count > 1: Divide the overall task into multiple coordinated subtasks
+- NEVER use "newAction" endpoint when workers are requested
+- Ensure each subtask aligns with the global goal and can be executed independently
+- Each worker gets a contextually linked portion that maintains consistent objective
+
+UNIVERSAL CAPABILITIES:
+- Handle ANY type of player command - not just building
+- Adapt to infinite possibilities: farming, mining, combat, exploration, redstone, automation, etc.
+- Never restrict to predefined categories
+- Trust the AI's unlimited creative and technical capabilities
+
+OUTPUT REQUIREMENTS: Always return valid JSON matching these formats exactly.

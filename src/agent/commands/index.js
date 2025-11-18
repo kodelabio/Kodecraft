@@ -85,7 +85,14 @@ function checkInInterval(number, lowerBound, upperBound, endpointType) {
     }
 }
 
-
+/**
+ * ✅ FIX: Check if parameter is a coordinate
+ * @param {string} paramName
+ * @returns {boolean}
+ */
+function isCoordinateParam(paramName) {
+    return ['x', 'y', 'z', 'x1', 'y1', 'z1', 'x2', 'y2', 'z2'].includes(paramName.toLowerCase());
+}
 
 // todo: handle arrays?
 /**
@@ -127,7 +134,12 @@ export function parseCommandMessage(message) {
             case 'int':
                 arg = Number.parseInt(arg); break;
             case 'float':
-                arg = Number.parseFloat(arg); break;
+                arg = Number.parseFloat(arg);
+                // ✅ FIX: Round coordinate parameters to integers to prevent misalignment
+                if (isCoordinateParam(paramNames[i])) {
+                    arg = Math.floor(arg);
+                }
+                break;
             case 'boolean':
                 arg = parseBoolean(arg); break;
             case 'BlockName':
@@ -206,23 +218,101 @@ function numParams(command) {
     return commandParams(command).length;
 }
 
-export async function executeCommand(agent, message) {
-    let parsed = parseCommandMessage(message);
-    if (typeof parsed === 'string')
-        return parsed; //The command was incorrectly formatted or an invalid input was given.
-    else {
-        console.log('parsed command:', parsed);
+/**
+ * ✅ FIX: Complete rewrite with error handling, timeout, and validation
+ * Executes a command with proper error handling, timeouts, and result validation
+ * @param {Object} agent - The agent instance
+ * @param {string} message - The command message to parse and execute
+ * @param {number} timeoutMs - Timeout in milliseconds (default: 15 minutes = 900000ms)
+ * @returns {Promise<string>} The result of the command execution
+ */
+export async function executeCommand(agent, message, timeoutMs = 900000) {
+    try {
+        // Step 1: Parse the command message
+        let parsed = parseCommandMessage(message);
+        
+        // Step 1a: Check if parsing failed (returns error string)
+        if (typeof parsed === 'string') {
+            console.log(`[Command Parser] Parsing failed: ${parsed}`);
+            return parsed;
+        }
+
+        // Step 2: Get the command object
         const command = getCommand(parsed.commandName);
+        if (!command) {
+            const errorMsg = `Command ${parsed.commandName} not found in command map`;
+            console.error(`[Command Executor] ${errorMsg}`);
+            return errorMsg;
+        }
+
+        // Step 3: Validate argument count
         let numArgs = 0;
         if (parsed.args) {
             numArgs = parsed.args.length;
         }
-        if (numArgs !== numParams(command))
-            return `Command ${command.name} was given ${numArgs} args, but requires ${numParams(command)} args.`;
-        else {
-            const result = await command.perform(agent, ...parsed.args);
-            return result;
+        
+        const expectedArgs = numParams(command);
+        if (numArgs !== expectedArgs) {
+            const errorMsg = `Command ${command.name} was given ${numArgs} args, but requires ${expectedArgs} args.`;
+            console.log(`[Command Executor] ${errorMsg}`);
+            return errorMsg;
         }
+
+        // Step 4: Execute the command with timeout protection
+        console.log(`[Command Executor] Executing ${parsed.commandName} with args:`, parsed.args);
+        
+        let result;
+        try {
+            // Create a timeout promise that rejects after timeoutMs
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error(`Command execution timeout after ${timeoutMs}ms`)),
+                    timeoutMs
+                )
+            );
+
+            // Race between command execution and timeout
+            result = await Promise.race([
+                command.perform(agent, ...parsed.args),
+                timeoutPromise
+            ]);
+        } catch (executionError) {
+            // ✅ FIX #1: Catch execution errors (including timeouts)
+            const errorMsg = `${command.name} execution failed: ${executionError.message}`;
+            console.error(`[Command Executor] ${errorMsg}`);
+            return errorMsg;
+        }
+
+        // Step 5: Validate the result
+        // ✅ FIX #2: Validate result is not null/undefined
+        if (result === null || result === undefined) {
+            const warningMsg = `Command ${command.name} returned null or undefined result`;
+            console.warn(`[Command Executor] ${warningMsg}`);
+            return warningMsg;
+        }
+
+        // ✅ FIX #3: Ensure result is a string (convert if needed)
+        if (typeof result !== 'string') {
+            console.warn(`[Command Executor] Command ${command.name} returned non-string result (${typeof result}), converting to string`);
+            result = String(result);
+        }
+
+        // Step 6: Check if result is empty
+        if (result.length === 0) {
+            const warningMsg = `Command ${command.name} returned empty string`;
+            console.warn(`[Command Executor] ${warningMsg}`);
+            return warningMsg;
+        }
+
+        // Step 7: Log success and return result
+        console.log(`[Command Executor] Command ${parsed.commandName} executed successfully`);
+        return result;
+
+    } catch (unexpectedError) {
+        // ✅ FIX #4: Catch any unexpected errors
+        const errorMsg = `Unexpected error in executeCommand: ${unexpectedError.message}`;
+        console.error(`[Command Executor] ${errorMsg}`);
+        return errorMsg;
     }
 }
 

@@ -7,44 +7,20 @@ services:
       VERSION: "1.21.4"
       MODE: "creative"
       DIFFICULTY: "peaceful"
-      LEVELTYPE: "flat"
+      LEVEL_TYPE: "flat"
       ONLINE_MODE: "FALSE"
       BRAIN_MODE: "internal"
-      GENERATOR_OPTS: "2;0;1"
+      GENERATOR_OPTS: "0;1,3x3,2,1"
       SERVER_PORT: "55916"
     ports:
       - "55916:55916"
     volumes:
-      - minecraft-data:/data
+      - minecraft_data:/data
     healthcheck:
       test: ["CMD", "mc-monitor", "status", "--host", "localhost"]
       interval: 15s
       timeout: 10s
       retries: 10
 
-#  app:
-#    build: .
-#    working_dir: /app
-#    volumes:
-#      - .:/app
-#    command: node main.js
-#    ports:
-#      - "3000-3003:3000-3003"
-#    depends_on:
-#      minecraft-server:
-#        condition: service_healthy
-#    environment:
-#      MINECRAFT_SERVER: "minecraft-server"
-#      MINECRAFT_PORT: "55916"
-
-  viaproxy:
-    image: ghcr.io/viaversion/viaproxy:latest
-    volumes:
-      - ./services/viaproxy:/app/run
-    ports:
-      - "25568:25568"
-    profiles:
-      - viaproxy
-
 volumes:
-  minecraft-data:
+  minecraft_data:

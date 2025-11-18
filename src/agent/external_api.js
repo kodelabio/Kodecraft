@@ -1252,6 +1252,8 @@ export class ExternalAPI {
             setImmediate(async () => {
                 try {
                     const taskStartTime = Date.now();
+                    const conversationId = req.body.conversationId; 
+                    //const startBlockCount = getBlockCount(this.agent.bot); // Track initial
                     
                     const originalBrainMode = settings.brain_mode;
                     const originalHistory = this.agent.history;
@@ -1269,12 +1271,15 @@ export class ExternalAPI {
                         const result = await executeCommand(this.agent, command);
                         
                         const taskDuration = Date.now() - taskStartTime;
+                        //const endBlockCount = getBlockCount(this.agent.bot);
+                        //const blocksPlaced = endBlockCount - startBlockCount;
                         console.log(`[API] Task executed successfully (${taskDuration}ms)`);
                         
                         // Call completion callback
                         if (global.reportTaskCompletion) {
                             console.log(`[API] 📞 Reporting completion...`);
                             await global.reportTaskCompletion({
+                                conversationId: conversationId,  // ← Return it!,
                                 taskCompleted: modifiedPrompt.substring(0, 100),
                                 blocksPlaced: 100,
                                 timeSpent: taskDuration,
@@ -1294,6 +1299,7 @@ export class ExternalAPI {
                     if (global.reportTaskCompletion) {
                         await global.reportTaskCompletion({
                             taskCompleted: modifiedPrompt.substring(0, 100),
+                            conversationId: conversationId,  // ← Return it!
                             status: 'error',
                             error: error.message
                         });
@@ -1931,7 +1937,7 @@ export class ExternalAPI {
      */
     async handleOrchestrationSendTask(req, res) {
         try {
-            const { workerPort, taskPrompt } = req.body;
+            const { workerPort, taskPrompt, conversationId} = req.body;
 
             if (!workerPort || !taskPrompt) {
                 return res.status(400).json({
@@ -1939,7 +1945,7 @@ export class ExternalAPI {
                 });
             }
 
-            const result = await this.orchestration.sendTaskToWorker(workerPort, taskPrompt);
+            const result = await this.orchestration.sendTaskToWorker(workerPort, taskPrompt, conversationId);
 
             if (result.success) {
                 res.json(result);

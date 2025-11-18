@@ -1,0 +1,1 @@
+tail -500 main.log | grep -i "callback\|completion\|webhook"

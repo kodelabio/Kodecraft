@@ -362,7 +362,7 @@ export class OrchestrationAPI {
      * Send a task to a worker via its API
      * Called by n8n to assign work
      */
-    async sendTaskToWorker(workerPort, taskPrompt) {
+    async sendTaskToWorker(workerPort, taskPrompt, conversationId) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
@@ -373,7 +373,7 @@ export class OrchestrationAPI {
             const response = await fetch(`http://localhost:${workerPort}/api/agent/newAction`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: taskPrompt }),
+                body: JSON.stringify({ prompt: taskPrompt, conversationId: conversationId }),
                 timeout: 900000
             });
 

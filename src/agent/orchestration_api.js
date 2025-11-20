@@ -358,57 +358,293 @@ export class OrchestrationAPI {
         };
     }
 
+    // Add this method to the OrchestrationAPI class in orchestration_api.js
+
+        /**
+         * Send a task for a specific stage to a worker
+         * Tracks task metadata and correlates callbacks with original request
+         * 
+         * @param {string} sessionId - Build session ID
+         * @param {number} stageNumber - Stage number (1, 2, 3, etc.)
+         * @param {string} workerName - Worker name (Worker1, Worker2, etc.)
+         * @param {number} port - Worker port
+         * @param {string} taskPrompt - Full task prompt for worker
+         * @param {string} callbackWebhookUrl - Optional callback webhook URL
+         * @returns {object} Task metadata with taskId
+         */
+    async sendTaskStage(sessionId, stageNumber, workerName, port, taskPrompt, callbackWebhookUrl) {
+        console.log(`📤 [Stage Task] Sending stage ${stageNumber} to ${workerName} on port ${port}`);
+        
+        // Generate unique task ID
+        const taskId = `task_${sessionId}_stage${stageNumber}_${workerName}_${Date.now()}`;
+        
+        // Initialize task tracking if needed
+        if (!this.stageTasks) {
+            this.stageTasks = new Map();
+        }
+        
+        try {
+            // Store task metadata for tracking
+            const taskMetadata = {
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                workerName: workerName,
+                port: port,
+                status: 'queued',
+                createdAt: Date.now(),
+                sentAt: null,
+                completedAt: null,
+                callbackWebhookUrl: callbackWebhookUrl || null,
+                taskPrompt: taskPrompt.substring(0, 200), // Store first 200 chars for reference
+                result: null,
+                error: null
+            };
+            
+            this.stageTasks.set(taskId, taskMetadata);
+            
+            console.log(`📋 [Stage Task] Created task ${taskId}`);
+            console.log(`   Stage: ${stageNumber}, Worker: ${workerName}, Port: ${port}`);
+            
+            // Send task to worker
+            const result = await this.sendTaskToWorker(port, taskPrompt, callbackWebhookUrl, taskId);
+            
+            // Update metadata - task was sent
+            taskMetadata.status = 'executing';
+            taskMetadata.sentAt = Date.now();
+            
+            if (!result.success) {
+            taskMetadata.status = 'failed';
+            taskMetadata.error = result.error;
+            console.error(`❌ [Stage Task] Failed to send task ${taskId}: ${result.error}`);
+            return {
+                success: false,
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                worker: workerName,
+                error: result.error
+            };
+            }
+            
+            console.log(`✅ [Stage Task] Task ${taskId} sent successfully`);
+            
+            return {
+            success: true,
+            taskId: taskId,
+            sessionId: sessionId,
+            stageNumber: stageNumber,
+            worker: workerName,
+            port: port,
+            status: 'executing',
+            createdAt: taskMetadata.createdAt
+            };
+            
+        } catch (error) {
+            console.error(`❌ [Stage Task] Error sending task ${taskId}:`, error.message);
+            
+            if (this.stageTasks.has(taskId)) {
+            const metadata = this.stageTasks.get(taskId);
+            metadata.status = 'failed';
+            metadata.error = error.message;
+            }
+            
+            return {
+            success: false,
+            taskId: taskId,
+            sessionId: sessionId,
+            stageNumber: stageNumber,
+            worker: workerName,
+            error: error.message
+            };
+        }
+        }
+
+    /**
+     * Handle stage task completion
+     * Called when worker finishes a stage task and sends callback
+     * 
+     * @param {string} taskId - Task ID from original sendTaskStage
+     * @param {object} result - Result from worker
+     * @returns {object} Update status
+     */
+    async handleTaskStageComplete(taskId, result) {
+        console.log(`✅ [Stage Complete] Task ${taskId} completed`);
+        
+        if (!this.stageTasks || !this.stageTasks.has(taskId)) {
+            console.warn(`⚠️  [Stage Complete] Task ${taskId} not found in tracking`);
+            return {
+            success: false,
+            error: `Task ${taskId} not found`
+            };
+        }
+        
+        const taskMetadata = this.stageTasks.get(taskId);
+        
+        // Update metadata
+        taskMetadata.status = 'completed';
+        taskMetadata.completedAt = Date.now();
+        taskMetadata.result = result;
+        
+        const duration = taskMetadata.completedAt - taskMetadata.sentAt;
+        
+        console.log(`📊 [Stage Complete] Task ${taskId} stats:`);
+        console.log(`   Worker: ${taskMetadata.workerName}`);
+        console.log(`   Stage: ${taskMetadata.stageNumber}`);
+        console.log(`   Duration: ${duration}ms`);
+        console.log(`   Status: ${taskMetadata.status}`);
+        
+        return {
+            success: true,
+            taskId: taskId,
+            sessionId: taskMetadata.sessionId,
+            stageNumber: taskMetadata.stageNumber,
+            worker: taskMetadata.workerName,
+            duration: duration,
+            status: 'completed'
+        };
+    }
+
+    /**
+     * Get task metadata by ID
+     * @param {string} taskId - Task ID
+     * @returns {object} Task metadata or null
+     */
+    getTaskMetadata(taskId) {
+        if (!this.stageTasks) return null;
+        return this.stageTasks.get(taskId) || null;
+    }
+
+    /**
+     * Get all tasks for a session
+     * @param {string} sessionId - Session ID
+     * @returns {array} Array of task metadata
+     */
+    getSessionTasks(sessionId) {
+        if (!this.stageTasks) return [];
+        const tasks = [];
+        this.stageTasks.forEach((metadata) => {
+            if (metadata.sessionId === sessionId) {
+            tasks.push(metadata);
+            }
+        });
+        return tasks;
+    }
+
+    /**
+     * Get all tasks for a stage
+     * @param {string} sessionId - Session ID
+     * @param {number} stageNumber - Stage number
+     * @returns {array} Array of task metadata
+     */
+    getStageTasks(sessionId, stageNumber) {
+        if (!this.stageTasks) return [];
+        const tasks = [];
+        this.stageTasks.forEach((metadata) => {
+            if (metadata.sessionId === sessionId && metadata.stageNumber === stageNumber) {
+            tasks.push(metadata);
+            }
+        });
+        return tasks;
+    }
+
+    /**
+     * Clean up old tasks (older than 1 hour)
+     */
+    cleanupOldTasks() {
+        if (!this.stageTasks) return;
+        
+        const currentTime = Date.now();
+        const maxAge = 3600000; // 1 hour
+        
+        let cleaned = 0;
+        this.stageTasks.forEach((metadata, taskId) => {
+            if (currentTime - metadata.createdAt > maxAge) {
+            this.stageTasks.delete(taskId);
+            cleaned++;
+            }
+        });
+        
+        if (cleaned > 0) {
+            console.log(`🧹 [Cleanup] Removed ${cleaned} old tasks`);
+        }
+    }
+
     /**
      * Send a task to a worker via its API
-     * Called by n8n to assign work
+     * Called by n8n to assign work OR by sendTaskStage for stage-aware tracking
+     * 
+     * @param {number} workerPort - Port of the worker
+     * @param {string} taskPrompt - The task prompt/description
+     * @param {string} taskId - Optional: Task ID for tracking (stage tasks)
      */
-    async sendTaskToWorker(workerPort, taskPrompt, conversationId) {
+    async sendTaskToWorker(workerPort, taskPrompt, callbackWebhookUrl, taskId = null) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
+        if (taskId) {
+            console.log(`   Task ID: ${taskId}`);
+        }
 
         try {
             console.log(`   Connecting to: http://localhost:${workerPort}/api/agent/newAction`);
             
+            // Build the request body
+            const requestBody = {
+            prompt: taskPrompt
+            };
+            
+            // Include taskId if this is a stage task (for callback correlation)
+            if (taskId) {
+            requestBody.taskId = taskId;
+            }
+            if (callbackWebhookUrl) {
+            requestBody.callbackWebhookUrl = callbackWebhookUrl;
+            }
+
+            
             const response = await fetch(`http://localhost:${workerPort}/api/agent/newAction`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: taskPrompt, conversationId: conversationId }),
-                timeout: 900000
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            timeout: 900000  // 15 minutes
             });
 
             console.log(`   Response status: ${response.status}`);
 
             if (response.ok) {
-                const result = await response.json();
-                console.log(`✓ Task sent successfully to port ${workerPort}`);
-                console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
-                return {
-                    success: true,
-                    port: workerPort,
-                    result: result
-                };
+            const result = await response.json();
+            console.log(`✅ Task sent successfully to port ${workerPort}`);
+            console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
+            return {
+                success: true,
+                port: workerPort,
+                taskId: taskId,
+                result: result
+            };
             } else {
-                const errorText = await response.text();
-                console.error(`✗ Failed to send task to port ${workerPort}: HTTP ${response.status}`);
-                console.error(`   Error: ${errorText.substring(0, 200)}`);
-                return {
-                    success: false,
-                    port: workerPort,
-                    error: `HTTP ${response.status}: ${errorText}`
-                };
-            }
-        } catch (error) {
-            console.error(`✗ Error sending task to port ${workerPort}:`, error.message);
-            console.error(`   Error code: ${error.code}`);
-            console.error(`   Error details: ${error.toString()}`);
+            const errorText = await response.text();
+            console.error(`❌ Failed to send task to port ${workerPort}: HTTP ${response.status}`);
+            console.error(`   Error: ${errorText.substring(0, 200)}`);
             return {
                 success: false,
                 port: workerPort,
-                error: error.message
+                taskId: taskId,
+                error: `HTTP ${response.status}: ${errorText}`
+            };
+            }
+        } catch (error) {
+            console.error(`❌ Error sending task to port ${workerPort}:`, error.message);
+            console.error(`   Error code: ${error.code}`);
+            console.error(`   Error details: ${error.toString()}`);
+            return {
+            success: false,
+            port: workerPort,
+            taskId: taskId,
+            error: error.message
             };
         }
-    }
+        }
 
    /**
      * Teleport all workers to coordinated positions around build site

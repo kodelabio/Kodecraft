@@ -1,9 +1,11 @@
 import { Agent } from '../agent/agent.js';
 import { ExternalAPI } from '../agent/external_api.js';
 import { setSettings } from '../agent/settings.js';
-import { readFileSync } from 'fs';
+import { readFileSync, createWriteStream } from 'fs';
+import { mkdir } from 'fs/promises';
 import yargs from 'yargs';
 import rootSettings from '../../settings.js';
+
 
 const args = process.argv.slice(2);
 if (args.length < 1) {
@@ -123,8 +125,37 @@ async function reportTaskCompletion(result) {
 // Make it globally available
 global.reportTaskCompletion = reportTaskCompletion;
 
+// Setup file logging
+async function setupLogging(workerName) {
+    try {
+        await mkdir('logs/workers', { recursive: true });
+        
+        const logFile = createWriteStream(`logs/workers/${workerName}-${Date.now()}.log`, { flags: 'a' });
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = (...args) => {
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+            logFile.write(`[${new Date().toISOString()}] LOG: ${msg}\n`);
+            originalLog(...args);
+        };
+        
+        console.error = (...args) => {
+            const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+            logFile.write(`[${new Date().toISOString()}] ERROR: ${msg}\n`);
+            originalError(...args);
+        };
+        
+        console.log(`📝 Logging initialized for ${workerName}`);
+    } catch (err) {
+        console.error('Failed to setup logging:', err.message);
+    }
+}
+
 (async () => {
     try {
+        // Setup logging first
+        await setupLogging(argv.name || 'unknown-worker');
         console.log(`Starting worker ${argv.name} in internal brain mode`);
         console.log(`📞 Callback webhook: ${argv.webhook || 'not set'}`);
         

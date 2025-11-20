@@ -16,6 +16,8 @@ Xvfb :99 -screen 0 1920x1080x24 &
 export DISPLAY=:99
 
 # Start node main.js in background with logs redirected to a file
-node --env-file=.env main.js >> main.log 2>&1 &
+node --env-file=.env main.js >> kodecraft.log 2>&1 &
 
-echo "Processes started. Logs being written to main.log"
+echo "Processes started. Logs being written to kodecraft.log"
+
+tail -f kodecraft.log

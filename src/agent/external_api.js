@@ -19,7 +19,7 @@ export class ExternalAPI {
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
 
-        this.orchestration = new OrchestrationAPI(agent);  // ← NEW LINE (replaced old line)
+        this.orchestration = new OrchestrationAPI(agent);  // â† NEW LINE (replaced old line)
         
         
         // CORS for n8n
@@ -118,6 +118,16 @@ export class ExternalAPI {
         // Goal management
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
+
+        // ========== NEW STAGE-AWARE ENDPOINTS ==========
+        // Send a task for a specific stage to a worker
+        this.app.post('/api/orchestration/send-task-stage', this.handleOrchestrationSendTaskStage.bind(this));
+        // Get task metadata by ID
+        this.app.get('/api/orchestration/task-status/:taskId', this.handleOrchestrationTaskStatus.bind(this));
+        // Get all tasks for a session
+        this.app.get('/api/orchestration/session-tasks/:sessionId', this.handleOrchestrationSessionTasks.bind(this));
+        // Get all tasks for a specific stage
+        this.app.get('/api/orchestration/stage-tasks/:sessionId/:stageNumber', this.handleOrchestrationStageTasks.bind(this));
         
         // Multi-bot management: REMOVED, REPLACED by ORCHESTRATION API
         //this.app.post('/api/multibot/spawnWorkers', this.handleSpawnWorkers.bind(this));
@@ -131,7 +141,7 @@ export class ExternalAPI {
         this.app.get('/api/health', (req, res) => {
             res.json({ status: 'ok' });
         });
-        // Orchestration endpoints for n8n (← NEW SECTION STARTS HERE)
+        // Orchestration endpoints for n8n (â† NEW SECTION STARTS HERE)
         this.app.post('/api/orchestration/spawn-worker', this.handleOrchestrationSpawnWorker.bind(this));
         this.app.post('/api/orchestration/wait-workers', this.handleOrchestrationWaitWorkers.bind(this));
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
@@ -143,11 +153,11 @@ export class ExternalAPI {
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
         this.app.post('/api/orchestration/stop-all', this.handleOrchestrationStopAll.bind(this));
-        // (← NEW SECTION ENDS HERE)
+        // (â† NEW SECTION ENDS HERE)
     }
 
 
-    // ✅ Helper method for null safety checks
+    // âœ… Helper method for null safety checks
     getBotSafely() {
         try {
             if (!this.agent) return null;
@@ -160,7 +170,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ Helper method for coordinate validation and rounding
+    // âœ… Helper method for coordinate validation and rounding
     validateAndRoundCoordinates(x, y, z) {
         if (typeof x !== 'number' || typeof y !== 'number' || typeof z !== 'number') {
             return 'x, y, z coordinates must be numbers';
@@ -175,7 +185,7 @@ export class ExternalAPI {
         };
     }
 
-    // ✅ Helper method for minDistance validation
+    // âœ… Helper method for minDistance validation
     validateMinDistance(minDistance) {
         if (typeof minDistance !== 'number') {
             return `minDistance must be a number, got ${typeof minDistance}`;
@@ -189,7 +199,7 @@ export class ExternalAPI {
         return true;
     }
 
-    // ✅ FIXED handleMove
+    // âœ… FIXED handleMove
     async handleMove(req, res) {
         try {
             const { x, y, z, direction, minDistance = 1 } = req.body;
@@ -291,7 +301,7 @@ export class ExternalAPI {
 
     
 
-    // ✅ FIXED handleGoToPlayer
+    // âœ… FIXED handleGoToPlayer
     async handleGoToPlayer(req, res) {
         try {
             const { player, distance = 3 } = req.body;
@@ -337,7 +347,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleGoToCoordinates
+    // âœ… FIXED handleGoToCoordinates
     async handleGoToCoordinates(req, res) {
         try {
             const { x, y, z, closeness = 1 } = req.body;
@@ -384,7 +394,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleMoveAway
+    // âœ… FIXED handleMoveAway
     async handleMoveAway(req, res) {
         try {
             const { distance = 5 } = req.body;
@@ -422,7 +432,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleSearchForBlock
+    // âœ… FIXED handleSearchForBlock
     async handleSearchForBlock(req, res) {
         try {
             const { blockType, range = 64 } = req.body;
@@ -451,7 +461,7 @@ export class ExternalAPI {
                 });
             }
 
-            // ✅ CHECK FOR PATHFINDING/NAVIGATION FAILURES
+            // âœ… CHECK FOR PATHFINDING/NAVIGATION FAILURES
             const lowerResult = result.toLowerCase();
             if (lowerResult.includes('not found')) {
                 return res.status(404).json({ 
@@ -460,7 +470,7 @@ export class ExternalAPI {
                 });
             }
 
-            // ✅ NEW: Check for pathfinding errors
+            // âœ… NEW: Check for pathfinding errors
             if (lowerResult.includes('pathfinding stopped') || 
                 lowerResult.includes('unreachable') || 
                 lowerResult.includes('took too long') ||
@@ -480,7 +490,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleSearchForEntity
+    // âœ… FIXED handleSearchForEntity
     async handleSearchForEntity(req, res) {
         try {
             const { entityType, range = 64 } = req.body;
@@ -517,7 +527,7 @@ export class ExternalAPI {
                 });
             }
 
-            // ✅ NEW: Check for pathfinding errors
+            // âœ… NEW: Check for pathfinding errors
             if (lowerResult.includes('pathfinding stopped') || 
                 lowerResult.includes('unreachable') || 
                 lowerResult.includes('took too long') ||
@@ -558,7 +568,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handlePlace
+    // âœ… FIXED handlePlace
     async handlePlace(req, res) {
         try {
             const { material, x, y, z, face = 'top' } = req.body;
@@ -619,7 +629,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleBreak
+    // âœ… FIXED handleBreak
     async handleBreak(req, res) {
         try {
             const { x, y, z } = req.body;
@@ -644,7 +654,7 @@ export class ExternalAPI {
         }
     }
 
-    // ✅ FIXED handleUseDoor
+    // âœ… FIXED handleUseDoor
     async handleUseDoor(req, res) {
         try {
             const { x, y, z } = req.body;
@@ -1231,14 +1241,6 @@ export class ExternalAPI {
 
             console.log(`[API] Received newAction: ${prompt.substring(0, 50)}...`);
 
-            // Modify prompt for building
-            let modifiedPrompt = prompt;
-            if (prompt.toLowerCase().includes('build') || prompt.toLowerCase().includes('place')) {
-                modifiedPrompt = prompt.replace(/at \(-?\d+,\s*-?\d+,\s*-?\d+\)/gi, 'at my current position');
-                if (!modifiedPrompt.toLowerCase().includes('current position')) {
-                    modifiedPrompt += ' at my current position';
-                }
-            }
 
             // Return 200 immediately - don't wait for task to complete
             res.json({ 
@@ -1253,6 +1255,7 @@ export class ExternalAPI {
                 try {
                     const taskStartTime = Date.now();
                     const conversationId = req.body.conversationId; 
+                    const taskId = req.body.taskId || null;
                     //const startBlockCount = getBlockCount(this.agent.bot); // Track initial
                     
                     const originalBrainMode = settings.brain_mode;
@@ -1265,9 +1268,9 @@ export class ExternalAPI {
                         
                         this.agent.history = new History(this.agent);
                         this.agent.coder = new Coder(this.agent);
-                        this.agent.history.add('user', modifiedPrompt);
+                        this.agent.history.add('user', prompt);
                         
-                        const command = `!newAction("${modifiedPrompt}")`;
+                        const command = `!newAction("${prompt}")`;
                         const result = await executeCommand(this.agent, command);
                         
                         const taskDuration = Date.now() - taskStartTime;
@@ -1280,7 +1283,8 @@ export class ExternalAPI {
                             console.log(`[API] 📞 Reporting completion...`);
                             await global.reportTaskCompletion({
                                 conversationId: conversationId,  // ← Return it!,
-                                taskCompleted: modifiedPrompt.substring(0, 100),
+                                taskId: taskId,
+                                taskCompleted: prompt.substring(0, 100),
                                 blocksPlaced: 100,
                                 timeSpent: taskDuration,
                                 status: 'success'
@@ -1298,7 +1302,7 @@ export class ExternalAPI {
                     // Try to report error via callback
                     if (global.reportTaskCompletion) {
                         await global.reportTaskCompletion({
-                            taskCompleted: modifiedPrompt.substring(0, 100),
+                            taskCompleted: prompt.substring(0, 100),
                             conversationId: conversationId,  // ← Return it!
                             status: 'error',
                             error: error.message
@@ -1567,10 +1571,10 @@ export class ExternalAPI {
         });
     }
 
-    // Multi-bot management handlers
+    // Multi-bot management handlers (Updated to use OrchestrationAPI)
     async handleSpawnWorkers(req, res) {
         try {
-            const { count, leaderName } = req.body;
+            const { count, basePort = settings.multibot_base_port + 2, sessionId } = req.body;
             
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -1584,16 +1588,29 @@ export class ExternalAPI {
                 });
             }
             
-            const workers = await this.multiBotManager.spawnWorkers(
-                count, 
-                leaderName || this.agent.name || 'Leader'
-            );
+            const spawnResults = [];
+            for (let i = 0; i < count; i++) {
+                const workerName = `Worker_${i + 1}`;
+                const workerPort = basePort + i;
+                
+                const result = await this.orchestration.spawnWorker(
+                    workerName,
+                    workerPort,
+                    sessionId || `session_${Date.now()}`,
+                    settings.n8n_webhook_url
+                );
+                
+                spawnResults.push(result);
+            }
             
-            res.json({
+            const status = this.orchestration.getStatus();
+            
+            res.status(202).json({
                 success: true,
-                workers,
-                message: `Spawned ${workers.length} workers successfully`,
-                totalWorkers: this.multiBotManager.workers.size
+                spawned: spawnResults.filter(r => r.success).length,
+                results: spawnResults,
+                message: `Spawned ${spawnResults.filter(r => r.success).length} workers successfully`,
+                totalWorkers: status.totalWorkers
             });
             
         } catch (error) {
@@ -1603,7 +1620,7 @@ export class ExternalAPI {
 
     async handleCoordinateBuild(req, res) {
         try {
-            const { buildRequest, workerCount } = req.body;
+            const { buildRequest, workerCount, sessionId } = req.body;
             
             if (!buildRequest || typeof buildRequest !== 'string') {
                 return res.status(400).json({ 
@@ -1617,14 +1634,25 @@ export class ExternalAPI {
                 });
             }
             
-            const coordination = await this.multiBotManager.coordinateCollaborativeBuild(
+            // Create a build session using OrchestrationAPI
+            const sessionResult = this.orchestration.createBuildSession(
+                sessionId || `build_${Date.now()}`,
                 buildRequest,
                 workerCount
             );
             
-            res.json({
+            res.status(201).json({
                 success: true,
-                ...coordination
+                ...sessionResult,
+                message: `Build session created. Next: spawn workers and register them to this session.`,
+                nextSteps: [
+                    `1. Spawn ${workerCount} workers using /api/orchestration/spawn-worker`,
+                    `2. Wait for workers using /api/orchestration/wait-workers`,
+                    `3. Register workers using /api/orchestration/register-workers`,
+                    `4. Reserve location using /api/orchestration/reserve-location`,
+                    `5. Teleport workers using /api/orchestration/teleport-workers`,
+                    `6. Send tasks using /api/orchestration/send-task`
+                ]
             });
             
         } catch (error) {
@@ -1642,21 +1670,56 @@ export class ExternalAPI {
                 });
             }
             
-            if (!taskBreakdown) {
+            if (!taskBreakdown || !Array.isArray(taskBreakdown)) {
                 return res.status(400).json({ 
-                    error: 'taskBreakdown parameter required' 
+                    error: 'taskBreakdown parameter must be an array of tasks' 
                 });
             }
             
-            const assignments = await this.multiBotManager.assignTasksToWorkers(
-                sessionId,
-                taskBreakdown
-            );
+            // Get session and workers
+            const session = this.orchestration.buildSessions.get(sessionId);
+            if (!session) {
+                return res.status(404).json({
+                    error: `Build session ${sessionId} not found`
+                });
+            }
+            
+            if (!session.workers || session.workers.length === 0) {
+                return res.status(400).json({
+                    error: `No workers registered for session ${sessionId}. Register workers first.`
+                });
+            }
+            
+            // Assign tasks to workers (round-robin)
+            const assignments = [];
+            for (let i = 0; i < taskBreakdown.length; i++) {
+                const task = taskBreakdown[i];
+                const worker = session.workers[i % session.workers.length];
+                
+                const result = await this.orchestration.sendTaskToWorker(
+                    worker.port,
+                    task.prompt || task.description || task
+                );
+                
+                assignments.push({
+                    taskIndex: i,
+                    task: task,
+                    assignedTo: worker.name,
+                    workerPort: worker.port,
+                    success: result.success,
+                    result: result
+                });
+            }
+            
+            const successCount = assignments.filter(a => a.success).length;
             
             res.json({
                 success: true,
-                assignments,
-                message: `Assigned ${assignments.length} tasks to workers`
+                sessionId: sessionId,
+                assignments: assignments,
+                tasksAssigned: successCount,
+                totalTasks: taskBreakdown.length,
+                message: `Assigned ${successCount}/${taskBreakdown.length} tasks to ${session.workers.length} workers`
             });
             
         } catch (error) {
@@ -1680,13 +1743,20 @@ export class ExternalAPI {
                 });
             }
             
-            const results = await this.multiBotManager.teleportWorkers(sessionId, position);
+            // Use OrchestrationAPI instead of deprecated multiBotManager
+            const result = await this.orchestration.teleportWorkers(sessionId, position);
             
-            res.json({
-                success: true,
-                teleportResults: results,
-                message: `Teleported workers to position (${position.x}, ${position.y}, ${position.z})`
-            });
+            if (result.success) {
+                res.json({
+                    success: true,
+                    sessionId: result.sessionId,
+                    teleportResults: result.teleportResults,
+                    buildLocation: result.buildLocation,
+                    message: `Teleported workers to position (${position.x}, ${position.y}, ${position.z})`
+                });
+            } else {
+                res.status(404).json(result);
+            }
             
         } catch (error) {
             this.handleError(res, error, 'teleportWorkers');
@@ -1726,7 +1796,7 @@ export class ExternalAPI {
 
     async handleMultiBotStatus(req, res) {
         try {
-            const status = this.multiBotManager.getStatus();
+            const status = this.orchestration.getStatus();
             
             res.json({
                 success: true,
@@ -1740,7 +1810,7 @@ export class ExternalAPI {
 
     async handleStopWorkers(req, res) {
         try {
-            const result = await this.multiBotManager.stopAllWorkers();
+            const result = await this.orchestration.stopAllWorkers();
             
             res.json({
                 success: true,
@@ -1956,6 +2026,251 @@ export class ExternalAPI {
             this.handleError(res, error, 'orchestrationSendTask');
         }
     }
+
+ 
+    // This is a NEW webhook endpoint (not the same as the worker callback)
+
+    /**
+     * Handle stage task completion callback from worker
+     * Called by worker when a stage task completes (via n8n webhook trigger)
+     * 
+     * This endpoint receives the taskId and correlates it back to the original request
+     * 
+     * POST /api/orchestration/task-complete
+     * Body: {
+     *   taskId: "task_build_123_stage1_Worker1_...",
+     *   sessionId: "build_123",
+     *   stageNumber: 1,
+     *   worker: "Worker1",
+     *   status: "completed",
+     *   result: { ... },
+     *   completionTime: "2025-11-19T..."
+     * }
+     */
+    async handleOrchestrationTaskComplete(req, res) {
+        try {
+            const { taskId, sessionId, stageNumber, worker, status, result, completionTime } = req.body;
+
+            if (!taskId || !sessionId || !stageNumber || !worker) {
+            return res.status(400).json({
+                error: 'Missing required parameters: taskId, sessionId, stageNumber, worker',
+                code: 'missing_parameters'
+            });
+            }
+
+            console.log(`[API] Received task-complete callback`);
+            console.log(`   Task ID: ${taskId}`);
+            console.log(`   Session: ${sessionId}`);
+            console.log(`   Stage: ${stageNumber}`);
+            console.log(`   Worker: ${worker}`);
+            console.log(`   Status: ${status}`);
+
+            // Update task metadata in orchestration API
+            const updateResult = await this.orchestration.handleTaskStageComplete(taskId, {
+            status: status,
+            result: result,
+            completionTime: completionTime
+            });
+
+            if (updateResult.success) {
+            console.log(`✅ Task ${taskId} marked as complete`);
+            
+            res.json({
+                success: true,
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                worker: worker,
+                message: `Task ${taskId} completion recorded`,
+                duration: updateResult.duration
+            });
+            } else {
+            console.warn(`⚠️  Task ${taskId} completion recorded but metadata update failed`);
+            
+            res.status(404).json({
+                error: `Task ${taskId} not found in tracking`,
+                code: 'task_not_found'
+            });
+            }
+        } catch (error) {
+            console.error(`[API] Error in task-complete:`, error);
+            this.handleError(res, error, 'orchestrationTaskComplete');
+        }
+        }
+
+
+    // Add this handler to the ExternalAPI class in external_api.js
+// Place it in the "ORCHESTRATION API HANDLERS" section
+
+/**
+ * Send a task for a specific stage to a worker
+ * POST /api/orchestration/send-task-stage
+ * Body: { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl }
+ */
+    async handleOrchestrationSendTaskStage(req, res) {
+  try {
+    const { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl, conversationId } = req.body;
+
+    // Validate required parameters
+    if (!sessionId || !stageNumber || !worker || !port || !taskPrompt) {
+      return res.status(400).json({
+        error: 'Missing required parameters: sessionId, stageNumber, worker, port, taskPrompt',
+        code: 'missing_parameters'
+      });
+    }
+
+    // Validate types
+    if (typeof stageNumber !== 'number' || stageNumber < 1) {
+      return res.status(400).json({
+        error: 'stageNumber must be a positive integer',
+        code: 'invalid_stage'
+      });
+    }
+
+    if (typeof port !== 'number' || port < 1024 || port > 65535) {
+      return res.status(400).json({
+        error: 'port must be a valid port number (1024-65535)',
+        code: 'invalid_port'
+      });
+    }
+
+    if (typeof taskPrompt !== 'string' || taskPrompt.length === 0) {
+      return res.status(400).json({
+        error: 'taskPrompt must be a non-empty string',
+        code: 'invalid_prompt'
+      });
+    }
+
+    console.log(`[API] Received send-task-stage request:`);
+    console.log(`   Session: ${sessionId}`);
+    console.log(`   Stage: ${stageNumber}`);
+    console.log(`   Worker: ${worker}`);
+    console.log(`   Port: ${port}`);
+    console.log(`   Prompt length: ${taskPrompt.length}`);
+
+    // Send task via orchestration API
+    const result = await this.orchestration.sendTaskStage(
+      sessionId,
+      stageNumber,
+      worker,
+      port,
+      taskPrompt,
+      conversationId,
+      callbackWebhookUrl || settings.n8n_webhook_url_stage_complete
+    );
+
+    if (result.success) {
+      res.status(202).json(result); // 202 Accepted
+    } else {
+      res.status(500).json(result);
+    }
+  } catch (error) {
+    console.error(`[API] Error in send-task-stage:`, error);
+    this.handleError(res, error, 'orchestrationSendTaskStage');
+  }
+}
+
+/**
+ * Get stage task metadata and status
+ * GET /api/orchestration/task-status/:taskId
+ */
+async handleOrchestrationTaskStatus(req, res) {
+  try {
+    const { taskId } = req.params;
+
+    if (!taskId) {
+      return res.status(400).json({
+        error: 'taskId parameter required',
+        code: 'missing_parameter'
+      });
+    }
+
+    const metadata = this.orchestration.getTaskMetadata(taskId);
+
+    if (!metadata) {
+      return res.status(404).json({
+        error: `Task ${taskId} not found`,
+        code: 'task_not_found'
+      });
+    }
+
+    res.json({
+      success: true,
+      task: metadata
+    });
+  } catch (error) {
+    console.error(`[API] Error in task-status:`, error);
+    this.handleError(res, error, 'orchestrationTaskStatus');
+  }
+}
+
+/**
+ * Get all tasks for a session
+ * GET /api/orchestration/session-tasks/:sessionId
+ */
+async handleOrchestrationSessionTasks(req, res) {
+  try {
+    const { sessionId } = req.params;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        error: 'sessionId parameter required',
+        code: 'missing_parameter'
+      });
+    }
+
+    const tasks = this.orchestration.getSessionTasks(sessionId);
+
+    res.json({
+      success: true,
+      sessionId: sessionId,
+      totalTasks: tasks.length,
+      tasks: tasks
+    });
+  } catch (error) {
+    console.error(`[API] Error in session-tasks:`, error);
+    this.handleError(res, error, 'orchestrationSessionTasks');
+  }
+}
+
+    /**
+    * Get all tasks for a specific stage
+    * GET /api/orchestration/stage-tasks/:sessionId/:stageNumber
+    */
+    async handleOrchestrationStageTasks(req, res) {
+        try {
+            const { sessionId, stageNumber } = req.params;
+
+            if (!sessionId || !stageNumber) {
+            return res.status(400).json({
+                error: 'sessionId and stageNumber parameters required',
+                code: 'missing_parameters'
+            });
+            }
+
+            const stageNum = parseInt(stageNumber);
+            if (isNaN(stageNum) || stageNum < 1) {
+            return res.status(400).json({
+                error: 'stageNumber must be a positive integer',
+                code: 'invalid_stage'
+            });
+            }
+
+            const tasks = this.orchestration.getStageTasks(sessionId, stageNum);
+
+            res.json({
+            success: true,
+            sessionId: sessionId,
+            stageNumber: stageNum,
+            totalTasks: tasks.length,
+            tasks: tasks,
+            allComplete: tasks.length > 0 && tasks.every(t => t.status === 'completed')
+            });
+        } catch (error) {
+            console.error(`[API] Error in stage-tasks:`, error);
+            this.handleError(res, error, 'orchestrationStageTasks');
+        }
+        }
 
     /**
      * Get orchestration status

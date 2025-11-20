@@ -45,6 +45,25 @@ export const actionsList = [
                 return `EXTERNAL_BRAIN_TASK: ${prompt}`;
             }
 
+            // Extract ABSOLUTE COORDINATES from prompt
+            const coordMatch = prompt.match(/ABSOLUTE COORDINATES FOR THIS WORKER:([\s\S]*?)(?=\n\nScope:|$)/);
+            if (coordMatch) {
+                const coordSection = coordMatch[1];
+                const xRange = coordSection.match(/- X range:\s*([-\d]+)\s*to\s*([-\d]+)/);
+                const zRange = coordSection.match(/- Z range:\s*([-\d]+)\s*to\s*([-\d]+)/);
+                const yRange = coordSection.match(/- Y range:\s*([-\d]+)\s*to\s*([-\d]+)/);
+                
+                agent.taskCoordinates = {
+                    xMin: xRange ? parseInt(xRange[1]) : null,
+                    xMax: xRange ? parseInt(xRange[2]) : null,
+                    zMin: zRange ? parseInt(zRange[1]) : null,
+                    zMax: zRange ? parseInt(zRange[2]) : null,
+                    yMin: yRange ? parseInt(yRange[1]) : null,
+                    yMax: yRange ? parseInt(yRange[2]) : null
+                };
+                console.log('[newAction] Extracted task coordinates:', agent.taskCoordinates);
+            }
+
             // Internal mode: standard code generation process
             let result = "";
             const actionFn = async () => {

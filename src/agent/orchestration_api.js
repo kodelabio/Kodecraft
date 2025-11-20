@@ -224,9 +224,9 @@ export class OrchestrationAPI {
     }
 
     /**
-     * Determine and reserve a build location
-     * Prevents conflicts between concurrent builds
-     */
+    * Reserve a build location, ensuring it's on solid ground
+    * Finds the ground level at proposed location and places build on top
+    */
     reserveBuildLocation(sessionId, preferredLocation, minDistance = 30) {
         console.log(`📍 Reserving build location for session ${sessionId}`);
 
@@ -262,6 +262,18 @@ export class OrchestrationAPI {
             attempts++;
         }
 
+        // ✅ NEW: Find ground level at the proposed location
+        console.log(`🔍 Finding ground level at x=${buildLocation.x}, z=${buildLocation.z}`);
+        const groundY = this.findGroundLevel(buildLocation.x, buildLocation.z);
+        
+        if (groundY !== null) {
+            buildLocation.y = groundY + 1; // Place on top of ground block
+            console.log(`✓ Found solid ground at Y=${groundY}, setting build location to Y=${buildLocation.y}`);
+        } else {
+            console.warn(`⚠️ Could not find solid ground at x=${buildLocation.x}, z=${buildLocation.z}`);
+            console.warn(`   Using default location Y=${buildLocation.y} (might be in void!)`);
+        }
+
         // Reserve the location
         this.buildLocations.push({
             x: buildLocation.x,
@@ -269,13 +281,15 @@ export class OrchestrationAPI {
             z: buildLocation.z,
             sessionId: sessionId,
             buildRequest: this.buildSessions.get(sessionId)?.buildRequest || '',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            groundLevel: groundY // Store for reference
         });
 
         // Update session
         const session = this.buildSessions.get(sessionId);
         if (session) {
             session.buildLocation = buildLocation;
+            session.groundLevel = groundY;
         }
 
         console.log(`✓ Location reserved: x=${buildLocation.x}, y=${buildLocation.y}, z=${buildLocation.z}`);
@@ -284,8 +298,52 @@ export class OrchestrationAPI {
             success: true,
             sessionId: sessionId,
             buildLocation: buildLocation,
-            message: `Build location reserved`
+            groundLevel: groundY,
+            message: groundY !== null ? 
+                `Build location reserved on solid ground` : 
+                `Build location reserved (no ground found - might be in void)`
         };
+    }
+
+    /**
+     * Find the ground level (top solid block) at given X,Z coordinates
+     * Scans from Y=320 down to Y=-64 to find the first solid block
+     * Returns the Y coordinate of the top solid block, or null if not found
+     */
+    findGroundLevel(x, z) {
+        try {
+            const bot = this.agent?.bot;
+            if (!bot || !bot.blockAt) {
+                console.warn(`⚠️ Bot not available for ground level detection`);
+                return null;
+            }
+
+            // Scan from top (Y=320) down to bottom (Y=-64) of world
+            // Stop at first solid block found
+            for (let y = 320; y >= -64; y--) {
+                try {
+                    const block = bot.blockAt(x, y, z);
+                    
+                    // Found solid block (type 0 is air)
+                    if (block && block.type !== 0) {
+                        console.log(`✓ Found solid ground: ${block.name} at y=${y}`);
+                        return y;
+                    }
+                } catch (e) {
+                    // Block might not be loaded, continue searching
+                    continue;
+                }
+            }
+
+            // No solid blocks found in entire height range
+            console.warn(`⚠️ No solid ground found at x=${x}, z=${z} (Y: -64 to 320)`);
+            console.warn(`   This location is in the void!`);
+            return null;
+
+        } catch (error) {
+            console.error(`⚠️ Error finding ground level at x=${x}, z=${z}:`, error.message);
+            return null;
+        }
     }
 
     /**
@@ -430,14 +488,14 @@ export class OrchestrationAPI {
             console.log(`✅ [Stage Task] Task ${taskId} sent successfully`);
             
             return {
-            success: true,
-            taskId: taskId,
-            sessionId: sessionId,
-            stageNumber: stageNumber,
-            worker: workerName,
-            port: port,
-            status: 'executing',
-            createdAt: taskMetadata.createdAt
+                success: true,
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                worker: workerName,
+                port: port,
+                status: 'executing',
+                createdAt: taskMetadata.createdAt
             };
             
         } catch (error) {

@@ -29,7 +29,25 @@ export class Coder {
         lockdown();
         // this message history is transient and only maintained in this function
         let messages = agent_history.getHistory(); 
-        messages.push({role: 'system', content: 'Code generation started. Write code in codeblock in your response:'});
+        
+        // Add task coordinates to system prompt if available
+        // Add task coordinates to system prompt if available
+        let systemMsg = 'Code generation started. Write code in codeblock in your response:';
+        if (this.agent.taskCoordinates && this.agent.taskCoordinates.xMin !== null) {
+            const coords = this.agent.taskCoordinates;
+            systemMsg += `\n\nUSE THESE EXACT COORDINATES - THIS IS CRITICAL:\n`;
+            systemMsg += `const X_MIN = ${coords.xMin};\n`;
+            systemMsg += `const X_MAX = ${coords.xMax};\n`;
+            systemMsg += `const Z_MIN = ${coords.zMin};\n`;
+            systemMsg += `const Z_MAX = ${coords.zMax};\n`;
+            systemMsg += `const Y_MIN = ${coords.yMin};\n`;
+            systemMsg += `const Y_MAX = ${coords.yMax};\n`;
+            systemMsg += `COPY THESE VARIABLE DECLARATIONS INTO YOUR CODE. DO NOT USE DIFFERENT COORDINATES.`;
+        }
+
+
+        
+        messages.push({role: 'system', content: systemMsg});
 
         const MAX_ATTEMPTS = 5;
         const MAX_NO_CODE = 3;

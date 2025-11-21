@@ -1,0 +1,66 @@
+version: '3.8'
+
+# This file overrides docker-compose.yml for development
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.override.yml up
+# Or just: docker-compose up (if this file is named docker-compose.override.yml)
+
+services:
+  leader:
+    # Rebuild image when source changes
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Force rebuild
+      # cache_from: []
+    
+    # Mount source code for live editing
+    volumes:
+      # Mount all source files
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./logs:/app/logs
+      # Keep node_modules from image to avoid version mismatches
+      - /app/node_modules
+    
+    # Use development environment
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+      - VERBOSE_LOGGING=true
+    
+    # Enable stdin and tty for interactive debugging
+    stdin_open: true
+    tty: true
+    
+    # Show logs in real-time
+    command: tail -f /dev/null  # Keep container running
+    
+    # Disable restart policy for development
+    restart: no
+
+# Uncomment the sections below if you want to use PostgreSQL and n8n in development
+
+  # postgres:
+  #   environment:
+  #     - POSTGRES_PASSWORD=changeme
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: no
+  #   # Easier to debug with port exposed
+  #   ports:
+  #     - "5432:5432"
+
+  # n8n:
+  #   environment:
+  #     - N8N_BASIC_AUTH_USER=admin
+  #     - N8N_BASIC_AUTH_PASSWORD=password
+  #   volumes:
+  #     - n8n-data:/home/node/.n8n
+  #   restart: no
+  #   # Access n8n UI
+  #   ports:
+  #     - "5678:5678"
+
+volumes:
+  postgres-data:
+  n8n-data:

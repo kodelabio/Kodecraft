@@ -1,11 +1,11 @@
 const settings = {
     "minecraft_version": "1.21.4", // supports up to 1.21.1
-    "host": "127.0.0.1", 
-    "port": 55916,
+    "host": process.env.MINECRAFT_HOST || "127.0.0.1", 
+    "port": process.env.MINECRAFT_PORT || 55916,
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
-    "mindserver_port": 8080,
+    "mindserver_port": process.env.MINDSERVER_PORT|| 8080,
     
     "base_profile": "creative", // survival, creative, or god_mode
     "profiles": [
@@ -52,7 +52,7 @@ const settings = {
     "external_api_port": parseInt(process.env.EXTERNAL_API_PORT || "4001"),
     "external_mode_allow_chat": process.env.EXTERNAL_MODE_ALLOW_CHAT === "true" || false,
     "multibot_base_port": parseInt(process.env.MULTIBOT_BASE_PORT || "4000"),
-    "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/worker-complete",
+    "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/worker-stage-complete",
 }
 
 export default settings;

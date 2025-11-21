@@ -1,20 +1,26 @@
-version: '3.8'
-
 services:
-  app:
-    image: node:latest
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: sh -c "npm install && node main.js"
+  minecraft-server:
+    image: itzg/minecraft-server:2024.12.1
+    environment:
+      EULA: "TRUE"
+      MEMORY: "1G"
+      VERSION: "1.21.4"
+      MODE: "creative"
+      DIFFICULTY: "peaceful"
+      LEVEL_TYPE: "flat"
+      ONLINE_MODE: "FALSE"
+      BRAIN_MODE: "internal"
+      GENERATOR_OPTS: "0;1,3x3,2,1"
+      SERVER_PORT: "55916"
     ports:
-      - "3000-3003:3000-3003" # see the view from the camera mounted on your bot head: http://localhost:3000/
+      - "55916:55916"
+    volumes:
+      - minecraft_data:/data
+    healthcheck:
+      test: ["CMD", "mc-monitor", "status", "--host", "localhost"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
 
-  viaproxy: #use this service to connect to an unsupported minecraft server versions. more info: ./services/viaproxy/README.md
-    image: ghcr.io/viaversion/viaproxy:latest
-    volumes:
-      - ./services/viaproxy:/app/run
-    ports:
-      - "25568:25568"
-    profiles:
-      - viaproxy
+volumes:
+  minecraft_data:

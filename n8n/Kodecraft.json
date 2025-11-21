@@ -1,0 +1,4888 @@
+{
+  "name": "Kodecraft",
+  "nodes": [
+    {
+      "parameters": {
+        "chatId": "={{ String($json.chatId) }}",
+        "text": "={{ $json.text || 'Missing text content' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send Final Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1504,
+        5712
+      ],
+      "id": "d1f299a2-b942-4666-84cc-d4294682419e",
+      "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format result for user response\nconst inputData = $input.first().json || {};\n\n// ALWAYS get the original context from Route by Intent to preserve chatId and other context\nconst originalContext = $('Route by Intent').item.json;\n\n// Check if this is a chat response (direct from Route by Intent)\nif (inputData.intent === 'chat' || originalContext.intent === 'chat') {\n  console.log('Processing chat response');\n  const chatResponse = inputData.params?.response || inputData.response || originalContext.params?.response || originalContext.response || 'Chat response received';\n  \n  return {\n    json: {\n      chatId: originalContext.chatId || inputData.chatId || 'unknown',\n      text: chatResponse,\n      conversationHistory: originalContext.conversationHistory || inputData.conversationHistory || [],\n      executionResult: { type: 'chat', response: chatResponse }\n    }\n  };\n}\n\n// For non-chat intents, use originalContext as intentData to preserve all context\nlet intentData = originalContext;\n// Get execution result - PRIORITY: inputData.executionResult over inputData\nlet executionResult = inputData.executionResult || inputData;\n\n// Set default final message - PRIORITY: executionResult message over intentData response\nlet finalMessage = executionResult.response || intentData.response || 'Construction completed!';\n\n// If execution failed, append error\nif (executionResult.error) {\n  finalMessage += `\\n\\n Error: ${executionResult.error}`;\n} else if (executionResult.message && executionResult.message !== intentData.response) {\n  finalMessage += `\\n\\n ${executionResult.message}`;\n}\n\n// For status/inventory, include the data\nif (intentData.intent === 'stats' && executionResult.position) {\n  finalMessage = `Position: x:${executionResult.position.x?.toFixed(1)}, y:${executionResult.position.y?.toFixed(1)}, z:${executionResult.position.z?.toFixed(1)}\\nHealth: ${executionResult.health}/20\\nHunger: ${executionResult.hunger}/20\\nAction: ${executionResult.current_action || 'Idle'}`;\n} else if (intentData.intent === 'inventory' && executionResult.inventory) {\n  const items = Array.isArray(executionResult.inventory) ? \n    executionResult.inventory.map(item => `${item.name}(${item.count})`).join(', ') : \n    'Empty';\n  finalMessage = `Inventory: ${items}`;\n} else if (intentData.intent === 'nearbyBlocks' && executionResult.nearby_blocks) {\n  finalMessage = `Nearby blocks: ${executionResult.nearby_blocks}`;\n} else if (intentData.intent === 'entities' && executionResult.nearby_entities) {\n  finalMessage = `Nearby entities: ${executionResult.nearby_entities}`;\n} else if (intentData.intent === 'craftable' && executionResult.craftable_items) {\n  finalMessage = `Craftable items: ${executionResult.craftable_items}`;\n} else if (intentData.intent === 'modes' && executionResult.modes) {\n  finalMessage = `Bot modes: ${executionResult.modes}`;\n} else if (intentData.intent === 'savedPlaces' && executionResult.saved_places) {\n  finalMessage = `Saved places: ${executionResult.saved_places}`;\n} else if (intentData.intent === 'getCraftingPlan' && executionResult.crafting_plan) {\n  finalMessage = `Crafting plan: ${executionResult.crafting_plan}`;\n} else if (intentData.intent === 'lookAtPlayer' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n} else if (intentData.intent === 'lookAtPosition' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n}\nelse if (intentData.intent === 'collaborativeBuild' && executionResult.aiActions) {\n  finalMessage = `Building completed: Collaborative Build Actions:\\n\\n${executionResult.aiActions}`;\n}\n\n// Save bot response to conversation history\nconst conversationHistory = intentData.conversationHistory || [];\nconversationHistory.push({\n  role: 'assistant',\n  content: finalMessage,\n  timestamp: Date.now()\n});\n\nif (conversationHistory.length > 20) {\n  conversationHistory.splice(0, conversationHistory.length - 20);\n}\n\n// --- Resolve chatId directly from previous node (most reliable) ---\nlet chatId =\n  inputData.chatId ||               // from previous node\n  intentData.chatId ||              // fallback if merged\n  originalContext.chatId ||         // from Route by Intent (if available)\n  $('Normalize Input').first().json.chatId ||\n  inputData.conversationId ||       // fallback alias\n  'unknown';\n\nconsole.log('Resolved chatId:', chatId);\n\nreturn {\n  json: {\n    chatId,\n    text: finalMessage,\n    conversationHistory,\n    executionResult\n  }\n};"
+      },
+      "name": "Format Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        5712
+      ],
+      "id": "ccb6fe5e-d422-4ef4-9448-6df25a53aa0b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stop",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Stop",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        9152
+      ],
+      "id": "dfec1cc2-029d-4bbb-90bf-1409d8b14729",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/status",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute MultiBotStatus",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        9536
+      ],
+      "id": "e66441e8-3583-472d-a824-6c09b7a8c136",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "id": "b5ee1db1-5e96-4995-9943-bd1f74f8d017",
+      "name": "Wait for Workers Init",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3328,
+        4000
+      ],
+      "webhookId": "b1285893-251a-4e14-89b4-a96fa9fa6ea5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/assignTasks",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "sessionId",
+              "value": "={{ $json.sessionId || $json.conversationId  }}"
+            },
+            {
+              "name": "taskBreakdown",
+              "value": "={{ $('Execute Building Plan').first().json.taskBreakdown }}"
+            },
+            {
+              "name": "leaderPosition",
+              "value": "={{ $('Execute Building Plan').first().json.botStatus?.position || { x: 0, y: 64, z: 0 } }}"
+            },
+            {
+              "name": "buildCoordinates",
+              "value": "={{ $('Execute Building Plan').first().json.params?.buildCoordinates || null }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Execute Building Plan').first().json.params?.taskDivision || null }}"
+            },
+            {
+              "name": "singleWorkerMode",
+              "value": "={{ $('Execute Building Plan').first().json.params?.singleWorkerMode || false }}"
+            },
+            {
+              "name": "buildingRequest",
+              "value": "={{ $('Execute Building Plan').first().json.buildRequest || $('Execute Building Plan').first().json.userMessage }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute AssignTasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2816,
+        4704
+      ],
+      "id": "18c842dd-b691-4963-9109-233f80e14c66",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/stop",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute StopWorkers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        9728
+      ],
+      "id": "df4a8f4b-774a-49b8-9d08-d3de7d964166",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/workers",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute GetWorkerList",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        9920
+      ],
+      "id": "84d7d0b8-bff0-4c80-ae2e-b2c6f3c06c5c",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/endGoal",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute EndGoal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8960
+      ],
+      "id": "14354fcd-17bb-4c42-87f7-0b61f39ece26",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/clearChat",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute ClearChat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8768
+      ],
+      "id": "e1eef999-11f6-4c91-a39b-04d75ae5e9dc",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/restart",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Restart",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8576
+      ],
+      "id": "f2894a7e-9148-42ea-92dd-6400c80a839d",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/endConversation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute EndConversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8384
+      ],
+      "id": "ebc4d3fd-e247-47bc-a8fa-696a480fda37",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/startConversation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.params.message }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute StartConversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8192
+      ],
+      "id": "4f7945d0-0e58-4148-8faf-93aa01bd5ee2",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPosition",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute LookAtPosition",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        8000
+      ],
+      "id": "b5e53978-1d76-4134-bcf3-197e9e5b0e78",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPlayer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            },
+            {
+              "name": "direction",
+              "value": "={{ $json.params.direction || 'at' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute LookAtPlayer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        7808
+      ],
+      "id": "4f516b40-1dad-4432-a825-adcb4602e509",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "multibot-route",
+              "leftValue": "={{ $json.building_plan.executionType }}",
+              "rightValue": "multibot",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b4c36be9-0c60-4b4c-a852-dd1e43a72945",
+              "leftValue": "={{ $json.building_plan.workerCount }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Route Building Execution",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        4144
+      ],
+      "id": "1b5150a4-d118-4e82-8165-5e2d905335ce"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/newAction",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $('Parse Plan').item.json.plan.buildingRequest }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "id": "f8b409c1-d101-4f13-9c21-a2d6af84b536",
+      "name": "Execute Building API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        4288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nconst conversationData = $('Route by Intent').item.json;\nconsole.log('Retrieved conversation data', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Extract code output between \"Code Output\" and \"Code finished\"\nlet ai_actions = '';\nconst codeOutputMatch = apiMessage.match(/Code Output([\\s\\S]*?)Code finished/i);\nif (codeOutputMatch && codeOutputMatch[1]) {\n  ai_actions = codeOutputMatch[1].trim();\n  console.log('Extracted code output:', ai_actions);\n} else {\n  console.log('No code output found between markers');\n}\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult,\n      aiActions: ai_actions\n    }\n  }\n};"
+      },
+      "id": "b560e47d-0fce-4741-89aa-48d23e383870",
+      "name": "Format Building Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2304,
+        4288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "building-plan-assignment",
+              "name": "building_plan",
+              "value": "={{ JSON.stringify($json.plan) }}",
+              "type": "object"
+            },
+            {
+              "id": "task-type-assignment",
+              "name": "task_type",
+              "value": "smart_building",
+              "type": "string"
+            },
+            {
+              "id": "message-assignment",
+              "name": "message",
+              "value": "=Smart building plan created: {{ JSON.stringify($json.plan)}}",
+              "type": "string"
+            },
+            {
+              "id": "2e6eb1c5-f68a-4bd1-a4e3-18c8b5d42887",
+              "name": "executionType",
+              "value": "={{ $json.plan.executionType }}",
+              "type": "string"
+            },
+            {
+              "id": "d4ca63ac-baae-4fd4-82b7-90b7dcec370f",
+              "name": "taskBreakdown",
+              "value": "={{ Object.entries($json.plan.taskDivision || {}).map(([worker, task]) => `${worker}: ${task}`) }}",
+              "type": "array"
+            },
+            {
+              "id": "ac45a162-49a2-45dd-aee5-01d07cb1149f",
+              "name": "location",
+              "value": "={{ $json.plan.location }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ffae3b74-77a5-412e-a484-f88ebafef47e",
+      "name": "Building Plan Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1296,
+        4144
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.params.prompt || $json.params.buildRequest }}\nCONTEXT: {{ $json.params.workerCount ? 'Collaborative execution with ' + $json.params.workerCount + ' workers requested' : 'Single bot execution request' }}\n\n{{$('Get Prompts').all().find(row => row.json.agent === \"Smart Building Planner\").json.user_prompt_template}}",
+        "options": {
+          "systemMessage": "={{$('Get Prompts').all().find(row => row.json.agent === \"Smart Building Planner\").json.system_prompt}}"
+        }
+      },
+      "id": "2df55d30-07d5-4bf9-9b56-b15e40435b9d",
+      "name": "Smart Building Planner",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        4288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/useDoor",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute UseDoor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        7616
+      ],
+      "id": "fe622542-7c3a-484a-ad07-40217864121d",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToBed",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute GoToBed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        7424
+      ],
+      "id": "141f5f6f-0572-4342-95ac-5dc7ce158866",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stay",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "seconds",
+              "value": "={{ $json.params.seconds || 30 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "name": "Execute Stay",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        7232
+      ],
+      "id": "e374ea71-5d84-47ba-a10f-604f5d3b30e7",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/setMode",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "mode",
+              "value": "={{ $json.params.mode }}"
+            },
+            {
+              "name": "enabled",
+              "value": "={{ $json.params.enabled }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute SetMode",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        7040
+      ],
+      "id": "1d22f058-dfa3-49fe-9a88-3173e9f8493e",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        6848
+      ],
+      "id": "31a229a8-e239-4314-8f83-ef629860344e",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stats",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        6656
+      ],
+      "id": "d3b49d32-44ca-436a-8b1d-f28d4789fe9c",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/getCraftingPlan?item={{ encodeURIComponent($json.params.item) }}&quantity={{ $json.params.quantity || 1 }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute GetCraftingPlan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        6464
+      ],
+      "id": "072952c5-ffb8-4742-8eb5-7bb7d43466a3",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/modes",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute Modes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        6272
+      ],
+      "id": "cc31da25-2bed-4b05-bcb4-7c7229199a5e",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Entities",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        6080
+      ],
+      "id": "678c654b-3fca-45f2-b5e5-23d2a08d5130",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/craftable",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Craftable",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        5888
+      ],
+      "id": "2dd14b4e-3685-4359-8b7e-d3ea8dc997e4",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/nearbyBlocks",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute NearbyBlocks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        5696
+      ],
+      "id": "844a3c88-e221-4669-afe5-5d4c55aa3eb4",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/savedPlaces",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute SavedPlaces",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        5408
+      ],
+      "id": "c5003e15-7499-4271-ae97-a9862e3d2f32",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToRememberedPlace",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.params.name }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute GoToRememberedPlace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        5216
+      ],
+      "id": "3cbf4750-be9b-4913-bd45-da72489eb76f",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/rememberHere",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.params.name }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Execute RememberHere",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        5024
+      ],
+      "id": "29428e87-c393-412c-bed8-d24ec8172cdd",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/defendSelf",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "range",
+              "value": "={{ $json.params.range || 9 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute DefendSelf",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        4832
+      ],
+      "id": "41ca82e8-58ad-4c8a-a7ff-73e95e1bc6d7",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/attackPlayer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute AttackPlayer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        4640
+      ],
+      "id": "a2a785a1-c6e3-49e1-a851-a11152584e3f",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/clearFurnace",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute ClearFurnace",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        3936
+      ],
+      "id": "d8b4006a-d3f4-4f87-bb25-69bcd45b271c",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/smelt",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute Smelt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        3744
+      ],
+      "id": "c9be7b97-d3f0-48bf-ba22-1fa6b0746ad3",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/craft",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute Craft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        3552
+      ],
+      "id": "99d9fa08-78da-4629-bf35-acb7f2a9cab3",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/viewChest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute ViewChest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        3360
+      ],
+      "id": "7625aad0-2d3e-4d33-9cc9-a49e7a330a7a",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/takeFromChest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            },
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute TakeFromChest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        3168
+      ],
+      "id": "44ed6dea-9fcc-46e1-9a25-76d5a78d598b",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/putInChest",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            },
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute PutInChest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2976
+      ],
+      "id": "65d5f42b-e558-4962-a70f-aeebb373dd60",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/givePlayer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            },
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute GivePlayer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2784
+      ],
+      "id": "309d3bec-7e53-4bb8-990e-8e4580ff4b8b",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/consume",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Consume",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2592
+      ],
+      "id": "5972828d-8c93-48fc-8da5-6fb654ba7aaf",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/discard",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Discard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2400
+      ],
+      "id": "0b127aab-1ff5-4fbc-b8aa-943455f393e9",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/equip",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "item",
+              "value": "={{ $json.params.item }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Execute Equip",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2208
+      ],
+      "id": "3073adc3-f503-4ce1-b09c-479432149b9c",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/activate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "x",
+              "value": "={{ $json.params.x }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute Activate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        2016
+      ],
+      "id": "7f3dba9f-1833-4570-b334-e1b932cff393",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/digDown",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "depth",
+              "value": "={{ $json.params.depth || 3 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute DigDown",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1824
+      ],
+      "id": "7b2858bf-c77e-45c4-97cf-95d0994183e7",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/place",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "material",
+              "value": "={{ $json.params.material }}"
+            },
+            {
+              "name": "x",
+              "value": "={{ $json.params.x !== undefined ? $json.params.x : ($json.botStatus.position.x + 1) }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y !== undefined ? $json.params.y : $json.botStatus.position.y }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z !== undefined ? $json.params.z : $json.botStatus.position.z }}"
+            },
+            {
+              "name": "face",
+              "value": "={{ $json.params.face || 'top' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute Place",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1632
+      ],
+      "id": "e4242184-97c2-4b7f-b3da-c472969d45d1",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/collect",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "block",
+              "value": "={{ $json.params.block }}"
+            },
+            {
+              "name": "quantity",
+              "value": "={{ $json.params.quantity || 1 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute Collect",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1440
+      ],
+      "id": "6601ce55-47ea-4ce5-86d7-ccaa0c662f83",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForEntity",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "entityType",
+              "value": "={{ $json.params.entityType }}"
+            },
+            {
+              "name": "range",
+              "value": "={{ Math.max(32, Math.min(512, $json.params.range)) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute SearchForEntity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1248
+      ],
+      "id": "c63a1f7f-615e-4ff2-bd34-5cdd0f32b9f1",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForBlock",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "search_range",
+              "value": "={{ Math.max(32, Math.min(512, $json.params.range)) }}"
+            },
+            {
+              "name": "blockType",
+              "value": "={{ $json.params.blockType }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute SearchForBlock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        1056
+      ],
+      "id": "764dcc29-2bce-4aac-a287-50bd5a598736",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/moveAway",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "distance",
+              "value": "={{ $json.params.distance || 10 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute MoveAway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        864
+      ],
+      "id": "8a2e781c-68a6-4739-a22b-709d09b22e9f",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/followPlayer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.playerName }}"
+            },
+            {
+              "name": "distance",
+              "value": "={{ $json.params.distance || 4 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute FollowPlayer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        672
+      ],
+      "id": "2a22ed53-298d-4a48-965f-66f0f237667d",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToPlayer",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "player",
+              "value": "={{ $json.params.player }}"
+            },
+            {
+              "name": "closeness",
+              "value": "={{ $json.params.closeness || 3 }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Execute GoToPlayer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        480
+      ],
+      "id": "de616d18-7c6e-4d62-8391-6f2c36d783d1",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/move",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "x",
+              "value": "={{ $json.params.x || 0 }}"
+            },
+            {
+              "name": "y",
+              "value": "={{ $json.params.y || 0 }}"
+            },
+            {
+              "name": "z",
+              "value": "={{ $json.params.z || 0 }}"
+            },
+            {
+              "name": "direction",
+              "value": "={{ $json.params.direction || '' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute Move",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        288
+      ],
+      "id": "70fd97af-7b63-4435-b54e-6eae092b36df",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "chat-intent-route",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "chat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "chat"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "593610ca-8b21-420d-9a66-300175e2baf1",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "move",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "move"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "fb997916-972c-4c69-ae73-aa6ff7e02c32",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "goToPlayer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "goToPlayer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c3",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "followPlayer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "followPlayer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c4",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "moveAway",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "moveAway"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c5",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "searchForBlock",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "searchForBlock"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c6",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "searchForEntity",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "searchForEntity"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c7",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "collectBlocks",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "collectBlocks"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c8",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "placeBlocks",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "placeBlocks"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c9",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "digDown",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "digDown"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c10",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "activate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "activate"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c11",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "equip",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "equip"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c12",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "discard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "discard"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c13",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "consume",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consume"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c14",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "givePlayer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "givePlayer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c15",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "putInChest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "putInChest"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c16",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "takeFromChest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "takeFromChest"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c17",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "viewChest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "viewChest"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c18",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "craft",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "craft"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c19",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "smelt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "smelt"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c20",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "clearFurnace",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "clearFurnace"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c21",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "attackPlayer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "attackPlayer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c22",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "defendSelf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "defendSelf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c23",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "rememberHere",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "rememberHere"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c24",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "goToRememberedPlace",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "goToRememberedPlace"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c25",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "savedPlaces",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "savedPlaces"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c26",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "nearbyBlocks",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nearbyBlocks"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c27",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "craftable",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "craftable"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c28",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "entities",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "entities"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c29",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "modes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "modes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c30",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "getCraftingPlan",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "getCraftingPlan"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c31",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "stats",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "stats"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c32",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "inventory",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "inventory"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c33",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "setMode",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "setMode"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c34",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "stay",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "stay"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c35",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "goToBed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "goToBed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c36",
+                    "leftValue": "{{ $json.intent }}",
+                    "rightValue": "useDoor",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "useDoor"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c37",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "newAction",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "newAction"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c38",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "lookAtPlayer",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lookAtPlayer"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c39",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "lookAtPosition",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "lookAtPosition"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c40",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "startConversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "startConversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c41",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "endConversation",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "endConversation"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c42",
+                    "leftValue": "{{ $json.intent }}",
+                    "rightValue": "restart",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "restart"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c43",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "clearChat",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "clearChat"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c44",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "endGoal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "endGoal"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c45",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "stop",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "stop"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c46",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "spawnWorkers",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "spawnWorkers"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c47",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "collaborativeBuild",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "collaborativeBuild"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c48",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "multiBotStatus",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "multiBotStatus"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c49",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "assignTasks",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "assignTasks"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c50",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "stopWorkers",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "stopWorkers"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c51",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "getWorkerList",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "getWorkerList"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Route by Intent",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -1392,
+        4416
+      ],
+      "id": "ded87587-ddbe-42ac-88d3-fabc643ef0c7"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ String($json.chatId) }}",
+        "text": "={{ $json.clarificationQuestion || $json.params?.response || $json.response || 'Could you please provide more details?' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send Clarification Question",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1392,
+        4224
+      ],
+      "id": "2376cdc4-0487-4e7b-91b5-f205b6943092",
+      "webhookId": "543fb473-fb72-48c8-a57f-00bf2b17a65e",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "clarification-or-chat",
+              "leftValue": "={{ $json.needsClarification || $json.intent === 'chat' || $json.intent === 'clarification' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Check Intent Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        4720
+      ],
+      "id": "f8eb42a5-6967-486c-bb09-a155856cb3ce"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === PARSE AI AGENT RESPONSE ===\nconst aiResponse = $input.first().json;\n\nconsole.log('=== PARSE AI AGENT RESPONSE ===');\nconsole.log('AI Agent Response:', JSON.stringify(aiResponse, null, 2));\n\nlet responseText = '';\nlet needsClarification = false;\nlet clarificationQuestion = '';\nlet parsedIntent = null;\nlet parsedParams = {};\nlet conversationState = 'executing';\n\n// AI Agent returns data in 'output' field as JSON string\n// Handle multiple possible formats:\n// 1. Single object: {\"output\": \"JSON_STRING\"}\n// 2. Array format: [{\"output\": \"JSON_STRING\"}]\n// 3. Direct content formats\nif (aiResponse.output) {\n  responseText = aiResponse.output;\n  console.log('Extracted from single object format');\n} else if (Array.isArray(aiResponse) && aiResponse.length > 0) {\n  if (aiResponse[0].output) {\n    // Handle array format: [{\"output\": \"JSON_STRING\"}]\n    responseText = aiResponse[0].output;\n    console.log('Extracted from array format:', responseText);\n  } else if (aiResponse[0].message && aiResponse[0].message.content) {\n    responseText = aiResponse[0].message.content;\n  } else {\n    responseText = JSON.stringify(aiResponse[0]);\n  }\n} else if (aiResponse.message && aiResponse.message.content) {\n  responseText = aiResponse.message.content;\n} else if (aiResponse.text) {\n  responseText = aiResponse.text;\n} else if (aiResponse.content) {\n  responseText = aiResponse.content;\n} else {\n  responseText = JSON.stringify(aiResponse);\n}\n\nconsole.log('Final extracted response text:', responseText);\n\n// Try to parse JSON response for intent and parameters\ntry {\n  let parsed;\n  \n  // Try to parse as direct JSON first (AI Agent often returns clean JSON)\n  try {\n    parsed = JSON.parse(responseText);\n    console.log('Successfully parsed direct JSON:', parsed);\n  } catch (e) {\n    // If direct parse fails, look for JSON pattern in text\n    console.log('Direct JSON parse failed, trying pattern match');\n    const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[0]);\n      console.log('Successfully parsed extracted JSON:', parsed);\n    } else {\n      throw new Error('No JSON pattern found');\n    }\n  }\n  \n  // Handle different AI response formats\n  if (parsed.intent) {\n    // Standard format: {\"intent\": \"action\", \"params\": {...}, \"response\": \"...\"}\n    parsedIntent = parsed.intent;\n    parsedParams = parsed.params || parsed.parameters || {};\n    \n    // Check for casual conversation intents that should be treated as chat\n    if (['greetings', 'greeting', 'hello', 'hi', 'casual', 'smalltalk'].includes(parsedIntent.toLowerCase())) {\n      console.log('Converting greeting/casual intent to chat');\n      parsedIntent = 'chat';\n      parsedParams = { response: parsed.response || parsed.params?.response || parsed.parameters?.response || 'Hello! How can I help you in Minecraft today?' };\n    }\n    \n    // Also extract response from top level if available\n    if (parsed.response && !parsedParams.response) {\n      parsedParams.response = parsed.response;\n    }\n  } else if (parsed.chat) {\n    // Chat format: {\"chat\": \"message\"}\n    parsedIntent = 'chat';\n    parsedParams = { response: parsed.chat };\n  } else if (parsed.clarification) {\n    // Clarification format: {\"clarification\": \"question\"}\n    parsedIntent = 'clarification';\n    parsedParams = { response: parsed.clarification };\n  } else {\n    // Unknown format, use first key as intent type\n    const firstKey = Object.keys(parsed)[0];\n    if (firstKey) {\n      parsedIntent = firstKey;\n      parsedParams = { response: parsed[firstKey] };\n    }\n  }\n    \n  console.log('Final parsed intent:', parsedIntent);\n  console.log('Final parsed params:', parsedParams);\n    \n  // Check if the AI is asking for clarification\n  if (parsed.needsClarification || parsed.clarification || \n      (parsed.response && (parsed.response.includes('?') || parsed.response.includes('clarify') || parsed.response.includes('specify')))) {\n    needsClarification = true;\n    clarificationQuestion = parsed.clarificationQuestion || parsed.response || 'Could you provide more details?';\n    // Set intent to clarification if not already set\n    if (!parsedIntent) {\n      parsedIntent = 'clarification';\n    }\n    conversationState = 'clarifying';\n    console.log('AI needs clarification:', clarificationQuestion);\n  }\n    \n  // Handle clarification responses - when user provides more context in clarifying state\n  // Check both AI response and original input context for conversation state\n  const inputConversationState = $('Prepare Conversation Context').first()?.json?.conversationState;\n  if ((aiResponse.conversationState === 'clarifying' || inputConversationState === 'clarifying') && parsedIntent && parsedIntent !== 'clarification' && parsedIntent !== 'chat') {\n    console.log('User provided clarification, AI determined intent:', parsedIntent);\n    needsClarification = false;\n    conversationState = 'executing';\n  }\n    \n  // Check if required parameters are missing for certain intents\n  if (parsedIntent && !needsClarification) {\n    const requiredParams = {\n      'move': ['x', 'y', 'z'],\n      'goToPlayer': ['player'],\n      'collectBlocks': ['block'],\n      'placeBlocks': ['material'],\n      'craft': ['item'],\n      'givePlayer': ['player', 'item'],\n      'newAction': ['prompt']\n    };\n      \n    const required = requiredParams[parsedIntent];\n    if (required) {\n      const missingParams = required.filter(param => !parsedParams[param] && parsedParams[param] !== 0);\n      console.log(`Parameter validation for ${parsedIntent}:`, {\n        required,\n        parsedParams,\n        missingParams\n      });\n      if (missingParams.length > 0) {\n        needsClarification = true;\n        clarificationQuestion = `I need more information. Please specify: ${missingParams.join(', ')}`;\n        conversationState = 'clarifying';\n        console.log('Missing required parameters:', missingParams);\n      }\n    }\n  }\n} catch (e) {\n  console.log('Failed to parse JSON, treating as chat response:', e.message);\n  parsedIntent = 'chat';\n  parsedParams = { response: responseText };\n}\n\n// Get conversation context for clarification tracking\n// Use original data if AI response doesn't have conversation history\nconst originalData = $('Prepare Conversation Context').first().json || {};\nconst conversationHistory = aiResponse.conversationHistory || originalData.turns || [];\nlet clarificationCount = originalData.clarificationCount || 0;\n// Fallback: count questions in history if clarificationCount not available\nif (!originalData.clarificationCount) {\n  clarificationCount = conversationHistory.filter(turn => \n    turn.role === 'assistant' && turn.content && turn.content.includes('?')\n  ).length;\n}\n\n// Limit clarification attempts\nconst maxClarifications = 3;\nif (clarificationCount >= maxClarifications && needsClarification) {\n  console.log('Max clarification attempts reached, proceeding with available info');\n  needsClarification = false;\n  conversationState = 'executing';\n  if (!parsedIntent || parsedIntent === 'chat') {\n    parsedIntent = 'chat';\n    parsedParams = { response: 'I will do my best with the information provided.' };\n  }\n}\n\n// originalData already declared above for clarification tracking\n\nreturn {\n  json: {\n    // Preserve ALL original context data\n    ...originalData,\n    // Add parsed AI response data\n    intent: parsedIntent,\n    params: parsedParams,\n    response: parsedParams.response || responseText,\n    needsClarification,\n    clarificationQuestion,\n    conversationState,\n    clarificationCount,\n    originalResponse: responseText,\n    // Preserve AI response for debugging\n    aiResponse: aiResponse,\n    // Debug info\n    parsedSuccessfully: !!parsedIntent\n  }\n};"
+      },
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1840,
+        4720
+      ],
+      "id": "eefc59b1-804e-498e-b225-37d7ff5868f2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\n\nconsole.log('=== PREPARE CONVERSATION CONTEXT ===');\nconsole.log('Input structure:', Object.keys(input));\nconsole.log('Full JSON from MongoDB:', JSON.stringify(input, null, 2));\n\n// Get conversation data from the previous Load Conversation History node\nconst conversation = input.conversation || {};\nconst turns = input.conversationHistory || [];\nconst memory = input.memory || '';\n\nconsole.log('Conversation loaded:', {\n  conversationId: conversation.conversationId,\n  turnsCount: turns.length,\n  hasMemory: !!memory,\n  conversationState: input.conversationState || 'initial'\n});\n\n// Use current data with fallback to stored data\nconst botStatus = input.botStatus || {};\nconst botInventory = input.botInventory || [];\nconst nearbyPlayers = input.nearbyPlayers || [];\n\nconst playerName = input.playerName || input.username || 'Player';\nconst message = input.message || '';\n\n// Enhanced context building from database\nconst conversationState = input.conversationState || 'initial';\nconst needsClarification = input.needsClarification || false;\nconst clarificationCount = input.clarificationCount || 0;\n\nconsole.log('Conversation state:', conversationState);\nconsole.log('Total turns:', turns.length);\nconsole.log('Memory length:', memory.length);\n\n// Build comprehensive system prompt matching codebase capabilities\nlet systemPrompt = $('Get Prompts').all().find(row => row.json.agent === \"Oracle\").json.system_prompt;\n\n// Add current bot status to system prompt\nif (botStatus && Object.keys(botStatus).length > 0) {\n  let statusText = 'Status unavailable';\n  if (botStatus.position) {\n    statusText = `Position: x:${botStatus.position.x?.toFixed(1)}, y:${botStatus.position.y?.toFixed(1)}, z:${botStatus.position.z?.toFixed(1)} | Health: ${botStatus.health}/20 | Action: ${botStatus.current_action || 'Idle'}`;\n  }\n  systemPrompt += `\\n\\nCurrent Status: ${statusText}`;\n}\n\n// Add inventory info if available\nif (botInventory && Array.isArray(botInventory) && botInventory.length > 0) {\n  const inventoryText = botInventory.map(item => `${item.name || item.type}(${item.count || item.quantity || 1})`).join(', ');\n  systemPrompt += `\\nCurrent Inventory: ${inventoryText}`;\n} else {\n  systemPrompt += `\\nCurrent Inventory: Empty (Creative Mode)`;\n}\n\n// Add nearby players info\nif (nearbyPlayers && nearbyPlayers.length > 0) {\n  systemPrompt += `\\nNearby Players: ${nearbyPlayers.join(', ')}`;\n} else {\n  systemPrompt += `\\nNearby Players: None detected`;\n}\n\n// Add conversation memory if available\nif (memory.trim()) {\n  systemPrompt += `\\n\\nConversation Memory: ${memory}`;\n}\n\n// Add clarification context if in clarification state\nif (conversationState === 'clarifying') {\n  systemPrompt += `\\n\\nIMPORTANT: You are currently in clarification mode (attempt ${clarificationCount + 1}/3). The user's previous request needed more details. Based on their response, either:\n1. If you now have enough information, proceed with the appropriate intent\n2. If still unclear, ask ONE specific clarifying question\n3. If this is attempt 3, proceed with best effort using available information`;\n}\n\n// Build messages array following codebase History.getHistory() pattern\nconst messages = [];\n\n// Add enhanced system message\nmessages.push({\n  role: 'system',\n  content: systemPrompt\n});\n\n// Add conversation history - smart context management\nconst maxContextTurns = 15; // Increased from 10 for better context\nlet contextTurns = turns.slice(-maxContextTurns);\n\n// If we have memory but limited context, add a memory summary message\nif (turns.length > maxContextTurns && memory.trim()) {\n  messages.push({\n    role: 'system',\n    content: `Previous conversation summary: ${memory}`\n  });\n}\n\n// Add recent conversation turns\nfor (const turn of contextTurns) {\n  // Ensure proper role mapping\n  let role = 'user';\n  if (turn.role === 'assistant' || turn.role === 'bot') {\n    role = 'assistant';\n  } else if (turn.role === 'system') {\n    role = 'system';\n  }\n  \n  messages.push({\n    role: role,\n    content: turn.content || turn.message || ''\n  });\n}\n\n// Add current user message if not already in recent history\nconst recentMessages = contextTurns.slice(-3);\nconst alreadyIncluded = recentMessages.some(turn => \n  turn.content === message || turn.content === `${playerName}: ${message}`\n);\n\nif (!alreadyIncluded && message) {\n  messages.push({\n    role: 'user', \n    content: `${playerName}: ${message}`\n  });\n}\n\n// Log comprehensive context info\nconsole.log('Enhanced conversation context prepared:', {\n  totalTurns: turns.length,\n  contextTurns: contextTurns.length,\n  messagesCount: messages.length,\n  hasMemory: !!memory,\n  conversationState,\n  needsClarification,\n  clarificationCount,\n  playerName,\n  currentMessage: message,\n  hasStatus: !!botStatus.position,\n  hasInventory: !!botInventory?.length,\n  nearbyPlayersCount: (nearbyPlayers || []).length,\n  mongoDataReceived: !!conversation._id,\n  conversationExists: !!conversation.conversationId\n});\n\nreturn {\n  json: {\n    // Original data\n    ...input,\n    // MongoDB conversation data\n    conversation: conversation,\n    turns: turns,\n    memory: memory,\n    // Merged current data\n    botStatus: botStatus,\n    botInventory: botInventory,\n    nearbyPlayers: nearbyPlayers,\n    // AI context\n    messages,\n    conversationTurns: turns.length,\n    conversationState,\n    needsClarification,\n    clarificationCount,\n    systemPrompt,\n    // Player info\n    playerName: playerName,\n    message: message,\n    // Meta\n    enhanced: true,\n    dataComplete: true\n  }\n};"
+      },
+      "name": "Prepare Conversation Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2512,
+        4720
+      ],
+      "id": "b3c70306-9207-4414-99e0-59544fb9aa03"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "conversationId",
+              "name": "conversationId",
+              "value": "={{ $json.chatId }}",
+              "type": "string"
+            },
+            {
+              "id": "playerName",
+              "name": "playerName",
+              "value": "={{ $json.playerName }}",
+              "type": "string"
+            },
+            {
+              "id": "username",
+              "name": "username",
+              "value": "={{ $json.username }}",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "chatId",
+              "name": "chatId",
+              "value": "={{ $json.chatId }}",
+              "type": "string"
+            },
+            {
+              "id": "botStatus",
+              "name": "botStatus",
+              "value": "={{ $json.botStatus }}",
+              "type": "object"
+            },
+            {
+              "id": "botInventory",
+              "name": "botInventory",
+              "value": "={{ $json.botInventory }}",
+              "type": "array"
+            },
+            {
+              "id": "nearbyPlayers",
+              "name": "nearbyPlayers",
+              "value": "={{ $json.nearbyPlayers }}",
+              "type": "array"
+            },
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp || new Date().getTime() }}",
+              "type": "number"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "value": "telegram",
+              "type": "string"
+            },
+            {
+              "id": "newTurn",
+              "name": "newTurn",
+              "value": "={{ { timestamp: ($json.timestamp || new Date().getTime()), role: 'user', content: ($json.playerName + ': ' + $json.message), playerName: $json.playerName, source: 'telegram' } }}",
+              "type": "object"
+            },
+            {
+              "id": "lastUpdated",
+              "name": "lastUpdated",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare DB Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2736,
+        4720
+      ],
+      "id": "230b4478-fd09-4f0f-9e4b-cf2382908553"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst playersHttpResponse = $input.first().json;\nconst mergedData = $('Merge Status + Inventory').first().json;\n\nconsole.log('=== FINAL MERGE: PLAYERS DATA ===');\nconsole.log('Merged data keys:', Object.keys(mergedData));\nconsole.log('Players Response:', JSON.stringify(playersHttpResponse, null, 2));\nconsole.log('Current playerName:', mergedData.playerName);\nconsole.log('Current botInventory:', mergedData.botInventory);\n\n// Get nearby players data from the HTTP response\nlet nearbyPlayers = [];\nif (playersHttpResponse && playersHttpResponse.nearby_entities) {\n  const entitiesText = playersHttpResponse.nearby_entities;\n  console.log('Entities text:', entitiesText);\n  \n  // Extract player names from entities text\n  const playerMatches = entitiesText.match(/player:\\s*([\\w]+)/g);\n  if (playerMatches) {\n    nearbyPlayers = playerMatches.map(match => match.replace('player: ', ''));\n  }\n}\n\nconsole.log('Nearby players found:', nearbyPlayers);\n\n// Final result with all data properly merged\nconst result = {\n  ...mergedData,\n  nearbyPlayers: nearbyPlayers,\n  source: 'inventory_and_players',\n  timestamp: new Date().getTime()\n};\n\nconsole.log('Final result keys:', Object.keys(result));\nconsole.log('Final playerName:', result.playerName);\nconsole.log('Final botInventory length:', result.botInventory ? result.botInventory.length : 'undefined');\nconsole.log('Final nearbyPlayers:', result.nearbyPlayers);\n\nreturn { json: result };"
+      },
+      "name": "Merge Players Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2944,
+        4720
+      ],
+      "id": "736e24a6-c357-4f73-a76b-c3440b05a550"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Get Nearby Players",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3088,
+        4720
+      ],
+      "id": "a021c1da-1e2b-4dd4-874d-8b79155894cf",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const inventoryHttpResponse = $input.first().json;\nconst statusData = $('Merge Status Data').first().json;\n\nconsole.log('=== MERGE STATUS + INVENTORY ===');\nconsole.log('Status data:', statusData);\nconsole.log('Inventory response:', JSON.stringify(inventoryHttpResponse, null, 2));\n\n// Get the actual in-game player name from bot status, not telegram username\nlet playerName = statusData.username; // fallback to telegram username\nif (statusData.botStatus && statusData.botStatus.raw_stats) {\n  const statsText = statusData.botStatus.raw_stats;\n  const playerMatch = statsText.match(/Nearby Human Players: ([A-Z]+)/i);\n  if (playerMatch && playerMatch[1]) {\n    playerName = playerMatch[1];\n    console.log('Found in-game player name:', playerName);\n  }\n}\n\n// Process inventory data from API response - handle creative mode format\nlet botInventory = [];\nconsole.log('Processing inventory response...');\n\nif (inventoryHttpResponse) {\n  // Handle array response format\n  if (Array.isArray(inventoryHttpResponse)) {\n    console.log('Inventory is array format');\n    \n    for (const item of inventoryHttpResponse) {\n      if (item && item.inventory) {\n        // Parse inventory text format\n        const inventoryText = item.inventory;\n        console.log('Parsing inventory text:', inventoryText);\n        \n        // Extract items from inventory text\n        // Format: \"- glass: 1\" or \"- item_name: quantity\"\n        const itemMatches = inventoryText.match(/- ([^:]+): (\\d+)/g);\n        if (itemMatches) {\n          for (const match of itemMatches) {\n            const parts = match.replace('- ', '').split(': ');\n            if (parts.length === 2) {\n              botInventory.push({\n                name: parts[0].trim(),\n                count: parseInt(parts[1]),\n                type: parts[0].trim()\n              });\n            }\n          }\n        }\n        \n        // Check if creative mode\n        if (inventoryText.includes('creative mode')) {\n          console.log('Bot is in creative mode - unlimited items available');\n        }\n      }\n    }\n  } else if (inventoryHttpResponse.inventory) {\n    // Direct inventory property\n    if (Array.isArray(inventoryHttpResponse.inventory)) {\n      botInventory = inventoryHttpResponse.inventory;\n    } else if (typeof inventoryHttpResponse.inventory === 'string') {\n      // Parse string format\n      const inventoryText = inventoryHttpResponse.inventory;\n      const itemMatches = inventoryText.match(/- ([^:]+): (\\d+)/g);\n      if (itemMatches) {\n        for (const match of itemMatches) {\n          const parts = match.replace('- ', '').split(': ');\n          if (parts.length === 2) {\n            botInventory.push({\n              name: parts[0].trim(),\n              count: parseInt(parts[1]),\n              type: parts[0].trim()\n            });\n          }\n        }\n      }\n    }\n  }\n}\n\nconsole.log('Processed inventory:', botInventory);\nconsole.log('Inventory count:', botInventory.length);\nconsole.log('Using player name:', playerName);\n\n// Merge all data together\nconst result = {\n  ...statusData,\n  playerName: playerName, // Override with in-game name\n  botInventory: botInventory,\n  inventoryProcessed: true\n};\n\nreturn { json: result };"
+      },
+      "name": "Merge Status + Inventory",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3312,
+        4720
+      ],
+      "id": "afbb3776-0451-4bc9-8f16-cc42f63e8dd7"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Get Bot Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3504,
+        4736
+      ],
+      "id": "1e5678c8-851d-4a72-af24-bb50c0d9efd9",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// === MERGE STATUS DATA ===\nconst inputData = $('Normalize Input').first().json;\nconst statusResponse = $input.first().json;\n\nconsole.log('=== MERGE STATUS ===');\nconsole.log('Input data keys:', Object.keys(inputData));\nconsole.log('Status response full:', JSON.stringify(statusResponse, null, 2));\nconsole.log('Status response type:', typeof statusResponse);\n\n// Process bot status\nlet botStatus = {};\nif (statusResponse && !statusResponse.error) {\n  botStatus = statusResponse;\n  console.log('Bot Status Retrieved:', botStatus);\n} else {\n  console.log('Bot Status Error - using defaults');\n  botStatus = { error: 'Status unavailable', health: 20, food: 20, position: { x: 0, y: 64, z: 0 } };\n}\n\n// Merge input data with bot status\nreturn {\n  json: {\n    ...inputData,\n    botStatus,\n    source: 'status'\n  }\n};"
+      },
+      "name": "Merge Status Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        4736
+      ],
+      "id": "c1fd91a4-fc66-49b2-8b74-98a47cc60447"
+    },
+    {
+      "parameters": {
+        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "name": "Get Bot Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3888,
+        4736
+      ],
+      "id": "f0306702-5626-4144-b1dd-de4d6fdb3097",
+      "executeOnce": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// === NORMALIZE INPUT & LOAD HISTORY ===\nconst inputData = $input.first().json;\n\nconsole.log('=== NORMALIZE INPUT ===');\nconsole.log('Raw input data:', JSON.stringify(inputData, null, 2));\n\nlet username, message, chatId, source;\n\n// Handle different input sources\nif (inputData.source === 'ingame') {\n  // In-game chat forwarding\n  username = inputData.username;  // Dynamic player name from in-game\n  message = inputData.message;\n  chatId = null;  // No chat ID for in-game\n  source = 'ingame';\n  console.log('Processing IN-GAME chat from player:', username);\n} else if (inputData.message) {\n  // Telegram input\n  username = inputData.message.from?.username || inputData.message.from?.first_name || 'User';\n  message = inputData.message.text || '';\n  chatId = inputData.message.chat?.id;\n  source = 'telegram';\n  console.log('Processing TELEGRAM message from user:', username);\n} else {\n  return { json: { error: 'Unknown input format', rawInput: inputData } };\n}\n\nif (!message) {\n  return { json: { error: 'No message text', chatId, source } };\n}\n\n// Load conversation history and memory from workflow static data\nlet conversationHistory = [];\nlet botMemory = '';\n\ntry {\n  const staticData = $execution.getStaticData('global') || {};\n  conversationHistory = staticData.conversationHistory || [];\n  botMemory = staticData.botMemory || '';\n} catch (e) {\n  console.log('Initializing new conversation:', e);\n}\n\n// Add user message to history\nconversationHistory.push({\n  role: 'user',\n  content: `${username}: ${message}`,\n  timestamp: Date.now(),\n  source: source\n});\n\n// Keep last 20 messages\nif (conversationHistory.length > 20) {\n  conversationHistory = conversationHistory.slice(-20);\n}\n\n// Save updated history back\ntry {\n  const staticData = $execution.getStaticData('global');\n  staticData.conversationHistory = conversationHistory;\n  staticData.botMemory = botMemory;\n} catch (e) {\n  console.log('Could not save conversation history:', e);\n}\n\nconsole.log('Final normalized data:');\nconsole.log('Username (in-game player):', username);\nconsole.log('Message:', message);\nconsole.log('Source:', source);\nconsole.log('Chat ID:', chatId);\n\nreturn {\n  json: {\n    username,        // This is now the ACTUAL in-game player name\n    message,\n    chatId,\n    conversationHistory,\n    botMemory,\n    timestamp: Date.now(),\n    source: source,\n    playerName: username  // Explicit field for the in-game player name\n  }\n};"
+      },
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4240,
+        4736
+      ],
+      "id": "4160901b-cac6-411c-b4ca-1d5159c532ea"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "name": "Telegram Bot",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -4432,
+        4736
+      ],
+      "webhookId": "e84c3f33-f0af-4b2b-972c-343d55a2636e",
+      "id": "3e9997f7-a209-4e3b-94ba-788bd18fab96",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "ConversationId",
+        "collectionName": "history",
+        "databaseName": "Minecraft"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        -2080,
+        4944
+      ],
+      "id": "4557b228-f457-4f42-b1a8-f25d95de68a3",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2208,
+        4944
+      ],
+      "id": "896d2b97-f137-437b-911b-a9cc2fc1a881",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "bcAk6fZ6KgqKAt8K",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        800,
+        4528
+      ],
+      "id": "2a22dcc4-6789-49a5-bed8-86bd1081fc7a",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "bcAk6fZ6KgqKAt8K",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "ConversationId",
+        "collectionName": "history",
+        "databaseName": "admin"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        944,
+        4512
+      ],
+      "id": "8f3f5149-bdd4-41b2-9531-abe5124014cb",
+      "name": "MongoDB Chat Memory1",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/multibot/status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3536,
+        4000
+      ],
+      "id": "705ee818-54f5-4589-bc92-259d8a4b3c0a",
+      "name": "MultiBot Status",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "workers",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3744,
+        4000
+      ],
+      "id": "2c89bf7a-87e9-4db7-bcff-1fdb08156f16",
+      "name": "Split Out",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.KODECRAFT_SERVER_URL.split(':').slice(0, 2).join(':') }}:{{ $json.port }}/api/agent/endGoal",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3968,
+        4000
+      ],
+      "id": "a6e21d87-a308-4e7e-a313-f0c32f29eda9",
+      "name": "Reset Worker",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "results",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        4208,
+        4000
+      ],
+      "id": "868066b1-59d3-44cb-831a-df7a1428c7de",
+      "name": "Aggregate",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0181dfc8-22e5-46e9-aba6-bf870e6670bf",
+              "name": "workers",
+              "value": "={{ $json.results }}",
+              "type": "string"
+            },
+            {
+              "id": "dac1a68c-0913-4875-8cfa-bd94dce3d8d6",
+              "name": "sessionId",
+              "value": "={{ $('Wait for Workers Init').item.json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "95e57745-c503-48f8-8f68-35d7ab2bd898",
+              "name": "success",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "7664b85d-d985-4edb-b0e3-8ab31632c617",
+              "name": "message",
+              "value": "Workers resetted",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4416,
+        4000
+      ],
+      "id": "40e2910d-9d30-412e-83f4-4759a3563fa2",
+      "name": "Set Reply",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the output string from the previous node\nconst outputString = $input.first().json.output;\n\nconsole.log('Raw output:', outputString);\n\ntry {\n  let parsedData;\n  \n  // Try to parse directly as JSON first\n  try {\n    parsedData = JSON.parse(outputString);\n    console.log('Parsed as direct JSON');\n  } catch (e) {\n    // If direct parsing fails, try to extract JSON from code blocks\n    \n    // Match various code block formats: ```json ... ```, ```...```, or just raw JSON\n    const codeBlockMatch = outputString.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    \n    if (codeBlockMatch && codeBlockMatch[1]) {\n      console.log('Extracted from code block');\n      parsedData = JSON.parse(codeBlockMatch[1]);\n    } else {\n      // Try to find JSON object/array patterns in the string\n      const jsonMatch = outputString.match(/(\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\])/);\n      \n      if (jsonMatch) {\n        console.log('Extracted JSON pattern');\n        parsedData = JSON.parse(jsonMatch[1]);\n      } else {\n        throw new Error('No JSON found in output');\n      }\n    }\n  }\n  \n  console.log('Parsed data:', JSON.stringify(parsedData, null, 2));\n  \n  // Return the parsed data as-is (generic, no assumptions about structure)\n  return {\n    plan: parsedData\n  };\n  \n} catch (error) {\n  console.log('Error parsing JSON:', error.message);\n  return [{\n    json: {\n      error: 'Failed to parse JSON',\n      message: error.message,\n      rawOutput: outputString\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        4144
+      ],
+      "id": "ec24ae06-f75c-4434-9e0e-18bc40965d62",
+      "name": "Parse Plan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/start-collaborative-build-stages",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "buildingRequest",
+              "value": "={{ $('Route Building Execution').item.json.building_plan.buildingRequest }}"
+            },
+            {
+              "name": "workerCount",
+              "value": "={{ $('Route Building Execution').item.json.building_plan.workerCount }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Route Building Execution').item.json.building_plan.taskDivision }}"
+            },
+            {
+              "name": "conversationId",
+              "value": "={{ $('Check Intent Type').item.json.conversationId }}"
+            },
+            {
+              "name": "username",
+              "value": "={{ $('Check Intent Type').item.json.username }}"
+            },
+            {
+              "name": "botStatus",
+              "value": "={{ $('Check Intent Type').item.json.botStatus }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $json.building_plan.location }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2096,
+        4048
+      ],
+      "id": "5f16d0c5-2af2-467c-8b0d-100d2300f4a9",
+      "name": "StartCollaborativeBuild"
+    },
+    {
+      "parameters": {
+        "content": "StartCollaborativeBuild\n  ├─ Generate sessionId\n  ├─ Save to DB\n  └─ Execute: SpawnWorkers (pass taskDivision too)\n      ↓\nSpawnWorkers\n  ├─ Spawn workers (workerCount: 3)\n  ├─ Append to spawnedWorkers array\n  └─ Execute: WaitAndRegister (pass taskDivision)\n      ↓\nWaitAndRegister\n  ├─ Wait for workers ready\n  ├─ Register workers\n  └─ Execute: CoordinateBuild (pass taskDivision)\n      ↓\nCoordinateBuild\n  ├─ Create session\n  ├─ Get position\n  ├─ Reserve location\n  ├─ Teleport workers\n  └─ Execute: DistributeTasks (pass taskDivision) ← HERE!\n      ↓\nDistributeTasks\n  ├─ Function: Convert taskDivision to array\n  ├─ Loop through tasks\n  ├─ HTTP POST send-task to each worker\n  └─ Complete",
+        "height": 480,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1744,
+        3520
+      ],
+      "typeVersion": 1,
+      "id": "0a10a151-03b8-4a1f-9c77-149c15ff4bd7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/spawn-workers",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "workercount",
+              "value": "={{ $json.params.quantity }}"
+            },
+            {
+              "name": "conversationId",
+              "value": "={{ $json.conversationId }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{Object.fromEntries(Array.from({length: $json.params.quantity}, () => [`worker_${Math.random().toString(36).substring(2, 8)}`, `go to ${$json.params.location}`]))}}"
+            },
+            {
+              "name": "botstatus",
+              "value": "={{ $json.botStatus }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{\"spawn_\" + new Date().getTime()}}"
+            },
+            {
+              "name": "callbackWebhookUrl",
+              "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-complete"
+            },
+            {
+              "name": "taskRequest",
+              "value": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "SpawnWorkers Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        9344
+      ],
+      "id": "99415c78-0d12-4aab-b4e6-ac03ef94e3df",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}\n\n{{$('Get Prompts').all().find(row => row.json.agent === \"Oracle\").json.user_prompt_template}}\n\nCONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? 'CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? 'CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
+        "options": {
+          "systemMessage": "={{ $json.systemPrompt}}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2192,
+        4720
+      ],
+      "id": "e6f51ae8-22d0-4e30-a69a-29fa4fe72e76",
+      "name": "Oracle"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "fiybiQlR805maJNt",
+          "mode": "list",
+          "cachedResultName": "KodecraftPrompts",
+          "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt"
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -4048,
+        4736
+      ],
+      "id": "83911fec-df13-4287-afbc-296552a9c1a3",
+      "name": "Get Prompts",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Bot').item.json.message.chat.id }}",
+        "text": "=I will proceed to {{ $json.building_plan.buildingRequest }}\nI will be using {{ $json.building_plan.workerCount }} workers.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Send Reply1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1872,
+        4096
+      ],
+      "id": "fa958473-fd05-45d6-abaa-aba2cedb5c50",
+      "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Telegram Bot": [
+      {
+        "json": {
+          "update_id": 238963688,
+          "message": {
+            "message_id": 799,
+            "from": {
+              "id": 5415489232,
+              "is_bot": false,
+              "first_name": "Maurizio",
+              "username": "Santamm67",
+              "language_code": "en"
+            },
+            "chat": {
+              "id": 5415489232,
+              "first_name": "Maurizio",
+              "username": "Santamm67",
+              "type": "private"
+            },
+            "date": 1763653412,
+            "text": "Build a house with a roof using 3 workers"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Format Result": {
+      "main": [
+        [
+          {
+            "node": "Send Final Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Stop": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute MultiBotStatus": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute AssignTasks": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Workers Init": {
+      "main": [
+        [
+          {
+            "node": "MultiBot Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute StopWorkers": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GetWorkerList": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute EndGoal": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute ClearChat": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Restart": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute EndConversation": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute StartConversation": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute LookAtPosition": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute LookAtPlayer": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Building API Call": {
+      "main": [
+        [
+          {
+            "node": "Format Building Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Building Response": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Building Execution": {
+      "main": [
+        [
+          {
+            "node": "Send Reply1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Building API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Building Plan Result": {
+      "main": [
+        [
+          {
+            "node": "Route Building Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Smart Building Planner": {
+      "main": [
+        [
+          {
+            "node": "Parse Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute UseDoor": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GoToBed": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Stay": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SetMode": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Inventory": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Stats": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GetCraftingPlan": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Modes": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Entities": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Craftable": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute NearbyBlocks": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SavedPlaces": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GoToRememberedPlace": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute RememberHere": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute DefendSelf": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute AttackPlayer": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute ClearFurnace": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Smelt": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Craft": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute ViewChest": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute TakeFromChest": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute PutInChest": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GivePlayer": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Consume": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Discard": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Equip": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Activate": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute DigDown": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Place": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Collect": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SearchForEntity": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute SearchForBlock": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute MoveAway": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute FollowPlayer": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute GoToPlayer": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Move": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Intent": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Move",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GoToPlayer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute FollowPlayer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute MoveAway",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute SearchForBlock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute SearchForEntity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Collect",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Place",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute DigDown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Activate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Equip",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Discard",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Consume",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GivePlayer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute PutInChest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute TakeFromChest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute ViewChest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Craft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Smelt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute ClearFurnace",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute AttackPlayer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute DefendSelf",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute RememberHere",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GoToRememberedPlace",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute SavedPlaces",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute NearbyBlocks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Craftable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Entities",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Modes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GetCraftingPlan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Stats",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute SetMode",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Stay",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GoToBed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute UseDoor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Smart Building Planner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute LookAtPlayer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute LookAtPosition",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute StartConversation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute EndConversation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Restart",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute ClearChat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute EndGoal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Stop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SpawnWorkers Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Smart Building Planner",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute MultiBotStatus",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute AssignTasks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute StopWorkers",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute GetWorkerList",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Intent Type": {
+      "main": [
+        [
+          {
+            "node": "Send Clarification Question",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Check Intent Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Conversation Context": {
+      "main": [
+        [
+          {
+            "node": "Oracle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare DB Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare Conversation Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Players Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare DB Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Nearby Players": {
+      "main": [
+        [
+          {
+            "node": "Merge Players Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Status + Inventory": {
+      "main": [
+        [
+          {
+            "node": "Get Nearby Players",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Bot Inventory": {
+      "main": [
+        [
+          {
+            "node": "Merge Status + Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Status Data": {
+      "main": [
+        [
+          {
+            "node": "Get Bot Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Bot Status": {
+      "main": [
+        [
+          {
+            "node": "Merge Status Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Get Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Bot": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Oracle",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Oracle",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Smart Building Planner",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Smart Building Planner",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MultiBot Status": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Reset Worker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Worker": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Set Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Reply": {
+      "main": [
+        [
+          {
+            "node": "Execute AssignTasks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Plan": {
+      "main": [
+        [
+          {
+            "node": "Building Plan Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "StartCollaborativeBuild": {
+      "main": [
+        []
+      ]
+    },
+    "SpawnWorkers Workflow": {
+      "main": [
+        [
+          {
+            "node": "Format Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Oracle": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prompts": {
+      "main": [
+        [
+          {
+            "node": "Get Bot Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Reply1": {
+      "main": [
+        [
+          {
+            "node": "StartCollaborativeBuild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "26029cb7-002e-472b-ba94-1326108db71b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "id": "NbnxZS53MmqSYSgX",
+  "tags": []
+}

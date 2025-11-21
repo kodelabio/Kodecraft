@@ -1,0 +1,1355 @@
+{
+  "name": "Distribute Tasks in Stages",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/kodecraft/distribute-tasks-stages",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        80
+      ],
+      "id": "d7a37764-9f00-4543-af93-40556a894a2f",
+      "name": "Webhook",
+      "webhookId": "25bc15a7-f0ca-43fe-b603-d1517c32f5ba"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/send-task-stage",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "port",
+              "value": "={{ $json.port }}"
+            },
+            {
+              "name": "taskPrompt",
+              "value": "={{ $json.taskPrompt }}"
+            },
+            {
+              "name": "conversationId",
+              "value": "={{ $('Webhook').item.json.body.conversationId }}"
+            },
+            {
+              "name": "worker",
+              "value": "={{ $json.worker }}"
+            },
+            {
+              "name": "stageNumber",
+              "value": "={{ $json.stageNumber }}"
+            },
+            {
+              "name": "callbackWebhookUrl",
+              "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-stage-complete"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1792,
+        96
+      ],
+      "id": "665e4660-e4a7-41e9-b20c-47b6fad7592d",
+      "name": "Send Task",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        448,
+        -48
+      ],
+      "id": "0e5298ed-11d1-42d9-82ba-dbc8c31da8b0",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const stages = $input.first().json.body.stages;\nconst stagesArray = Object.keys(stages)\n  .sort((a, b) => parseInt(a) - parseInt(b))\n  .map(stageKey => {\n    const stage = stages[stageKey];\n    const workers = Object.keys(stage.tasks).map(workerName => {\n      const task = stage.tasks[workerName];\n      return {\n        sessionId: $input.first().json.body.sessionId,\n        stageNumber: stage.stageNumber,\n        worker: workerName,\n        port: task.port,\n        taskPrompt: task.fullPrompt\n      };\n    });\n    return {\n      stageNumber: stage.stageNumber,\n      status: stage.status,\n      tasks: workers  // Now as array instead of dict\n    };\n  });\n\nreturn { stagesArray };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        80
+      ],
+      "id": "eee067be-ee60-4089-86d4-94ad3c7a9809",
+      "name": "Stages List"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "stagesArray",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        80
+      ],
+      "id": "2e378c79-480d-468b-9fe8-5df0ce613721",
+      "name": "Split Stages"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        0,
+        80
+      ],
+      "id": "5c09818d-a2a9-4e3a-89a2-ed0fa3a6d95b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+        "text": "=Starting Worker {{ $('Split Workers').item.json.worker }} on stage {{ $('Split Workers').item.json.stageNumber }}..",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Start Stage",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2464,
+        96
+      ],
+      "id": "6e9c1868-bae0-44ba-a8c6-1b57c24b6cc0",
+      "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        96
+      ],
+      "id": "fe3ec374-1b57-4ab5-a67f-5fadc06ea4da",
+      "name": "Split Workers"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "CollaborativeTasks",
+        "updateKey": "sessionId",
+        "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, stages, completedStages, startTime",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        -672,
+        -224
+      ],
+      "id": "0776decb-55ec-404f-bb09-fc7cfeb5a29a",
+      "name": "Update Tasks Request",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2082892d-1066-4f03-bb74-00af9befd498",
+              "name": "sessionId",
+              "value": "={{ $('Webhook').item.json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "1923c62e-4fa3-462f-9b05-ccf80f886ca2",
+              "name": "stageNumber",
+              "value": "={{ $('Split Workers').item.json.stageNumber }}",
+              "type": "number"
+            },
+            {
+              "id": "9dada34f-e7a4-4842-af3c-a9e91ac3e768",
+              "name": "worker",
+              "value": "={{ $('Split Workers').item.json.worker }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        96
+      ],
+      "id": "73121a23-86fa-41b6-a62d-33dd6bc9427d",
+      "name": "Update Task"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "db737727-f14c-4794-a32e-6ae58da50280",
+              "name": "tasks",
+              "value": "={{ $('Loop Over Items').item.json.tasks }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        96
+      ],
+      "id": "adfa1d5b-bcc1-479f-9737-b3f5a18015a2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "CollaborativeTasks",
+        "query": "={\"sessionId\":\"{{ $('Webhook').item.json.body.sessionId }}\"}",
+        "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.status\": \"started\"\n  }\n}"
+      },
+      "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "ac2429a2-9894-4769-9b22-cc6c2b185454",
+      "name": "Set Stage started",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Stages workflow\n- Work is organized in sequential stages\n- each stage has parallel tasks\n- each stage can only start once the previous stage taske are completed",
+        "height": 352,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2288,
+        176
+      ],
+      "typeVersion": 1,
+      "id": "1e5b523c-0d1b-452b-8cd7-1c84b6a18a16",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "collection": "CollaborativeTasks",
+        "options": {},
+        "query": "={\"sessionId\": \"{{ $('Webhook').item.json.body.sessionId }}\"} "
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        192
+      ],
+      "id": "1c87088e-16c5-4876-8493-5998efdb02e5",
+      "name": "Retrieve Session",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        448
+      ],
+      "id": "f9abef38-e362-4749-9ee4-b590e86a9c8a",
+      "name": "Wait",
+      "webhookId": "6c6ecbf7-de2e-485c-8f37-945cca5b51bd"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get stage number from current loop item\nconst currentStage = $('Loop Over Items').first().json.stageNumber;\nconst previousStage = currentStage - 1;\n\nif (currentStage === 1) {\n  return {\n    stageNumber: 1, \n    canProceed: true,\n    reason: \"First stage\"\n  };\n}\n\n// Now get the document (must come from previous MongoDB read or Set node)\nconst doc = $input.first().json;\n\nif (!doc.stages || !doc.stages[previousStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${previousStage} not found`\n  };\n}\n\nconst previousStageData = doc.stages[previousStage];\nconst workers = Object.keys(previousStageData.tasks);\n\n//const allComplete = workers.every(w => \n//  previousStageData.tasks[w].status === \"completed\"\n//);\nconst allComplete = previousStageData.status === \"completed\";\n\nreturn {\n  canProceed: allComplete,\n  previousStage: previousStage,\n  stageNumber: currentStage,\n  completedWorkers: workers.filter(w => previousStageData.tasks[w].status === \"completed\").length,\n  totalWorkers: workers.length\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        192
+      ],
+      "id": "8894a786-500d-40bc-be18-29fd1807e2a7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2567a554-030d-4fa0-afd3-89e9315e65cd",
+              "leftValue": "={{ $json.canProceed }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        192
+      ],
+      "id": "f4b57c16-a458-49ab-ba23-19bbbf28de44",
+      "name": "Proceed?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "collection": "CollaborativeTasks",
+        "query": "={\"sessionId\":\"{{ $json.sessionId }}\"}",
+        "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.status\": \"started\",\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.startedAt\": \"{{new Date().toISOString()}}\"\n  }\n}"
+      },
+      "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        96
+      ],
+      "id": "e5b18b71-2fa0-4295-a440-e9026c4f1eb4",
+      "name": "Set Task Started",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+        "text": "=Project completed. ",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "End Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        192,
+        -48
+      ],
+      "id": "12cb0e71-6c06-41d1-90d4-bae3b16d68f1",
+      "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "svdev-avatar.kodelab.io",
+            "x-real-ip": "3.10.173.248",
+            "x-forwarded-for": "3.10.173.248",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "53134",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "content-type": "application/json",
+            "user-agent": "axios/1.12.0",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "sessionId": "build_1763587777859",
+            "stages": {
+              "1": {
+                "stageNumber": 1,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 1,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Align the overall rectangular footprint so that one long side faces or is easily reachable from Mauri67. Work only in the front-left quadrant of that footprint without moving its global position.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 1 OF 7:\nAlign the overall rectangular footprint so that one long side faces or is easily reachable from Mauri67. Work only in the front-left quadrant of that footprint without moving its global position.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 1,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "Match Worker1’s ground floor Y-level and footprint alignment, extending the same floor material across your quadrant.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 1 OF 6:\nMatch Worker1’s ground floor Y-level and footprint alignment, extending the same floor material across your quadrant.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 1,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Match the ground floor Y-level and floor material used by Workers1–2, extending the floor across your quadrant.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 1 OF 6:\nMatch the ground floor Y-level and floor material used by Workers1–2, extending the floor across your quadrant.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 1,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Extend the ground floor and second-storey floor across your quadrant, matching floor height and materials used in the other quadrants.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 1 OF 6:\nExtend the ground floor and second-storey floor across your quadrant, matching floor height and materials used in the other quadrants.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 1,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "Choose the most convenient spot for the main entrance along the front side facing or near Mauri67 and install a double or single door, adding small stairs or a porch if needed for elevation changes.",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 1 OF 6:\nChoose the most convenient spot for the main entrance along the front side facing or near Mauri67 and install a double or single door, adding small stairs or a porch if needed for elevation changes.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "2": {
+                "stageNumber": 2,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 2,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Lightly level terrain only within your quadrant (remove grass, flowers, and small 1-block bumps) to create a consistent ground Y-level; avoid deep excavation or wide terrain cuts.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 2 OF 7:\nLightly level terrain only within your quadrant (remove grass, flowers, and small 1-block bumps) to create a consistent ground Y-level; avoid deep excavation or wide terrain cuts.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 2,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "Build the first-storey exterior walls in your quadrant, aligning wall height, thickness, and window levels with Worker1 at the shared boundary x:-219.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 2 OF 6:\nBuild the first-storey exterior walls in your quadrant, aligning wall height, thickness, and window levels with Worker1 at the shared boundary x:-219.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 2,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Build exterior walls for both storeys in your quadrant, aligning height and style with Workers1–2 at the edges x:-217 and z:midZ.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 2 OF 6:\nBuild exterior walls for both storeys in your quadrant, aligning height and style with Workers1–2 at the edges x:-217 and z:midZ.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 2,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Construct first- and second-storey exterior walls matching Worker3’s style at z:midZ and Worker2’s style at x:-216, including balanced window placements.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 2 OF 6:\nConstruct first- and second-storey exterior walls matching Worker3’s style at z:midZ and Worker2’s style at x:-216, including balanced window placements.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 2,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "Enhance the front facade by aligning window placements across front quadrants, adding symmetrical details such as logs, fences, or a small balcony/overhang above the entrance (staying close to the front wall and not extending far into nearby terrain or builds).",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 2 OF 6:\nEnhance the front facade by aligning window placements across front quadrants, adding symmetrical details such as logs, fences, or a small balcony/overhang above the entrance (staying close to the front wall and not extending far into nearby terrain or builds).\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "3": {
+                "stageNumber": 3,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 3,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Lay the ground floor (Y-level) in your quadrant using the agreed floor material (e.g., oak_planks), ensuring it matches the height used by others across -220–-214 and 48–54.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 3 OF 7:\nLay the ground floor (Y-level) in your quadrant using the agreed floor material (e.g., oak_planks), ensuring it matches the height used by others across -220–-214 and 48–54.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 3,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "Extend walls upward for the second storey to the same height as Worker1’s, keeping windows and any decorative elements (e.g., shutters, log trim) consistent.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 3 OF 6:\nExtend walls upward for the second storey to the same height as Worker1’s, keeping windows and any decorative elements (e.g., shutters, log trim) consistent.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 3,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Design and build an internal staircase (e.g., along a wall or in a stairwell) within your quadrant or just touching the boundary with Worker4’s quadrant, ensuring safe, easy access between the two storeys without head-bump issues.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 3 OF 6:\nDesign and build an internal staircase (e.g., along a wall or in a stairwell) within your quadrant or just touching the boundary with Worker4’s quadrant, ensuring safe, easy access between the two storeys without head-bump issues.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 3,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Coordinate with Worker3’s staircase location to ensure your walls and room divisions do not block access; create simple room partitions (e.g., bedrooms or storage rooms) in your quadrant on one or both storeys.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 3 OF 6:\nCoordinate with Worker3’s staircase location to ensure your walls and room divisions do not block access; create simple room partitions (e.g., bedrooms or storage rooms) in your quadrant on one or both storeys.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 3,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "On the first storey, place core functional blocks: at least 2–3 beds in one or more rooms, 1–2 crafting tables, 2–4 furnaces/smokers, and multiple chests/barrels for storage, distributed across rooms without blocking paths or staircase access.",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 3 OF 6:\nOn the first storey, place core functional blocks: at least 2–3 beds in one or more rooms, 1–2 crafting tables, 2–4 furnaces/smokers, and multiple chests/barrels for storage, distributed across rooms without blocking paths or staircase access.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "4": {
+                "stageNumber": 4,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 4,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Build exterior walls in your quadrant for both storeys to the agreed height (e.g., 4 blocks per level), using consistent corner pillars (logs/stone) and plank infill, leaving window openings that align roughly with neighboring quadrants.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 4 OF 7:\nBuild exterior walls in your quadrant for both storeys to the agreed height (e.g., 4 blocks per level), using consistent corner pillars (logs/stone) and plank infill, leaving window openings that align roughly with neighboring quadrants.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 4,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "Shape your part of the main roof above your quadrant, mirroring Worker1’s roof slope and orientation and meeting cleanly along z:midZ and x:-219.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 4 OF 6:\nShape your part of the main roof above your quadrant, mirroring Worker1’s roof slope and orientation and meeting cleanly along z:midZ and x:-219.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 4,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Ensure walls adjacent to the staircase are properly closed and visually integrated, adding windows where appropriate that do not conflict with stair placement.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 4 OF 6:\nEnsure walls adjacent to the staircase are properly closed and visually integrated, adding windows where appropriate that do not conflict with stair placement.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 4,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Build your portion of the roof, aligning slopes and overhangs with adjacent quadrants so the finished roof is continuous and symmetrical.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 4 OF 6:\nBuild your portion of the roof, aligning slopes and overhangs with adjacent quadrants so the finished roof is continuous and symmetrical.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 4,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "On the second storey, focus on additional beds, storage, and decorative elements (e.g., bookshelves, flower pots) while keeping circulation clear to any balconies or key windows.",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 4 OF 6:\nOn the second storey, focus on additional beds, storage, and decorative elements (e.g., bookshelves, flower pots) while keeping circulation clear to any balconies or key windows.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "5": {
+                "stageNumber": 5,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 5,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Extend your walls up for the second storey, matching the same vertical alignment and window spacing as the first storey and the adjacent quadrants.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 5 OF 7:\nExtend your walls up for the second storey, matching the same vertical alignment and window spacing as the first storey and the adjacent quadrants.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 5,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "If the main entrance will be on the front edge (z:48) near your quadrant, reserve a central or near-central span for Worker5 to build the entry/stairs while you frame windows and wall segments around it.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 5 OF 6:\nIf the main entrance will be on the front edge (z:48) near your quadrant, reserve a central or near-central span for Worker5 to build the entry/stairs while you frame windows and wall segments around it.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 5,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Construct the section of the roof above your quadrant, ensuring it matches the global roof design and links cleanly to roofs from Workers1, 2, and 4 at shared edges.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 5 OF 6:\nConstruct the section of the roof above your quadrant, ensuring it matches the global roof design and links cleanly to roofs from Workers1, 2, and 4 at shared edges.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 5,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Add interior lighting and minimal decor details (e.g., support beams, corner pillars) to make the back of the house feel finished.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 5 OF 6:\nAdd interior lighting and minimal decor details (e.g., support beams, corner pillars) to make the back of the house feel finished.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 5,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "Place sufficient interior lighting throughout all rooms, corridors, and the staircase so that no interior area is dark enough to allow mob spawns.",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 5 OF 6:\nPlace sufficient interior lighting throughout all rooms, corridors, and the staircase so that no interior area is dark enough to allow mob spawns.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "6": {
+                "stageNumber": 6,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 6,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Construct your share of the roof above your quadrant (e.g., part of a pitched or gabled roof), ensuring it ties cleanly along boundaries at x:-220 and z:midZ without overhang into other quadrants beyond shared eaves lines.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 6 OF 7:\nConstruct your share of the roof above your quadrant (e.g., part of a pitched or gabled roof), ensuring it ties cleanly along boundaries at x:-220 and z:midZ without overhang into other quadrants beyond shared eaves lines.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker2": {
+                    "stageNumber": 6,
+                    "totalStages": 6,
+                    "worker": "Worker2",
+                    "port": 4003,
+                    "status": "not-started",
+                    "subtask": "Add external lighting and any minor exterior details (e.g., small overhangs) that stay within your quadrant and align visually with Worker1.",
+                    "objective": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -219,
+                      "xMax": -219,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-right (north-east) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 6 OF 6:\nAdd external lighting and any minor exterior details (e.g., small overhangs) that stay within your quadrant and align visually with Worker1.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -219 to -219\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-219\n- Left boundary (shared with Worker1): x:-219\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:minZ to z:midZ of the house footprint, plus vertical space from ground to roof directly above this quadrant.\n\nConstraints: Do NOT modify blocks beyond x:midX–x:maxX or z:minZ–z:midZ other than at shared boundaries. Avoid interfering with internal layout tasks assigned to Workers3–5 except to close your walls and roof.\n- Stay within x:-219 to -219\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker3": {
+                    "stageNumber": 6,
+                    "totalStages": 6,
+                    "worker": "Worker3",
+                    "port": 4004,
+                    "status": "not-started",
+                    "subtask": "Provide both interior and limited exterior lighting in your quadrant, especially around the staircase to prevent mob spawns.",
+                    "objective": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.",
+                    "coordinates": {
+                      "xMin": -218,
+                      "xMax": -217,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-left (south-west) quadrant of the house structure and coordinate the main internal staircase between the two storeys within this region.\n\nSTAGE 6 OF 6:\nProvide both interior and limited exterior lighting in your quadrant, especially around the staircase to prevent mob spawns.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -218 to -217\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker4): x:-217\n- Left boundary (shared with Worker2): x:-218\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this area.\n\nConstraints: Stay within x:minX–x:midX and z:midZ–z:maxZ except along shared boundaries. Do not rework external facade styles set by Workers1–2; match them instead.\n- Stay within x:-218 to -217\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker4": {
+                    "stageNumber": 6,
+                    "totalStages": 6,
+                    "worker": "Worker4",
+                    "port": 4005,
+                    "status": "not-started",
+                    "subtask": "Ensure that all openings to the outside in your quadrant are properly closed with windows or walls so the house becomes fully mob-safe when all quadrants are complete.",
+                    "objective": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.",
+                    "coordinates": {
+                      "xMin": -216,
+                      "xMax": -216,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Build the back-right (south-east) quadrant of the house and support interior layout for the rear sections on both storeys.\n\nSTAGE 6 OF 6:\nEnsure that all openings to the outside in your quadrant are properly closed with windows or walls so the house becomes fully mob-safe when all quadrants are complete.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -216 to -216\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker5): x:-216\n- Left boundary (shared with Worker3): x:-216\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:midX to x:maxX and z:midZ to z:maxZ of the house footprint, plus vertical space from ground to roof above this quadrant.\n\nConstraints: Do not expand beyond x:midX–x:maxX or z:midZ–z:maxZ. Avoid large-scale terrain edits behind the house; keep changes within or directly under the footprint.\n- Stay within x:-216 to -216\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  },
+                  "Worker5": {
+                    "stageNumber": 6,
+                    "totalStages": 6,
+                    "worker": "Worker5",
+                    "port": 4006,
+                    "status": "not-started",
+                    "subtask": "Add exterior lighting around the main entrance, at key corners, and along the primary path from Mauri67’s approach direction, without modifying existing external builds or terrain beyond small steps/paths.",
+                    "objective": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.",
+                    "coordinates": {
+                      "xMin": -215,
+                      "xMax": -214,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Finish the global front facade and entrance area and distribute interior furnishings across both storeys without conflicting with structural walls.\n\nSTAGE 6 OF 6:\nAdd exterior lighting around the main entrance, at key corners, and along the primary path from Mauri67’s approach direction, without modifying existing external builds or terrain beyond small steps/paths.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -215 to -214\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Left boundary (shared with Worker4): x:-215\n\nHouse center: (-217, -60, 51)\n\nScope: Operate mainly along the central front strip of the house (near z:minZ across x:minX to x:maxX) and inside both storeys across the entire footprint, without altering exterior structural walls except for doors, windows, and minor decorative elements.\n\nConstraints: Do not significantly change the structural footprint or external wall lines set by Workers1–4. Keep decorative protrusions (porches, balconies) minimal and close to the house facade to avoid colliding with any of Mauri67’s nearby builds.\n- Stay within x:-215 to -214\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              },
+              "7": {
+                "stageNumber": 7,
+                "status": "not-started",
+                "tasks": {
+                  "Worker1": {
+                    "stageNumber": 7,
+                    "totalStages": 7,
+                    "worker": "Worker1",
+                    "port": 4002,
+                    "status": "not-started",
+                    "subtask": "Place exterior lighting (torches/lanterns) on walls in your quadrant and help ensure the area just in front of the house near Mauri67 is well lit.",
+                    "objective": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.",
+                    "coordinates": {
+                      "xMin": -220,
+                      "xMax": -220,
+                      "zMin": 48,
+                      "zMax": 54,
+                      "yMin": -60,
+                      "yMax": -57
+                    },
+                    "fullPrompt": "Construct the front-left (north-west) quadrant of the house for both storeys: foundation, floors, exterior walls, and its part of the roof.\n\nSTAGE 7 OF 7:\nPlace exterior lighting (torches/lanterns) on walls in your quadrant and help ensure the area just in front of the house near Mauri67 is well lit.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -220 to -220\n- Z range: 48 to 54\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-220\n\nHouse center: (-217, -60, 51)\n\nScope: Operate only within x:minX to x:midX and z:minZ to z:midZ of the rectangular house footprint next to Mauri67, plus the vertical space from ground level up to roof height directly above this quadrant.\n\nConstraints: Do NOT place or break blocks outside x:minX–x:midX or z:minZ–z:midZ, except exactly along shared edges with adjacent quadrants to tie walls/roof. Do not modify Mauri67’s existing builds or terrain outside the agreed footprint.\n- Stay within x:-220 to -220\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                    "completionTime": null,
+                    "result": null
+                  }
+                }
+              }
+            },
+            "workerCount": 5,
+            "workers": [
+              {
+                "success": true,
+                "workerName": "Worker1",
+                "port": 4002,
+                "status": "spawned",
+                "pid": 3464101,
+                "message": "Worker Worker1 spawned successfully"
+              },
+              {
+                "success": true,
+                "workerName": "Worker2",
+                "port": 4003,
+                "status": "spawned",
+                "pid": 3464102,
+                "message": "Worker Worker2 spawned successfully"
+              },
+              {
+                "success": true,
+                "workerName": "Worker3",
+                "port": 4004,
+                "status": "spawned",
+                "pid": 3464108,
+                "message": "Worker Worker3 spawned successfully"
+              },
+              {
+                "success": true,
+                "workerName": "Worker4",
+                "port": 4005,
+                "status": "spawned",
+                "pid": 3464120,
+                "message": "Worker Worker4 spawned successfully"
+              },
+              {
+                "success": true,
+                "workerName": "Worker5",
+                "port": 4006,
+                "status": "spawned",
+                "pid": 3464133,
+                "message": "Worker Worker5 spawned successfully"
+              }
+            ],
+            "conversationId": "5415489232"
+          },
+          "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/distribute-tasks-stages",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Stages List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Task": {
+      "main": [
+        [
+          {
+            "node": "Update Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stages List": {
+      "main": [
+        [
+          {
+            "node": "Split Stages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Stages": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "End Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Retrieve Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Stage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Workers": {
+      "main": [
+        [
+          {
+            "node": "Send Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Task": {
+      "main": [
+        [
+          {
+            "node": "Set Task Started",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tasks Request": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Stage started": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Session": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proceed?": {
+      "main": [
+        [
+          {
+            "node": "Set Stage started",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Proceed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Task Started": {
+      "main": [
+        [
+          {
+            "node": "Start Stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End Reply": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5e193e6e-ef4e-449e-bfc3-b2efcf9a34a7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "id": "M3zEuHJ9drOEnW94",
+  "tags": []
+}

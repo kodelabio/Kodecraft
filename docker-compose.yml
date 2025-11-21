@@ -1,6 +1,10 @@
+#version: '3.8'
+
 services:
+  # Minecraft Server
   minecraft-server:
     image: itzg/minecraft-server:2024.12.1
+    container_name: kodecraft-minecraft
     environment:
       EULA: "TRUE"
       MEMORY: "1G"
@@ -21,6 +25,74 @@ services:
       interval: 15s
       timeout: 10s
       retries: 10
+    restart: unless-stopped
+    networks:
+      - kodecraft-network
+
+  # Leader bot instance
+  leader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kodecraft-leader
+    ports:
+      - "4001:4001"
+    environment:
+      - DISPLAY=:99
+      - NODE_ENV=production
+      # Connect to Minecraft server via container name
+      - MINECRAFT_HOST=minecraft-server
+      - MINECRAFT_PORT=55916
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount .env file (create this in your project root)
+      - ./.env:/app/.env:ro
+      # Optional: mount source for development
+      # - ./src:/app/src
+    restart: unless-stopped
+    networks:
+      - kodecraft-network
+    #depends_on:
+    #  minecraft-server:
+    #    condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/api/agent/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Uncomment the sections below if you want to use MongoDB and n8n in development
+
+  # mongodb:
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=kodecraft
+  #     - MONGO_INITDB_ROOT_PASSWORD=changeme
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #     - mongodb_config:/data/configdb
+  #   restart: no
+  #   # Easier to debug with port exposed
+  #   ports:
+  #     - "27017:27017"
+
+  # n8n:
+  #   environment:
+  #     - N8N_BASIC_AUTH_USER=admin
+  #     - N8N_BASIC_AUTH_PASSWORD=password
+  #   volumes:
+  #     - n8n-data:/home/node/.n8n
+  #   restart: no
+  #   # Access n8n UI
+  #   ports:
+  #     - "5678:5678"
+
+networks:
+  kodecraft-network:
+    driver: bridge
 
 volumes:
   minecraft_data:
+  #postgres-data:
+  #n8n-data:

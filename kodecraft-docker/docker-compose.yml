@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Leader bot instance
+  leader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kodecraft-leader
+    ports:
+      - "4001:4001"
+    environment:
+      - DISPLAY=:99
+      - NODE_ENV=production
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount .env file (create this in your project root)
+      - ./.env:/app/.env:ro
+      # Optional: mount source for development
+      # - ./src:/app/src
+    restart: unless-stopped
+    networks:
+      - kodecraft-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/api/agent/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Database for session tracking
+  # postgres:
+  #   image: postgres:15
+  #   container_name: kodecraft-db
+  #   environment:
+  #     - POSTGRES_DB=kodecraft
+  #     - POSTGRES_USER=kodecraft
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD:-changeme}
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - kodecraft-network
+
+  # Optional: n8n instance for orchestration workflows
+  # n8n:
+  #   image: n8nio/n8n:latest
+  #   container_name: kodecraft-n8n
+  #   ports:
+  #     - "5678:5678"
+  #   environment:
+  #     - N8N_BASIC_AUTH_ACTIVE=true
+  #     - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+  #     - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-password}
+  #   volumes:
+  #     - n8n-data:/home/node/.n8n
+  #   restart: unless-stopped
+  #   networks:
+  #     - kodecraft-network
+  #   depends_on:
+  #     - leader
+
+networks:
+  kodecraft-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  n8n-data:

@@ -1,5 +1,5 @@
 # Use Ubuntu base image with Node.js pre-installed
-FROM node:22.18.0-bookworm
+FROM node:20-bookworm
 
 # Install system dependencies including X11/Xvfb
 RUN apt-get update && apt-get install -y \
@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y \
     x11-apps \
     wget \
     curl \
-    netcat-openbsd \
     ca-certificates \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*

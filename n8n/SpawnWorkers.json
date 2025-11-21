@@ -1,0 +1,313 @@
+{
+  "name": "SpawnWorkers",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/kodecraft/spawn-workers",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -656,
+        0
+      ],
+      "id": "df02bd1d-7fbc-4392-b29d-aca8aba40053",
+      "name": "Webhook",
+      "webhookId": "9cfecb93-6588-4a65-963c-95ef53348b30"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node: Extract taskDivision\nconst taskDivision = $json.body.taskDivision || $json.taskDivision;\n\nreturn Object.entries(taskDivision).map(([key, value]) => ({\n  key: key,\n  value: value\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        0
+      ],
+      "id": "900f80c5-fd25-4a82-9812-69bb99435d23",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f8be14a2-cd45-4422-aec3-4ad5920dc6cb",
+              "name": "worker_name",
+              "value": "={{ $json.key }}",
+              "type": "string"
+            },
+            {
+              "id": "05dad437-4fed-4a25-9f44-4a8bca399d0d",
+              "name": "worker_port",
+              "value": "={{ 4002+$itemIndex}}",
+              "type": "number"
+            },
+            {
+              "id": "b8f23734-09ac-4c77-8383-f7e9ab0672c8",
+              "name": "callbackWebhookUrl",
+              "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "803c9224-af5c-4976-b484-2c75c14e6587",
+              "name": "sessionId",
+              "value": "={{ $('Webhook').item.json.body.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "61421acd-e6c8-426c-9643-981c580b3fad",
+      "name": "Set Name and Port"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/spawn-worker",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.worker_name }}"
+            },
+            {
+              "name": "port",
+              "value": "={{ $json.worker_port }}"
+            },
+            {
+              "name": "callbackWebhookUrl",
+              "value": "={{$json.callbackWebhookUrl }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        0
+      ],
+      "id": "1bf3209d-c46b-4979-aec3-441c4e6ce72c",
+      "name": "Spawn workers"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        768,
+        0
+      ],
+      "id": "0b5f4080-0250-4c07-8baf-2866b1da52ad",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "spawnedWorkers",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        272,
+        0
+      ],
+      "id": "b3be650a-d8a4-444d-99ef-df953c989115",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/wait-and-register",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "spawnedWorkers",
+              "value": "={{ $json.spawnedWorkers }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('Webhook').item.json.body.sessionId }}"
+            },
+            {
+              "name": "taskRequest",
+              "value": "={{ $('Webhook').item.json.body.taskRequest }}"
+            },
+            {
+              "name": "leaderBotUrl",
+              "value": "={{ $env.KODECRAFT_SERVER_URL }}"
+            },
+            {
+              "name": "callbackUrl",
+              "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}"
+            },
+            {
+              "name": "workerCount",
+              "value": "={{ $('Webhook').item.json.body.workercount }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Webhook').item.json.body.taskDivision }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        560,
+        -208
+      ],
+      "id": "147e528d-2dbd-4544-ac02-995e9935b18f",
+      "name": "Wait and Register",
+      "disabled": true
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "svdev-avatar.kodelab.io",
+            "x-real-ip": "3.10.173.248",
+            "x-forwarded-for": "3.10.173.248",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "1165",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "content-type": "application/json",
+            "user-agent": "axios/1.12.0",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "workercount": 3,
+            "conversationId": "5415489232",
+            "taskDivision": {
+              "worker_u0imsl": "go to next to Mauri67",
+              "worker_f2k5dj": "go to next to Mauri67",
+              "worker_iy7jnd": "go to next to Mauri67"
+            },
+            "botstatus": {
+              "position": {
+                "x": 156.5,
+                "y": 68.5,
+                "z": -18.454859718892372
+              },
+              "health": 20,
+              "hunger": 20,
+              "gamemode": "creative",
+              "current_action": "Idle",
+              "is_busy": false,
+              "time_of_day": 3348,
+              "weather": "clear",
+              "raw_stats": "\nSTATS\n- Position: x: 156.50, y: 68.50, z: -18.45\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: snowy_taiga\n- Weather: Clear\n- Block Below: oak_planks\n- Block at Legs: oak_slab\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Morning- Current Action: Idle\n- Nearby Human Players: worker_qux0vt\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(ON)\n- unstuck(ON)\n- cowardice(OFF)\n- self_defense(ON)\n- hunting(ON)\n- item_collecting(ON)\n- torch_placing(ON)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n"
+            },
+            "sessionId": "spawn_1763116726256",
+            "callbackWebhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/worker-complete",
+            "taskRequest": "Can you spawn 3 workers and bring them next to Mauri67"
+          },
+          "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/spawn-workers",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Set Name and Port",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Name and Port": {
+      "main": [
+        [
+          {
+            "node": "Spawn workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spawn workers": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait and Register": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2348bb76-adf4-416c-988f-28c763c7ceb6",
+  "meta": {
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "id": "hqBUx1ah29Iw9zKl",
+  "tags": []
+}

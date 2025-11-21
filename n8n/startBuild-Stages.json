@@ -1,0 +1,576 @@
+{
+  "name": "startBuild-Stages",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/kodecraft/start-collaborative-build-stages",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -752,
+        0
+      ],
+      "id": "42e104b7-e2de-4f2f-b389-cefc1355e9e1",
+      "name": "Webhook",
+      "webhookId": "2cb716f1-0896-441a-b1e2-cda74978ba9e"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n     \"sessionId\": \"{{ $('Set Building Request').item.json.sessionId }}\",\n     \"status\": \"build_started\",\n     \"message\": \"Build orchestration started\",\n     \"workerCount\": {{ $input.all().length}}\n   } ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        752,
+        0
+      ],
+      "id": "b617a1b8-e5e3-4c86-9735-5caad44aff8f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ee4c036-c158-407f-9d91-f3da2febc635",
+              "name": "buildingRequest",
+              "value": "={{ $json.body.buildingRequest }}",
+              "type": "string"
+            },
+            {
+              "id": "a21e4b01-56a5-4934-a098-22b812c04310",
+              "name": "workercount",
+              "value": "={{ $json.body.workersCount }}",
+              "type": "string"
+            },
+            {
+              "id": "ec7ee5cf-7f84-43e3-8e97-055246d8c1c7",
+              "name": "taskDivision",
+              "value": "={{ $json.body.taskDivision }}",
+              "type": "object"
+            },
+            {
+              "id": "2e673979-3791-49d1-b87c-df3ac1ffce81",
+              "name": "conversationId",
+              "value": "={{ $json.body.conversationId }}",
+              "type": "string"
+            },
+            {
+              "id": "ffe05833-2558-4c83-9a84-95b77050214d",
+              "name": "username",
+              "value": "={{ $json.body.username }}",
+              "type": "string"
+            },
+            {
+              "id": "c6ac0434-0dcf-4be7-9b62-7dac7310af30",
+              "name": "botStatus",
+              "value": "={{ $json.body.botStatus }}",
+              "type": "object"
+            },
+            {
+              "id": "019464d5-07ac-4a47-8d2e-664e5fa1b5aa",
+              "name": "status",
+              "value": "pending",
+              "type": "string"
+            },
+            {
+              "id": "67732f2a-1220-4c6b-bfaa-d8a8daac2e98",
+              "name": "completedWorkers",
+              "value": "={{ 0 }}",
+              "type": "number"
+            },
+            {
+              "id": "729a1d6a-0319-4b9d-a6b2-a78a54ff2f27",
+              "name": "startTime",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "ccb2ceb2-ec33-4ca9-9f8f-ab9ddc15fe60",
+              "name": "workersStatus",
+              "value": "={{Object.fromEntries(Object.keys($json.body.taskDivision).map(key => [key, \"not-started\"]))}}",
+              "type": "object"
+            },
+            {
+              "id": "2142bc2e-8160-409f-ac91-3298c4162ac7",
+              "name": "sessionId",
+              "value": "={{\"build_\" + new Date().getTime()}}",
+              "type": "string"
+            },
+            {
+              "id": "b976d07a-a355-4428-8dbe-3d9512b1d8a8",
+              "name": "callbackWebhookUrl",
+              "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "99e38808-d413-4d58-ae62-98531c166b1e",
+              "name": "location",
+              "value": "={{ $json.body.location }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -496,
+        0
+      ],
+      "id": "9f50070b-837d-418e-909c-2d804c265766",
+      "name": "Set Building Request"
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "collection": "CollaborativeBuild",
+        "fields": "conversationId, sessionId, username, botStatus, buildingRequest, location, workercount,taskDivision, status, workersStatus, completedWorkers, startTime",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "8cda5cb1-f322-4105-9c94-b70b42acc964",
+      "name": "Store Building Request",
+      "credentials": {
+        "mongoDb": {
+          "id": "96R7SDP9Z6t0aXMB",
+          "name": "Minecraft"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/spawn-workers",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "conversationId",
+              "value": "={{ $('Set Building Request').item.json.conversationId}}"
+            },
+            {
+              "name": "workercount",
+              "value": "={{ $('Set Building Request').item.json.workercount }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Set Building Request').item.json.taskDivision }}"
+            },
+            {
+              "name": "botstatus",
+              "value": "={{ $('Set Building Request').item.json.botStatus }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('Set Building Request').item.json.sessionId }}"
+            },
+            {
+              "name": "callbackWebhookUrl",
+              "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-stage-complete"
+            },
+            {
+              "name": "buildingRequest",
+              "value": "={{ $('Webhook').item.json.body.buildingRequest }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "88d37d3e-a49b-4afe-81ce-33abac7fab94",
+      "name": "SpawnWorkers",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "content": "StartCollaborativeBuild\n  ├─ Generate sessionId\n  ├─ Save to DB\n  └─ Execute: SpawnWorkers (pass taskDivision too)\n      ↓\nSpawnWorkers\n  ├─ Spawn workers (workerCount: 3)\n  ├─ Append to spawnedWorkers array\n  └─ Execute: WaitAndRegister (pass taskDivision)\n      ↓\nWaitAndRegister\n  ├─ Wait for workers ready\n  ├─ Register workers\n  └─ Execute: CoordinateBuild (pass taskDivision)\n      ↓\nCoordinateBuild\n  ├─ Create session\n  ├─ Get position\n  ├─ Reserve location\n  ├─ Teleport workers\n  └─ Execute: DistributeTasks (pass taskDivision) ← HERE!\n      ↓\nDistributeTasks\n  ├─ Function: Convert taskDivision to array\n  ├─ Loop through tasks\n  ├─ HTTP POST send-task to each worker\n  └─ Complete",
+        "height": 480,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -848,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "747a9b40-8790-40e6-bf43-c8a58e8eb418",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/wait-and-register",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "spawnedWorkers",
+              "value": "={{ $json.spawnedWorkers }}"
+            },
+            {
+              "name": "sessionId",
+              "value": "={{ $('Set Building Request').item.json.sessionId }}"
+            },
+            {
+              "name": "taskRequest",
+              "value": "={{ $('Set Building Request').item.json.buildingRequest }}"
+            },
+            {
+              "name": "leaderBotUrl",
+              "value": "={{ $env.KODECRAFT_SERVER_URL }}"
+            },
+            {
+              "name": "callbackUrl",
+              "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-complete"
+            },
+            {
+              "name": "workerCount",
+              "value": "={{ $('Set Building Request').item.json.workercount }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Webhook').item.json.body.taskDivision }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "17018d04-27d4-47a3-9b6d-3425ab91134a",
+      "name": "Wait and Register"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+        "text": "={{ $json.spawnedWorkers.map(w => w.message).join('\\n') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Workers Created",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "284c0043-2654-4edc-b085-28e272de137e",
+      "webhookId": "d293004e-30df-49c6-9725-e10ce7e53c21",
+      "credentials": {
+        "telegramApi": {
+          "id": "4yys1NU8F0wF3Nr3",
+          "name": "Minecraft-Test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n     \"sessionId\": \"{{ $('Set Building Request').item.json.sessionId }}\",\n     \"status\": \"failed\",\n     \"message\": \"Build orchestration failed to spawn workers\",\n     \"workerCount\": 0\n   } ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        240
+      ],
+      "id": "4022cdc7-b3d9-496d-94e7-d09b714317cd",
+      "name": "Failed to spawn workers"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n     \"sessionId\": \"{{ $('Set Building Request').item.json.sessionId }}\",\n     \"status\": \"error\",\n     \"message\": \"Failed to build: {{ $json.error.message }},\n     \"workerCount\": 0\n   } ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        736,
+        240
+      ],
+      "id": "c0f862c0-d129-4487-b669-979c719bbc94",
+      "name": "Failed to Build"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/coordinate-build-stages",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "sessionId",
+              "value": "={{ $('Wait and Register').item.json.sessionId }}"
+            },
+            {
+              "name": "=workerCount",
+              "value": "={{ $('Webhook').item.json.body.workerCount }}"
+            },
+            {
+              "name": "taskDivision",
+              "value": "={{ $('Webhook').item.json.body.taskDivision }}"
+            },
+            {
+              "name": "workers",
+              "value": "={{ $('Wait and Register').item.json.spawnedWorkers }}"
+            },
+            {
+              "name": "buildRequest",
+              "value": "={{ $('Webhook').item.json.body.buildingRequest }}"
+            },
+            {
+              "name": "location",
+              "value": "={{ $('Webhook').item.json.body.location }}"
+            },
+            {
+              "name": "conversationId",
+              "value": "={{ $('Webhook').item.json.body.conversationId }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        544,
+        0
+      ],
+      "id": "243b823b-371d-4a83-b6ff-15d251e8080a",
+      "name": "CoordinateBuildStages",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "svdev-avatar.kodelab.io",
+            "x-real-ip": "3.10.173.248",
+            "x-forwarded-for": "3.10.173.248",
+            "x-forwarded-proto": "https",
+            "connection": "close",
+            "content-length": "7959",
+            "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+            "content-type": "application/json",
+            "user-agent": "axios/1.12.0",
+            "accept-encoding": "gzip, compress, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "buildingRequest": "Build a simple rectangular house near the leader’s current position using three workers. The house footprint should be about 9x7 blocks (9 along X, 7 along Z), with walls 4 blocks high and a basic peaked or sloped roof. Use common materials like wood planks for walls, logs for corners if available, and matching wood or stone for the roof. Include at least one main doorway on a long side and several window openings for light. All three workers must operate simultaneously in separate spatial regions of the build to avoid overlap.",
+            "workerCount": 3,
+            "taskDivision": {
+              "Worker1": {
+                "objective": "Construct the west (negative X) third of the house: footprint prep, outer walls, and west roof section.",
+                "scope": "House footprint: 9x7 aligned to world axes. Let X range X_start..X_end (9 blocks), Z range Z_start..Z_end (7 blocks). Define splits so: Worker1 = X_start..X_mid1, Worker2 = X_mid1+1..X_mid2, Worker3 = X_mid2+1..X_end. Worker1 owns X_start..X_mid1 across all Z.",
+                "subtasks": [
+                  "Mark a 9x7 rectangle roughly centered on the leader: choose X_start..X_end and Z_start..Z_end so there are exactly 9 X positions and 7 Z positions. Compute X_mid1 and X_mid2 to divide X into three contiguous sections of 3 blocks each.",
+                  "Lightly level terrain ONLY inside your zone (X_start..X_mid1, Z_start..Z_end) so the interior floor is mostly flat at one Y level. Only remove blocks directly in the footprint or blocking walls/roof.",
+                  "Build 4-block-high exterior walls along: (a) the west outer wall at X_start, and (b) your portions of the north and south walls between X_start and X_mid1.",
+                  "Place vertical corner supports (logs if available, else planks) at the northwest and southwest corners: (X_start, Z_start) and (X_start, Z_end).",
+                  "Add at least one 1x2 window opening in your section of the north or south wall. Do not place glass unless materials are provided.",
+                  "Begin the roof above your section: place sloped roof blocks (stairs or slabs) on top of your walls, sloping toward the center of the house. Extend only within X_start..X_mid1 and stop cleanly at the boundary near X_mid1 so Worker2 can continue the pattern.",
+                  "Optionally lay a simple plank floor inside your X range, matching a single Y height, without extending beyond X_mid1."
+                ],
+                "blockBreakLimit": "Do not break more than 40 terrain blocks. Only break blocks within X_start..X_mid1 and Z_start..Z_end that interfere with the floor, walls, or roof.",
+                "assumptions": "Assume Workers 2 and 3 will align wall height (4 blocks) and materials with yours and extend the same roof style across their sections.",
+                "constraints": "Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof within your third; avoid complex interior furnishing."
+              },
+              "Worker2": {
+                "objective": "Construct the central third of the house: middle wall segment, host the main doorway, and central roof section including part of the ridge.",
+                "scope": "Worker2 owns the middle X band: X_mid1+1..X_mid2 across all Z (Z_start..Z_end). Responsible for central walls, doorway, and the central span of the roof and ridge in this band.",
+                "subtasks": [
+                  "Use the 9x7 rectangle and X_mid1/X_mid2 to define your zone: X_mid1+1..X_mid2, Z_start..Z_end. Match the interior floor Y level that Worker1 establishes at the boundary.",
+                  "Lightly level terrain only inside your band so the floor stays continuous and flat from Worker1’s side into yours.",
+                  "Build 4-block-high walls along your portions of the north and south walls between X_mid1+1 and X_mid2, ensuring they connect flush with Worker1’s walls at X_mid1+1.",
+                  "Place the main doorway in your band on either the north or south long wall: leave at least a 2-block-tall, 1–2 block wide opening. Do not fill this gap.",
+                  "Add at least one window opening (1x2 or similar) on the opposite long wall from the doorway within your band for symmetry and light.",
+                  "Continue the roof across your section: mirror the slope and material from Worker1’s roof and extend it across X_mid1+1..X_mid2. Ensure the roof height and ridge alignment are continuous so no gaps appear when Worker3 connects.",
+                  "Keep any roof overhang to at most 1 block beyond the walls and consistent along your band.",
+                  "Optionally place floor blocks in your zone, matching Worker1’s material and Y level if they installed flooring."
+                ],
+                "blockBreakLimit": "Do not break more than 40 terrain blocks. Only break blocks within X_mid1+1..X_mid2 and Z_start..Z_end that obstruct the floor or walls/roof.",
+                "assumptions": "Assume Worker1’s section already indicates wall height, materials, and roof slope at X_mid1, and Worker3 will extend that same pattern from X_mid2+1..X_end.",
+                "constraints": "Do not modify blocks in Worker1’s band (X_start..X_mid1) or Worker3’s band (X_mid2+1..X_end) except where walls and roof must connect flush at the boundaries. Avoid terrain changes outside the 9x7 footprint."
+              },
+              "Worker3": {
+                "objective": "Construct the east (positive X) third of the house: footprint prep, outer walls, and east roof section, completing the overall roof alignment.",
+                "scope": "Worker3 owns the eastern X band: X_mid2+1..X_end across all Z (Z_start..Z_end). Responsible for east walls, windows, and final roof continuation over this third.",
+                "subtasks": [
+                  "Use the established 9x7 rectangle and X_mid2 to define your zone: X_mid2+1..X_end, Z_start..Z_end. Match the interior floor Y level from Workers 1 and 2 at the boundaries.",
+                  "Lightly level terrain strictly inside your third so the floor is flat and continuous across all three sections.",
+                  "Build 4-block-high walls along: (a) the east outer wall at X_end, and (b) your segments of the north and south walls between X_mid2+1 and X_end, tying cleanly into Worker2’s walls.",
+                  "Place vertical corner supports (logs if available, else planks) at the northeast and southeast corners: (X_end, Z_start) and (X_end, Z_end).",
+                  "Create at least one 1x2 window opening in your section of either the north or south wall, aligning height with the windows in Workers 1 and 2’s sections.",
+                  "Extend the roof over your band: mirror the roof material and slope coming from Worker2’s boundary at X_mid2+1. Connect seamlessly so the ridge and eaves look continuous and there are no gaps.",
+                  "Ensure any roof overhang (up to 1 block) matches the pattern used by Workers 1 and 2 along the full length of the house.",
+                  "Optionally finish a matching interior floor in your section using the same material and Y level as the other sections if present."
+                ],
+                "blockBreakLimit": "Do not break more than 40 terrain blocks. Only break blocks within X_mid2+1..X_end and Z_start..Z_end that block floor, wall, or roof placement.",
+                "assumptions": "Assume Workers 1 and 2 have fully defined the overall height, materials, and roof style along their boundaries, giving clear visual references at X_mid2.",
+                "constraints": "Do not alter blocks in Worker1’s or Worker2’s regions except where roof and walls must connect flush at the shared boundaries. Do not clear terrain outside your third of the footprint. Keep all building work within the 9x7 footprint plus at most a 1-block consistent roof overhang."
+              }
+            },
+            "conversationId": "5415489232",
+            "username": "Santamm67",
+            "botStatus": {
+              "position": {
+                "x": -4.314978444037716,
+                "y": -60,
+                "z": -32.49974577915472
+              },
+              "health": 20,
+              "hunger": 20,
+              "gamemode": "creative",
+              "current_action": "Idle",
+              "is_busy": false,
+              "time_of_day": 7428,
+              "weather": "clear",
+              "raw_stats": "\nSTATS\n- Position: x: -4.31, y: -60.00, z: -32.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Afternoon- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n"
+            }
+          },
+          "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/start-collaborative-build-stages",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Building Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Building Request": {
+      "main": [
+        [
+          {
+            "node": "Store Building Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Building Request": {
+      "main": [
+        [
+          {
+            "node": "SpawnWorkers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "SpawnWorkers": {
+      "main": [
+        [
+          {
+            "node": "Wait and Register",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed to spawn workers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait and Register": {
+      "main": [
+        [
+          {
+            "node": "Workers Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workers Created": {
+      "main": [
+        [
+          {
+            "node": "CoordinateBuildStages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CoordinateBuildStages": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Failed to Build",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "db1fc52f-6db7-419d-a9d2-5401cc148134",
+  "meta": {
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "id": "L3kplOI51e8XlxtZ",
+  "tags": []
+}

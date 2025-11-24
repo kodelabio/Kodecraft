@@ -1,0 +1,236 @@
+{
+  "name": "Import Datatable",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/kodecraft/import-datatable",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -416,
+        -112
+      ],
+      "id": "527b7fc4-8e1f-4808-b939-e3cac40df039",
+      "name": "Webhook",
+      "webhookId": "b6dfda12-4a3a-4db4-8b39-4e7854c49272"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "fiybiQlR805maJNt",
+          "mode": "list",
+          "cachedResultName": "KodecraftPrompts",
+          "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "agent": "={{ $json.agent }}",
+            "system_prompt": "={{ $json.system_prompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "system_prompt",
+              "displayName": "system_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "user_prompt_template",
+              "displayName": "user_prompt_template",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "version",
+              "displayName": "version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -112
+      ],
+      "id": "f7b81429-6797-4f0f-b056-be25b2599793",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62afd669-4e31-4f81-b735-75e3d9cdac56",
+              "name": "agent",
+              "value": "={{ $json.agent }}",
+              "type": "string"
+            },
+            {
+              "id": "d11c8398-a6b6-47c4-8eaf-66eef5c2573d",
+              "name": "system_prompt",
+              "value": "={{ $json.system_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "197e4edb-5f50-4a4f-80f6-57d7ef49c29e",
+              "name": "user_prompt_template",
+              "value": "={{ $json.user_prompt_template }}",
+              "type": "string"
+            },
+            {
+              "id": "c0fb2dac-0924-4800-af75-65a469dcb8e6",
+              "name": "createdAt",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "e1065f55-7ef2-48e0-af19-473d7b1fc3e6",
+              "name": "updatedAt",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        -112
+      ],
+      "id": "b40ad623-7d67-4b3f-876e-eb6e5a0e977b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        -112
+      ],
+      "id": "8a5292bd-61ed-490a-ba1a-3f7cf6302c5f",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        416,
+        -112
+      ],
+      "id": "aaa4aad3-45d5-4f1f-9081-ed5b4c2335df",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "eb5e3f5c-d6b6-4fbd-9fd0-2e2cfd3d8f31",
+  "meta": {
+    "instanceId": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "id": "tbI8HknYLlcUAvkN",
+  "tags": []
+}

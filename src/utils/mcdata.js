@@ -3,7 +3,7 @@ import settings from '../agent/settings.js';
 import { createBot } from 'mineflayer';
 import prismarine_items from 'prismarine-item';
 import { pathfinder } from 'mineflayer-pathfinder';
-//import { plugin as pvp } from 'mineflayer-pvp';
+import { plugin as pvp } from 'mineflayer-pvp';
 import { plugin as collectblock } from 'mineflayer-collectblock';
 import { plugin as autoEat } from 'mineflayer-auto-eat';
 import plugin from 'mineflayer-armor-manager';
@@ -66,7 +66,7 @@ export function initBot(username) {
         version: mc_version,
     });
     bot.loadPlugin(pathfinder);
-    //bot.loadPlugin(pvp);
+    bot.loadPlugin(pvp);
     bot.loadPlugin(collectblock);
     bot.loadPlugin(autoEat);
     bot.loadPlugin(armorManager); // auto equip armor

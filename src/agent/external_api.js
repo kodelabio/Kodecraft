@@ -223,10 +223,22 @@ export class ExternalAPI {
                     });
                 }
 
+                // Map common direction variations to standard directions
+                const directionMapping = {
+                    'backward': 'back',
+                    'backwards': 'back',
+                    'forwards': 'forward',
+                    'leftward': 'left',
+                    'rightward': 'right'
+                };
+                
+                // Normalize direction
+                const normalizedDirection = directionMapping[direction.toLowerCase()] || direction.toLowerCase();
+                
                 const validDirections = ['left', 'right', 'forward', 'back', 'north', 'south', 'east', 'west'];
-                if (!validDirections.includes(direction)) {
+                if (!validDirections.includes(normalizedDirection)) {
                     return res.status(400).json({
-                        error: `Invalid direction: '${direction}'. Valid options: ${validDirections.join(', ')}`,
+                        error: `Invalid direction: '${direction}'. Valid options: left, right, forward, back, north, south, east, west`,
                         code: 'invalid_direction'
                     });
                 }
@@ -243,7 +255,7 @@ export class ExternalAPI {
                     'west': [-5, 0, 0]
                 };
                 
-                const [dx, dy, dz] = movements[direction];
+                const [dx, dy, dz] = movements[normalizedDirection];
                 const targetX = Math.floor(pos.x + dx);
                 const targetY = Math.floor(pos.y + dy);
                 const targetZ = Math.floor(pos.z + dz);

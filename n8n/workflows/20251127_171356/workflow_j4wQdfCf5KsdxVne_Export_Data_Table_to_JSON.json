@@ -1,0 +1,119 @@
+{
+    "id": "j4wQdfCf5KsdxVne",
+    "meta": null,
+    "name": "Export Data Table to JSON",
+    "nodes": [
+        {
+            "id": "3a333345-df76-47d0-831f-d843de88dc20",
+            "name": "Get All Rows",
+            "type": "n8n-nodes-base.dataTable",
+            "position": [
+                208,
+                -144
+            ],
+            "parameters": {
+                "operation": "get",
+                "returnAll": true,
+                "dataTableId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "fiybiQlR805maJNt",
+                    "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt",
+                    "cachedResultName": "KodecraftPrompts"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "ba4e69a7-a0e2-47d2-9647-53c80040f8d1",
+            "name": "Convert to JSON File",
+            "type": "n8n-nodes-base.convertToFile",
+            "position": [
+                432,
+                -144
+            ],
+            "parameters": {
+                "options": {
+                    "fileName": "datatable_export.json"
+                },
+                "operation": "toJson"
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "4eaa9d20-777f-4d1b-9e1d-f33bed96bd01",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -16,
+                -144
+            ],
+            "webhookId": "0443d898-24f2-458d-8e28-42b23cca3725",
+            "parameters": {
+                "path": "/tools/get-datatable",
+                "options": {
+                },
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "230f0814-5092-460e-ab05-149acb48b657",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                656,
+                -144
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "binary"
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": true,
+    "pinData": {
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "ba1ebeb1-af57-47fb-b704-bd967446d599",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Get All Rows",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get All Rows": {
+            "main": [
+                [
+                    {
+                        "node": "Convert to JSON File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Convert to JSON File": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -19,6 +19,21 @@ export class OrchestrationAPI {
      * Called by n8n for each worker needed
      */
     async spawnWorker(name, port, sessionId, callbackWebhookUrl) {
+
+        // Check if worker already exists
+        if (this.workers.has(name)) {
+            const existing = this.workers.get(name);
+            console.log(`ℹ️  Worker ${name} already exists, reusing`);
+            return {
+                success: true,
+                workerName: name,
+                port: existing.port,
+                status: 'existing',
+                pid: existing.process.pid,
+                message: `Worker ${name} already running`
+                };
+        }
+
         console.log(`🔧 Spawning worker: ${name} on port ${port}`);
         
         try {
@@ -66,6 +81,50 @@ export class OrchestrationAPI {
 
             // Wait a moment for process to start
             await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Wait for worker API to be ready
+            const ready = await this.isWorkerReady(port, 30000);
+            if (!ready) {
+                throw new Error(`Worker ${name} API not responding after 30 seconds`);
+            }
+
+            // Move worker to safe location
+            try {
+                const leaderPos = this.agent.bot.entity.position;
+                const safePos = {
+                    x: Math.floor(leaderPos.x) + 5,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + 5
+                };
+
+                const response = await fetch(`http://localhost:${port}/api/agent/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(safePos),
+                    timeout: 15000
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Move failed with status ${response.status}`);
+                }
+
+                console.log(`✓ Worker ${name} moved to safe location`);
+
+            } catch (error) {
+                console.error(`❌ Worker ${name} failed to move to safe location: ${error.message}`);
+                // Kill the stuck worker
+                workerProcess.kill('SIGTERM');
+                this.workers.delete(name);
+                
+                return {
+                    success: false,
+                    workerName: name,
+                    port: port,
+                    status: 'spawned',
+                    pid: workerProcess.pid,
+                    error: `Failed to move to safe location: ${error.message}`
+                };
+            }
 
             return {
                 success: true,
@@ -709,69 +768,46 @@ export class OrchestrationAPI {
      * Called by n8n to position workers
      */
     async teleportWorkers(sessionId, buildLocation) {
-        console.log(`ðŸš€ Teleporting workers to build location`);
-
         const session = this.buildSessions.get(sessionId);
         if (!session) {
-            return {
-                success: false,
-                error: `Build session ${sessionId} not found`
-            };
+            return { success: false, error: `Build session ${sessionId} not found` };
         }
 
         const workers = session.workers;
         const results = [];
+        const timeout = 30000;  // 30 seconds max wait
+        const checkInterval = 500;
 
-        // Teleport each worker to a position around the build site
+        // Send move commands to all workers
         for (let i = 0; i < workers.length; i++) {
             const worker = workers[i];
+            const angle = (i / workers.length) * 2 * Math.PI;
+            const radius = Math.min(3, workers.length);
+
+            const targetPos = {
+                x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
+                y: buildLocation.y,
+                z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
+            };
+
             try {
-                // Calculate formation position (tight circle)
-                const angle = (i / workers.length) * 2 * Math.PI;
-                const radius = Math.min(3, workers.length);
-
-                const targetPos = {
-                    x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
-                    y: buildLocation.y,
-                    z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
-                };
-
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
+                await fetch(`http://localhost:${worker.port}/api/agent/move`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(targetPos),
                     timeout: 5000
                 });
-
-                if (response.ok) {
-                    results.push({
-                        workerName: worker.name,
-                        status: 'teleported',
-                        position: targetPos
-                    });
-                    console.log(`âœ“ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
-                } else {
-                    results.push({
-                        workerName: worker.name,
-                        status: 'failed',
-                        error: `HTTP ${response.status}`
-                    });
-                }
+                results.push({ workerName: worker.name, targetPos: targetPos, arrived: false });
             } catch (error) {
-                results.push({
-                    workerName: worker.name,
-                    status: 'error',
-                    error: error.message
-                });
+                results.push({ workerName: worker.name, status: 'error', error: error.message });
             }
         }
 
-        return {
-            success: true,
-            sessionId: sessionId,
-            teleportResults: results,
-            buildLocation: buildLocation
-        };
+        // Wait for pathfinding to complete (15 seconds should be plenty)
+        await new Promise(resolve => setTimeout(resolve, 15000));
+
+        console.log(`✓ All workers should have arrived at teleport positions`);
+        return { success: true, sessionId: sessionId, results: results, buildLocation: buildLocation };
     }
 
 

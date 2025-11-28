@@ -1,19 +1,19 @@
 {
-    "id": "qgs7tVIkq5v7YATw",
+    "id": "NbnxZS53MmqSYSgX",
     "meta": {
         "templateCredsSetupCompleted": true
     },
-    "name": "MindCraft",
+    "name": "Kodecraft",
     "nodes": [
         {
-            "id": "e8d93421-683a-4b95-8130-065a9d1ae32b",
+            "id": "d1f299a2-b942-4666-84cc-d4294682419e",
             "name": "Send Final Reply",
             "type": "n8n-nodes-base.telegram",
             "position": [
-                1920,
-                2016
+                1504,
+                5712
             ],
-            "webhookId": "370e7291-9b82-4082-9db8-af47faa89cb7",
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
             "parameters": {
                 "text": "={{ $json.text || 'Missing text content' }}",
                 "chatId": "={{ String($json.chatId) }}",
@@ -23,35 +23,35 @@
             },
             "credentials": {
                 "telegramApi": {
-                    "id": "DJUqMSuN8PYQPPoL",
-                    "name": "Telegram account"
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
                 }
             },
             "typeVersion": 1.2
         },
         {
-            "id": "7d37f718-7115-48cd-8a65-81b94c8f6b2e",
+            "id": "ccb6fe5e-d422-4ef4-9448-6df25a53aa0b",
             "name": "Format Result",
             "type": "n8n-nodes-base.code",
             "position": [
-                1440,
-                2032
+                928,
+                5712
             ],
             "parameters": {
-                "jsCode": "// === FORMAT RESULT FOR USER ===\n// Get input data - this could be from execution or direct from Route by Intent\nconst inputData = $input.first().json || {};\nconsole.log('Format Result input:', JSON.stringify(inputData, null, 2));\n\n// ALWAYS get the original context from Route by Intent to preserve chatId and other context\nlet originalContext = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    originalContext = routeResult.first().json || {};\n    console.log('Retrieved original context from Route by Intent:', {\n      chatId: originalContext.chatId,\n      playerName: originalContext.playerName,\n      source: originalContext.source\n    });\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e.message);\n}\n\n// Check if this is a chat response (direct from Route by Intent)\nif (inputData.intent === 'chat' || originalContext.intent === 'chat') {\n  console.log('Processing chat response');\n  const chatResponse = inputData.params?.response || inputData.response || originalContext.params?.response || originalContext.response || 'Chat response received';\n  \n  return {\n    json: {\n      chatId: originalContext.chatId || inputData.chatId || 'unknown',\n      text: chatResponse,\n      conversationHistory: originalContext.conversationHistory || inputData.conversationHistory || [],\n      executionResult: { type: 'chat', response: chatResponse }\n    }\n  };\n}\n\n// For non-chat intents, use originalContext as intentData to preserve all context\nlet intentData = originalContext;\n\n// Get execution result \nlet executionResult = inputData;\n\n// Set default final message\nlet finalMessage = intentData.response || executionResult.message || 'Construction completed!';\n\n// If execution failed, append error\nif (executionResult.error) {\n  finalMessage += `\\n\\n Error: ${executionResult.error}`;\n} else if (executionResult.message && executionResult.message !== intentData.response) {\n  finalMessage += `\\n\\n ${executionResult.message}`;\n}\n\n// For status/inventory, include the data\nif (intentData.intent === 'stats' && executionResult.position) {\n  finalMessage = `Position: x:${executionResult.position.x?.toFixed(1)}, y:${executionResult.position.y?.toFixed(1)}, z:${executionResult.position.z?.toFixed(1)}\\nHealth: ${executionResult.health}/20\\nHunger: ${executionResult.hunger}/20\\nAction: ${executionResult.current_action || 'Idle'}`;\n} else if (intentData.intent === 'inventory' && executionResult.inventory) {\n  const items = Array.isArray(executionResult.inventory) ? \n    executionResult.inventory.map(item => `${item.name}(${item.count})`).join(', ') : \n    'Empty';\n  finalMessage = `Inventory: ${items}`;\n} else if (intentData.intent === 'nearbyBlocks' && executionResult.nearby_blocks) {\n  finalMessage = `Nearby blocks: ${executionResult.nearby_blocks}`;\n} else if (intentData.intent === 'entities' && executionResult.nearby_entities) {\n  finalMessage = `Nearby entities: ${executionResult.nearby_entities}`;\n} else if (intentData.intent === 'craftable' && executionResult.craftable_items) {\n  finalMessage = `Craftable items: ${executionResult.craftable_items}`;\n} else if (intentData.intent === 'modes' && executionResult.modes) {\n  finalMessage = `Bot modes: ${executionResult.modes}`;\n} else if (intentData.intent === 'savedPlaces' && executionResult.saved_places) {\n  finalMessage = `Saved places: ${executionResult.saved_places}`;\n} else if (intentData.intent === 'getCraftingPlan' && executionResult.crafting_plan) {\n  finalMessage = `Crafting plan: ${executionResult.crafting_plan}`;\n} else if (intentData.intent === 'lookAtPlayer' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n} else if (intentData.intent === 'lookAtPosition' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n}\n\n// Save bot response to conversation history\nconst conversationHistory = intentData.conversationHistory || [];\nconversationHistory.push({\n  role: 'assistant',\n  content: finalMessage,\n  timestamp: Date.now()\n});\n\nif (conversationHistory.length > 20) {\n  conversationHistory.splice(0, conversationHistory.length - 20);\n}\n\n// --- Resolve chatId directly from previous node (most reliable) ---\nlet chatId =\n  inputData.chatId ||               // from previous node\n  intentData.chatId ||              // fallback if merged\n  originalContext.chatId ||         // from Route by Intent (if available)\n  inputData.conversationId ||       // fallback alias\n  'unknown';\n\nconsole.log('Resolved chatId (from previous node):', chatId);\n\nreturn {\n  json: {\n    chatId,\n    text: finalMessage,\n    conversationHistory,\n    executionResult\n  }\n};"
+                "jsCode": "// Format result for user response\nconst inputData = $input.first().json || {};\n\n// ALWAYS get the original context from Route by Intent to preserve chatId and other context\nconst originalContext = $('Route by Intent').item.json;\n\n// Check if this is a chat response (direct from Route by Intent)\nif (inputData.intent === 'chat' || originalContext.intent === 'chat') {\n  console.log('Processing chat response');\n  const chatResponse = inputData.params?.response || inputData.response || originalContext.params?.response || originalContext.response || 'Chat response received';\n  \n  return {\n    json: {\n      chatId: originalContext.chatId || inputData.chatId || 'unknown',\n      text: chatResponse,\n      conversationHistory: originalContext.conversationHistory || inputData.conversationHistory || [],\n      executionResult: { type: 'chat', response: chatResponse }\n    }\n  };\n}\n\n// For non-chat intents, use originalContext as intentData to preserve all context\nlet intentData = originalContext;\n// Get execution result - PRIORITY: inputData.executionResult over inputData\n// Handle if inputData is an array\nlet data = Array.isArray(inputData) ? inputData[0] : inputData;\nlet executionResult = data.executionResult || data;\n\n// Set default final message\nlet finalMessage = executionResult.response || 'Task completed!';\n\n// If execution failed, extract and parse the error\nif (executionResult.error) {\n  let errorMessage = '';\n  \n  if (executionResult.error.message) {\n    let message = executionResult.error.message;\n    \n    try {\n      // Remove HTTP status prefix (e.g., \"404 - \")\n      message = message.replace(/^\\d{3}\\s*-\\s*/, '').trim();\n      \n      // Remove outer quotes if present\n      if (message.startsWith('\"') && message.endsWith('\"')) {\n        message = message.slice(1, -1);\n      }\n      \n      // First unescape: handle \\\\ and \\\"\n      const firstUnescape = JSON.parse('\"' + message + '\"');\n      \n      // Second parse: get the actual JSON object\n      const errorObj = JSON.parse(firstUnescape);\n      \n      // Extract the error field and clean up newlines\n      errorMessage = errorObj.error \n        ? errorObj.error.replace(/\\n/g, ' ').trim()\n        : message;\n    } catch (e) {\n      // If parsing fails, use the raw message without status code\n      errorMessage = rawMessage.replace(/^\\d{3}\\s*-\\s*/, '').trim();\n    }\n  }\n  \n  if (errorMessage) {\n    finalMessage += `\\n\\n${errorMessage}`;\n  }\n} else if (executionResult.message) {\n  finalMessage += `\\n\\n${executionResult.message}`;\n}\n\n// For status/inventory, include the data\nif (intentData.intent === 'stats' && executionResult.position) {\n  finalMessage = `Position: x:${executionResult.position.x?.toFixed(1)}, y:${executionResult.position.y?.toFixed(1)}, z:${executionResult.position.z?.toFixed(1)}\\nHealth: ${executionResult.health}/20\\nHunger: ${executionResult.hunger}/20\\nAction: ${executionResult.current_action || 'Idle'}`;\n} else if (intentData.intent === 'inventory' && executionResult.inventory) {\n  const items = Array.isArray(executionResult.inventory) ? \n    executionResult.inventory.map(item => `${item.name}(${item.count})`).join(', ') : \n    'Empty';\n  finalMessage = `Inventory: ${items}`;\n} else if (intentData.intent === 'nearbyBlocks' && executionResult.nearby_blocks) {\n  finalMessage = `Nearby blocks: ${executionResult.nearby_blocks}`;\n} else if (intentData.intent === 'entities' && executionResult.nearby_entities) {\n  finalMessage = `Nearby entities: ${executionResult.nearby_entities}`;\n} else if (intentData.intent === 'craftable' && executionResult.craftable_items) {\n  finalMessage = `Craftable items: ${executionResult.craftable_items}`;\n} else if (intentData.intent === 'modes' && executionResult.modes) {\n  finalMessage = `Bot modes: ${executionResult.modes}`;\n} else if (intentData.intent === 'savedPlaces' && executionResult.saved_places) {\n  finalMessage = `Saved places: ${executionResult.saved_places}`;\n} else if (intentData.intent === 'getCraftingPlan' && executionResult.crafting_plan) {\n  finalMessage = `Crafting plan: ${executionResult.crafting_plan}`;\n} else if (intentData.intent === 'lookAtPlayer' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n} else if (intentData.intent === 'lookAtPosition' && executionResult.vision_result) {\n  finalMessage = `Vision: ${executionResult.vision_result}`;\n}\nelse if (intentData.intent === 'collaborativeBuild' && executionResult.aiActions) {\n  finalMessage = `Building completed: Collaborative Build Actions:\\n\\n${executionResult.aiActions}`;\n}\n\n// Save bot response to conversation history\nconst conversationHistory = intentData.conversationHistory || [];\nconversationHistory.push({\n  role: 'assistant',\n  content: finalMessage,\n  timestamp: Date.now()\n});\n\nif (conversationHistory.length > 20) {\n  conversationHistory.splice(0, conversationHistory.length - 20);\n}\n\n// --- Resolve chatId directly from previous node (most reliable) ---\nlet chatId =\n  inputData.chatId ||               // from previous node\n  intentData.chatId ||              // fallback if merged\n  originalContext.chatId ||         // from Route by Intent (if available)\n  $('Normalize Input').first().json.chatId ||\n  inputData.conversationId ||       // fallback alias\n  'unknown';\n\nconsole.log('Resolved chatId:', chatId);\n\nreturn {\n  json: {\n    chatId,\n    text: finalMessage,\n    conversationHistory,\n    executionResult\n  }\n};"
             },
             "typeVersion": 2
         },
         {
-            "id": "5a34e42e-6da0-4f47-89f4-9a9cb4d744a3",
+            "id": "dfec1cc2-029d-4bbb-90bf-1409d8b14729",
             "name": "Execute Stop",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                7488
+                528,
+                9152
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/stop",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stop",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -68,89 +68,15 @@
             "continueOnFail": true
         },
         {
-            "id": "797a7b6a-9fc9-4c4b-bf14-29d743bb569b",
-            "name": "Execute SpawnWorkers",
-            "type": "n8n-nodes-base.httpRequest",
-            "position": [
-                -2288,
-                7648
-            ],
-            "parameters": {
-                "url": "http://localhost:4001/api/multibot/spawn",
-                "method": "POST",
-                "options": {
-                    "timeout": 30000
-                },
-                "sendBody": true,
-                "bodyParameters": {
-                    "parameters": [
-                        {
-                            "name": "count",
-                            "value": "={{ $json.params.count || 3 }}"
-                        }
-                    ]
-                }
-            },
-            "typeVersion": 4.2,
-            "continueOnFail": true
-        },
-        {
-            "id": "3bd10f4d-4d7a-4831-b61d-f2d2ff35118b",
-            "name": "Execute CollaborativeBuild",
-            "type": "n8n-nodes-base.httpRequest",
-            "position": [
-                1200,
-                2784
-            ],
-            "parameters": {
-                "url": "http://localhost:4001/api/multibot/coordinateBuild",
-                "method": "POST",
-                "options": {
-                    "timeout": 120000
-                },
-                "sendBody": true,
-                "bodyParameters": {
-                    "parameters": [
-                        {
-                            "name": "buildRequest",
-                            "value": "={{ $json.params.buildRequest }}"
-                        },
-                        {
-                            "name": "workerCount",
-                            "value": "={{ $json.params.workerCount || 3 }}"
-                        },
-                        {
-                            "name": "leaderPosition",
-                            "value": "={{ $json.botStatus && $json.botStatus.position ? $json.botStatus.position : { x: 0, y: 64, z: 0 } }}"
-                        },
-                        {
-                            "name": "buildCoordinates",
-                            "value": "={{ $json.params.buildCoordinates || null }}"
-                        },
-                        {
-                            "name": "taskDivision",
-                            "value": "={{ $json.params.taskDivision || null }}"
-                        },
-                        {
-                            "name": "singleWorkerMode",
-                            "value": "={{ ($json.params.workerCount || 3) === 1 }}"
-                        }
-                    ]
-                }
-            },
-            "typeVersion": 4.2,
-            "continueOnFail": true
-        },
-        {
-            "id": "b6a0ae82-6070-448b-859e-5f611cf5a9f4",
+            "id": "e66441e8-3583-472d-a824-6c09b7a8c136",
             "name": "Execute MultiBotStatus",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                7968
+                528,
+                9536
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/multibot/status",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/status",
                 "options": {
                     "timeout": 10000
                 }
@@ -159,42 +85,15 @@
             "continueOnFail": true
         },
         {
-            "id": "1470ff0d-e6e9-4c28-a185-ba1e434411a7",
-            "name": "Wait for Workers Init",
-            "type": "n8n-nodes-base.wait",
-            "position": [
-                -656,
-                2736
-            ],
-            "webhookId": "1219d699-b6bf-4fb0-8182-08565f16026c",
-            "parameters": {
-                "amount": 10
-            },
-            "typeVersion": 1.1
-        },
-        {
-            "id": "bcbff491-7f57-41ca-97c8-e31781360288",
-            "name": "Reset Worker States",
-            "type": "n8n-nodes-base.code",
-            "position": [
-                -128,
-                2704
-            ],
-            "parameters": {
-                "jsCode": "// Reset worker states by calling endGoal on each worker\nconst sessionId = $input.first().json.sessionId;\n\nif (!sessionId) {\n  console.log('No sessionId found, skipping worker reset');\n  return [{ json: { message: 'No workers to reset', sessionId } }];\n}\n\ntry {\n  // First get worker status to find active workers\n  const statusResponse = await $request({\n    method: 'GET',\n    url: 'http://localhost:4001/api/multibot/status',\n    headers: { 'Content-Type': 'application/json' },\n    json: true\n  });\n  \n  const workers = statusResponse.workers || [];\n  \n  console.log(`Resetting ${workers.length} workers...`);\n  \n  // Reset each worker by calling endGoal\n  const resetPromises = workers.map(async (worker) => {\n    try {\n      await $request({\n        method: 'POST',\n        url: `http://localhost:${worker.port}/api/agent/endGoal`,\n        headers: { 'Content-Type': 'application/json' },\n        body: {},\n        json: true\n      });\n      \n      console.log(`Reset worker ${worker.name} successfully`);\n      return { worker: worker.name, status: 'reset' };\n    } catch (error) {\n      console.log(`Error resetting worker ${worker.name}:`, error.message);\n      return { worker: worker.name, status: 'error', error: error.message };\n    }\n  });\n  \n  const results = await Promise.all(resetPromises);\n  \n  return [{\n    json: {\n      message: `Reset ${workers.length} workers`,\n      sessionId,\n      workers: results,\n      success: true\n    }\n  }];\n  \n} catch (error) {\n  console.log('Error in worker reset:', error.message);\n  return [{\n    json: {\n      message: 'Error during worker reset',\n      error: error.message,\n      sessionId,\n      success: false\n    }\n  }];\n}"
-            },
-            "typeVersion": 2
-        },
-        {
-            "id": "1ecd06ba-6790-48ad-b44b-bba8e3a09b45",
+            "id": "18c842dd-b691-4963-9109-233f80e14c66",
             "name": "Execute AssignTasks",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                8160
+                528,
+                5568
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/multibot/assignTasks",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/assignTasks",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -204,7 +103,7 @@
                     "parameters": [
                         {
                             "name": "sessionId",
-                            "value": "={{ $json.sessionId }}"
+                            "value": "={{ $json.sessionId || $json.conversationId  }}"
                         },
                         {
                             "name": "taskBreakdown",
@@ -237,15 +136,15 @@
             "continueOnFail": true
         },
         {
-            "id": "fc3381a9-59f0-44f1-8906-c58ea9b3a81a",
+            "id": "df4a8f4b-774a-49b8-9d08-d3de7d964166",
             "name": "Execute StopWorkers",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                8320
+                528,
+                9728
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/multibot/stop",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/stop",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -262,15 +161,15 @@
             "continueOnFail": true
         },
         {
-            "id": "b7384407-1e9c-41dd-a434-f122a1f89035",
+            "id": "84d7d0b8-bff0-4c80-ae2e-b2c6f3c06c5c",
             "name": "Execute GetWorkerList",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                8480
+                528,
+                9920
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/multibot/workers",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/multibot/workers",
                 "options": {
                     "timeout": 10000
                 }
@@ -279,15 +178,15 @@
             "continueOnFail": true
         },
         {
-            "id": "126d2b42-01ae-4131-ba00-08ddd7ace10b",
+            "id": "14354fcd-17bb-4c42-87f7-0b61f39ece26",
             "name": "Execute EndGoal",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                7312
+                528,
+                8960
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/endGoal",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/endGoal",
                 "method": "POST",
                 "options": {
                     "timeout": 5000
@@ -304,15 +203,15 @@
             "continueOnFail": true
         },
         {
-            "id": "1a97bfc4-fb65-47b8-8c5c-9643b0daa47d",
+            "id": "e1eef999-11f6-4c91-a39b-04d75ae5e9dc",
             "name": "Execute ClearChat",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6976
+                528,
+                8768
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/clearChat",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/clearChat",
                 "method": "POST",
                 "options": {
                     "timeout": 5000
@@ -329,15 +228,15 @@
             "continueOnFail": true
         },
         {
-            "id": "823b3f18-aecc-49c4-bb2d-f59c9fc94733",
+            "id": "f2894a7e-9148-42ea-92dd-6400c80a839d",
             "name": "Execute Restart",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6816
+                528,
+                8576
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/restart",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/restart",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -354,15 +253,15 @@
             "continueOnFail": true
         },
         {
-            "id": "03b212ed-f6c7-4fe5-86c9-f5cb3c0335bf",
+            "id": "ebc4d3fd-e247-47bc-a8fa-696a480fda37",
             "name": "Execute EndConversation",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6640
+                528,
+                8384
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/endConversation",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/endConversation",
                 "method": "POST",
                 "options": {
                     "timeout": 5000
@@ -381,15 +280,15 @@
             "continueOnFail": true
         },
         {
-            "id": "206fc388-47f6-4b35-9c85-2fa1fc9a463c",
+            "id": "4f7945d0-0e58-4148-8faf-93aa01bd5ee2",
             "name": "Execute StartConversation",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6464
+                528,
+                8192
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/startConversation",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/startConversation",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -412,15 +311,15 @@
             "continueOnFail": true
         },
         {
-            "id": "f55da9ef-a584-4aa0-92ef-7da4261f314e",
+            "id": "b5e53978-1d76-4134-bcf3-197e9e5b0e78",
             "name": "Execute LookAtPosition",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6304
+                528,
+                8000
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/lookAtPosition",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPosition",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -447,15 +346,15 @@
             "continueOnFail": true
         },
         {
-            "id": "a2a9a93a-af5b-4d5c-9fe2-28f36ed85e61",
+            "id": "4f516b40-1dad-4432-a825-adcb4602e509",
             "name": "Execute LookAtPlayer",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                6144
+                528,
+                7808
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/lookAtPlayer",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/lookAtPlayer",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -478,25 +377,12 @@
             "continueOnFail": true
         },
         {
-            "id": "dd9fa59d-3a10-4ec0-a637-0e96a7e9043e",
-            "name": "Execute Building Plan",
-            "type": "n8n-nodes-base.code",
-            "position": [
-                896,
-                2992
-            ],
-            "parameters": {
-                "jsCode": "// Execute Building Plan - Determine execution path (newAction vs multibot)\nconst input = $input.first().json;\n\nconsole.log('=== EXECUTE BUILDING PLAN ===');\nconsole.log('Input:', JSON.stringify(input, null, 2));\n\n// Get conversation context from Route by Intent node\nlet conversationData = {};\ntry {\n  const routeResult = $('Route by Intent');\n  if (routeResult && routeResult.first && routeResult.first()) {\n    conversationData = routeResult.first().json || {};\n    console.log('Retrieved conversation data:', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source,\n      intent: conversationData.intent\n    });\n  }\n} catch (e) {\n  console.log('Could not get Route by Intent data:', e);\n}\n\n// Extract the building request from Smart Building Planner AI Agent output\nlet buildingRequest = '';\nlet executionType = 'single';\nlet apiEndpoint = 'newAction';\nlet workerCount = 1;\nlet taskDivision = null;\n\n// The Smart Building Planner already refined the prompt, extract it\ntry {\n  const content = input.output || input.building_plan || input.message || '';\n  console.log('Smart Building Planner output:', content);\n  \n  // Try to extract JSON from AI Agent output\n  const jsonMatch = content.match(/```json\\s*([\\s\\S]*?)```/) || content.match(/{[\\s\\S]*}/);\n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]);\n    buildingRequest = parsed.buildingRequest || parsed.userMessage || content;\n    executionType = parsed.executionType || 'single';\n    \n    // IMPORTANT: Extract taskDivision data from Smart Building Planner\n    taskDivision = parsed.taskDivision || null;\n    console.log('Extracted taskDivision:', taskDivision);\n    \n    // Use the original intent to determine the correct endpoint\n    if (parsed.apiEndpoint) {\n      apiEndpoint = parsed.apiEndpoint;\n    } else if (conversationData.intent === 'collaborativeBuild') {\n      apiEndpoint = 'collaborativeBuild';\n      executionType = 'multibot';\n    } else {\n      apiEndpoint = 'newAction';\n    }\n    workerCount = parsed.workerCount || conversationData.params?.workerCount || 1;\n  } else {\n    // Use content directly if no JSON\n    buildingRequest = content;\n    \n    // Check if this was a multibot request from original context\n    if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n      executionType = 'multibot';\n      apiEndpoint = 'collaborativeBuild';\n      workerCount = conversationData.params?.workerCount || 3;\n    }\n  }\n} catch (e) {\n  console.log('Failed to parse Smart Building Planner output, using raw content:', e);\n  buildingRequest = input.output || input.building_plan || input.message || '';\n  // Check original intent for multibot\n  if (conversationData.intent === 'collaborativeBuild' || conversationData.params?.workerCount) {\n    executionType = 'multibot';\n    apiEndpoint = 'collaborativeBuild';\n    workerCount = conversationData.params?.workerCount || 3;\n  }\n}\n\n// Final override check: if original intent was collaborativeBuild, ensure we use multibot path\nif (conversationData.intent === 'collaborativeBuild' && executionType !== 'multibot') {\n  console.log('Overriding execution type to multibot based on original intent');\n  executionType = 'multibot';\n  apiEndpoint = 'collaborativeBuild';\n  workerCount = conversationData.params?.workerCount || 3;\n}\n\n// Validate we have a building request\nif (!buildingRequest || buildingRequest.trim() === '') {\n  return {\n    json: {\n      success: false,\n      error: 'No building request found',\n      details: 'Smart Building Planner did not provide a valid building request',\n      // Preserve conversation data for error response\n      chatId: conversationData.chatId || 'unknown',\n      playerName: conversationData.playerName || 'User',\n      source: conversationData.source || 'telegram'\n    }\n  };\n}\n\nconsole.log('Final execution plan:', {\n  buildingRequest: buildingRequest.substring(0, 100),\n  executionType,\n  apiEndpoint,\n  workerCount,\n  hasTaskDivision: !!taskDivision\n});\n\n// Convert taskDivision object to array format expected by multibot API\nlet taskBreakdown = null;\nif (taskDivision && typeof taskDivision === 'object') {\n  // Convert object format to array format\n  taskBreakdown = Object.entries(taskDivision).map(([worker, task]) => \n    `${worker}: ${task}`\n  );\n  console.log('Converted taskDivision to taskBreakdown:', taskBreakdown);\n}\n\n// Return data for appropriate execution path\nreturn {\n  json: {\n    userMessage: buildingRequest,\n    buildRequest: buildingRequest,\n    executionType: executionType,\n    apiEndpoint: apiEndpoint,\n    workerCount: workerCount,\n    taskDivision: taskDivision,\n    taskBreakdown: taskBreakdown,\n    success: true,\n    message: `${executionType === 'multibot' ? 'Multibot' : 'Single bot'} building request ready: ${buildingRequest.substring(0, 50)}...`,\n    // Preserve conversation data for response\n    chatId: conversationData.chatId || 'unknown',\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    // Add params for multibot execution\n    params: {\n      buildRequest: buildingRequest,\n      workerCount: workerCount,\n      taskDivision: taskDivision,\n      taskBreakdown: taskBreakdown\n    }\n  }\n};\n"
-            },
-            "typeVersion": 2
-        },
-        {
-            "id": "8966d220-71c2-4b68-9ba2-6155234337cb",
+            "id": "1b5150a4-d118-4e82-8165-5e2d905335ce",
             "name": "Route Building Execution",
             "type": "n8n-nodes-base.if",
             "position": [
-                1232,
-                2992
+                1616,
+                4144
             ],
             "parameters": {
                 "options": {
@@ -517,8 +403,17 @@
                                 "type": "string",
                                 "operation": "equals"
                             },
-                            "leftValue": "={{ $json.executionType }}",
+                            "leftValue": "={{ $json.building_plan.executionType }}",
                             "rightValue": "multibot"
+                        },
+                        {
+                            "id": "b4c36be9-0c60-4b4c-a852-dd1e43a72945",
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            },
+                            "leftValue": "={{ $json.building_plan.workerCount }}",
+                            "rightValue": 1
                         }
                     ]
                 }
@@ -526,18 +421,18 @@
             "typeVersion": 2
         },
         {
-            "id": "c24a70c0-9134-426a-bb8f-7d6962e48cb4",
+            "id": "f8b409c1-d101-4f13-9c21-a2d6af84b536",
             "name": "Execute Building API Call",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                1568,
-                2992
+                1984,
+                4288
             ],
             "parameters": {
                 "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/newAction",
                 "method": "POST",
                 "options": {
-                    "timeout": 60000
+                    "timeout": 3600000
                 },
                 "sendBody": true,
                 "sendHeaders": true,
@@ -545,7 +440,7 @@
                     "parameters": [
                         {
                             "name": "prompt",
-                            "value": "={{ $json.userMessage }}"
+                            "value": "={{ $('Parse Plan').item.json.plan.buildingRequest }}"
                         }
                     ]
                 },
@@ -561,25 +456,25 @@
             "typeVersion": 4.2
         },
         {
-            "id": "2c77eed1-4645-49fc-ba66-6c60e715ab2a",
+            "id": "b560e47d-0fce-4741-89aa-48d23e383870",
             "name": "Format Building Response",
             "type": "n8n-nodes-base.code",
             "position": [
-                1856,
-                3056
+                2304,
+                4288
             ],
             "parameters": {
-                "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nlet conversationData = {};\ntry {\n  const buildingPlanResult = $('Execute Building Plan');\n  if (buildingPlanResult && buildingPlanResult.first && buildingPlanResult.first()) {\n    conversationData = buildingPlanResult.first().json || {};\n    console.log('Retrieved conversation data from Execute Building Plan:', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n  }\n} catch (e) {\n  console.log('Could not get Execute Building Plan data:', e);\n}\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult\n    }\n  }\n};"
+                "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nconst conversationData = $('Route by Intent').item.json;\nconsole.log('Retrieved conversation data', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Extract code output between \"Code Output\" and \"Code finished\"\nlet ai_actions = '';\nconst codeOutputMatch = apiMessage.match(/Code Output([\\s\\S]*?)Code finished/i);\nif (codeOutputMatch && codeOutputMatch[1]) {\n  ai_actions = codeOutputMatch[1].trim();\n  console.log('Extracted code output:', ai_actions);\n} else {\n  console.log('No code output found between markers');\n}\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult,\n      aiActions: ai_actions\n    }\n  }\n};"
             },
             "typeVersion": 2
         },
         {
-            "id": "226b6d01-9d4f-4ffd-9c36-4e87d1aadadd",
+            "id": "ffae3b74-77a5-412e-a484-f88ebafef47e",
             "name": "Building Plan Result",
             "type": "n8n-nodes-base.set",
             "position": [
-                704,
-                3520
+                1296,
+                4144
             ],
             "parameters": {
                 "options": {
@@ -589,8 +484,8 @@
                         {
                             "id": "building-plan-assignment",
                             "name": "building_plan",
-                            "type": "string",
-                            "value": "={{ $json.output }}"
+                            "type": "object",
+                            "value": "={{ JSON.stringify($json.plan) }}"
                         },
                         {
                             "id": "task-type-assignment",
@@ -602,7 +497,25 @@
                             "id": "message-assignment",
                             "name": "message",
                             "type": "string",
-                            "value": "Smart building plan created: {{ $json.output }}"
+                            "value": "=Smart building plan created: {{ JSON.stringify($json.plan)}}"
+                        },
+                        {
+                            "id": "2e6eb1c5-f68a-4bd1-a4e3-18c8b5d42887",
+                            "name": "executionType",
+                            "type": "string",
+                            "value": "={{ $json.plan.executionType }}"
+                        },
+                        {
+                            "id": "d4ca63ac-baae-4fd4-82b7-90b7dcec370f",
+                            "name": "taskBreakdown",
+                            "type": "array",
+                            "value": "={{ Object.entries($json.plan.taskDivision || {}).map(([worker, task]) => `${worker}: ${task}`) }}"
+                        },
+                        {
+                            "id": "ac45a162-49a2-45dd-aee5-01d07cb1149f",
+                            "name": "location",
+                            "type": "string",
+                            "value": "={{ $json.plan.location }}"
                         }
                     ]
                 }
@@ -610,32 +523,32 @@
             "typeVersion": 3.4
         },
         {
-            "id": "77006d0e-14d4-4d12-a04d-f1496b38e512",
+            "id": "2df55d30-07d5-4bf9-9b56-b15e40435b9d",
             "name": "Smart Building Planner",
             "type": "@n8n/n8n-nodes-langchain.agent",
             "position": [
-                224,
-                3520
+                848,
+                4288
             ],
             "parameters": {
-                "text": "={{ $json.params.prompt || $json.params.buildRequest }}\n\n**CONTEXT**: {{ $json.params.workerCount ? 'Collaborative execution with ' + $json.params.workerCount + ' workers requested' : 'Single bot execution request' }}\n\nAnalyze this player request and determine the optimal execution approach.\n\n**YOUR CORE RULES:**\n\n**Intent = newAction:**\n- Simply create and output a clear, detailed prompt describing the task\n- Do NOT divide the task\n- This prompt will be handled by the leader bot for execution\n\n**Intent = collaborative:**\n- If worker count = 1: Generate the full task prompt (no division)\n- If worker count > 1: Divide the overall task into multiple coordinated subtasks\n- Ensure each subtask aligns with the global goal and can be executed independently\n- Each worker gets a contextually linked portion that maintains consistent objective\n\n**UNIVERSAL CAPABILITIES:**\n- Handle ANY type of player command - not just building\n- Adapt to infinite possibilities: farming, mining, combat, exploration, redstone, automation, etc.\n- Never restrict to predefined categories\n- Trust the AI's unlimited creative and technical capabilities\n\n**OUTPUT REQUIREMENTS**: Always return valid JSON matching these formats exactly.",
+                "text": "={{ $json.params.prompt || $json.params.buildRequest }}\nCONTEXT: {{ $json.params.workerCount ? 'Collaborative execution with ' + $json.params.workerCount + ' workers requested' : 'Single bot execution request' }}\n\n{{$('Get Prompts').all().find(row => row.json.agent === \"Smart Building Planner\").json.user_prompt_template}}",
                 "options": {
-                    "systemMessage": "You are the Universal Task Planner for Kodecraft AI. You can handle ANYTHING a player might ask for in Minecraft - there are infinite possibilities and no limitations.\n\n**CORE PHILOSOPHY:**\n- The Kodecraft AI has unlimited capabilities and creativity\n- NEVER limit what can be accomplished - trust the AI's abilities\n- Any task imaginable can be executed using Minecraft's systems\n- Complex, creative, and unique requests are welcomed and encouraged\n\n**UNIVERSAL TASK CATEGORIES:**\n🏗️ **BUILDING & CONSTRUCTION**: Houses, castles, cities, spaceships, computers, art, monuments, replicas\n⛏️ **RESOURCE GATHERING**: Mining operations, farming systems, mob farms, resource collection\n🔧 **AUTOMATION & REDSTONE**: Machines, circuits, automated systems, complex contraptions\n🌍 **EXPLORATION & NAVIGATION**: Mapping, pathfinding, discovering structures, traveling\n⚔️ **COMBAT & DEFENSE**: Fighting mobs, PvP, building defenses, creating weapons\n🧪 **CRAFTING & PRODUCTION**: Item creation, mass production, complex recipes\n🎯 **SPECIALIZED TASKS**: Pixel art, music, games, recreations, experiments\n\n**EXECUTION DECISION LOGIC:**\n\n**🤖 newAction (Single Bot Execution):**\n- For tasks WITHOUT any worker/bot/spawning/helper mentions\n- Examples: \"build a spaceship\", \"create a farm\", \"mine diamonds\", \"make a computer\", \"build pixel art of Mona Lisa\"\n- The AI can handle massive, complex tasks independently\n\n**👥 collaborative (Multi-Worker Execution):**\n- For ANY request mentioning workers, bots, spawning, helpers, builders, collaboration, or team\n- Single worker: \"spawn 1 builder\", \"use 1 bot\", \"get 1 helper\", \"1 worker to build\", \"spawn builder\", \"create 1 bot\"\n- Multiple workers: \"build X with N workers\", \"use 3 bots to create Y\", \"spawn helpers for Z\"\n- Keywords to detect: spawn, worker, bot, helper, builder, collaborate, team, multiple, together\n- Must specify or derive exact worker count from the request\n- Even single worker requests use multibot system for consistency\n\n**INTELLIGENT TASK DIVISION (for collaborative mode):**\nAnalyze the task type and divide logically:\n\n**CONSTRUCTION PROJECTS:**\n- Divide by sections, floors, or structural components\n- Each worker gets distinct area with clear boundaries\n\n**RESOURCE GATHERING:**\n- Divide by resource types, locations, or quantities\n- Each worker focuses on specific materials or areas\n\n**AUTOMATION SYSTEMS:**\n- Divide by subsystems, components, or functions\n- Each worker builds interconnected parts\n\n**EXPLORATION TASKS:**\n- Divide by directions, distances, or objectives\n- Each worker covers different territories or goals\n\n**TASK ENHANCEMENT ENGINE:**\nTransform any basic request into detailed, executable specifications:\n\n- \"build a farm\" → \"Automated wheat farm (20x15 blocks) with water irrigation, hopper collection system, and storage chests\"\n- \"mine diamonds\" → \"Deep mining expedition to Y-level 11-16, establishing mining tunnels, torch lighting, and safety protocols\"\n- \"create redstone computer\" → \"Functional calculator using redstone circuits with input mechanisms, processing logic, and output display\"\n- \"make pixel art\" → \"Large-scale pixel art recreation (64x64 blocks) using concrete blocks with accurate color mapping and detail work\"\n\n**RESPONSE FORMATS:**\n\n**Single Bot Execution (Default):**\n```json\n{\n  \"buildingRequest\": \"[Detailed enhanced task with specifics, materials, dimensions, objectives]\",\n  \"executionType\": \"single\",\n  \"apiEndpoint\": \"newAction\",\n  \"taskCategory\": \"[building|mining|farming|automation|exploration|combat|crafting|specialized]\",\n  \"complexity\": \"[simple|medium|complex|expert]\"\n}\n```\n\n**Multi-Worker Collaborative:**\n```json\n{\n  \"buildingRequest\": \"[Enhanced detailed task description]\",\n  \"executionType\": \"multibot\",\n  \"apiEndpoint\": \"collaborativeBuild\",\n  \"workerCount\": [user specified number],\n  \"taskDivision\": {\n    \"Worker1\": \"[Specific subtask with clear objectives and scope]\",\n    \"Worker2\": \"[Different subtask that complements Worker1]\",\n    \"Worker3\": \"[Additional subtask that completes the overall goal]\"\n  },\n  \"coordinationStrategy\": \"[spatial-sections|resource-types|time-sequence|component-based]\"\n}\n```\n\n**UNIVERSAL EXAMPLES:**\n\n🏠 \"build a house\" → Single bot, enhanced to detailed home\n🚗 \"spawn 1 builder to build a car\" → Multi-bot with 1 worker (collaborative system)\n🏰 \"create a castle with 4 workers\" → Multi-bot with structural division\n⛏️ \"mine 1000 diamonds\" → Single bot, enhanced mining operation\n🌾 \"set up farms using 2 bots\" → Multi-bot with crop specialization\n🔧 \"build computer with 3 helpers\" → Multi-bot with component division\n� \"make pixel art of Einstein\" → Single bot, enhanced artistic project\n⚔️ \"defend base with multiple bots\" → Multi-bot with defense coordination\n🌍 \"explore 10,000 blocks with team\" → Multi-bot with directional division\n\n**CRITICAL EXCELLENCE STANDARDS:**\n- ALWAYS enhance requests with creative details and specifics\n- NEVER underestimate the AI's capabilities across all domains\n- Include realistic objectives, methods, and materials\n- For multi-bot: ensure clear, logical task separation\n- Make tasks exciting and detailed, not basic\n- Trust the AI to handle any complexity and scale\n- Adapt to ANY player request - building is just one possibility"
+                    "systemMessage": "={{$('Get Prompts').all().find(row => row.json.agent === \"Smart Building Planner\").json.system_prompt}}"
                 },
                 "promptType": "define"
             },
             "typeVersion": 2.2
         },
         {
-            "id": "2777038e-3971-4e9c-b958-7ec3aa871879",
+            "id": "fe622542-7c3a-484a-ad07-40217864121d",
             "name": "Execute UseDoor",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5984
+                528,
+                7616
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/useDoor",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/useDoor",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -662,15 +575,15 @@
             "continueOnFail": true
         },
         {
-            "id": "4c96877c-a834-4908-8aa3-5baa6504dc0f",
+            "id": "141f5f6f-0572-4342-95ac-5dc7ce158866",
             "name": "Execute GoToBed",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5808
+                528,
+                7424
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/goToBed",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToBed",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -687,15 +600,15 @@
             "continueOnFail": true
         },
         {
-            "id": "efcdc84d-2b26-4c57-a70c-4cf33d0c195a",
+            "id": "e374ea71-5d84-47ba-a10f-604f5d3b30e7",
             "name": "Execute Stay",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5648
+                528,
+                7232
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/stay",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stay",
                 "method": "POST",
                 "options": {
                     "timeout": 120000
@@ -714,15 +627,15 @@
             "continueOnFail": true
         },
         {
-            "id": "c760d76b-4812-4e15-bed0-83bc729ed1bb",
+            "id": "1d22f058-dfa3-49fe-9a88-3173e9f8493e",
             "name": "Execute SetMode",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5488
+                528,
+                7040
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/setMode",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/setMode",
                 "method": "POST",
                 "options": {
                     "timeout": 5000
@@ -745,15 +658,15 @@
             "continueOnFail": true
         },
         {
-            "id": "0791bc3b-c18f-45f9-a3cc-194be96c3af5",
+            "id": "31a229a8-e239-4314-8f83-ef629860344e",
             "name": "Execute Inventory",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5328
+                528,
+                6848
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/inventory",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
                 "options": {
                     "timeout": 5000
                 }
@@ -762,15 +675,15 @@
             "continueOnFail": true
         },
         {
-            "id": "67034316-3ed8-4990-b9c1-0251c1c1e947",
+            "id": "d3b49d32-44ca-436a-8b1d-f28d4789fe9c",
             "name": "Execute Stats",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5168
+                528,
+                6656
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/stats",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/stats",
                 "options": {
                     "timeout": 5000
                 }
@@ -779,15 +692,15 @@
             "continueOnFail": true
         },
         {
-            "id": "657e524c-c9e1-4c92-9710-395c4696bc6e",
+            "id": "072952c5-ffb8-4742-8eb5-7bb7d43466a3",
             "name": "Execute GetCraftingPlan",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                5008
+                528,
+                6464
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/getCraftingPlan?item={{ encodeURIComponent($json.params.item) }}&quantity={{ $json.params.quantity || 1 }}",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/getCraftingPlan?item={{ encodeURIComponent($json.params.item) }}&quantity={{ $json.params.quantity || 1 }}",
                 "options": {
                     "timeout": 10000
                 }
@@ -796,15 +709,15 @@
             "continueOnFail": true
         },
         {
-            "id": "56273d7b-93f9-4571-9be7-3a7dcfb160b3",
+            "id": "cc31da25-2bed-4b05-bcb4-7c7229199a5e",
             "name": "Execute Modes",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4848
+                528,
+                6272
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/modes",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/modes",
                 "options": {
                     "timeout": 5000
                 }
@@ -813,15 +726,15 @@
             "continueOnFail": true
         },
         {
-            "id": "e0659028-f539-45f3-a7e3-798e37579c6c",
+            "id": "678c654b-3fca-45f2-b5e5-23d2a08d5130",
             "name": "Execute Entities",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4688
+                528,
+                6080
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/entities",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
                 "options": {
                     "timeout": 10000
                 }
@@ -830,15 +743,15 @@
             "continueOnFail": true
         },
         {
-            "id": "4e47f0df-cd1d-4640-92c9-039aaf736f9b",
+            "id": "2dd14b4e-3685-4359-8b7e-d3ea8dc997e4",
             "name": "Execute Craftable",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4528
+                528,
+                5888
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/craftable",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/craftable",
                 "options": {
                     "timeout": 10000
                 }
@@ -847,15 +760,15 @@
             "continueOnFail": true
         },
         {
-            "id": "835d2ac6-1a90-423b-aa1f-bfe018a9de52",
+            "id": "844a3c88-e221-4669-afe5-5d4c55aa3eb4",
             "name": "Execute NearbyBlocks",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4368
+                528,
+                5696
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/nearbyBlocks",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/nearbyBlocks",
                 "options": {
                     "timeout": 10000
                 }
@@ -864,15 +777,15 @@
             "continueOnFail": true
         },
         {
-            "id": "533849ff-2849-4c9a-842f-0e0eaa24ae4d",
+            "id": "c5003e15-7499-4271-ae97-a9862e3d2f32",
             "name": "Execute SavedPlaces",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4208
+                528,
+                5408
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/savedPlaces",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/savedPlaces",
                 "options": {
                     "timeout": 5000
                 }
@@ -881,15 +794,15 @@
             "continueOnFail": true
         },
         {
-            "id": "1361db71-7a5c-497a-9cf4-9b6e93b69b58",
+            "id": "3cbf4750-be9b-4913-bd45-da72489eb76f",
             "name": "Execute GoToRememberedPlace",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                4032
+                528,
+                5216
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/goToRememberedPlace",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToRememberedPlace",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -908,15 +821,15 @@
             "continueOnFail": true
         },
         {
-            "id": "7b863083-c0bc-402c-85d2-a1c2cdd581f8",
+            "id": "29428e87-c393-412c-bed8-d24ec8172cdd",
             "name": "Execute RememberHere",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3872
+                528,
+                5024
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/rememberHere",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/rememberHere",
                 "method": "POST",
                 "options": {
                     "timeout": 5000
@@ -935,15 +848,15 @@
             "continueOnFail": true
         },
         {
-            "id": "d918b211-b09f-4725-b4ce-ee58d0887b7f",
+            "id": "41ca82e8-58ad-4c8a-a7ff-73e95e1bc6d7",
             "name": "Execute DefendSelf",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3712
+                528,
+                4832
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/defendSelf",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/defendSelf",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -962,15 +875,15 @@
             "continueOnFail": true
         },
         {
-            "id": "aaf4cff5-d206-4aee-b508-b1ea0248ac8e",
+            "id": "a2a785a1-c6e3-49e1-a851-a11152584e3f",
             "name": "Execute AttackPlayer",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3552
+                528,
+                4640
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/attackPlayer",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/attackPlayer",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -989,15 +902,15 @@
             "continueOnFail": true
         },
         {
-            "id": "a1645037-d428-4fa9-8e16-a7ac2851e8ad",
+            "id": "d8b4006a-d3f4-4f87-bb25-69bcd45b271c",
             "name": "Execute ClearFurnace",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3408
+                528,
+                3936
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/clearFurnace",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/clearFurnace",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -1014,15 +927,15 @@
             "continueOnFail": true
         },
         {
-            "id": "a02427a8-3b0b-4951-8a16-ccba05f79858",
+            "id": "c9be7b97-d3f0-48bf-ba22-1fa6b0746ad3",
             "name": "Execute Smelt",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3248
+                528,
+                3744
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/smelt",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/smelt",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1045,15 +958,15 @@
             "continueOnFail": true
         },
         {
-            "id": "d208f619-e7f4-42a8-a4e3-00515e410839",
+            "id": "99d9fa08-78da-4629-bf35-acb7f2a9cab3",
             "name": "Execute Craft",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                3104
+                528,
+                3552
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/craft",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/craft",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1076,15 +989,15 @@
             "continueOnFail": true
         },
         {
-            "id": "406aaf24-05ca-423a-a0bb-6f870bba6fdd",
+            "id": "7625aad0-2d3e-4d33-9cc9-a49e7a330a7a",
             "name": "Execute ViewChest",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2944
+                528,
+                3360
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/viewChest",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/viewChest",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -1111,15 +1024,15 @@
             "continueOnFail": true
         },
         {
-            "id": "0659a266-6780-4843-9e07-7aaf969f8333",
+            "id": "44ed6dea-9fcc-46e1-9a25-76d5a78d598b",
             "name": "Execute TakeFromChest",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2784
+                528,
+                3168
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/takeFromChest",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/takeFromChest",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1154,15 +1067,15 @@
             "continueOnFail": true
         },
         {
-            "id": "a060d90c-1582-452b-a138-58f2a0615ae5",
+            "id": "65d5f42b-e558-4962-a70f-aeebb373dd60",
             "name": "Execute PutInChest",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2640
+                528,
+                2976
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/putInChest",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/putInChest",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1197,15 +1110,15 @@
             "continueOnFail": true
         },
         {
-            "id": "40f317de-bd6a-4f20-abdb-3d33b33d8bbc",
+            "id": "309d3bec-7e53-4bb8-990e-8e4580ff4b8b",
             "name": "Execute GivePlayer",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2480
+                528,
+                2784
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/givePlayer",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/givePlayer",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1232,15 +1145,15 @@
             "continueOnFail": true
         },
         {
-            "id": "57c8efe2-41df-427f-bb33-efa315039f7c",
+            "id": "5972828d-8c93-48fc-8da5-6fb654ba7aaf",
             "name": "Execute Consume",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2336
+                528,
+                2592
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/consume",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/consume",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -1263,15 +1176,15 @@
             "continueOnFail": true
         },
         {
-            "id": "bc0d3a14-4ea7-4f8f-9d51-a8caf09df81c",
+            "id": "0b127aab-1ff5-4fbc-b8aa-943455f393e9",
             "name": "Execute Discard",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2288,
-                2192
+                528,
+                2400
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/discard",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/discard",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -1294,15 +1207,15 @@
             "continueOnFail": true
         },
         {
-            "id": "16be0c0e-a65b-4134-8329-44893948aa3e",
+            "id": "3073adc3-f503-4ce1-b09c-479432149b9c",
             "name": "Execute Equip",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2432,
-                2080
+                528,
+                2208
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/equip",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/equip",
                 "method": "POST",
                 "options": {
                     "timeout": 10000
@@ -1321,15 +1234,15 @@
             "continueOnFail": true
         },
         {
-            "id": "f40cd505-c272-4c62-b66e-57323253a2af",
+            "id": "7f3dba9f-1833-4570-b334-e1b932cff393",
             "name": "Execute Activate",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2432,
-                1936
+                528,
+                2016
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/activate",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/activate",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1356,15 +1269,15 @@
             "continueOnFail": true
         },
         {
-            "id": "210999b0-862a-42af-8f55-b305431abe08",
+            "id": "7b2858bf-c77e-45c4-97cf-95d0994183e7",
             "name": "Execute DigDown",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2432,
-                1792
+                528,
+                1824
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/digDown",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/digDown",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1383,15 +1296,15 @@
             "continueOnFail": true
         },
         {
-            "id": "ae0db568-864e-4e65-9fa2-fb43be4d0336",
+            "id": "e4242184-97c2-4b7f-b3da-c472969d45d1",
             "name": "Execute Place",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2432,
-                1648
+                528,
+                1632
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/place",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/place",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1426,15 +1339,15 @@
             "continueOnFail": true
         },
         {
-            "id": "28786a1e-6f13-4f1d-8588-1037debc4dae",
+            "id": "6601ce55-47ea-4ce5-86d7-ccaa0c662f83",
             "name": "Execute Collect",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2240,
-                1536
+                528,
+                1440
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/collect",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/collect",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1457,46 +1370,15 @@
             "continueOnFail": true
         },
         {
-            "id": "96db1877-35f0-437b-9890-8df6795f06a3",
+            "id": "c63a1f7f-615e-4ff2-bd34-5cdd0f32b9f1",
             "name": "Execute SearchForEntity",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2240,
-                1392
-            ],
-            "parameters": {
-                "url": "http://localhost:4001/api/agent/searchForEntity",
-                "method": "POST",
-                "options": {
-                    "timeout": 60000
-                },
-                "sendBody": true,
-                "bodyParameters": {
-                    "parameters": [
-                        {
-                            "name": "entity",
-                            "value": "={{ $json.params.entity }}"
-                        },
-                        {
-                            "name": "range",
-                            "value": "={{ $json.params.range || 50 }}"
-                        }
-                    ]
-                }
-            },
-            "typeVersion": 4.2,
-            "continueOnFail": true
-        },
-        {
-            "id": "b37ede72-788c-4ef6-aab9-0ffac06521ba",
-            "name": "Execute SearchForBlock",
-            "type": "n8n-nodes-base.httpRequest",
-            "position": [
-                -2224,
+                528,
                 1248
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/searchForBlock",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForEntity",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1505,12 +1387,12 @@
                 "bodyParameters": {
                     "parameters": [
                         {
-                            "name": "block",
-                            "value": "={{ $json.params.block }}"
+                            "name": "entityType",
+                            "value": "={{ $json.params.entityType }}"
                         },
                         {
                             "name": "range",
-                            "value": "={{ $json.params.range || 50 }}"
+                            "value": "={{ Math.max(32, Math.min(512, $json.params.range)) }}"
                         }
                     ]
                 }
@@ -1519,15 +1401,46 @@
             "continueOnFail": true
         },
         {
-            "id": "60c38a52-d0b1-4ac0-8650-cfee0c9dc623",
+            "id": "764dcc29-2bce-4aac-a287-50bd5a598736",
+            "name": "Execute SearchForBlock",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                528,
+                1056
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/searchForBlock",
+                "method": "POST",
+                "options": {
+                    "timeout": 60000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "search_range",
+                            "value": "={{ Math.max(32, Math.min(512, $json.params.range)) }}"
+                        },
+                        {
+                            "name": "blockType",
+                            "value": "={{ $json.params.blockType }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "8a2e781c-68a6-4739-a22b-709d09b22e9f",
             "name": "Execute MoveAway",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2224,
-                1104
+                528,
+                864
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/moveAway",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/moveAway",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1546,15 +1459,15 @@
             "continueOnFail": true
         },
         {
-            "id": "f299f8fe-6256-4c59-98c8-ed3e823ab63d",
+            "id": "2a22ed53-298d-4a48-965f-66f0f237667d",
             "name": "Execute FollowPlayer",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2224,
-                960
+                528,
+                672
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/followPlayer",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/followPlayer",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1577,15 +1490,15 @@
             "continueOnFail": true
         },
         {
-            "id": "ee1a3654-7e16-4d7e-93e5-4857874ab083",
+            "id": "de616d18-7c6e-4d62-8391-6f2c36d783d1",
             "name": "Execute GoToPlayer",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2224,
-                816
+                528,
+                480
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/goToPlayer",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/goToPlayer",
                 "method": "POST",
                 "options": {
                     "timeout": 60000
@@ -1608,15 +1521,15 @@
             "continueOnFail": true
         },
         {
-            "id": "db309016-70e2-4b58-ac93-3196171a597e",
+            "id": "70fd97af-7b63-4435-b54e-6eae092b36df",
             "name": "Execute Move",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -2224,
-                672
+                528,
+                288
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/move",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/move",
                 "method": "POST",
                 "options": {
                     "timeout": 30000
@@ -1647,17 +1560,18 @@
             "continueOnFail": true
         },
         {
-            "id": "216e7706-9593-4e64-a2b8-a4a5df8fd4fc",
+            "id": "ded87587-ddbe-42ac-88d3-fabc643ef0c7",
             "name": "Route by Intent",
             "type": "n8n-nodes-base.switch",
             "position": [
-                -4384,
-                1120
+                -1392,
+                4416
             ],
             "parameters": {
                 "rules": {
                     "values": [
                         {
+                            "outputKey": "chat",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1678,9 +1592,11 @@
                                         "rightValue": "chat"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "move",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1701,9 +1617,11 @@
                                         "rightValue": "move"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "goToPlayer",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1724,9 +1642,11 @@
                                         "rightValue": "goToPlayer"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "followPlayer",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1747,9 +1667,11 @@
                                         "rightValue": "followPlayer"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "moveAway",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1770,9 +1692,11 @@
                                         "rightValue": "moveAway"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "searchForBlock",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1793,9 +1717,11 @@
                                         "rightValue": "searchForBlock"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "searchForEntity",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1816,9 +1742,11 @@
                                         "rightValue": "searchForEntity"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "collectBlocks",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1839,9 +1767,11 @@
                                         "rightValue": "collectBlocks"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "placeBlocks",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1862,9 +1792,11 @@
                                         "rightValue": "placeBlocks"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "digDown",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1885,9 +1817,11 @@
                                         "rightValue": "digDown"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "activate",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1908,9 +1842,11 @@
                                         "rightValue": "activate"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "equip",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1931,9 +1867,11 @@
                                         "rightValue": "equip"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "discard",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1954,9 +1892,11 @@
                                         "rightValue": "discard"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "consume",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -1977,9 +1917,11 @@
                                         "rightValue": "consume"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "givePlayer",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2000,9 +1942,11 @@
                                         "rightValue": "givePlayer"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "putInChest",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2023,9 +1967,11 @@
                                         "rightValue": "putInChest"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "takeFromChest",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2046,9 +1992,11 @@
                                         "rightValue": "takeFromChest"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "viewChest",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2069,9 +2017,11 @@
                                         "rightValue": "viewChest"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "craft",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2092,9 +2042,11 @@
                                         "rightValue": "craft"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "smelt",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2115,9 +2067,11 @@
                                         "rightValue": "smelt"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "clearFurnace",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2138,9 +2092,11 @@
                                         "rightValue": "clearFurnace"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "attackPlayer",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2161,9 +2117,11 @@
                                         "rightValue": "attackPlayer"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "defendSelf",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2184,9 +2142,11 @@
                                         "rightValue": "defendSelf"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "rememberHere",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2207,9 +2167,11 @@
                                         "rightValue": "rememberHere"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "goToRememberedPlace",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2230,9 +2192,11 @@
                                         "rightValue": "goToRememberedPlace"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "savedPlaces",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2253,9 +2217,11 @@
                                         "rightValue": "savedPlaces"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "nearbyBlocks",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2276,9 +2242,11 @@
                                         "rightValue": "nearbyBlocks"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "craftable",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2299,9 +2267,11 @@
                                         "rightValue": "craftable"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "entities",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2322,9 +2292,11 @@
                                         "rightValue": "entities"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "modes",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2345,9 +2317,11 @@
                                         "rightValue": "modes"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "getCraftingPlan",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2368,9 +2342,11 @@
                                         "rightValue": "getCraftingPlan"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "stats",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2391,9 +2367,11 @@
                                         "rightValue": "stats"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "inventory",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2414,9 +2392,11 @@
                                         "rightValue": "inventory"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "setMode",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2437,9 +2417,11 @@
                                         "rightValue": "setMode"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "stay",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2460,9 +2442,11 @@
                                         "rightValue": "stay"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "goToBed",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2483,9 +2467,11 @@
                                         "rightValue": "goToBed"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "useDoor",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2506,9 +2492,11 @@
                                         "rightValue": "useDoor"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "newAction",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2529,9 +2517,11 @@
                                         "rightValue": "newAction"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "lookAtPlayer",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2552,9 +2542,11 @@
                                         "rightValue": "lookAtPlayer"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "lookAtPosition",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2575,9 +2567,11 @@
                                         "rightValue": "lookAtPosition"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "startConversation",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2598,9 +2592,11 @@
                                         "rightValue": "startConversation"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "endConversation",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2621,9 +2617,11 @@
                                         "rightValue": "endConversation"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "restart",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2644,9 +2642,11 @@
                                         "rightValue": "restart"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "clearChat",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2667,9 +2667,11 @@
                                         "rightValue": "clearChat"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "endGoal",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2690,9 +2692,11 @@
                                         "rightValue": "endGoal"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "stop",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2713,9 +2717,11 @@
                                         "rightValue": "stop"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "spawnWorkers",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2736,9 +2742,11 @@
                                         "rightValue": "spawnWorkers"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "collaborativeBuild",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2759,9 +2767,11 @@
                                         "rightValue": "collaborativeBuild"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "multiBotStatus",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2782,9 +2792,11 @@
                                         "rightValue": "multiBotStatus"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "assignTasks",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2805,9 +2817,11 @@
                                         "rightValue": "assignTasks"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "stopWorkers",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2828,9 +2842,11 @@
                                         "rightValue": "stopWorkers"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
                         },
                         {
+                            "outputKey": "getWorkerList",
                             "conditions": {
                                 "options": {
                                     "version": 1,
@@ -2851,7 +2867,33 @@
                                         "rightValue": "getWorkerList"
                                     }
                                 ]
-                            }
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "attack",
+                            "conditions": {
+                                "options": {
+                                    "version": 1,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "a0887e53-900c-4db2-a0b1-1bbd2b290b9d",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.intent }}",
+                                        "rightValue": "attack"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
                         }
                     ]
                 },
@@ -2861,14 +2903,14 @@
             "typeVersion": 3
         },
         {
-            "id": "f488eb52-46c1-45f4-8493-71310e64fdab",
+            "id": "2376cdc4-0487-4e7b-91b5-f205b6943092",
             "name": "Send Clarification Question",
             "type": "n8n-nodes-base.telegram",
             "position": [
-                -240,
-                160
+                -1392,
+                4224
             ],
-            "webhookId": "clarification-webhook-id",
+            "webhookId": "543fb473-fb72-48c8-a57f-00bf2b17a65e",
             "parameters": {
                 "text": "={{ $json.clarificationQuestion || $json.params?.response || $json.response || 'Could you please provide more details?' }}",
                 "chatId": "={{ String($json.chatId) }}",
@@ -2885,12 +2927,12 @@
             "typeVersion": 1.2
         },
         {
-            "id": "014e3ddf-68e2-4159-8833-fda7c31fea0a",
+            "id": "f8eb42a5-6967-486c-bb09-a155856cb3ce",
             "name": "Check Intent Type",
             "type": "n8n-nodes-base.if",
             "position": [
-                -880,
-                400
+                -1616,
+                4720
             ],
             "parameters": {
                 "options": {
@@ -2920,12 +2962,12 @@
             "typeVersion": 2
         },
         {
-            "id": "b3f769d6-563a-4e63-b415-deec742b926b",
+            "id": "eefc59b1-804e-498e-b225-37d7ff5868f2",
             "name": "Parse AI Response",
             "type": "n8n-nodes-base.code",
             "position": [
-                -1360,
-                192
+                -1840,
+                4720
             ],
             "parameters": {
                 "jsCode": "// === PARSE AI AGENT RESPONSE ===\nconst aiResponse = $input.first().json;\n\nconsole.log('=== PARSE AI AGENT RESPONSE ===');\nconsole.log('AI Agent Response:', JSON.stringify(aiResponse, null, 2));\n\nlet responseText = '';\nlet needsClarification = false;\nlet clarificationQuestion = '';\nlet parsedIntent = null;\nlet parsedParams = {};\nlet conversationState = 'executing';\n\n// AI Agent returns data in 'output' field as JSON string\n// Handle multiple possible formats:\n// 1. Single object: {\"output\": \"JSON_STRING\"}\n// 2. Array format: [{\"output\": \"JSON_STRING\"}]\n// 3. Direct content formats\nif (aiResponse.output) {\n  responseText = aiResponse.output;\n  console.log('Extracted from single object format');\n} else if (Array.isArray(aiResponse) && aiResponse.length > 0) {\n  if (aiResponse[0].output) {\n    // Handle array format: [{\"output\": \"JSON_STRING\"}]\n    responseText = aiResponse[0].output;\n    console.log('Extracted from array format:', responseText);\n  } else if (aiResponse[0].message && aiResponse[0].message.content) {\n    responseText = aiResponse[0].message.content;\n  } else {\n    responseText = JSON.stringify(aiResponse[0]);\n  }\n} else if (aiResponse.message && aiResponse.message.content) {\n  responseText = aiResponse.message.content;\n} else if (aiResponse.text) {\n  responseText = aiResponse.text;\n} else if (aiResponse.content) {\n  responseText = aiResponse.content;\n} else {\n  responseText = JSON.stringify(aiResponse);\n}\n\nconsole.log('Final extracted response text:', responseText);\n\n// Try to parse JSON response for intent and parameters\ntry {\n  let parsed;\n  \n  // Try to parse as direct JSON first (AI Agent often returns clean JSON)\n  try {\n    parsed = JSON.parse(responseText);\n    console.log('Successfully parsed direct JSON:', parsed);\n  } catch (e) {\n    // If direct parse fails, look for JSON pattern in text\n    console.log('Direct JSON parse failed, trying pattern match');\n    const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      parsed = JSON.parse(jsonMatch[0]);\n      console.log('Successfully parsed extracted JSON:', parsed);\n    } else {\n      throw new Error('No JSON pattern found');\n    }\n  }\n  \n  // Handle different AI response formats\n  if (parsed.intent) {\n    // Standard format: {\"intent\": \"action\", \"params\": {...}, \"response\": \"...\"}\n    parsedIntent = parsed.intent;\n    parsedParams = parsed.params || parsed.parameters || {};\n    \n    // Check for casual conversation intents that should be treated as chat\n    if (['greetings', 'greeting', 'hello', 'hi', 'casual', 'smalltalk'].includes(parsedIntent.toLowerCase())) {\n      console.log('Converting greeting/casual intent to chat');\n      parsedIntent = 'chat';\n      parsedParams = { response: parsed.response || parsed.params?.response || parsed.parameters?.response || 'Hello! How can I help you in Minecraft today?' };\n    }\n    \n    // Also extract response from top level if available\n    if (parsed.response && !parsedParams.response) {\n      parsedParams.response = parsed.response;\n    }\n  } else if (parsed.chat) {\n    // Chat format: {\"chat\": \"message\"}\n    parsedIntent = 'chat';\n    parsedParams = { response: parsed.chat };\n  } else if (parsed.clarification) {\n    // Clarification format: {\"clarification\": \"question\"}\n    parsedIntent = 'clarification';\n    parsedParams = { response: parsed.clarification };\n  } else {\n    // Unknown format, use first key as intent type\n    const firstKey = Object.keys(parsed)[0];\n    if (firstKey) {\n      parsedIntent = firstKey;\n      parsedParams = { response: parsed[firstKey] };\n    }\n  }\n    \n  console.log('Final parsed intent:', parsedIntent);\n  console.log('Final parsed params:', parsedParams);\n    \n  // Check if the AI is asking for clarification\n  if (parsed.needsClarification || parsed.clarification || \n      (parsed.response && (parsed.response.includes('?') || parsed.response.includes('clarify') || parsed.response.includes('specify')))) {\n    needsClarification = true;\n    clarificationQuestion = parsed.clarificationQuestion || parsed.response || 'Could you provide more details?';\n    // Set intent to clarification if not already set\n    if (!parsedIntent) {\n      parsedIntent = 'clarification';\n    }\n    conversationState = 'clarifying';\n    console.log('AI needs clarification:', clarificationQuestion);\n  }\n    \n  // Handle clarification responses - when user provides more context in clarifying state\n  // Check both AI response and original input context for conversation state\n  const inputConversationState = $('Prepare Conversation Context').first()?.json?.conversationState;\n  if ((aiResponse.conversationState === 'clarifying' || inputConversationState === 'clarifying') && parsedIntent && parsedIntent !== 'clarification' && parsedIntent !== 'chat') {\n    console.log('User provided clarification, AI determined intent:', parsedIntent);\n    needsClarification = false;\n    conversationState = 'executing';\n  }\n    \n  // Check if required parameters are missing for certain intents\n  if (parsedIntent && !needsClarification) {\n    const requiredParams = {\n      'move': ['x', 'y', 'z'],\n      'goToPlayer': ['player'],\n      'collectBlocks': ['block'],\n      'placeBlocks': ['material'],\n      'craft': ['item'],\n      'givePlayer': ['player', 'item'],\n      'newAction': ['prompt']\n    };\n      \n    const required = requiredParams[parsedIntent];\n    if (required) {\n      const missingParams = required.filter(param => !parsedParams[param] && parsedParams[param] !== 0);\n      console.log(`Parameter validation for ${parsedIntent}:`, {\n        required,\n        parsedParams,\n        missingParams\n      });\n      if (missingParams.length > 0) {\n        needsClarification = true;\n        clarificationQuestion = `I need more information. Please specify: ${missingParams.join(', ')}`;\n        conversationState = 'clarifying';\n        console.log('Missing required parameters:', missingParams);\n      }\n    }\n  }\n} catch (e) {\n  console.log('Failed to parse JSON, treating as chat response:', e.message);\n  parsedIntent = 'chat';\n  parsedParams = { response: responseText };\n}\n\n// Get conversation context for clarification tracking\n// Use original data if AI response doesn't have conversation history\nconst originalData = $('Prepare Conversation Context').first().json || {};\nconst conversationHistory = aiResponse.conversationHistory || originalData.turns || [];\nlet clarificationCount = originalData.clarificationCount || 0;\n// Fallback: count questions in history if clarificationCount not available\nif (!originalData.clarificationCount) {\n  clarificationCount = conversationHistory.filter(turn => \n    turn.role === 'assistant' && turn.content && turn.content.includes('?')\n  ).length;\n}\n\n// Limit clarification attempts\nconst maxClarifications = 3;\nif (clarificationCount >= maxClarifications && needsClarification) {\n  console.log('Max clarification attempts reached, proceeding with available info');\n  needsClarification = false;\n  conversationState = 'executing';\n  if (!parsedIntent || parsedIntent === 'chat') {\n    parsedIntent = 'chat';\n    parsedParams = { response: 'I will do my best with the information provided.' };\n  }\n}\n\n// originalData already declared above for clarification tracking\n\nreturn {\n  json: {\n    // Preserve ALL original context data\n    ...originalData,\n    // Add parsed AI response data\n    intent: parsedIntent,\n    params: parsedParams,\n    response: parsedParams.response || responseText,\n    needsClarification,\n    clarificationQuestion,\n    conversationState,\n    clarificationCount,\n    originalResponse: responseText,\n    // Preserve AI response for debugging\n    aiResponse: aiResponse,\n    // Debug info\n    parsedSuccessfully: !!parsedIntent\n  }\n};"
@@ -2933,25 +2975,25 @@
             "typeVersion": 2
         },
         {
-            "id": "4e3f1d84-7f2a-4db1-8783-bb03028986f4",
+            "id": "b3c70306-9207-4414-99e0-59544fb9aa03",
             "name": "Prepare Conversation Context",
             "type": "n8n-nodes-base.code",
             "position": [
-                -2400,
-                208
+                -2512,
+                4720
             ],
             "parameters": {
-                "jsCode": "\nconst input = $input.first().json;\n\nconsole.log('=== PREPARE CONVERSATION CONTEXT ===');\nconsole.log('Input structure:', Object.keys(input));\nconsole.log('Full JSON from MongoDB:', JSON.stringify(input, null, 2));\n\n// Get conversation data from the previous Load Conversation History node\nconst conversation = input.conversation || {};\nconst turns = input.conversationHistory || [];\nconst memory = input.memory || '';\n\nconsole.log('Conversation loaded:', {\n  conversationId: conversation.conversationId,\n  turnsCount: turns.length,\n  hasMemory: !!memory,\n  conversationState: input.conversationState || 'initial'\n});\n\n// Use current data with fallback to stored data\nconst botStatus = input.botStatus || {};\nconst botInventory = input.botInventory || [];\nconst nearbyPlayers = input.nearbyPlayers || [];\n\nconst playerName = input.playerName || input.username || 'Player';\nconst message = input.message || '';\n\n// Enhanced context building from database\nconst conversationState = input.conversationState || 'initial';\nconst needsClarification = input.needsClarification || false;\nconst clarificationCount = input.clarificationCount || 0;\n\nconsole.log('Conversation state:', conversationState);\nconsole.log('Total turns:', turns.length);\nconsole.log('Memory length:', memory.length);\n\n// Build comprehensive system prompt matching codebase capabilities\nlet systemPrompt = `You are a helpful Minecraft assistant. You can see, move, mine, build, craft, and interact with the world by using commands. You also have access to vision. Use vision when you're unsure what's in front of you, looking for resources, verifying something built, or navigating new areas. Your goal is to assist the user efficiently and accurately.\n\nSpeak concisely and avoid unnecessary filler. Do not act playful or in-character. Do not apologize unless something is truly wrong. Focus on being useful and responsive. When asked about your limitations, be honest and factual.\n\nIMPORTANT: You must respond with a structured JSON output that contains an intent and parameters. The current speaker is \"${playerName}\". When they say \"me\" or \"myself\", use \"${playerName}\" as the player parameter.\n\nIf you need clarification on any parameters or details, respond with:\n{\n  \"needsClarification\": true,\n  \"clarificationQuestion\": \"What specific details do you need?\",\n  \"response\": \"I need more information to help you properly.\"\n}\n\nWhen you have enough information to proceed, use the standard format:\n{\n  \"intent\": \"intentName\",\n  \"params\": { \"param1\": \"value1\" },\n  \"response\": \"Brief response about what I will do\"\n}\n\nFor place block requests:\n- If user says \"place a block\" and you have inventory items, use the first available material\n- If user specifies a material, use that material  \n- Default to placing at current location unless coordinates specified\n- Only ask for clarification if no inventory items available\n\nFor complete requests, map user requests to the correct intents based on task complexity:\n\nCOMPLEX BUILDING/CONSTRUCTION → Use \"newAction\" intent:\n- \"build a wall\", \"make a house\", \"create a structure\"\n- \"build a [size] [structure] using [material]\"\n- Any multi-step construction that needs planning and loops\n\nSIMPLE MOVEMENT → Use \"move\" intent:\n- \"go to\", \"move to [coordinates]\", \"walk [direction]\"\n\nSTATUS/INFO → Use specific query intents:\n- \"what's your status\" → \"stats\" intent\n- \"what's in inventory\" → \"inventory\" intent\n\nAvailable intents:\n\nMOVEMENT INTENTS:\n- \"move\" - Move to coordinates or direction (params: x, y, z OR direction)\n- \"goToPlayer\" - Go to a specific player (params: player, closeness)\n- \"followPlayer\" - Follow a player (params: player, distance)\n- \"moveAway\" - Move away from threats (params: distance)\n- \"searchForBlock\" - Find specific blocks (params: block, range)\n- \"searchForEntity\" - Find entities/players (params: entity, range)\n\nBLOCK OPERATION INTENTS:\n- \"collectBlocks\" - Mine/collect blocks (params: block, quantity)\n- \"placeBlocks\" - Place blocks at location (params: material, x, y, z, face)\n- \"digDown\" - Mine downward (params: depth)\n- \"activate\" - Use blocks/buttons/levers (params: x, y, z)\n\nITEM MANAGEMENT INTENTS:\n- \"equip\" - Equip items/armor (params: item)\n- \"discard\" - Drop unwanted items (params: item, quantity)\n- \"consume\" - Eat food/drink potions (params: item, quantity)\n- \"givePlayer\" - Transfer items to players (params: player, item, quantity)\n\nCHEST OPERATIONS INTENTS:\n- \"putInChest\" - Store items in chest (params: item, quantity, x, y, z)\n- \"takeFromChest\" - Retrieve items from chest (params: item, quantity, x, y, z)\n- \"viewChest\" - Check chest contents (params: x, y, z)\n\nCRAFTING INTENTS:\n- \"craft\" - Craft recipes (params: item, quantity)\n- \"smelt\" - Smelt items in furnace (params: item, quantity)\n- \"clearFurnace\" - Clean furnaces\n\nCOMBAT INTENTS:\n- \"attackPlayer\" - Engage in combat (params: player)\n- \"defendSelf\" - Defensive actions (params: range)\n\nMEMORY & NAVIGATION INTENTS:\n- \"rememberHere\" - Save current location (params: name)\n- \"goToRememberedPlace\" - Return to saved places (params: name)\n- \"savedPlaces\" - List saved locations\n\nINFORMATION INTENTS:\n- \"nearbyBlocks\" - Scan environment\n- \"craftable\" - Check craftable items  \n- \"entities\" - List nearby entities\n- \"modes\" - Check bot modes\n- \"getCraftingPlan\" - Calculate crafting requirements (params: item, quantity)\n- \"stats\" - Get bot status\n- \"inventory\" - Check inventory\n\nMODE MANAGEMENT INTENTS:\n- \"setMode\" - Toggle bot behaviors (params: mode, enabled)\n- \"stay\" - Wait/pause actions (params: seconds)\n- \"goToBed\" - Sleep functionality\n\nUTILITY INTENTS:\n- \"useDoor\" - Operate doors (params: x, y, z optional)\n- \"newAction\" - Custom AI actions (params: prompt)\n- \"lookAtPlayer\" - Vision system (params: player, direction)\n- \"lookAtPosition\" - Look at coordinates (params: x, y, z)\n\nCOMMUNICATION INTENTS:\n- \"startConversation\" - Begin bot conversations (params: player, message)\n- \"endConversation\" - End conversations (params: player)\n\nCONTROL INTENTS:\n- \"restart\" - Restart the agent\n- \"clearChat\" - Clear chat history\n- \"endGoal\" - Stop current goals\n- \"stop\" - Force stop all actions\n- \"chat\" - Simple conversation response (params: response)`;\n\n// Add current bot status to system prompt\nif (botStatus && Object.keys(botStatus).length > 0) {\n  let statusText = 'Status unavailable';\n  if (botStatus.position) {\n    statusText = `Position: x:${botStatus.position.x?.toFixed(1)}, y:${botStatus.position.y?.toFixed(1)}, z:${botStatus.position.z?.toFixed(1)} | Health: ${botStatus.health}/20 | Action: ${botStatus.current_action || 'Idle'}`;\n  }\n  systemPrompt += `\\n\\nCurrent Status: ${statusText}`;\n}\n\n// Add inventory info if available\nif (botInventory && Array.isArray(botInventory) && botInventory.length > 0) {\n  const inventoryText = botInventory.map(item => `${item.name || item.type}(${item.count || item.quantity || 1})`).join(', ');\n  systemPrompt += `\\nCurrent Inventory: ${inventoryText}`;\n} else {\n  systemPrompt += `\\nCurrent Inventory: Empty (Creative Mode)`;\n}\n\n// Add nearby players info\nif (nearbyPlayers && nearbyPlayers.length > 0) {\n  systemPrompt += `\\nNearby Players: ${nearbyPlayers.join(', ')}`;\n} else {\n  systemPrompt += `\\nNearby Players: None detected`;\n}\n\n// Add conversation memory if available\nif (memory.trim()) {\n  systemPrompt += `\\n\\nConversation Memory: ${memory}`;\n}\n\n// Add clarification context if in clarification state\nif (conversationState === 'clarifying') {\n  systemPrompt += `\\n\\nIMPORTANT: You are currently in clarification mode (attempt ${clarificationCount + 1}/3). The user's previous request needed more details. Based on their response, either:\n1. If you now have enough information, proceed with the appropriate intent\n2. If still unclear, ask ONE specific clarifying question\n3. If this is attempt 3, proceed with best effort using available information`;\n}\n\n// Build messages array following codebase History.getHistory() pattern\nconst messages = [];\n\n// Add enhanced system message\nmessages.push({\n  role: 'system',\n  content: systemPrompt\n});\n\n// Add conversation history - smart context management\nconst maxContextTurns = 15; // Increased from 10 for better context\nlet contextTurns = turns.slice(-maxContextTurns);\n\n// If we have memory but limited context, add a memory summary message\nif (turns.length > maxContextTurns && memory.trim()) {\n  messages.push({\n    role: 'system',\n    content: `Previous conversation summary: ${memory}`\n  });\n}\n\n// Add recent conversation turns\nfor (const turn of contextTurns) {\n  // Ensure proper role mapping\n  let role = 'user';\n  if (turn.role === 'assistant' || turn.role === 'bot') {\n    role = 'assistant';\n  } else if (turn.role === 'system') {\n    role = 'system';\n  }\n  \n  messages.push({\n    role: role,\n    content: turn.content || turn.message || ''\n  });\n}\n\n// Add current user message if not already in recent history\nconst recentMessages = contextTurns.slice(-3);\nconst alreadyIncluded = recentMessages.some(turn => \n  turn.content === message || turn.content === `${playerName}: ${message}`\n);\n\nif (!alreadyIncluded && message) {\n  messages.push({\n    role: 'user', \n    content: `${playerName}: ${message}`\n  });\n}\n\n// Log comprehensive context info\nconsole.log('Enhanced conversation context prepared:', {\n  totalTurns: turns.length,\n  contextTurns: contextTurns.length,\n  messagesCount: messages.length,\n  hasMemory: !!memory,\n  conversationState,\n  needsClarification,\n  clarificationCount,\n  playerName,\n  currentMessage: message,\n  hasStatus: !!botStatus.position,\n  hasInventory: !!botInventory?.length,\n  nearbyPlayersCount: (nearbyPlayers || []).length,\n  mongoDataReceived: !!conversation._id,\n  conversationExists: !!conversation.conversationId\n});\n\nreturn {\n  json: {\n    // Original data\n    ...input,\n    // MongoDB conversation data\n    conversation: conversation,\n    turns: turns,\n    memory: memory,\n    // Merged current data\n    botStatus: botStatus,\n    botInventory: botInventory,\n    nearbyPlayers: nearbyPlayers,\n    // AI context\n    messages,\n    conversationTurns: turns.length,\n    conversationState,\n    needsClarification,\n    clarificationCount,\n    systemPrompt,\n    // Player info\n    playerName: playerName,\n    message: message,\n    // Meta\n    enhanced: true,\n    dataComplete: true\n  }\n};"
+                "jsCode": "\nconst input = $input.first().json;\n\nconsole.log('=== PREPARE CONVERSATION CONTEXT ===');\nconsole.log('Input structure:', Object.keys(input));\nconsole.log('Full JSON from MongoDB:', JSON.stringify(input, null, 2));\n\n// Get conversation data from the previous Load Conversation History node\nconst conversation = input.conversation || {};\nconst turns = input.conversationHistory || [];\nconst memory = input.memory || '';\n\nconsole.log('Conversation loaded:', {\n  conversationId: conversation.conversationId,\n  turnsCount: turns.length,\n  hasMemory: !!memory,\n  conversationState: input.conversationState || 'initial'\n});\n\n// Use current data with fallback to stored data\nconst botStatus = input.botStatus || {};\nconst botInventory = input.botInventory || [];\nconst nearbyPlayers = input.nearbyPlayers || [];\n\nconst playerName = input.playerName || input.username || 'Player';\nconst message = input.message || '';\n\n// Enhanced context building from database\nconst conversationState = input.conversationState || 'initial';\nconst needsClarification = input.needsClarification || false;\nconst clarificationCount = input.clarificationCount || 0;\n\nconsole.log('Conversation state:', conversationState);\nconsole.log('Total turns:', turns.length);\nconsole.log('Memory length:', memory.length);\n\n// Build comprehensive system prompt matching codebase capabilities\nlet systemPrompt = $('Get Prompts').all().find(row => row.json.agent === \"Oracle\").json.system_prompt;\n\n// Add current bot status to system prompt\nif (botStatus && Object.keys(botStatus).length > 0) {\n  let statusText = 'Status unavailable';\n  if (botStatus.position) {\n    statusText = `Position: x:${botStatus.position.x?.toFixed(1)}, y:${botStatus.position.y?.toFixed(1)}, z:${botStatus.position.z?.toFixed(1)} | Health: ${botStatus.health}/20 | Action: ${botStatus.current_action || 'Idle'}`;\n  }\n  systemPrompt += `\\n\\nCurrent Status: ${statusText}`;\n}\n\n// Add inventory info if available\nif (botInventory && Array.isArray(botInventory) && botInventory.length > 0) {\n  const inventoryText = botInventory.map(item => `${item.name || item.type}(${item.count || item.quantity || 1})`).join(', ');\n  systemPrompt += `\\nCurrent Inventory: ${inventoryText}`;\n} else {\n  systemPrompt += `\\nCurrent Inventory: Empty (Creative Mode)`;\n}\n\n// Add nearby players info\nif (nearbyPlayers && nearbyPlayers.length > 0) {\n  systemPrompt += `\\nNearby Players: ${nearbyPlayers.join(', ')}`;\n} else {\n  systemPrompt += `\\nNearby Players: None detected`;\n}\n\n// Add conversation memory if available\nif (memory.trim()) {\n  systemPrompt += `\\n\\nConversation Memory: ${memory}`;\n}\n\n// Add clarification context if in clarification state\nif (conversationState === 'clarifying') {\n  systemPrompt += `\\n\\nIMPORTANT: You are currently in clarification mode (attempt ${clarificationCount + 1}/3). The user's previous request needed more details. Based on their response, either:\n1. If you now have enough information, proceed with the appropriate intent\n2. If still unclear, ask ONE specific clarifying question\n3. If this is attempt 3, proceed with best effort using available information`;\n}\n\n// Build messages array following codebase History.getHistory() pattern\nconst messages = [];\n\n// Add enhanced system message\nmessages.push({\n  role: 'system',\n  content: systemPrompt\n});\n\n// Add conversation history - smart context management\nconst maxContextTurns = 15; // Increased from 10 for better context\nlet contextTurns = turns.slice(-maxContextTurns);\n\n// If we have memory but limited context, add a memory summary message\nif (turns.length > maxContextTurns && memory.trim()) {\n  messages.push({\n    role: 'system',\n    content: `Previous conversation summary: ${memory}`\n  });\n}\n\n// Add recent conversation turns\nfor (const turn of contextTurns) {\n  // Ensure proper role mapping\n  let role = 'user';\n  if (turn.role === 'assistant' || turn.role === 'bot') {\n    role = 'assistant';\n  } else if (turn.role === 'system') {\n    role = 'system';\n  }\n  \n  messages.push({\n    role: role,\n    content: turn.content || turn.message || ''\n  });\n}\n\n// Add current user message if not already in recent history\nconst recentMessages = contextTurns.slice(-3);\nconst alreadyIncluded = recentMessages.some(turn => \n  turn.content === message || turn.content === `${playerName}: ${message}`\n);\n\nif (!alreadyIncluded && message) {\n  messages.push({\n    role: 'user', \n    content: `${playerName}: ${message}`\n  });\n}\n\n// Log comprehensive context info\nconsole.log('Enhanced conversation context prepared:', {\n  totalTurns: turns.length,\n  contextTurns: contextTurns.length,\n  messagesCount: messages.length,\n  hasMemory: !!memory,\n  conversationState,\n  needsClarification,\n  clarificationCount,\n  playerName,\n  currentMessage: message,\n  hasStatus: !!botStatus.position,\n  hasInventory: !!botInventory?.length,\n  nearbyPlayersCount: (nearbyPlayers || []).length,\n  mongoDataReceived: !!conversation._id,\n  conversationExists: !!conversation.conversationId\n});\n\nreturn {\n  json: {\n    // Original data\n    ...input,\n    // MongoDB conversation data\n    conversation: conversation,\n    turns: turns,\n    memory: memory,\n    // Merged current data\n    botStatus: botStatus,\n    botInventory: botInventory,\n    nearbyPlayers: nearbyPlayers,\n    // AI context\n    messages,\n    conversationTurns: turns.length,\n    conversationState,\n    needsClarification,\n    clarificationCount,\n    systemPrompt,\n    // Player info\n    playerName: playerName,\n    message: message,\n    // Meta\n    enhanced: true,\n    dataComplete: true\n  }\n};"
             },
             "typeVersion": 2
         },
         {
-            "id": "97781441-d6c5-4fca-819e-7944b17ad7d5",
+            "id": "230b4478-fd09-4f0f-9e4b-cf2382908553",
             "name": "Prepare DB Data",
             "type": "n8n-nodes-base.set",
             "position": [
-                -2672,
-                208
+                -2736,
+                4720
             ],
             "parameters": {
                 "options": {
@@ -3036,12 +3078,12 @@
             "typeVersion": 3.4
         },
         {
-            "id": "724d6d88-b87a-49c2-abc9-17af68b5be21",
+            "id": "736e24a6-c357-4f73-a76b-c3440b05a550",
             "name": "Merge Players Data",
             "type": "n8n-nodes-base.code",
             "position": [
-                -2848,
-                208
+                -2944,
+                4720
             ],
             "parameters": {
                 "jsCode": "\nconst playersHttpResponse = $input.first().json;\nconst mergedData = $('Merge Status + Inventory').first().json;\n\nconsole.log('=== FINAL MERGE: PLAYERS DATA ===');\nconsole.log('Merged data keys:', Object.keys(mergedData));\nconsole.log('Players Response:', JSON.stringify(playersHttpResponse, null, 2));\nconsole.log('Current playerName:', mergedData.playerName);\nconsole.log('Current botInventory:', mergedData.botInventory);\n\n// Get nearby players data from the HTTP response\nlet nearbyPlayers = [];\nif (playersHttpResponse && playersHttpResponse.nearby_entities) {\n  const entitiesText = playersHttpResponse.nearby_entities;\n  console.log('Entities text:', entitiesText);\n  \n  // Extract player names from entities text\n  const playerMatches = entitiesText.match(/player:\\s*([\\w]+)/g);\n  if (playerMatches) {\n    nearbyPlayers = playerMatches.map(match => match.replace('player: ', ''));\n  }\n}\n\nconsole.log('Nearby players found:', nearbyPlayers);\n\n// Final result with all data properly merged\nconst result = {\n  ...mergedData,\n  nearbyPlayers: nearbyPlayers,\n  source: 'inventory_and_players',\n  timestamp: new Date().getTime()\n};\n\nconsole.log('Final result keys:', Object.keys(result));\nconsole.log('Final playerName:', result.playerName);\nconsole.log('Final botInventory length:', result.botInventory ? result.botInventory.length : 'undefined');\nconsole.log('Final nearbyPlayers:', result.nearbyPlayers);\n\nreturn { json: result };"
@@ -3049,15 +3091,15 @@
             "typeVersion": 2
         },
         {
-            "id": "6d762ca1-008e-4410-8653-4d11de28e42a",
+            "id": "a021c1da-1e2b-4dd4-874d-8b79155894cf",
             "name": "Get Nearby Players",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -3008,
-                208
+                -3088,
+                4720
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/entities",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/entities",
                 "options": {
                     "timeout": 5000
                 }
@@ -3066,12 +3108,12 @@
             "continueOnFail": true
         },
         {
-            "id": "45f4ae0c-2781-43d0-9ec0-c3e4fb1475d3",
+            "id": "afbb3776-0451-4bc9-8f16-cc42f63e8dd7",
             "name": "Merge Status + Inventory",
             "type": "n8n-nodes-base.code",
             "position": [
-                -3200,
-                208
+                -3312,
+                4720
             ],
             "parameters": {
                 "jsCode": "const inventoryHttpResponse = $input.first().json;\nconst statusData = $('Merge Status Data').first().json;\n\nconsole.log('=== MERGE STATUS + INVENTORY ===');\nconsole.log('Status data:', statusData);\nconsole.log('Inventory response:', JSON.stringify(inventoryHttpResponse, null, 2));\n\n// Get the actual in-game player name from bot status, not telegram username\nlet playerName = statusData.username; // fallback to telegram username\nif (statusData.botStatus && statusData.botStatus.raw_stats) {\n  const statsText = statusData.botStatus.raw_stats;\n  const playerMatch = statsText.match(/Nearby Human Players: ([A-Z]+)/i);\n  if (playerMatch && playerMatch[1]) {\n    playerName = playerMatch[1];\n    console.log('Found in-game player name:', playerName);\n  }\n}\n\n// Process inventory data from API response - handle creative mode format\nlet botInventory = [];\nconsole.log('Processing inventory response...');\n\nif (inventoryHttpResponse) {\n  // Handle array response format\n  if (Array.isArray(inventoryHttpResponse)) {\n    console.log('Inventory is array format');\n    \n    for (const item of inventoryHttpResponse) {\n      if (item && item.inventory) {\n        // Parse inventory text format\n        const inventoryText = item.inventory;\n        console.log('Parsing inventory text:', inventoryText);\n        \n        // Extract items from inventory text\n        // Format: \"- glass: 1\" or \"- item_name: quantity\"\n        const itemMatches = inventoryText.match(/- ([^:]+): (\\d+)/g);\n        if (itemMatches) {\n          for (const match of itemMatches) {\n            const parts = match.replace('- ', '').split(': ');\n            if (parts.length === 2) {\n              botInventory.push({\n                name: parts[0].trim(),\n                count: parseInt(parts[1]),\n                type: parts[0].trim()\n              });\n            }\n          }\n        }\n        \n        // Check if creative mode\n        if (inventoryText.includes('creative mode')) {\n          console.log('Bot is in creative mode - unlimited items available');\n        }\n      }\n    }\n  } else if (inventoryHttpResponse.inventory) {\n    // Direct inventory property\n    if (Array.isArray(inventoryHttpResponse.inventory)) {\n      botInventory = inventoryHttpResponse.inventory;\n    } else if (typeof inventoryHttpResponse.inventory === 'string') {\n      // Parse string format\n      const inventoryText = inventoryHttpResponse.inventory;\n      const itemMatches = inventoryText.match(/- ([^:]+): (\\d+)/g);\n      if (itemMatches) {\n        for (const match of itemMatches) {\n          const parts = match.replace('- ', '').split(': ');\n          if (parts.length === 2) {\n            botInventory.push({\n              name: parts[0].trim(),\n              count: parseInt(parts[1]),\n              type: parts[0].trim()\n            });\n          }\n        }\n      }\n    }\n  }\n}\n\nconsole.log('Processed inventory:', botInventory);\nconsole.log('Inventory count:', botInventory.length);\nconsole.log('Using player name:', playerName);\n\n// Merge all data together\nconst result = {\n  ...statusData,\n  playerName: playerName, // Override with in-game name\n  botInventory: botInventory,\n  inventoryProcessed: true\n};\n\nreturn { json: result };"
@@ -3079,15 +3121,15 @@
             "typeVersion": 2
         },
         {
-            "id": "ed304e4a-358b-4402-b957-f63ac049c39b",
+            "id": "1e5678c8-851d-4a72-af24-bb50c0d9efd9",
             "name": "Get Bot Inventory",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -3424,
-                208
+                -3504,
+                4736
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/inventory",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/inventory",
                 "options": {
                     "timeout": 5000
                 }
@@ -3096,12 +3138,12 @@
             "continueOnFail": true
         },
         {
-            "id": "d4ff4c5f-bf36-44d2-9390-fb6be515493d",
+            "id": "c1fd91a4-fc66-49b2-8b74-98a47cc60447",
             "name": "Merge Status Data",
             "type": "n8n-nodes-base.code",
             "position": [
-                -3680,
-                208
+                -3696,
+                4736
             ],
             "parameters": {
                 "jsCode": "// === MERGE STATUS DATA ===\nconst inputData = $('Normalize Input').first().json;\nconst statusResponse = $input.first().json;\n\nconsole.log('=== MERGE STATUS ===');\nconsole.log('Input data keys:', Object.keys(inputData));\nconsole.log('Status response full:', JSON.stringify(statusResponse, null, 2));\nconsole.log('Status response type:', typeof statusResponse);\n\n// Process bot status\nlet botStatus = {};\nif (statusResponse && !statusResponse.error) {\n  botStatus = statusResponse;\n  console.log('Bot Status Retrieved:', botStatus);\n} else {\n  console.log('Bot Status Error - using defaults');\n  botStatus = { error: 'Status unavailable', health: 20, food: 20, position: { x: 0, y: 64, z: 0 } };\n}\n\n// Merge input data with bot status\nreturn {\n  json: {\n    ...inputData,\n    botStatus,\n    source: 'status'\n  }\n};"
@@ -3109,29 +3151,30 @@
             "typeVersion": 2
         },
         {
-            "id": "29aeddba-c272-4dc4-94ce-38bc397e60a2",
+            "id": "f0306702-5626-4144-b1dd-de4d6fdb3097",
             "name": "Get Bot Status",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                -3904,
-                208
+                -3888,
+                4736
             ],
             "parameters": {
-                "url": "http://localhost:4001/api/agent/status",
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
                 "options": {
                     "timeout": 5000
                 }
             },
+            "executeOnce": true,
             "typeVersion": 4.2,
             "continueOnFail": true
         },
         {
-            "id": "65ecd9ad-f0b1-4495-b5e3-076970837202",
+            "id": "4160901b-cac6-411c-b4ca-1d5159c532ea",
             "name": "Normalize Input",
             "type": "n8n-nodes-base.code",
             "position": [
-                -4160,
-                208
+                -4240,
+                4736
             ],
             "parameters": {
                 "jsCode": "// === NORMALIZE INPUT & LOAD HISTORY ===\nconst inputData = $input.first().json;\n\nconsole.log('=== NORMALIZE INPUT ===');\nconsole.log('Raw input data:', JSON.stringify(inputData, null, 2));\n\nlet username, message, chatId, source;\n\n// Handle different input sources\nif (inputData.source === 'ingame') {\n  // In-game chat forwarding\n  username = inputData.username;  // Dynamic player name from in-game\n  message = inputData.message;\n  chatId = null;  // No chat ID for in-game\n  source = 'ingame';\n  console.log('Processing IN-GAME chat from player:', username);\n} else if (inputData.message) {\n  // Telegram input\n  username = inputData.message.from?.username || inputData.message.from?.first_name || 'User';\n  message = inputData.message.text || '';\n  chatId = inputData.message.chat?.id;\n  source = 'telegram';\n  console.log('Processing TELEGRAM message from user:', username);\n} else {\n  return { json: { error: 'Unknown input format', rawInput: inputData } };\n}\n\nif (!message) {\n  return { json: { error: 'No message text', chatId, source } };\n}\n\n// Load conversation history and memory from workflow static data\nlet conversationHistory = [];\nlet botMemory = '';\n\ntry {\n  const staticData = $execution.getStaticData('global') || {};\n  conversationHistory = staticData.conversationHistory || [];\n  botMemory = staticData.botMemory || '';\n} catch (e) {\n  console.log('Initializing new conversation:', e);\n}\n\n// Add user message to history\nconversationHistory.push({\n  role: 'user',\n  content: `${username}: ${message}`,\n  timestamp: Date.now(),\n  source: source\n});\n\n// Keep last 20 messages\nif (conversationHistory.length > 20) {\n  conversationHistory = conversationHistory.slice(-20);\n}\n\n// Save updated history back\ntry {\n  const staticData = $execution.getStaticData('global');\n  staticData.conversationHistory = conversationHistory;\n  staticData.botMemory = botMemory;\n} catch (e) {\n  console.log('Could not save conversation history:', e);\n}\n\nconsole.log('Final normalized data:');\nconsole.log('Username (in-game player):', username);\nconsole.log('Message:', message);\nconsole.log('Source:', source);\nconsole.log('Chat ID:', chatId);\n\nreturn {\n  json: {\n    username,        // This is now the ACTUAL in-game player name\n    message,\n    chatId,\n    conversationHistory,\n    botMemory,\n    timestamp: Date.now(),\n    source: source,\n    playerName: username  // Explicit field for the in-game player name\n  }\n};"
@@ -3139,14 +3182,14 @@
             "typeVersion": 2
         },
         {
-            "id": "6aa5d75c-e653-4276-be17-6ec02a7acaab",
+            "id": "3e9997f7-a209-4e3b-94ba-788bd18fab96",
             "name": "Telegram Bot",
             "type": "n8n-nodes-base.telegramTrigger",
             "position": [
-                -4416,
-                208
+                -4432,
+                4736
             ],
-            "webhookId": "telegram-kodecraft-bot",
+            "webhookId": "e84c3f33-f0af-4b2b-972c-343d55a2636e",
             "parameters": {
                 "updates": [
                     "message"
@@ -3163,29 +3206,12 @@
             "typeVersion": 1.1
         },
         {
-            "id": "55d1a2f8-b536-44b5-82e9-2fdce375d83a",
-            "name": "AI Agent1",
-            "type": "@n8n/n8n-nodes-langchain.agent",
-            "position": [
-                -1872,
-                208
-            ],
-            "parameters": {
-                "text": "={{ $json.message }}\n\n🔥 CRITICAL INTENT CLASSIFICATION REMINDER:\n- If user mentions spawning workers + building task: USE \"collaborativeBuild\"\n- If user only wants workers (no building): USE \"spawnWorkers\"\n- Examples: \"spawn workers to build house\" = collaborativeBuild, \"spawn 3 workers\" = spawnWorkers\n\n💡 CONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? '🔍 CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? '📝 CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
-                "options": {
-                    "systemMessage": "={{ $json.systemPrompt || 'You are an intelligent Minecraft AI bot with unlimited creative capabilities. You can handle any request through advanced AI-powered code generation. Always respond with valid JSON in the format: {\"intent\": \"intentName\", \"params\": {}, \"response\": \"Brief response\"}. CRITICAL MULTIBOT INTENT CLASSIFICATION: If user mentions BOTH spawning workers AND building something, use \"collaborativeBuild\" intent (NOT spawnWorkers). Use \"spawnWorkers\" only when they want workers without a building task. Examples: \"spawn workers to build X\" → collaborativeBuild, \"spawn 3 workers\" → spawnWorkers.' }}"
-                },
-                "promptType": "define"
-            },
-            "typeVersion": 2.2
-        },
-        {
-            "id": "830909ef-d3b4-4acd-bdf0-670b5ca52dce",
+            "id": "4557b228-f457-4f42-b1a8-f25d95de68a3",
             "name": "MongoDB Chat Memory",
             "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
             "position": [
-                -1840,
-                368
+                -2080,
+                4944
             ],
             "parameters": {
                 "sessionKey": "ConversationId",
@@ -3202,19 +3228,19 @@
             "typeVersion": 1
         },
         {
-            "id": "67f46909-e28d-4b5e-ba7a-99d2431c2386",
+            "id": "896d2b97-f137-437b-911b-a9cc2fc1a881",
             "name": "OpenAI Chat Model",
             "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
             "position": [
-                -2048,
-                384
+                -2208,
+                4944
             ],
             "parameters": {
                 "model": {
                     "__rl": true,
                     "mode": "list",
-                    "value": "gpt-4o-mini",
-                    "cachedResultName": "gpt-4o-mini"
+                    "value": "gpt-4o",
+                    "cachedResultName": "gpt-4o"
                 },
                 "options": {
                 }
@@ -3228,19 +3254,19 @@
             "typeVersion": 1.2
         },
         {
-            "id": "0e64f86b-48cd-4a0c-b5c2-cdf1b4b98d20",
+            "id": "2a22dcc4-6789-49a5-bed8-86bd1081fc7a",
             "name": "OpenAI Chat Model1",
             "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
             "position": [
-                80,
-                3728
+                800,
+                4528
             ],
             "parameters": {
                 "model": {
                     "__rl": true,
                     "mode": "list",
-                    "value": "gpt-4o-mini",
-                    "cachedResultName": "gpt-4o-mini"
+                    "value": "gpt-5.1",
+                    "cachedResultName": "gpt-5.1"
                 },
                 "options": {
                 }
@@ -3254,12 +3280,12 @@
             "typeVersion": 1.2
         },
         {
-            "id": "2294f04d-045a-48e6-94d1-38b73036a6da",
+            "id": "8f3f5149-bdd4-41b2-9531-abe5124014cb",
             "name": "MongoDB Chat Memory1",
             "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
             "position": [
-                224,
-                3728
+                944,
+                4512
             ],
             "parameters": {
                 "sessionKey": "ConversationId",
@@ -3269,35 +3295,309 @@
             },
             "credentials": {
                 "mongoDb": {
-                    "id": "6h9OGZjm1kMMRMa4",
-                    "name": "MongoDB Pickey"
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
                 }
             },
             "typeVersion": 1
+        },
+        {
+            "id": "ec24ae06-f75c-4434-9e0e-18bc40965d62",
+            "name": "Parse Plan",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1088,
+                4144
+            ],
+            "parameters": {
+                "jsCode": "// Get the output string from the previous node\nconst outputString = $input.first().json.output;\n\nconsole.log('Raw output:', outputString);\n\ntry {\n  let parsedData;\n  \n  // Try to parse directly as JSON first\n  try {\n    parsedData = JSON.parse(outputString);\n    console.log('Parsed as direct JSON');\n  } catch (e) {\n    // If direct parsing fails, try to extract JSON from code blocks\n    \n    // Match various code block formats: ```json ... ```, ```...```, or just raw JSON\n    const codeBlockMatch = outputString.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    \n    if (codeBlockMatch && codeBlockMatch[1]) {\n      console.log('Extracted from code block');\n      parsedData = JSON.parse(codeBlockMatch[1]);\n    } else {\n      // Try to find JSON object/array patterns in the string\n      const jsonMatch = outputString.match(/(\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\])/);\n      \n      if (jsonMatch) {\n        console.log('Extracted JSON pattern');\n        parsedData = JSON.parse(jsonMatch[1]);\n      } else {\n        throw new Error('No JSON found in output');\n      }\n    }\n  }\n  \n  console.log('Parsed data:', JSON.stringify(parsedData, null, 2));\n  \n  // Return the parsed data as-is (generic, no assumptions about structure)\n  return {\n    plan: parsedData\n  };\n  \n} catch (error) {\n  console.log('Error parsing JSON:', error.message);\n  return [{\n    json: {\n      error: 'Failed to parse JSON',\n      message: error.message,\n      rawOutput: outputString\n    }\n  }];\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "5f16d0c5-2af2-467c-8b0d-100d2300f4a9",
+            "name": "StartCollaborativeBuild",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2096,
+                4048
+            ],
+            "parameters": {
+                "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/start-collaborative-build-stages",
+                "method": "POST",
+                "options": {
+                    "timeout": 600000,
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "buildingRequest",
+                            "value": "={{ $('Route Building Execution').item.json.building_plan.buildingRequest }}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Route Building Execution').item.json.building_plan.workerCount }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $('Route Building Execution').item.json.building_plan.taskDivision }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Check Intent Type').item.json.conversationId }}"
+                        },
+                        {
+                            "name": "username",
+                            "value": "={{ $('Check Intent Type').item.json.username }}"
+                        },
+                        {
+                            "name": "botStatus",
+                            "value": "={{ $('Check Intent Type').item.json.botStatus }}"
+                        },
+                        {
+                            "name": "location",
+                            "value": "={{ $json.building_plan.location }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "0a10a151-03b8-4a1f-9c77-149c15ff4bd7",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1744,
+                3520
+            ],
+            "parameters": {
+                "width": 944,
+                "height": 480,
+                "content": "StartCollaborativeBuild\n  ├─ Generate sessionId\n  ├─ Save to DB\n  └─ Execute: SpawnWorkers (pass taskDivision too)\n      ↓\nSpawnWorkers\n  ├─ Spawn workers (workerCount: 3)\n  ├─ Append to spawnedWorkers array\n  └─ Execute: WaitAndRegister (pass taskDivision)\n      ↓\nWaitAndRegister\n  ├─ Wait for workers ready\n  ├─ Register workers\n  └─ Execute: CoordinateBuild (pass taskDivision)\n      ↓\nCoordinateBuild\n  ├─ Create session\n  ├─ Get position\n  ├─ Reserve location\n  ├─ Teleport workers\n  └─ Execute: DistributeTasks (pass taskDivision) ← HERE!\n      ↓\nDistributeTasks\n  ├─ Function: Convert taskDivision to array\n  ├─ Loop through tasks\n  ├─ HTTP POST send-task to each worker\n  └─ Complete"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "99415c78-0d12-4aab-b4e6-ac03ef94e3df",
+            "name": "SpawnWorkers Workflow",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                528,
+                9344
+            ],
+            "parameters": {
+                "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/spawn-workers",
+                "method": "POST",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "workercount",
+                            "value": "={{ $json.params.quantity }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $json.conversationId }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{Object.fromEntries(Array.from({length: $json.params.quantity}, () => [`worker_${Math.random().toString(36).substring(2, 8)}`, `go to ${$json.params.location}`]))}}"
+                        },
+                        {
+                            "name": "botstatus",
+                            "value": "={{ $json.botStatus }}"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{\"spawn_\" + new Date().getTime()}}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-complete"
+                        },
+                        {
+                            "name": "taskRequest",
+                            "value": "={{ $json.message }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "e6f51ae8-22d0-4e30-a69a-29fa4fe72e76",
+            "name": "Oracle",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "position": [
+                -2192,
+                4720
+            ],
+            "parameters": {
+                "text": "={{ $json.message }}\n\n{{$('Get Prompts').all().find(row => row.json.agent === \"Oracle\").json.user_prompt_template}}\n\nCONVERSATION STATE: {{ $json.conversationState || 'initial' }}\n{{ $json.needsClarification ? 'CLARIFICATION NEEDED - User needs to provide more details' : '' }}\n{{ $json.clarificationCount ? 'CLARIFICATION ATTEMPT: ' + $json.clarificationCount + '/3' : '' }}",
+                "options": {
+                    "systemMessage": "={{ $json.systemPrompt}}"
+                },
+                "promptType": "define"
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "83911fec-df13-4287-afbc-296552a9c1a3",
+            "name": "Get Prompts",
+            "type": "n8n-nodes-base.dataTable",
+            "position": [
+                -4048,
+                4736
+            ],
+            "parameters": {
+                "operation": "get",
+                "dataTableId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "fiybiQlR805maJNt",
+                    "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt",
+                    "cachedResultName": "KodecraftPrompts"
+                }
+            },
+            "executeOnce": false,
+            "typeVersion": 1
+        },
+        {
+            "id": "fa958473-fd05-45d6-abaa-aba2cedb5c50",
+            "name": "Send Reply1",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                1872,
+                4096
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=I will proceed to {{ $json.building_plan.buildingRequest }}\nI will be using {{ $json.building_plan.workerCount }} workers.",
+                "chatId": "={{ $('Telegram Bot').item.json.message.chat.id }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "3eb4e4f6-3b35-40ce-8bb1-fa0c0efd04b1",
+            "name": "Notify Error",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2368,
+                4128
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Error during task execution: ",
+                "chatId": "={{ $('Telegram Bot').item.json.message.chat.id }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "2b99496a-b4b1-42bc-9eee-6d133068e438",
+            "name": "Completed",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2368,
+                3968
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Workflow completed.",
+                "chatId": "={{ $('Telegram Bot').item.json.message.chat.id }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "370599c6-618b-4edb-9b11-c8d8888fed41",
+            "name": "Execute Attack",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                528,
+                4496
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/attack",
+                "method": "POST",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "target",
+                            "value": "={{ $json.params.target }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
         }
     ],
-    "active": false,
+    "active": true,
     "pinData": {
         "Telegram Bot": [
             {
                 "json": {
                     "message": {
                         "chat": {
-                            "id": 7740896381,
+                            "id": 5415489232,
                             "type": "private",
-                            "first_name": "Alien"
+                            "username": "Santamm67",
+                            "first_name": "Maurizio"
                         },
-                        "date": 1762443057,
+                        "date": 1764326564,
                         "from": {
-                            "id": 7740896381,
+                            "id": 5415489232,
                             "is_bot": false,
-                            "first_name": "Alien",
+                            "username": "Santamm67",
+                            "first_name": "Maurizio",
                             "language_code": "en"
                         },
-                        "text": "build a simple car",
-                        "message_id": 1196
+                        "text": "attack a pig",
+                        "message_id": 1340
                     },
-                    "update_id": 884495804
+                    "update_id": 238963716
                 }
             }
         ]
@@ -3305,14 +3605,47 @@
     "settings": {
         "executionOrder": "v1"
     },
-    "versionId": "38f605f1-53a1-4ca4-b130-4f5cf337dd1e",
+    "versionId": "b883447e-a021-4a56-a95a-4958dd39bbbb",
     "staticData": null,
     "connections": {
-        "AI Agent1": {
+        "Oracle": {
             "main": [
                 [
                     {
                         "node": "Parse AI Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Plan": {
+            "main": [
+                [
+                    {
+                        "node": "Building Plan Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Get Bot Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Reply1": {
+            "main": [
+                [
+                    {
+                        "node": "StartCollaborativeBuild",
                         "type": "main",
                         "index": 0
                     }
@@ -3440,6 +3773,17 @@
                 ]
             ]
         },
+        "Execute Attack": {
+            "main": [
+                [
+                    {
+                        "node": "Format Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
         "Get Bot Status": {
             "main": [
                 [
@@ -3554,7 +3898,7 @@
             "main": [
                 [
                     {
-                        "node": "Get Bot Status",
+                        "node": "Get Prompts",
                         "type": "main",
                         "index": 0
                     }
@@ -3898,7 +4242,7 @@
                 ],
                 [
                     {
-                        "node": "Execute SpawnWorkers",
+                        "node": "SpawnWorkers Workflow",
                         "type": "main",
                         "index": 0
                     }
@@ -3934,6 +4278,13 @@
                 [
                     {
                         "node": "Execute GetWorkerList",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Execute Attack",
                         "type": "main",
                         "index": 0
                     }
@@ -4061,7 +4412,7 @@
             "ai_languageModel": [
                 [
                     {
-                        "node": "AI Agent1",
+                        "node": "Oracle",
                         "type": "ai_languageModel",
                         "index": 0
                     }
@@ -4193,19 +4544,8 @@
             "ai_memory": [
                 [
                     {
-                        "node": "AI Agent1",
+                        "node": "Oracle",
                         "type": "ai_memory",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Reset Worker States": {
-            "main": [
-                [
-                    {
-                        "node": "Execute AssignTasks",
-                        "type": "main",
                         "index": 0
                     }
                 ]
@@ -4215,7 +4555,7 @@
             "main": [
                 [
                     {
-                        "node": "Execute Building Plan",
+                        "node": "Route Building Execution",
                         "type": "main",
                         "index": 0
                     }
@@ -4288,34 +4628,12 @@
                 ]
             ]
         },
-        "Execute SpawnWorkers": {
-            "main": [
-                [
-                    {
-                        "node": "Format Result",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
         "MongoDB Chat Memory1": {
             "ai_memory": [
                 [
                     {
                         "node": "Smart Building Planner",
                         "type": "ai_memory",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Execute Building Plan": {
-            "main": [
-                [
-                    {
-                        "node": "Route Building Execution",
-                        "type": "main",
                         "index": 0
                     }
                 ]
@@ -4343,11 +4661,11 @@
                 ]
             ]
         },
-        "Wait for Workers Init": {
+        "SpawnWorkers Workflow": {
             "main": [
                 [
                     {
-                        "node": "Reset Worker States",
+                        "node": "Format Result",
                         "type": "main",
                         "index": 0
                     }
@@ -4391,7 +4709,7 @@
             "main": [
                 [
                     {
-                        "node": "Building Plan Result",
+                        "node": "Parse Plan",
                         "type": "main",
                         "index": 0
                     }
@@ -4431,6 +4749,24 @@
                 ]
             ]
         },
+        "StartCollaborativeBuild": {
+            "main": [
+                [
+                    {
+                        "node": "Completed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Notify Error",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
         "Format Building Response": {
             "main": [
                 [
@@ -4457,7 +4793,7 @@
             "main": [
                 [
                     {
-                        "node": "Execute CollaborativeBuild",
+                        "node": "Send Reply1",
                         "type": "main",
                         "index": 0
                     }
@@ -4493,17 +4829,6 @@
                 ]
             ]
         },
-        "Execute CollaborativeBuild": {
-            "main": [
-                [
-                    {
-                        "node": "Wait for Workers Init",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
         "Execute GoToRememberedPlace": {
             "main": [
                 [
@@ -4519,7 +4844,7 @@
             "main": [
                 [
                     {
-                        "node": "AI Agent1",
+                        "node": "Oracle",
                         "type": "main",
                         "index": 0
                     }

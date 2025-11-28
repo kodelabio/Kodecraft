@@ -1,0 +1,241 @@
+{
+    "id": "tbI8HknYLlcUAvkN",
+    "meta": null,
+    "name": "Import Datatable",
+    "nodes": [
+        {
+            "id": "527b7fc4-8e1f-4808-b939-e3cac40df039",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -416,
+                -112
+            ],
+            "webhookId": "b6dfda12-4a3a-4db4-8b39-4e7854c49272",
+            "parameters": {
+                "path": "/kodecraft/import-datatable",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "f7b81429-6797-4f0f-b056-be25b2599793",
+            "name": "Insert row",
+            "type": "n8n-nodes-base.dataTable",
+            "position": [
+                208,
+                -112
+            ],
+            "parameters": {
+                "columns": {
+                    "value": {
+                        "agent": "={{ $json.agent }}",
+                        "system_prompt": "={{ $json.system_prompt }}"
+                    },
+                    "schema": [
+                        {
+                            "id": "agent",
+                            "type": "string",
+                            "display": true,
+                            "removed": false,
+                            "readOnly": false,
+                            "required": false,
+                            "displayName": "agent",
+                            "defaultMatch": false
+                        },
+                        {
+                            "id": "system_prompt",
+                            "type": "string",
+                            "display": true,
+                            "removed": false,
+                            "readOnly": false,
+                            "required": false,
+                            "displayName": "system_prompt",
+                            "defaultMatch": false
+                        },
+                        {
+                            "id": "user_prompt_template",
+                            "type": "string",
+                            "display": true,
+                            "removed": false,
+                            "readOnly": false,
+                            "required": false,
+                            "displayName": "user_prompt_template",
+                            "defaultMatch": false
+                        },
+                        {
+                            "id": "version",
+                            "type": "string",
+                            "display": true,
+                            "removed": false,
+                            "readOnly": false,
+                            "required": false,
+                            "displayName": "version",
+                            "defaultMatch": false
+                        },
+                        {
+                            "id": "description",
+                            "type": "string",
+                            "display": true,
+                            "removed": false,
+                            "readOnly": false,
+                            "required": false,
+                            "displayName": "description",
+                            "defaultMatch": false
+                        }
+                    ],
+                    "mappingMode": "autoMapInputData",
+                    "matchingColumns": [
+                    ],
+                    "attemptToConvertTypes": false,
+                    "convertFieldsToString": false
+                },
+                "options": {
+                },
+                "dataTableId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "fiybiQlR805maJNt",
+                    "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt",
+                    "cachedResultName": "KodecraftPrompts"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "b40ad623-7d67-4b3f-876e-eb6e5a0e977b",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                16,
+                -112
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "62afd669-4e31-4f81-b735-75e3d9cdac56",
+                            "name": "agent",
+                            "type": "string",
+                            "value": "={{ $json.agent }}"
+                        },
+                        {
+                            "id": "d11c8398-a6b6-47c4-8eaf-66eef5c2573d",
+                            "name": "system_prompt",
+                            "type": "string",
+                            "value": "={{ $json.system_prompt }}"
+                        },
+                        {
+                            "id": "197e4edb-5f50-4a4f-80f6-57d7ef49c29e",
+                            "name": "user_prompt_template",
+                            "type": "string",
+                            "value": "={{ $json.user_prompt_template }}"
+                        },
+                        {
+                            "id": "c0fb2dac-0924-4800-af75-65a469dcb8e6",
+                            "name": "createdAt",
+                            "type": "string",
+                            "value": "={{ $now }}"
+                        },
+                        {
+                            "id": "e1065f55-7ef2-48e0-af19-473d7b1fc3e6",
+                            "name": "updatedAt",
+                            "type": "string",
+                            "value": "={{ $now }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "8a5292bd-61ed-490a-ba1a-3f7cf6302c5f",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -208,
+                -112
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "body"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "aaa4aad3-45d5-4f1f-9081-ed5b4c2335df",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                416,
+                -112
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": false,
+    "pinData": {
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "eb5e3f5c-d6b6-4fbd-9fd0-2e2cfd3d8f31",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Insert row": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Insert row",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

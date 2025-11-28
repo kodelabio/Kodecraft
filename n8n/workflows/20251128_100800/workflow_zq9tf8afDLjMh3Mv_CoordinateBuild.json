@@ -1,0 +1,770 @@
+{
+    "id": "zq9tf8afDLjMh3Mv",
+    "meta": null,
+    "name": "CoordinateBuild",
+    "nodes": [
+        {
+            "id": "750b7935-91f7-4516-8121-174bad9317b9",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -112,
+                16
+            ],
+            "webhookId": "13e5877e-8cc2-480e-a7bb-cc7826c7ebaa",
+            "parameters": {
+                "path": "/kodecraft/coordinate-build",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "f5720b24-8fcf-4665-a0ca-0b4e6f5795f4",
+            "name": "Create Session",
+            "type": "n8n-nodes-base.httpRequest",
+            "disabled": true,
+            "position": [
+                -112,
+                -352
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/create-session",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId"
+                        },
+                        {
+                            "name": "buildRequest"
+                        },
+                        {
+                            "name": "workerCount"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "7f407d82-04d9-49a8-a1f0-4a299c7572d5",
+            "name": "Get Leader Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                784,
+                -128
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
+                "options": {
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "543312e0-a38f-45d7-b793-096c512ff1d7",
+            "name": "Reserve Location",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1232,
+                32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/reserve-location",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "preferredLocation",
+                            "value": "={{ $json.Position }}"
+                        },
+                        {
+                            "name": "minDistance",
+                            "value": "30"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "3ae157e8-1e9b-45e0-9851-76025a8ad18e",
+            "name": "Teleport Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                1456,
+                32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/teleport-workers ",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "buildLocation",
+                            "value": "={{ $json.buildLocation }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "62cecca8-50e3-42cd-b2f1-e28be0eccd28",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                1680,
+                32
+            ],
+            "webhookId": "0319ec5c-722f-441f-bd06-56ca9cc89389",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "a448ab44-e591-49dd-b386-fd21aaf27d32",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2768,
+                32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "a4e4de34-7fe4-4cfd-ab53-02e753158fa4",
+            "name": "Distribute Tasks",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2352,
+                32
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/distribute-tasks",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $json}}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "d5fc61e9-e4ba-49a2-a35f-df0d40d2939b",
+            "name": "Location?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                112,
+                16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "b584f29f-d8ea-4bba-8c72-c2eb72168bc9",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.body.location }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "82bea1b8-5544-48b3-bbbe-63776cf94f3e",
+            "name": "Get Player Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                784,
+                176
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/player-position",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "playerName",
+                            "value": "={{ $json.location.name }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "689fdbf1-41ea-4bf0-a56f-b179b1237880",
+            "name": "Parse Location",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                336,
+                96
+            ],
+            "parameters": {
+                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.location; // e.g., \"next to player Mauri67\"\n\nfunction parseLocation(input) {\n    const coordMatch = input.match(/^(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)$/);\n    if (coordMatch) {\n        return {\n            type: 'coordinates',\n            x: parseFloat(coordMatch[1]),\n            y: parseFloat(coordMatch[2]),\n            z: parseFloat(coordMatch[3])\n        };\n    }\n\n    const playerMatch = input.match(/(?:next\\s+to\\s+)?player\\s+(\\w+)/i);\n    if (playerMatch) {\n        return {\n            type: 'player',\n            name: playerMatch[1]\n        };\n    }\n\n    return {\n        type: 'landmark',\n        name: input.trim()\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "3db99db7-4fd5-44c5-bcde-4045514a7021",
+            "name": "Switch",
+            "type": "n8n-nodes-base.switch",
+            "position": [
+                560,
+                80
+            ],
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "outputKey": "player",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "e5406d5f-c2d5-4034-a6d3-9152d1ebf7ed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "player"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "landmark",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "d71606fb-c035-4ea1-86b8-c88518b34888",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "landmark"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "coordinates",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "f66ffc35-989e-4cae-95b8-28bf02c28d07",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "coordinates"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 3.3
+        },
+        {
+            "id": "a3499949-c347-43c2-ab27-5a4c5507a15d",
+            "name": "Floor Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1008,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const status = $json;\nreturn {\n  Position: {\n    x: Math.floor(status.position?.x || 0),\n    y: Math.floor(status.position?.y || 64),\n    z: Math.floor(status.position?.z || 0)\n  }\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "744e43c1-a8db-4f9a-a236-777c5f823376",
+            "name": "Adjust Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                2128,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const buildLocation = $('Teleport Workers').first().json.buildLocation;\nconst tasks = $input.first().json;\n\nconst houseX = buildLocation.x;\nconst houseY = buildLocation.y;\nconst houseZ = buildLocation.z;\n\nconst zMin = houseZ - 3;\nconst zMax = houseZ + 3;\n\n// Get all worker names sorted numerically (Worker1, Worker2, Worker3, etc.)\nconst workerNames = Object.keys(tasks).sort((a, b) => {\n  const numA = parseInt(a.match(/\\d+/)[0]);\n  const numB = parseInt(b.match(/\\d+/)[0]);\n  return numA - numB;\n});\n\nconst numWorkers = workerNames.length;\nconst totalWidth = 7; // 7x7 footprint = 7 blocks wide\nconst blocksPerWorker = totalWidth / numWorkers;\n\nconst updatedTasks = {};\n\nworkerNames.forEach((workerName, index) => {\n  // Calculate absolute coordinates for this worker\n  const workerXMin = Math.floor(houseX - 3 + index * blocksPerWorker);\n  const workerXMax = Math.floor(houseX - 3 + (index + 1) * blocksPerWorker);\n  \n  // Determine boundaries with adjacent workers\n  const prevWorker = index > 0 ? workerNames[index - 1] : null;\n  const nextWorker = index < numWorkers - 1 ? workerNames[index + 1] : null;\n  \n  let task = tasks[workerName];\n  \n  // Replace scope section (works for any pattern)\n  task = task.replace(\n    /Scope:[\\s\\S]*?(?=\\n\\nSubtasks)/,\n    `Scope: ABSOLUTE COORDINATES - x:${workerXMin} to ${workerXMax}, z:${zMin} to ${zMax}, y:${houseY} to ${houseY + 4}.`\n  );\n  \n  // Replace \"Within your region\" references\n  task = task.replace(\n    /Within your(?:\\s+ABSOLUTE)?\\s+region[^.]*\\./g,\n    `Within your ABSOLUTE region (x:${workerXMin} to ${workerXMax}, z:${zMin} to ${zMax}).`\n  );\n  \n  // Replace \"Do NOT place or break blocks outside\" constraints\n  task = task.replace(\n    /Do NOT place or break blocks outside your defined[^.]*region[^.]*\\./g,\n    `Do NOT place or break blocks outside your defined ABSOLUTE region (x:${workerXMin} to ${workerXMax}, z:${zMin} to ${zMax}).`\n  );\n  \n  // Replace boundary/axis references (flexible for any coordinate)\n  task = task.replace(\n    /(?:central\\s+)?(?:boundary|axis)(?:\\s+at\\s+x:[0-9\\-]+)?/g,\n    (match) => {\n      if (match.includes('boundary')) {\n        return nextWorker ? `boundary at x:${workerXMax}` : `boundary at x:${workerXMin}`;\n      }\n      return `axis at x:${Math.floor((workerXMin + workerXMax) / 2)}`;\n    }\n  );\n  \n  // Build boundary information\n  let boundaryInfo = '';\n  if (prevWorker) boundaryInfo += `The boundary with ${prevWorker} is at x:${workerXMin}. `;\n  if (nextWorker) boundaryInfo += `The boundary with ${nextWorker} is at x:${workerXMax}.`;\n  \n  // Replace or add CRITICAL section\n  if (task.includes('CRITICAL:')) {\n    task = task.replace(\n      /CRITICAL:[\\s\\S]*?(?=\\n\\nWork together)/,\n      `CRITICAL: Use ABSOLUTE coordinates x:${workerXMin} to ${workerXMax}, z:${zMin} to ${zMax}, y:${houseY} to ${houseY + 4}. ${boundaryInfo}`\n    );\n  } else {\n    task = task.replace(\n      'Work together with nearby workers',\n      `CRITICAL: Use ABSOLUTE coordinates x:${workerXMin} to ${workerXMax}, z:${zMin} to ${zMax}, y:${houseY} to ${houseY + 4}. ${boundaryInfo}\\n\\nWork together with nearby workers`\n    );\n  }\n  \n  updatedTasks[workerName] = task;\n});\n\nreturn updatedTasks;"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "375d8fde-3dcf-41aa-a90e-cd2a17dd1897",
+            "name": "Define Tasks",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1904,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const taskDivision = $('Webhook').first().json.body.taskDivision;\nconst buildRequest = $('Webhook').first().json.body.buildRequest;\n\nlet coordinatedTasks = {};\n\nObject.entries(taskDivision).forEach(([workerName, task]) => {\n  // Fix undefined blockBreakLimit\n  const blockLimit = task.blockBreakLimit || \"Do not break more than ~300 blocks\";\n\n  const taskDescription = `\nObjective: ${task.objective}\n\nScope: ${task.scope}\n\nSubtasks:\n${task.subtasks.map((t, i) => `${i + 1}. ${t}`).join('\\n')}\n\nBlock Break Limit: ${blockLimit}\n\nAssumptions: ${task.assumptions}\n\nConstraints: ${task.constraints}`;\n\n  coordinatedTasks[workerName] = `Help build: ${buildRequest}\n\nYour specific contribution:${taskDescription}\n\nWork together with nearby workers to create a cohesive structure. Position yourself strategically to connect your work with others.`;\n});\n\nreturn coordinatedTasks;"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "721a03b0-9b72-403c-95f1-c13d85b2d7be",
+            "name": "Workers Created",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2544,
+                32
+            ],
+            "webhookId": "5832cc56-081b-44b1-a83b-23761c324a70",
+            "parameters": {
+                "text": "=Workers Teleported to task location and tasks assigned.",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "449955cb-6936-404b-9f9a-eeb201c6fc6b",
+            "name": "Failed to Teleport",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1680,
+                192
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to teleport Workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "2fddb77a-fa76-41e1-884b-908739df1a7c",
+            "name": "Failed to Assign Tasks",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2608,
+                304
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to assign tasks to workers\"\n}"
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": false,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "pid": 3314131,
+                                "port": 4002,
+                                "status": "spawned",
+                                "message": "Worker Worker1 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker1"
+                            },
+                            {
+                                "pid": 3314132,
+                                "port": 4003,
+                                "status": "spawned",
+                                "message": "Worker Worker2 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker2"
+                            },
+                            {
+                                "pid": 3314138,
+                                "port": 4004,
+                                "status": "spawned",
+                                "message": "Worker Worker3 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker3"
+                            }
+                        ],
+                        "location": "",
+                        "sessionId": "build_1763566222421",
+                        "workerCount": 3,
+                        "buildRequest": "Create three workers and have them collaboratively start building a small survival house near the leader’s current position. The house should have an approximate footprint of 7x7 to 9x9 blocks, 3-block-high walls, and a simple gable or sloped roof outline. It must become progressively enclosed and mob-safe as they work, with at minimum a complete floor and mostly complete walls by the time the initial build phase is done. Use simple, common materials such as wood planks/logs and optionally cobblestone/stone for accents.",
+                        "taskDivision": {
+                            "Worker1": {
+                                "scope": "Operate only within x:minX to x:sec1X of the rectangular footprint and full z:minZ to z:maxZ, plus the roof line and outline above this section and along the shared boundaries at x:minX and x:sec1X.",
+                                "subtasks": [
+                                    "Lightly level the ground only within your third (remove grass, flowers, and small 1-block bumps) without deep excavation or wide terrain clearing.",
+                                    "Lay down the floor across your third using a consistent material (e.g., oak_planks) at a single flat Y-level that all workers can match.",
+                                    "Build exterior walls in your third up to full height (~3 blocks), using a simple pattern (e.g., logs at corners and at x:sec1X boundary, planks in between), leaving room for 1 small window if appropriate.",
+                                    "Start your third of the roof outline (gable or simple slope): place the lower roof layer and establish the roof angle so Workers 2 and 3 can extend it.",
+                                    "Seal obvious gaps in your walls where mobs could easily enter; prioritize creating a mostly enclosed shell on your side.",
+                                    "Place a few exterior lights (torches/lanterns) on the outside of your wall and corner at x:minX to reduce mob spawns."
+                                ],
+                                "objective": "Build the western third of the house footprint (negative-X side): local ground prep and full structural shell for that third (floor, walls, roof outline).",
+                                "assumptions": "Assume a roughly clear area exists near the leader for a 7x7 to 9x9 house. Workers 2 and 3 will match your floor Y-level, wall height, materials, and roof angle at the shared boundaries.",
+                                "constraints": "Do NOT place or break blocks beyond x:sec1X except exactly on that boundary to connect walls and roof. Do not modify terrain or builds outside the defined footprint.",
+                                "blockBreakLimit": "Only break blocks directly obstructing the footprint, walls, or roof in your third; avoid mass clearing and keep total block breaks under approximately 40 blocks."
+                            },
+                            "Worker2": {
+                                "scope": "Operate only within x:sec1X to x:sec2X of the footprint and full z:minZ to z:maxZ, plus the roof outline directly above this section and along the shared boundaries at x:sec1X and x:sec2X.",
+                                "subtasks": [
+                                    "Match Worker1’s floor level and material, extending the floor across your central third to create a continuous interior base.",
+                                    "Build walls in your third up to the same height and using the same style as Worker1, ensuring clean joins at x:sec1X and leaving enough solid wall for structural appearance.",
+                                    "Add a small, centrally placed window or two if it improves symmetry without weakening the structure.",
+                                    "Extend the roof outline from Worker1’s section across your third, following the same slope/angle and ensuring no gaps at the x:sec1X boundary.",
+                                    "Check for gaps between your walls and roof outline and close any obvious entry points that would compromise early mob safety.",
+                                    "Place interior lighting in your third (torches/lanterns on walls) to help keep the shared interior spawn-safe as the build progresses."
+                                ],
+                                "objective": "Build the central third of the house: connect left and right sections, extend the floor and walls, and continue the roof outline.",
+                                "assumptions": "Assume Worker1 has defined the base palette, floor Y-level, and initial roof angle; mirror that style and pass it seamlessly toward Worker3’s section.",
+                                "constraints": "Do NOT place or break blocks beyond x:sec1X or x:sec2X except exactly on those boundaries to stitch the sections together. Leave final door placement and detailed furnishing for later phases (likely to Worker3).",
+                                "blockBreakLimit": "Minimize breaking; only remove blocks that obstruct continuous floor or walls in your section, staying under roughly 30 block breaks."
+                            },
+                            "Worker3": {
+                                "scope": "Operate only within x:sec2X to x:maxX of the footprint and full z:minZ to z:maxZ, plus the roof outline above this section and the shared boundary at x:sec2X. Interior work should be limited to basic floor and wall closure in your third for now.",
+                                "subtasks": [
+                                    "Extend the floor at the same Y-level and with the same material across your third, perfectly aligning with Worker2’s floor.",
+                                    "Build exterior walls in your third with the same pattern and height as the other sections, adding 1 small window if appropriate while keeping enough solid wall for future door placement.",
+                                    "Continue the roof outline from Worker2’s boundary at x:sec2X and bring it to a clean end at x:maxX, matching the existing slope and style.",
+                                    "Ensure your walls and roof outline leave the structure mostly enclosed on your side, with minimal open gaps.",
+                                    "Reserve a suitable wall section (often along a long side or at the positive-X short side) where a main entrance door can later be added without major redesign.",
+                                    "Add a bit of interior and exterior lighting in your third, focusing on closing off dark corners near your walls."
+                                ],
+                                "objective": "Build the eastern third of the house (positive-X side), extending the floor, walls, and roof outline, and prepare space for future entrance and interior details.",
+                                "assumptions": "Assume Workers 1 and 2 have already established a consistent palette, wall height, and roof angle to be mirrored. Assume that once doors, full roof blocks, and furniture are added in a later step, the house will become fully mob-safe and functional.",
+                                "constraints": "Do NOT build outside x:sec2X to x:maxX, except exactly on x:sec2X where you connect walls and roof to Worker2’s section. Avoid large-scale terrain reshaping or modifying any nearby structures.",
+                                "blockBreakLimit": "Limit breaking to what is needed to align floor/walls and remove minor obstructions; keep total breaks under approximately 40 blocks."
+                            }
+                        },
+                        "conversationId": "233992454"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "6606",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/coordinate-build",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "cf93e9ec-5f44-4b07-8d81-592bf867afb8",
+    "staticData": null,
+    "connections": {
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Define Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [
+                    {
+                        "node": "Get Player Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ],
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Location?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Location?": {
+            "main": [
+                [
+                    {
+                        "node": "Get Leader Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Parse Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Define Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Adjust Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Session": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Parse Location": {
+            "main": [
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Created": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Distribute Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Workers Created",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Assign Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Reserve Location": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Reserve Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Adjust Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Distribute Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Leader Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Player Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

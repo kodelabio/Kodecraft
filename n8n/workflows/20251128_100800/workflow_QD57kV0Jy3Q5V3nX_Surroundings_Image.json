@@ -1,0 +1,243 @@
+{
+    "id": "QD57kV0Jy3Q5V3nX",
+    "meta": null,
+    "name": "Surroundings Image",
+    "nodes": [
+        {
+            "id": "32c4e259-b99a-4acc-bed6-f30281757fd3",
+            "name": "Find dynmap tiles",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                208,
+                -160
+            ],
+            "parameters": {
+                "jsCode": "const serverUrl = 'http://minecraft-250712.kodelab.dev:8100';\n// Input text\nconst positionText = $input.first().json.body.position\n\n// Parse coordinates\nconst regex = /X=([-+]?\\d*\\.?\\d+),?\\s*Y=([-+]?\\d*\\.?\\d+),?\\s*Z=([-+]?\\d*\\.?\\d+)/i;\nconst match = positionText.match(regex);\n\nif (match) {\n  const playerX = parseFloat(match[1]);\n  // const playerY = parseFloat(match[2]);\n  const playerZ = parseFloat(match[3]);\n  \n  // Configuration\n  const world = 'world';\n  const mapType = 't';\n  const zoom = 0;\n  const tileSize = 128;\n  const gridSize = 3;\n\n  // Calculate center tile\n  const centerTileX = Math.floor(playerX / tileSize);\n  const centerTileZ = Math.floor(playerZ / tileSize);\n  const offset = Math.floor(gridSize / 2);\n\n  const tiles = [];\n\n  // Generate 3x3 grid of tiles\n  for (let x = -offset; x <= offset; x++) {\n    for (let z = -offset; z <= offset; z++) {\n      const tileX = centerTileX + x;\n      const tileZ = centerTileZ + z;\n      const tileUrl = `${serverUrl}/tiles/${world}/${mapType}/${zoom}/${tileX}_${tileZ}.png`;\n    \n      tiles.push({\n        tileX: tileX,\n        tileZ: tileZ,\n        url: tileUrl\n      });\n    }\n  } // <-- This closing brace was missing!\n\n  return {\n    json: {\n      playerPosition: { x: playerX, z: playerZ },\n      centerTile: { x: centerTileX, z: centerTileZ },\n      tiles: tiles,\n      totalTiles: tiles.length\n    }\n  };\n} else {\n  return {\n    json: {\n      error: \"Could not parse position\",\n      originalText: positionText\n    }\n  };\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "155ab4e1-4398-4acc-a59a-7db3af3b24ef",
+            "name": "Split Out1",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                432,
+                -160
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "tiles"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "913454ef-e2fc-4bc8-bc9f-d77d49a997d7",
+            "name": "HTTP Request",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                656,
+                -160
+            ],
+            "parameters": {
+                "url": "={{ $json.url }}",
+                "options": {
+                }
+            },
+            "typeVersion": 4.2
+        },
+        {
+            "id": "73536c29-c285-419b-886c-da2a5558a83c",
+            "name": "Stitch images together",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                880,
+                -160
+            ],
+            "parameters": {
+                "language": "python",
+                "pythonCode": "from PIL import Image, ImageDraw, ImageFont\nimport base64\nimport io\n\ndef stitch_minecraft_tiles():\n    try:\n        tile_images = {}\n        paired_items = []\n\n        # Debug: Print all available coordinates first\n        print(\"=== DEBUG: Available tile coordinates ===\")\n        for idx, item in enumerate(items):\n            tile_x = item['json']['tileX']\n            tile_z = item['json']['tileZ']\n            print(f\"Item {idx}: tileX={tile_x}, tileZ={tile_z}\")\n\n        for idx, item in enumerate(items):\n            tile_x = item['json']['tileX']\n            tile_z = item['json']['tileZ']\n\n            # Collect pairedItem if present\n            if 'pairedItem' in item:\n                paired_items.append(item['pairedItem'])\n            else:\n                paired_items.append(None)\n\n            if 'binary' in item and 'data' in item['binary']:\n                image_data = item['binary']['data']['data']\n                image_buffer = base64.b64decode(image_data)\n                img = Image.open(io.BytesIO(image_buffer))\n                tile_images[(tile_x, tile_z)] = img\n            else:\n                raise ValueError(f\"No image data found for tile ({tile_x}, {tile_z})\")\n\n        if not tile_images:\n            raise ValueError(\"No valid tile images found\")\n\n        print(f\"=== DEBUG: Loaded {len(tile_images)} tiles ===\")\n        print(f\"Available coordinates: {list(tile_images.keys())}\")\n\n        # Check what coordinates we actually have and adjust accordingly\n        available_coords = list(tile_images.keys())\n        \n        # Try to determine the actual grid bounds\n        min_x = min(coord[0] for coord in available_coords)\n        max_x = max(coord[0] for coord in available_coords)\n        min_z = min(coord[1] for coord in available_coords)\n        max_z = max(coord[1] for coord in available_coords)\n        \n        print(f\"Grid bounds: X from {min_x} to {max_x}, Z from {min_z} to {max_z}\")\n        \n        # Build coordinate order based on actual available coordinates\n        coordinate_order = []\n        for z in range(min_z, max_z + 1):\n            for x in range(min_x, max_x + 1):\n                if (x, z) in tile_images:\n                    coordinate_order.append((x, z))\n        \n        print(f\"Coordinate order: {coordinate_order}\")\n        \n        # Check if we have a complete grid\n        expected_tiles = (max_x - min_x + 1) * (max_z - min_z + 1)\n        if len(coordinate_order) != expected_tiles:\n            print(f\"WARNING: Expected {expected_tiles} tiles, but only have {len(coordinate_order)}\")\n        \n        # If we don't have all tiles, use only available ones\n        if len(coordinate_order) < 9:\n            print(\"WARNING: Less than 9 tiles available, using available tiles only\")\n        \n        # Determine grid dimensions\n        grid_width = max_x - min_x + 1\n        grid_height = max_z - min_z + 1\n        \n        images = [tile_images[coords] for coords in coordinate_order]\n        img_width, img_height = images[0].size\n        composite_width = img_width * grid_width\n        composite_height = img_height * grid_height\n        composite = Image.new('RGB', (composite_width, composite_height))\n\n        # Paste images in grid\n        for coords in coordinate_order:\n            img = tile_images[coords]\n            # Calculate position in grid\n            col = coords[0] - min_x  # 0, 1, 2\n            row = coords[1] - min_z  # 0, 1, 2\n            \n            x = col * img_width\n            y = row * img_height\n            composite.paste(img, (x, y))\n\n        # Add grid lines\n        draw = ImageDraw.Draw(composite)\n        for i in range(1, grid_width):\n            x = i * img_width\n            draw.line([(x, 0), (x, composite_height)], fill=\"white\", width=2)\n        for i in range(1, grid_height):\n            y = i * img_height\n            draw.line([(0, y), (composite_width, y)], fill=\"white\", width=2)\n\n        # Add coordinate labels\n        try:\n            font = ImageFont.load_default()\n            for coords in coordinate_order:\n                col = coords[0] - min_x\n                row = coords[1] - min_z\n                x = col * img_width + 5\n                y = row * img_height + 5\n                label = f\"({coords[0]},{coords[1]})\"\n                draw.text((x, y), label, fill=\"yellow\", font=font)\n        except:\n            pass\n\n        buffer = io.BytesIO()\n        composite.save(buffer, format='PNG')\n        buffer.seek(0)\n        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')\n\n        return [{\n            'json': {\n                'success': True,\n                'grid_size': f'{grid_width}x{grid_height}',\n                'available_coordinates': available_coords,\n                'coordinate_mapping': {\n                    f'tile_{coords[0]}_{coords[1]}': coords for coords in coordinate_order\n                },\n                'dimensions': {\n                    'width': composite_width,\n                    'height': composite_height\n                }\n            },\n            'binary': {\n                'data': {\n                    'data': image_base64,\n                    'mimeType': 'image/png',\n                    'fileName': 'minecraft_world_view.png'\n                }\n            },\n            'pairedItem': [ {'item': i} for i in range(len(items)) ]\n        }]\n\n    except Exception as e:\n        return [{\n            'json': {\n                'success': False,\n                'error': str(e),\n                'debug_info': {\n                    'available_coordinates': list(tile_images.keys()) if 'tile_images' in locals() else 'Not available',\n                    'total_items': len(items)\n                }\n            }\n        }]\n\nreturn stitch_minecraft_tiles()"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "c12e0bdf-20ea-458f-8b72-3bfeae97fd75",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -16,
+                -160
+            ],
+            "webhookId": "a24ea772-184b-4601-a623-13997ad047a9",
+            "parameters": {
+                "path": "minecraft/get-surroundings-image",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "2ae03e94-f189-4f72-a841-949c3fb78236",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1104,
+                -160
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 200,
+                    "responseHeaders": {
+                        "entries": [
+                            {
+                                "name": "Content-Type",
+                                "value": "image/png; charset=utf-8"
+                            }
+                        ]
+                    }
+                },
+                "respondWith": "binary"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "2abe6f30-453f-4c3d-a992-25b95bec9c43",
+            "name": "Position1",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                208,
+                64
+            ],
+            "parameters": {
+                "url": "http://minecraft-250712.kodelab.dev:3000/message",
+                "method": "POST",
+                "options": {
+                    "response": {
+                        "response": {
+                            "responseFormat": "json"
+                        }
+                    }
+                },
+                "jsonBody": "={\n    \"jsonrpc\": \"2.0\",\n    \"id\": 101,\n    \"method\": \"tools/call\",\n  \"params\": {\n      \"name\": \"getPosition\",\n  \"arguments\": {}\n  }\n}",
+                "sendBody": true,
+                "specifyBody": "json"
+            },
+            "executeOnce": true,
+            "typeVersion": 4.2
+        },
+        {
+            "id": "5c059057-2eee-45da-8fd3-86d79e3a26d5",
+            "name": "When clicking ‘Execute workflow’",
+            "type": "n8n-nodes-base.manualTrigger",
+            "position": [
+                -16,
+                64
+            ],
+            "parameters": {
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "fc4218fb-c917-4da1-92ac-2762dad0b068",
+            "name": "Find Bluemap Map",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                432,
+                64
+            ],
+            "parameters": {
+                "jsCode": "\n// Input text\nconst positionText = $input.first().json.result.content[0].text;\n\n// Parse coordinates\nconst regex = /X=([-+]?\\d*\\.?\\d+),?\\s*Y=([-+]?\\d*\\.?\\d+),?\\s*Z=([-+]?\\d*\\.?\\d+)/i;\nconst match = positionText.match(regex);\n\nif (match) {\n  const worldX = parseFloat(match[1]);\n  const worldY = parseFloat(match[2]);\n  const worldZ = parseFloat(match[3]);\n  \n  // Generate BlueMap tile path (based on your filesystem structure)\n  const zoom = 0;           // Zoom level\n  const tileSize = 512;     // BlueMap tile size at zoom 0\n  const tileX = Math.floor(worldX / tileSize);\n  const tileZ = Math.floor(worldZ / tileSize);\n  \n  // Build the correct BlueMap URL based on your structure\n  const tileUrl = `http://minecraft-250712.kodelab.dev:8100/maps/world/tiles/${zoom}/x${tileX}/z${tileZ}.prbm.gz`;\n  \n  return {\n    json: {\n      worldX: worldX,\n      worldY: worldY,\n      worldZ: worldZ,\n      tileX: tileX,\n      tileZ: tileZ,\n      zoom: zoom,\n      tileUrl: tileUrl,\n      tilePath: `${zoom}/x${tileX}/z${tileZ}.prbm.gz`\n    }\n  };\n} else {\n  return {\n    json: {\n      error: \"Could not parse position\",\n      originalText: positionText\n    }\n  };\n}"
+            },
+            "typeVersion": 2
+        }
+    ],
+    "active": false,
+    "pinData": {
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "c8df2047-5665-49f2-a529-ea249ab328bd",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Find dynmap tiles",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Position1": {
+            "main": [
+                [
+                    {
+                        "node": "Find Bluemap Map",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out1": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request": {
+            "main": [
+                [
+                    {
+                        "node": "Stitch images together",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Find dynmap tiles": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Stitch images together": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "When clicking ‘Execute workflow’": {
+            "main": [
+                [
+                    {
+                        "node": "Position1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

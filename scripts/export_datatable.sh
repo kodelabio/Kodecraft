@@ -1,31 +1,28 @@
 #!/bin/bash
 
 # Default values
-WEBHOOK_BASE_URL="http://localhost/webhook/tools"
+WEBHOOK_BASE_URL="http://localhost/webhook/Kodecraft"
 OUTPUT_DIR="./n8n/datatables"
-# n8n does not allow yet to pass the data table name as parameter
-TABLE_NAME=""
+TABLE_NAME="KodecraftPrompts"
 
 # Help function
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS] [TABLE_NAME] [OUTPUT_DIR] [WEBHOOK_BASE_URL]
+Usage: $(basename "$0") [OPTIONS]
 
 Export n8n data table via webhook to JSON file.
 Creates a timestamped subdirectory for each export.
 
-Arguments:
-  TABLE_NAME        Name of the data table file name to export (required)
-  OUTPUT_DIR        Base directory for exports (default: ./n8n/datatables)
-  WEBHOOK_BASE_URL  Base URL for webhooks (default: https://localhost/webhook/tools)
-
 Options:
-  -h, --help        Show this help message and exit
+  --table-name TABLE_NAME      Name of the data table to export (required)
+  --output-dir OUTPUT_DIR      Base directory for exports (default: ./n8n/datatables)
+  --webhook-url WEBHOOK_URL    Base URL for webhooks (default: http://localhost/webhook/tools)
+  -h, --help                   Show this help message and exit
 
 Examples:
-  $(basename "$0") KodecraftPrompts
-  $(basename "$0") KodecraftPrompts ./exports
-  $(basename "$0") KodecraftPrompts ./exports https://my-n8n.example.com/webhook/tools
+  $(basename "$0") --table-name KodecraftPrompts
+  $(basename "$0") --table-name KodecraftPrompts --output-dir ./exports
+  $(basename "$0") --table-name KodecraftPrompts --output-dir ./exports --webhook-url https://my-n8n.example.com/webhook/tools
 
 Output:
   Data is exported to: OUTPUT_DIR/YYYYMMDD_HHMMSS/TABLE_NAME.json
@@ -33,21 +30,35 @@ EOF
   exit 0
 }
 
-# Parse options
-case "$1" in
-  -h|--help)
-    show_help
-    ;;
-esac
-
-# Set parameters from arguments
-TABLE_NAME="${1:-}"
-OUTPUT_DIR="${2:-$OUTPUT_DIR}"
-WEBHOOK_BASE_URL="${3:-$WEBHOOK_BASE_URL}"
+# Parse keyword arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      ;;
+    --table-name)
+      TABLE_NAME="$2"
+      shift 2
+      ;;
+    --output-dir)
+      OUTPUT_DIR="$2"
+      shift 2
+      ;;
+    --webhook-url)
+      WEBHOOK_BASE_URL="$2"
+      shift 2
+      ;;
+    *)
+      echo "Error: Unknown option '$1'"
+      echo ""
+      show_help
+      ;;
+  esac
+done
 
 # Validate table name
 if [[ -z "$TABLE_NAME" ]]; then
-  echo "Error: TABLE_NAME is required"
+  echo "Error: --table-name is required"
   echo ""
   show_help
 fi

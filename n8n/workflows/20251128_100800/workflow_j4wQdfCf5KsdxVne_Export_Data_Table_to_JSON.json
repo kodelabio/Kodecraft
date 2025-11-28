@@ -50,7 +50,7 @@
             ],
             "webhookId": "0443d898-24f2-458d-8e28-42b23cca3725",
             "parameters": {
-                "path": "/tools/get-datatable",
+                "path": "/Kodecraft/get-datatable",
                 "options": {
                 },
                 "responseMode": "responseNode"
@@ -79,7 +79,7 @@
     "settings": {
         "executionOrder": "v1"
     },
-    "versionId": "ba1ebeb1-af57-47fb-b704-bd967446d599",
+    "versionId": "268e7956-c445-4f96-b43c-182515ae1d03",
     "staticData": null,
     "connections": {
         "Webhook": {

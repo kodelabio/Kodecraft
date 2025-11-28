@@ -2,44 +2,59 @@
 
 # Default values
 CONTAINER_NAME="n8n_postgres-1"
-BASE_DIR="./n8n"
+BASE_DIR="./n8n/workflows"
 SUBDIR=""
 
 # Help function
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS] [CONTAINER_NAME] [BASE_DIR] [SUBDIR]
+Usage: $(basename "$0") [OPTIONS]
 
 Import n8n workflows from JSON files into n8n.
 
-Arguments:
-  CONTAINER_NAME    Docker container running n8n (default: n8n_postgres-1)
-  BASE_DIR          Base directory containing export subdirectories (default: ./n8n)
-  SUBDIR            Timestamped subdirectory to import from (e.g., 20250101_120000)
-                    If not specified, lists available subdirectories
-
 Options:
-  -h, --help        Show this help message and exit
+  --container CONTAINER_NAME    Docker container running n8n (default: n8n_postgres-1)
+  --base-dir BASE_DIR           Base directory containing export subdirectories (default: ./n8n/workflows)
+  --subdir SUBDIR               Timestamped subdirectory to import from (e.g., 20250101_120000)
+                                If not specified, lists available subdirectories
+  -h, --help                    Show this help message and exit
 
 Examples:
-  $(basename "$0")                                            # List available exports
-  $(basename "$0") my-n8n ./n8n                               # List available exports
-  $(basename "$0") my-n8n ./n8n 20250101_120000               # Import specific export
+  $(basename "$0")                                                                   # List available exports
+  $(basename "$0") --base-dir ./n8n                                                  # List available exports
+  $(basename "$0") --container my-n8n --base-dir ./n8n --subdir 20250101_120000     # Import specific export
+
+Output:
+  Imports workflows from the specified subdirectory into the n8n container
 EOF
   exit 0
 }
 
-# Parse options
-case "$1" in
-  -h|--help)
-    show_help
-    ;;
-esac
-
-# Set parameters from arguments (or use defaults)
-CONTAINER_NAME="${1:-$CONTAINER_NAME}"
-BASE_DIR="${2:-$BASE_DIR}"
-SUBDIR="${3:-}"
+# Parse keyword arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      show_help
+      ;;
+    --container)
+      CONTAINER_NAME="$2"
+      shift 2
+      ;;
+    --base-dir)
+      BASE_DIR="$2"
+      shift 2
+      ;;
+    --subdir)
+      SUBDIR="$2"
+      shift 2
+      ;;
+    *)
+      echo "Error: Unknown option '$1'"
+      echo ""
+      show_help
+      ;;
+  esac
+done
 
 # Check if base directory exists
 if [[ ! -d "$BASE_DIR" ]]; then
@@ -67,7 +82,7 @@ if [[ -z "$SUBDIR" ]]; then
   fi
   
   echo ""
-  echo "Usage: $(basename "$0") [CONTAINER_NAME] [BASE_DIR] [SUBDIR]"
+  echo "Usage: $(basename "$0") --container <name> --base-dir <dir> --subdir <subdir>"
   exit 0
 fi
 

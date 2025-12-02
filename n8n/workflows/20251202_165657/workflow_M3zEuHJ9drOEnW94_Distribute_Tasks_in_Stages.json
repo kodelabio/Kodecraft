@@ -1,0 +1,1191 @@
+{
+    "id": "M3zEuHJ9drOEnW94",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "name": "Distribute Tasks in Stages",
+    "nodes": [
+        {
+            "id": "d7a37764-9f00-4543-af93-40556a894a2f",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -672,
+                80
+            ],
+            "webhookId": "25bc15a7-f0ca-43fe-b603-d1517c32f5ba",
+            "parameters": {
+                "path": "/kodecraft/distribute-tasks-stages",
+                "options": {
+                },
+                "httpMethod": "POST"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "665e4660-e4a7-41e9-b20c-47b6fad7592d",
+            "name": "Send Task",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1792,
+                96
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/send-task-stage",
+                "method": "POST",
+                "options": {
+                    "timeout": 900000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "port",
+                            "value": "={{ $json.port }}"
+                        },
+                        {
+                            "name": "taskPrompt",
+                            "value": "={{ $json.taskPrompt }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "worker",
+                            "value": "={{ $json.worker }}"
+                        },
+                        {
+                            "name": "stageNumber",
+                            "value": "={{ $json.stageNumber }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-stage-complete"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "retryOnFail": true,
+            "typeVersion": 4.3
+        },
+        {
+            "id": "0e5298ed-11d1-42d9-82ba-dbc8c31da8b0",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                448,
+                -48
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "eee067be-ee60-4089-86d4-94ad3c7a9809",
+            "name": "Stages List",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -448,
+                80
+            ],
+            "parameters": {
+                "jsCode": "const stages = $input.first().json.body.stages;\nconst stagesArray = Object.keys(stages)\n  .sort((a, b) => parseInt(a) - parseInt(b))\n  .map(stageKey => {\n    const stage = stages[stageKey];\n    const workers = Object.keys(stage.tasks).map(workerName => {\n      const task = stage.tasks[workerName];\n      return {\n        sessionId: $input.first().json.body.sessionId,\n        stageNumber: stage.stageNumber,\n        worker: workerName,\n        port: task.port,\n        taskPrompt: task.fullPrompt\n      };\n    });\n    return {\n      stageNumber: stage.stageNumber,\n      status: stage.status,\n      tasks: workers  // Now as array instead of dict\n    };\n  });\n\nreturn { stagesArray };"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "2e378c79-480d-468b-9fe8-5df0ce613721",
+            "name": "Split Stages",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -224,
+                80
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "stagesArray"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "5c09818d-a2a9-4e3a-89a2-ed0fa3a6d95b",
+            "name": "Loop Over Items",
+            "type": "n8n-nodes-base.splitInBatches",
+            "position": [
+                0,
+                80
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 3
+        },
+        {
+            "id": "6e9c1868-bae0-44ba-a8c6-1b57c24b6cc0",
+            "name": "Start Stage",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2464,
+                96
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Starting Worker {{ $('Split Workers').item.json.worker }} on stage {{ $('Split Workers').item.json.stageNumber }}..",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "fe3ec374-1b57-4ab5-a67f-5fadc06ea4da",
+            "name": "Split Workers",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                1568,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "tasks"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "0776decb-55ec-404f-bb09-fc7cfeb5a29a",
+            "name": "Update Tasks Request",
+            "type": "n8n-nodes-base.mongoDb",
+            "disabled": true,
+            "position": [
+                -672,
+                -224
+            ],
+            "parameters": {
+                "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, stages, completedStages, startTime",
+                "options": {
+                },
+                "operation": "update",
+                "updateKey": "sessionId",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "73121a23-86fa-41b6-a62d-33dd6bc9427d",
+            "name": "Update Task",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                2016,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "2082892d-1066-4f03-bb74-00af9befd498",
+                            "name": "sessionId",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "id": "1923c62e-4fa3-462f-9b05-ccf80f886ca2",
+                            "name": "stageNumber",
+                            "type": "number",
+                            "value": "={{ $('Split Workers').item.json.stageNumber }}"
+                        },
+                        {
+                            "id": "9dada34f-e7a4-4842-af3c-a9e91ac3e768",
+                            "name": "worker",
+                            "type": "string",
+                            "value": "={{ $('Split Workers').item.json.worker }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "adfa1d5b-bcc1-479f-9737-b3f5a18015a2",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                1344,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "db737727-f14c-4794-a32e-6ae58da50280",
+                            "name": "tasks",
+                            "type": "array",
+                            "value": "={{ $('Loop Over Items').item.json.tasks }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "ac2429a2-9894-4769-9b22-cc6c2b185454",
+            "name": "Set Stage started",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                1040,
+                96
+            ],
+            "parameters": {
+                "query": "={\"sessionId\":\"{{ $('Webhook').item.json.body.sessionId }}\"}",
+                "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.status\": \"started\"\n  }\n}",
+                "operation": "update",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "1e5b523c-0d1b-452b-8cd7-1c84b6a18a16",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                2288,
+                176
+            ],
+            "parameters": {
+                "width": 464,
+                "height": 352,
+                "content": "## Stages workflow\n- Work is organized in sequential stages\n- each stage has parallel tasks\n- each stage can only start once the previous stage taske are completed"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "1c87088e-16c5-4876-8493-5998efdb02e5",
+            "name": "Retrieve Session",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                224,
+                192
+            ],
+            "parameters": {
+                "query": "={\"sessionId\": \"{{ $('Webhook').item.json.body.sessionId }}\"} ",
+                "options": {
+                },
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "f9abef38-e362-4749-9ee4-b590e86a9c8a",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                688,
+                448
+            ],
+            "webhookId": "6c6ecbf7-de2e-485c-8f37-945cca5b51bd",
+            "parameters": {
+                "amount": 10
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "8894a786-500d-40bc-be18-29fd1807e2a7",
+            "name": "Code in JavaScript",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                448,
+                192
+            ],
+            "parameters": {
+                "jsCode": "// Get stage number from current loop item\nconst currentStage = $('Loop Over Items').first().json.stageNumber;\nconst previousStage = currentStage - 1;\n\nif (currentStage === 1) {\n  return {\n    stageNumber: 1, \n    canProceed: true,\n    reason: \"First stage\"\n  };\n}\n\n// Now get the document (must come from previous MongoDB read or Set node)\nconst doc = $input.first().json;\n\nif (!doc.stages || !doc.stages[previousStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${previousStage} not found`\n  };\n}\n\nconst previousStageData = doc.stages[previousStage];\nconst workers = Object.keys(previousStageData.tasks);\n\n//const allComplete = workers.every(w => \n//  previousStageData.tasks[w].status === \"completed\"\n//);\nconst allComplete = previousStageData.status === \"completed\";\n\nreturn {\n  canProceed: allComplete,\n  previousStage: previousStage,\n  stageNumber: currentStage,\n  completedWorkers: workers.filter(w => previousStageData.tasks[w].status === \"completed\").length,\n  totalWorkers: workers.length\n};\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "f4b57c16-a458-49ab-ba23-19bbbf28de44",
+            "name": "Proceed?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                672,
+                192
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                        {
+                            "id": "2567a554-030d-4fa0-afd3-89e9315e65cd",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.canProceed }}",
+                            "rightValue": "1"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "e5b18b71-2fa0-4295-a440-e9026c4f1eb4",
+            "name": "Set Task Started",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                2240,
+                96
+            ],
+            "parameters": {
+                "query": "={\"sessionId\":\"{{ $json.sessionId }}\"}",
+                "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.status\": \"started\",\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.startedAt\": \"{{new Date().toISOString()}}\"\n  }\n}",
+                "operation": "update",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "12cb0e71-6c06-41d1-90d4-bae3b16d68f1",
+            "name": "End Reply",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                192,
+                -48
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Project completed. ",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "executeOnce": true,
+            "typeVersion": 1.2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "stages": {
+                            "1": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Mark a 9x7 rectangle roughly centered on the leader: choose X_start..X_end (9 blocks) and Z_start..Z_end (7 blocks). Compute X_mid1 and X_mid2 to split X into three contiguous sections.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 1 OF 7:\nMark a 9x7 rectangle roughly centered on the leader: choose X_start..X_end (9 blocks) and Z_start..Z_end (7 blocks). Compute X_mid1 and X_mid2 to split X into three contiguous sections.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 1,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Use the rectangle and X_mid1/X_mid2 defined by Worker1’s layout to locate your region (X_mid1+1..X_mid2, Z_start..Z_end), and match the floor Y level established in adjacent sections.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 1 OF 8:\nUse the rectangle and X_mid1/X_mid2 defined by Worker1’s layout to locate your region (X_mid1+1..X_mid2, Z_start..Z_end), and match the floor Y level established in adjacent sections.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 1,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Use the established 9x7 rectangle and X_mid2 to determine your band (X_mid2+1..X_end, Z_start..Z_end) and match the floor Y level from Workers 1 and 2.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 1 OF 8:\nUse the established 9x7 rectangle and X_mid2 to determine your band (X_mid2+1..X_end, Z_start..Z_end) and match the floor Y level from Workers 1 and 2.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 1,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 1
+                            },
+                            "2": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Lightly level terrain only inside your area (X_start..X_mid1, Z_start..Z_end) so the floor is mostly flat at one Y level; only remove blocks directly in the footprint or blocking walls/roof.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 2 OF 7:\nLightly level terrain only inside your area (X_start..X_mid1, Z_start..Z_end) so the floor is mostly flat at one Y level; only remove blocks directly in the footprint or blocking walls/roof.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 2,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Lightly level terrain only inside your band so the floor is continuous and flat with Worker1’s side.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 2 OF 8:\nLightly level terrain only inside your band so the floor is continuous and flat with Worker1’s side.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 2,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Lightly level terrain only within your third so the interior floor is flat and continuous.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 2 OF 8:\nLightly level terrain only within your third so the interior floor is flat and continuous.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 2,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 2
+                            },
+                            "3": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Build exterior walls 4 blocks high along: (a) the west outer wall at X_start, and (b) your portions of the north and south walls between X_start and X_mid1.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 3 OF 7:\nBuild exterior walls 4 blocks high along: (a) the west outer wall at X_start, and (b) your portions of the north and south walls between X_start and X_mid1.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 3,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Build walls 4 blocks high along your portions of the north and south walls between X_mid1+1 and X_mid2, and any needed internal supports/pillars if the span is long.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 3 OF 8:\nBuild walls 4 blocks high along your portions of the north and south walls between X_mid1+1 and X_mid2, and any needed internal supports/pillars if the span is long.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 3,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Build 4-block-high walls along: (a) the east outer wall at X_end, and (b) your portions of the north and south walls between X_mid2+1 and X_end.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 3 OF 8:\nBuild 4-block-high walls along: (a) the east outer wall at X_end, and (b) your portions of the north and south walls between X_mid2+1 and X_end.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 3,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 3
+                            },
+                            "4": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Place vertical corner supports (logs if available, otherwise planks) at the northwest and southwest corners (X_start,Z_start and X_start,Z_end).",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 4 OF 7:\nPlace vertical corner supports (logs if available, otherwise planks) at the northwest and southwest corners (X_start,Z_start and X_start,Z_end).\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 4,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Place the main doorway centered on either the north or south long wall in your band: leave at least a 2-block-tall, 1- or 2-block-wide opening, and do not fill it.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 4 OF 8:\nPlace the main doorway centered on either the north or south long wall in your band: leave at least a 2-block-tall, 1- or 2-block-wide opening, and do not fill it.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 4,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Place vertical corner supports (logs if available, else planks) at the northeast and southeast corners (X_end,Z_start and X_end,Z_end).",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 4 OF 8:\nPlace vertical corner supports (logs if available, else planks) at the northeast and southeast corners (X_end,Z_start and X_end,Z_end).\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 4,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 4
+                            },
+                            "5": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Create at least one 1x2 window opening in either the north or south wall within your section; no need to place glass unless available.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 5 OF 7:\nCreate at least one 1x2 window opening in either the north or south wall within your section; no need to place glass unless available.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 5,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Add at least one window opening (1x2 or similar) on the opposite long wall from the doorway, within your band, for light and symmetry.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 5 OF 8:\nAdd at least one window opening (1x2 or similar) on the opposite long wall from the doorway, within your band, for light and symmetry.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 5,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Add at least one window opening (1x2 or similar) in either the north or south wall inside your third, roughly matching the window heights used by Workers 1 and 2.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 5 OF 8:\nAdd at least one window opening (1x2 or similar) in either the north or south wall inside your third, roughly matching the window heights used by Workers 1 and 2.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 5,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 5
+                            },
+                            "6": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Start the roof in your third: place sloped roof blocks (stairs/slabs) on top of your walls, sloping upward toward the center ridge (along Z), and extending into your X range only. Stop cleanly at the boundary near X_mid1 so Worker2 can continue the pattern.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 6 OF 7:\nStart the roof in your third: place sloped roof blocks (stairs/slabs) on top of your walls, sloping upward toward the center ridge (along Z), and extending into your X range only. Stop cleanly at the boundary near X_mid1 so Worker2 can continue the pattern.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 6,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Construct the central roof: continue the roof slope beginning from your wall tops and blend with Worker1’s roof pattern at the X_mid1 boundary. Extend the roof across your band and ensure the highest ridge line is fully formed here (no gaps).",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 6 OF 8:\nConstruct the central roof: continue the roof slope beginning from your wall tops and blend with Worker1’s roof pattern at the X_mid1 boundary. Extend the roof across your band and ensure the highest ridge line is fully formed here (no gaps).\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 6,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Extend the roof from your east walls toward the center, mirroring the slope and materials used by Workers 1 and 2. Connect seamlessly at the X_mid2 boundary and ensure the roof ties cleanly into the central ridge created by Worker2.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 6 OF 8:\nExtend the roof from your east walls toward the center, mirroring the slope and materials used by Workers 1 and 2. Connect seamlessly at the X_mid2 boundary and ensure the roof ties cleanly into the central ridge created by Worker2.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 6,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 6
+                            },
+                            "7": {
+                                "tasks": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Optionally place a simple plank floor inside your section if materials permit, matching a single Y level and not extending into other workers’ X ranges.",
+                                        "objective": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.",
+                                        "fullPrompt": "Build the west (negative X) third of the house: footprint, walls, and west roof segment.\n\nSTAGE 7 OF 7:\nOptionally place a simple plank floor inside your section if materials permit, matching a single Y level and not extending into other workers’ X ranges.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -10 to -9\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker2): x:-9\n\nHouse center: (-7, -60, -8)\n\nScope: House footprint is 9x7 aligned to world axes. Let X range from X_start to X_end (9 blocks) and Z from Z_start to Z_end (7 blocks). Define X_mid1 and X_mid2 so that: X_start..X_mid1 (Worker1), X_mid1+1..X_mid2 (Worker2), X_mid2+1..X_end (Worker3). Worker1 owns X_start..X_mid1 (inclusive) across all Z.\n\nConstraints: Do not modify or place blocks east of X_mid1+0.5. Do not clear terrain outside the 9x7 footprint. Focus on structure and roof inside your third; avoid detailed interior decoration.\n- Stay within x:-10 to -9\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -9,
+                                            "xMin": -10,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 7,
+                                        "totalStages": 7,
+                                        "completionTime": null
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Ensure your roof blocks do not overhang beyond 1 block from the outer walls and remain consistent with overhang used by Workers 1 and 3.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 7 OF 8:\nEnsure your roof blocks do not overhang beyond 1 block from the outer walls and remain consistent with overhang used by Workers 1 and 3.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 7,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Ensure any roof overhang (up to 1 block) is symmetrical with the rest of the house and does not exceed the pattern set by Workers 1 and 2.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 7 OF 8:\nEnsure any roof overhang (up to 1 block) is symmetrical with the rest of the house and does not exceed the pattern set by Workers 1 and 2.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 7,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 7
+                            },
+                            "8": {
+                                "tasks": {
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Optionally place floor blocks inside your band, aligned with workers 1 and 3 if they lay floors.",
+                                        "objective": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.",
+                                        "fullPrompt": "Build the central third of the house: middle walls, central section of the roof, and host the main doorway.\n\nSTAGE 8 OF 8:\nOptionally place floor blocks inside your band, aligned with workers 1 and 3 if they lay floors.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -8 to -7\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Right boundary (shared with Worker3): x:-7\n- Left boundary (shared with Worker1): x:-8\n\nHouse center: (-7, -60, -8)\n\nScope: Worker2 owns the middle X section: X_mid1+1..X_mid2, across all Z (Z_start..Z_end). Responsible for walls, doorway, and central roof ridge segment in this band.\n\nConstraints: Do not modify blocks in Worker1’s west third (X_start..X_mid1) or Worker3’s east third (X_mid2+1..X_end). Only touch boundary edges where walls and roof must align. Avoid terrain changes outside the 9x7 footprint.\n- Stay within x:-8 to -7\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -7,
+                                            "xMin": -8,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 8,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    },
+                                    "Worker3": {
+                                        "port": 4004,
+                                        "result": null,
+                                        "status": "not-started",
+                                        "worker": "Worker3",
+                                        "subtask": "Optionally finish a matching interior floor in your section if others have laid floors.",
+                                        "objective": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.",
+                                        "fullPrompt": "Build the east (positive X) third of the house: footprint, walls, and east roof segment, completing alignment with the central ridge.\n\nSTAGE 8 OF 8:\nOptionally finish a matching interior floor in your section if others have laid floors.\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: -6 to -4\n- Z range: -11 to -5\n- Y range: -60 to -57\n- Left boundary (shared with Worker2): x:-6\n\nHouse center: (-7, -60, -8)\n\nScope: Worker3 owns the eastern X section: X_mid2+1..X_end, across all Z (Z_start..Z_end). Responsible for walls and roof over this third.\n\nConstraints: Do not modify any blocks in Worker1’s or Worker2’s regions except where roofs must connect at boundaries. Do not clear terrain outside your third of the footprint. Keep all structural work within the 9x7 area plus at most a 1-block consistent roof overhang.\n- Stay within x:-6 to -4\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.",
+                                        "coordinates": {
+                                            "xMax": -4,
+                                            "xMin": -6,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -5,
+                                            "zMin": -11
+                                        },
+                                        "stageNumber": 8,
+                                        "totalStages": 8,
+                                        "completionTime": null
+                                    }
+                                },
+                                "status": "not-started",
+                                "stageNumber": 8
+                            }
+                        },
+                        "workers": [
+                            {
+                                "pid": 3935224,
+                                "port": 4002,
+                                "status": "spawned",
+                                "message": "Worker Worker1 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker1"
+                            },
+                            {
+                                "pid": 3935226,
+                                "port": 4003,
+                                "status": "spawned",
+                                "message": "Worker Worker2 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker2"
+                            },
+                            {
+                                "pid": 3935231,
+                                "port": 4004,
+                                "status": "spawned",
+                                "message": "Worker Worker3 spawned successfully",
+                                "success": true,
+                                "workerName": "Worker3"
+                            }
+                        ],
+                        "sessionId": "build_1763649863620",
+                        "workerCount": 3,
+                        "conversationId": "5415489232"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "37726",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/distribute-tasks-stages",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "1a309186-868f-4089-a6af-bf413f5075b6",
+    "staticData": null,
+    "connections": {
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Retrieve Session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Stages List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Proceed?": {
+            "main": [
+                [
+                    {
+                        "node": "Set Stage started",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "End Reply": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Send Task": {
+            "main": [
+                [
+                    {
+                        "node": "Update Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Split Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Stages List": {
+            "main": [
+                [
+                    {
+                        "node": "Split Stages",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start Stage": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Task": {
+            "main": [
+                [
+                    {
+                        "node": "Set Task Started",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Stages": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Send Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Over Items": {
+            "main": [
+                [
+                    {
+                        "node": "End Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Retrieve Session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Retrieve Session": {
+            "main": [
+                [
+                    {
+                        "node": "Code in JavaScript",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Task Started": {
+            "main": [
+                [
+                    {
+                        "node": "Start Stage",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Stage started": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code in JavaScript": {
+            "main": [
+                [
+                    {
+                        "node": "Proceed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Tasks Request": {
+            "main": [
+                [
+                ]
+            ]
+        }
+    }
+}

@@ -109,6 +109,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/stop', this.handleStop.bind(this));
         this.app.post('/api/agent/restart', this.handleRestart.bind(this));
         this.app.post('/api/agent/clearChat', this.handleClearChat.bind(this));
+        this.app.post('/api/agent/spawnWorkers', this.handleSpawnWorkers.bind(this));
         
         // Vision
         this.app.post('/api/agent/vision', this.handleVision.bind(this));
@@ -141,7 +142,7 @@ export class ExternalAPI {
         this.app.get('/api/health', (req, res) => {
             res.json({ status: 'ok' });
         });
-        // Orchestration endpoints for n8n (â† NEW SECTION STARTS HERE)
+        // Orchestration endpoints for n8n for complex tasks(â† NEW SECTION STARTS HERE)
         this.app.post('/api/orchestration/spawn-worker', this.handleOrchestrationSpawnWorker.bind(this));
         this.app.post('/api/orchestration/wait-workers', this.handleOrchestrationWaitWorkers.bind(this));
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
@@ -153,6 +154,8 @@ export class ExternalAPI {
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
         this.app.post('/api/orchestration/stop-all', this.handleOrchestrationStopAll.bind(this));
+        this.app.post('/api/orchestration/move-worker-to-player', this.handleMoveWorkerToPlayer.bind(this));
+        this.app.post('/api/orchestration/move-worker-to', this.handleMoveWorkerTo.bind(this));
         // (â† NEW SECTION ENDS HERE)
     }
 
@@ -214,7 +217,7 @@ export class ExternalAPI {
             
             let command;
             
-            if (direction && !x && !y && !z) {
+            if (direction && direction.trim() && !x && !y && !z) {
                 const bot = this.getBotSafely();
                 if (!bot) {
                     return res.status(503).json({ 
@@ -243,6 +246,7 @@ export class ExternalAPI {
                     });
                 }
 
+
                 const pos = bot.entity.position;
                 const movements = {
                     'left': [-5, 0, 0],
@@ -262,8 +266,15 @@ export class ExternalAPI {
                 
                 command = `!goToCoordinates(${targetX}, ${targetY}, ${targetZ}, ${minDistance})`;
             }
-            else if (typeof x === 'number' && typeof y === 'number' && typeof z === 'number') {
-                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+
+            else if ((typeof x === 'number' || typeof x === 'string') && 
+                    (typeof y === 'number' || typeof y === 'string') && 
+                    (typeof z === 'number' || typeof z === 'string')) {
+                // Coerce strings to numbers if needed
+                const numX = typeof x === 'string' ? parseFloat(x) : x;
+                const numY = typeof y === 'string' ? parseFloat(y) : y;
+                const numZ = typeof z === 'string' ? parseFloat(z) : z;
+                const coordValidation = this.validateAndRoundCoordinates(numX, numY, numZ);
                 if (typeof coordValidation === 'string') {
                     return res.status(400).json({ 
                         error: coordValidation,
@@ -280,7 +291,12 @@ export class ExternalAPI {
                 });
             }
 
+            console.log(`[handleMove DEBUG] Executing command:`, command);
+            console.log(`[handleMove DEBUG] Bot busy?`, this.agent.actions?.executing);
+            console.log(`[handleMove DEBUG] Current action:`, this.agent.actions?.currentActionLabel);
             const result = await executeCommand(this.agent, command);
+            console.log(`[handleMove DEBUG] Command result:`, result);
+            console.log(`[handleMove DEBUG] Result type:`, typeof result);
             
             if (!result || typeof result !== 'string' || result.length === 0) {
                 return res.status(503).json({ 
@@ -1584,9 +1600,11 @@ export class ExternalAPI {
     }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)
+
+    // this one can still be used it user requests to deploy workers without specifying a task
     async handleSpawnWorkers(req, res) {
         try {
-            const { count, basePort = settings.multibot_base_port + 2, sessionId } = req.body;
+            const { count, basePort = settings.multibot_base_port, sessionId } = req.body;
             
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -1601,34 +1619,52 @@ export class ExternalAPI {
             }
             
             const spawnResults = [];
+
+            // Simply spawn workers - spawnWorker handles port auto-finding
             for (let i = 0; i < count; i++) {
-                const workerName = `Worker_${i + 1}`;
-                const workerPort = basePort + i;
+                this.orchestration.workerCounter++;
+                const workerName = `Worker_${this.orchestration.workerCounter}`;
+                const requestedPort = basePort + i;
                 
+                console.log(`[API] Spawning ${workerName}, requesting port ${requestedPort}`);
+
                 const result = await this.orchestration.spawnWorker(
                     workerName,
-                    workerPort,
+                    requestedPort,
                     sessionId || `session_${Date.now()}`,
                     settings.n8n_webhook_url
                 );
                 
                 spawnResults.push(result);
+
+                if (!result.success) {
+                    console.error(`[API] Failed to spawn ${workerName}:`, result.error);
+                }
             }
             
+            const successCount = spawnResults.filter(r => r.success).length;
             const status = this.orchestration.getStatus();
             
-            res.status(202).json({
-                success: true,
-                spawned: spawnResults.filter(r => r.success).length,
+            // HTTP status codes
+            const responseStatus = successCount === count ? 202 : (successCount > 0 ? 207 : 500);
+            
+            res.status(responseStatus).json({
+                success: successCount === count,
+                totalRequested: count,
+                successfulSpawns: successCount,
                 results: spawnResults,
-                message: `Spawned ${spawnResults.filter(r => r.success).length} workers successfully`,
-                totalWorkers: status.totalWorkers
+                message: `Spawned ${successCount}/${count} workers`,
+                ports: {
+                    requested: spawnResults.map(r => r.requestedPort),
+                    assigned: spawnResults.map(r => r.assignedPort)
+                }
             });
             
         } catch (error) {
+            console.error('[API] Error in handleSpawnWorkers:', error);
             this.handleError(res, error, 'spawnWorkers');
         }
-    }
+}
 
     async handleCoordinateBuild(req, res) {
         try {
@@ -2295,6 +2331,44 @@ async handleOrchestrationSessionTasks(req, res) {
         } catch (error) {
             this.handleError(res, error, 'orchestrationStatus');
         }
+    }
+
+
+    async handleMoveWorkerToPlayer(req, res) {
+        const { workerName, playerName, distance } = req.body;
+        if (workerName === 'all') {
+            const results = [];
+            for (const [name, worker] of this.orchestration.workers) {
+                const result = await this.orchestration.moveWorkerToPlayer(name, playerName, distance);
+                results.push({ workerName: name, ...result });
+            }
+            return res.json({ 
+                success: true, 
+                movedWorkers: results.length,
+                results: results
+             }); 
+        }
+        const result = await this.orchestration.moveWorkerToPlayer(workerName, playerName, distance);
+        res.json(result);
+    }
+
+    async handleMoveWorkerTo(req, res) {
+        const { workerName, x, y, z } = req.body;
+        if (workerName === 'all') {
+            const results = [];
+            for (const [name, worker] of this.orchestration.workers) {
+                const result = await this.orchestration.moveWorkerToCoordinates(name, x, y, z);
+                results.push({ workerName: name, ...result });
+            }
+            return res.json({ 
+                success: true, 
+                movedWorkers: results.length,
+                results: results 
+            });
+        }
+
+        const result = await this.orchestration.moveWorkerToCoordinates(workerName, x, y, z);
+        res.json(result);
     }
 
     /**

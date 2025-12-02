@@ -4,6 +4,7 @@
 
 import { spawn } from 'child_process';
 import settings from '../../settings.js';
+import net from 'net';
 
 export class OrchestrationAPI {
     constructor(agent) {
@@ -12,8 +13,88 @@ export class OrchestrationAPI {
         this.buildSessions = new Map();     // sessionId -> { buildRequest, workers, status, startTime }
         this.buildLocations = [];           // Track reserved build locations
         this.nextWorkerPort = settings.multibot_base_port + 2;
+        this.reservedPorts = new Set(); 
+        this.workerCounter = 0;  // ADD THIS
     }
 
+    /**
+     * Check if a port is available by attempting to bind
+     */
+    async isPortAvailable(port) {
+        return new Promise((resolve) => {
+            const server = net.createServer();
+            
+            server.once('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    resolve(false);
+                } else {
+                    resolve(false);
+                }
+            });
+            
+            server.once('listening', () => {
+                server.close();
+                resolve(true);
+            });
+            
+            server.listen(port, '127.0.0.1');
+        });
+    }
+
+    /**
+     * Reserve a port to prevent race conditions
+     */
+    reservePort(port) {
+        if (this.reservedPorts.has(port)) {
+            return false;
+        }
+        this.reservedPorts.add(port);
+        return true;
+    }
+
+    /**
+     * Release a port reservation on failure
+     */
+    releasePort(port) {
+        if (this.reservedPorts.has(port)) {
+            this.reservedPorts.delete(port);
+        }
+    }
+
+    /**
+     * Find next available port starting from startPort
+     */
+    async findNextAvailablePort(startPort, maxAttempts = 100) {
+        console.log(`🔍 Finding available port starting from ${startPort}...`);
+        
+        for (let i = 0; i < maxAttempts; i++) {
+            const port = startPort + i;
+            
+            // Skip if reserved
+            if (this.reservedPorts.has(port)) {
+                console.log(`   ⏭️  Port ${port} reserved`);
+                continue;
+            }
+            
+            // Skip if worker using it
+            if (Array.from(this.workers.values()).some(w => w.port === port)) {
+                console.log(`   ⏭️  Port ${port} in use by worker`);
+                continue;
+            }
+            
+            // Check actual availability
+            const available = await this.isPortAvailable(port);
+            console.log(`   📍 Port ${port}: ${available ? 'available' : 'unavailable'}`);
+            
+            if (available) {
+                console.log(`   ✓ Selected port ${port}`);
+                return port;
+            }
+        }
+        
+        console.log(`❌ No available ports found starting from ${startPort}`);
+        return null;
+    }
     /**
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
@@ -35,12 +116,35 @@ export class OrchestrationAPI {
         }
 
         console.log(`🔧 Spawning worker: ${name} on port ${port}`);
+
+        // Find next available port (auto-increment from requested)
+        const availablePort = await this.findNextAvailablePort(port);
+        if (!availablePort) {
+            return {
+                success: false,
+                workerName: name,
+                requestedPort: port,
+                error: `No available ports found starting from ${port}`
+            };
+        }
+
+        console.log(`Assigned port: ${availablePort}`);
+        const actualPort = availablePort;
+        // Reserve the port
+        if (!this.reservePort(actualPort)) {
+            return {
+                success: false,
+                workerName: name,
+                requestedPort: port,
+                error: `Failed to reserve port ${actualPort}`
+            };
+        }
         
         try {
             // Build worker initialization arguments
             let args = ['src/process/init_worker.js', name];
             args.push('-n', name);
-            args.push('-p', port);
+            args.push('-p', actualPort);
             args.push('-s', sessionId);
 
             
@@ -58,7 +162,7 @@ export class OrchestrationAPI {
             // Store worker info
             this.workers.set(name, {
                 process: workerProcess,
-                port: port,
+                port: actualPort,
                 status: 'spawning',
                 sessionId: sessionId,
                 spawnTime: Date.now(),
@@ -83,19 +187,23 @@ export class OrchestrationAPI {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Wait for worker API to be ready
-            const ready = await this.isWorkerReady(port, 30000);
+            const ready = await this.isWorkerReady(actualPort, 30000);
             if (!ready) {
                 throw new Error(`Worker ${name} API not responding after 30 seconds`);
             }
 
             // Move worker to safe location
+            /**
             try {
                 const leaderPos = this.agent.bot.entity.position;
+                console.log(`📍 Leader position: x=${leaderPos.x.toFixed(2)}, y=${leaderPos.y.toFixed(2)}, z=${leaderPos.z.toFixed(2)}`);
                 const safePos = {
-                    x: Math.floor(leaderPos.x) + 5,
+                    x: Math.floor(leaderPos.x) + 1,
                     y: Math.floor(leaderPos.y),
-                    z: Math.floor(leaderPos.z) + 5
+                    z: Math.floor(leaderPos.z) + 1
                 };
+                console.log(`🎯 Moving ${name} to safe location: x=${safePos.x}, y=${safePos.y}, z=${safePos.z}`);
+
 
                 const response = await fetch(`http://localhost:${port}/api/agent/move`, {
                     method: 'POST',
@@ -119,17 +227,17 @@ export class OrchestrationAPI {
                 return {
                     success: false,
                     workerName: name,
-                    port: port,
+                    port: actualPort,
                     status: 'spawned',
                     pid: workerProcess.pid,
                     error: `Failed to move to safe location: ${error.message}`
                 };
             }
-
+            */
             return {
                 success: true,
                 workerName: name,
-                port: port,
+                port: actualPort,
                 status: 'spawned',
                 pid: workerProcess.pid,
                 message: `Worker ${name} spawned successfully`
@@ -410,7 +518,7 @@ export class OrchestrationAPI {
      * Called by n8n to position workers
      */
     async teleportWorkers(sessionId, buildLocation) {
-        console.log(`🚀 Teleporting workers to build location`);
+        console.log(`🚀 Teleporting workers to a new location`);
 
         const session = this.buildSessions.get(sessionId);
         if (!session) {
@@ -810,7 +918,37 @@ export class OrchestrationAPI {
         return { success: true, sessionId: sessionId, results: results, buildLocation: buildLocation };
     }
 
+    async moveWorkerToPlayer(workerName, playerName, distance = 3) {
+        const worker = this.workers.get(workerName);
+        if (!worker) {
+            return { success: false, error: `Worker ${workerName} not found` };
+        }
 
+        const response = await fetch(`http://localhost:${worker.port}/api/agent/goToPlayer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player: playerName, distance: distance })
+        });
+
+        return response.ok ? { success: true, message: `${workerName} moving to ${playerName}` } : 
+                            { success: false, error: await response.text() };
+    }
+
+    async moveWorkerToCoordinates(workerName, x, y, z) {
+        const worker = this.workers.get(workerName);
+        if (!worker) {
+            return { success: false, error: `Worker ${workerName} not found` };
+        }
+
+        const response = await fetch(`http://localhost:${worker.port}/api/agent/goToCoordinates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ x: x, y: y, z: z })
+        });
+
+        return response.ok ? { success: true, message: `${workerName} moving to ${x}, ${y}, ${z}` } : 
+                            { success: false, error: await response.text() };
+    }
 
     /**
      * Get current status of all workers and sessions

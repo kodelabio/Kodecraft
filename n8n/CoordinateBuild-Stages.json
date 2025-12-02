@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "/kodecraft/coordinate-build-stages",
+        "path": "http://localhost:4001/kodecraft/coordinate-build-stages",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/create-session",
+        "url": "=http://localhost:4001/api/orchestration/create-session",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -50,7 +50,7 @@
     },
     {
       "parameters": {
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
+        "url": "=http://localhost:4001/api/agent/status",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -65,7 +65,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/reserve-location",
+        "url": "=http://localhost:4001/api/orchestration/reserve-location",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -229,7 +229,7 @@
     },
     {
       "parameters": {
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/player-position",
+        "url": "=http://localhost:4001/api/agent/player-position",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [

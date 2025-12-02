@@ -85,7 +85,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/register-workers",
+        "url": "=http://localhost:4001/api/orchestration/register-workers",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -181,7 +181,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/create-session",
+        "url": "=http://localhost:4001/api/orchestration/create-session",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [

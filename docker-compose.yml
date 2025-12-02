@@ -16,6 +16,7 @@ services:
       BRAIN_MODE: "internal"
       GENERATOR_OPTS: "0;1,3x3,2,1"
       SERVER_PORT: "55916"
+      ALLOW_CHEATS: "true"
     ports:
       - "55916:55916"
     volumes:

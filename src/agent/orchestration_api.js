@@ -803,7 +803,7 @@ export class OrchestrationAPI {
      * @param {string} taskPrompt - The task prompt/description
      * @param {string} taskId - Optional: Task ID for tracking (stage tasks)
      */
-    async sendTaskToWorker(workerPort, taskPrompt, callbackWebhookUrl, taskId = null) {
+    async sendTaskToWorker(workerPort, taskPrompt, conversationId, callbackWebhookUrl, taskId = null) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
@@ -816,15 +816,18 @@ export class OrchestrationAPI {
             
             // Build the request body
             const requestBody = {
-            prompt: taskPrompt
+                prompt: taskPrompt
             };
             
             // Include taskId if this is a stage task (for callback correlation)
             if (taskId) {
-            requestBody.taskId = taskId;
+                requestBody.taskId = taskId;
             }
             if (callbackWebhookUrl) {
-            requestBody.callbackWebhookUrl = callbackWebhookUrl;
+                requestBody.callbackWebhookUrl = callbackWebhookUrl;
+            }
+            if (conversationId) {
+                requestBody.conversationId = conversationId;
             }
 
             

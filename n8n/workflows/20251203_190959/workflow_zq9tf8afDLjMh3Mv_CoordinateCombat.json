@@ -1,0 +1,799 @@
+{
+    "id": "zq9tf8afDLjMh3Mv",
+    "meta": null,
+    "name": "CoordinateCombat",
+    "nodes": [
+        {
+            "id": "750b7935-91f7-4516-8121-174bad9317b9",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -112,
+                16
+            ],
+            "webhookId": "13e5877e-8cc2-480e-a7bb-cc7826c7ebaa",
+            "parameters": {
+                "path": "/kodecraft/coordinate-combat",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "f5720b24-8fcf-4665-a0ca-0b4e6f5795f4",
+            "name": "Create Session",
+            "type": "n8n-nodes-base.httpRequest",
+            "disabled": true,
+            "position": [
+                -112,
+                -352
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/create-session",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId"
+                        },
+                        {
+                            "name": "buildRequest"
+                        },
+                        {
+                            "name": "workerCount"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "7f407d82-04d9-49a8-a1f0-4a299c7572d5",
+            "name": "Get Leader Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                624,
+                -128
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
+                "options": {
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "543312e0-a38f-45d7-b793-096c512ff1d7",
+            "name": "Reserve Location",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1104,
+                32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/reserve-location",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "preferredLocation",
+                            "value": "={{ $json.Position }}"
+                        },
+                        {
+                            "name": "minDistance",
+                            "value": "30"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "3ae157e8-1e9b-45e0-9851-76025a8ad18e",
+            "name": "Teleport Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                1360,
+                32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/teleport-workers ",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "buildLocation",
+                            "value": "={{ $json.buildLocation }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "62cecca8-50e3-42cd-b2f1-e28be0eccd28",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                1680,
+                16
+            ],
+            "webhookId": "0319ec5c-722f-441f-bd06-56ca9cc89389",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "a448ab44-e591-49dd-b386-fd21aaf27d32",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2768,
+                32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "a4e4de34-7fe4-4cfd-ab53-02e753158fa4",
+            "name": "Distribute Tasks",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2352,
+                32
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/distribute-tasks",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $json}}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/soldier-complete"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "d5fc61e9-e4ba-49a2-a35f-df0d40d2939b",
+            "name": "Location?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                112,
+                16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "b584f29f-d8ea-4bba-8c72-c2eb72168bc9",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.body.location }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "82bea1b8-5544-48b3-bbbe-63776cf94f3e",
+            "name": "Get Player Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                784,
+                256
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/player-position",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "playerName",
+                            "value": "={{ $json.location.name }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "689fdbf1-41ea-4bf0-a56f-b179b1237880",
+            "name": "Parse Location",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                336,
+                96
+            ],
+            "parameters": {
+                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.location; // e.g., \"next to player Mauri67\"\n\nfunction parseLocation(input) {\n    const coordMatch = input.match(/^(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)$/);\n    if (coordMatch) {\n        return {\n            type: 'coordinates',\n            x: parseFloat(coordMatch[1]),\n            y: parseFloat(coordMatch[2]),\n            z: parseFloat(coordMatch[3])\n        };\n    }\n\n    const playerMatch = input.match(/(?:next\\s+to\\s+)?player\\s+(\\w+)/i);\n    if (playerMatch) {\n        return {\n            type: 'player',\n            name: playerMatch[1]\n        };\n    }\n\n    return {\n        type: 'landmark',\n        name: input.trim()\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "3db99db7-4fd5-44c5-bcde-4045514a7021",
+            "name": "Switch",
+            "type": "n8n-nodes-base.switch",
+            "position": [
+                560,
+                80
+            ],
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "outputKey": "player",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "e5406d5f-c2d5-4034-a6d3-9152d1ebf7ed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "player"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "landmark",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "d71606fb-c035-4ea1-86b8-c88518b34888",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "landmark"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "coordinates",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "f66ffc35-989e-4cae-95b8-28bf02c28d07",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "coordinates"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 3.3
+        },
+        {
+            "id": "a3499949-c347-43c2-ab27-5a4c5507a15d",
+            "name": "Floor Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                928,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const status = $json;\nreturn {\n  Position: {\n    x: Math.floor(status.position?.x || 0),\n    y: Math.floor(status.position?.y || 64),\n    z: Math.floor(status.position?.z || 0)\n  }\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "721a03b0-9b72-403c-95f1-c13d85b2d7be",
+            "name": "Workers Created",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2544,
+                32
+            ],
+            "webhookId": "5832cc56-081b-44b1-a83b-23761c324a70",
+            "parameters": {
+                "text": "=Workers Teleported to task location and tasks assigned.",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "449955cb-6936-404b-9f9a-eeb201c6fc6b",
+            "name": "Failed to Teleport",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1680,
+                192
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to teleport Workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "2fddb77a-fa76-41e1-884b-908739df1a7c",
+            "name": "Failed to Assign Tasks",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2608,
+                304
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to assign tasks to workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "744e43c1-a8db-4f9a-a236-777c5f823376",
+            "name": "Adjust Combat Positions",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                2128,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const targetLocation = $('Teleport Workers').first().json.buildLocation;\nconst tasks = $input.first().json;\nconst targetInfo = $('Webhook').first().json.body.targetInfo || {};\nconst sessionId = $('Webhook').first().json.body.sessionId || 'combat_session';\n\nconst COMBAT_RADIUS = 20;\nconst OFFSET_DISTANCE = 5;\nconst MIN_TEAMMATE_SPACING = 3;\n\nconst rallyPoint = {\n  x: Math.floor(targetLocation.x),\n  y: Math.floor(targetLocation.y),\n  z: Math.floor(targetLocation.z)\n};\n\nconst getCardinalDirection = (angleRadians) => {\n  const normalized = ((angleRadians % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);\n  if (normalized < Math.PI / 4 || normalized >= 7 * Math.PI / 4) return 'east';\n  if (normalized < 3 * Math.PI / 4) return 'north';\n  if (normalized < 5 * Math.PI / 4) return 'west';\n  return 'south';\n};\n\nconst soldierNames = Object.keys(tasks).sort((a, b) => {\n  const numA = parseInt(a.match(/\\d+/)?.[0] || 0);\n  const numB = parseInt(b.match(/\\d+/)?.[0] || 0);\n  return numA - numB;\n});\n\nconst numSoldiers = soldierNames.length;\nconst updatedTasks = {};\n\nsoldierNames.forEach((soldierName, index) => {\n  const angleRadians = (index / numSoldiers) * 2 * Math.PI;\n  \n  const startX = Math.floor(rallyPoint.x + Math.cos(angleRadians) * OFFSET_DISTANCE);\n  const startZ = Math.floor(rallyPoint.z + Math.sin(angleRadians) * OFFSET_DISTANCE);\n  const startY = rallyPoint.y;\n  \n  const cardinalDirection = getCardinalDirection(angleRadians);\n  const otherSoldiers = soldierNames.filter(s => s !== soldierName);\n  \n  let task = tasks[soldierName];\n  \n  // Update position line\n  const newPosition = `You start ${OFFSET_DISTANCE} blocks ${cardinalDirection} of the target at coordinates (${startX}, ${startY}, ${startZ}).`;\n  task = task.replace(\n    /POSITION:[\\s\\S]*?(?=\\n\\nTARGET:|TARGET:)/,\n    `POSITION: ${newPosition}\\n\\n`\n  );\n  \n  // Add combat zone info (simple format)\n  const combatZoneInfo = `\n\nCOMBAT ZONE:\n- Your Start Position: (${startX}, ${startY}, ${startZ})\n- Rally Point: (${rallyPoint.x}, ${rallyPoint.y}, ${rallyPoint.z})\n- Max Chase Distance: ${COMBAT_RADIUS} blocks from rally point\n- Your Approach: ${cardinalDirection} side\n\nTEAMMATES: ${otherSoldiers.join(', ') || 'None'}\n- Keep ${MIN_TEAMMATE_SPACING}+ blocks from teammates\n- Stay on YOUR side of target`;\n\n  // Append combat zone info before REMINDERS\n  if (task.includes('REMINDERS:')) {\n    task = task.replace('REMINDERS:', `${combatZoneInfo}\\n\\nREMINDERS:`);\n  } else {\n    task += combatZoneInfo;\n  }\n  \n  updatedTasks[soldierName] = task;\n});\n\nreturn {\n  tasks: updatedTasks,\n  combatMetadata: {\n    sessionId: sessionId,\n    rallyPoint: rallyPoint,\n    combatRadius: COMBAT_RADIUS,\n    soldierCount: numSoldiers\n  }\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "375d8fde-3dcf-41aa-a90e-cd2a17dd1897",
+            "name": "Format Combat Tasks",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1904,
+                32
+            ],
+            "parameters": {
+                "jsCode": "const taskDivision = $('Webhook').first().json.body.taskDivision;\nconst buildRequest = $('Webhook').first().json.body.combatRequest;\nconst location = $('Webhook').first().json.body.location || \"the target area\";\nconst targetInfo = $('Webhook').first().json.body.targetInfo || {};\nconst codePattern = $('Webhook').first().json.body.codePattern || {};\n\n// Extract target name for code template\nconst targetName = targetInfo.primaryTarget || \"hostile mob\";\n\nlet coordinatedTasks = {};\n\nObject.entries(taskDivision).forEach(([workerName, task]) => {\n  // Format equipment info\n  const equipment = task.equipment || {};\n  const equipmentStr = [\n    equipment.weapon ? `Weapon: ${equipment.weapon}` : null,\n    equipment.armor ? `Armor: ${equipment.armor}` : null,\n    equipment.offhand ? `Offhand: ${equipment.offhand}` : null\n  ].filter(Boolean).join(', ');\n\n  // Format tactics as numbered list\n  const tacticsStr = (task.tactics || [])\n    .map((t, i) => `${i + 1}. ${t}`)\n    .join('\\n');\n\n  // Format constraints as bullet points (use simple dash instead of bullet)\n  const constraintsStr = (task.constraints || [])\n    .map(c => `- ${c}`)\n    .join('\\n');\n\n  // Build the banned patterns list (simple format)\n  const bannedPatterns = (codePattern.banned || [\n    'bot.pathfinder',\n    'GoalNear',\n    'GoalBlock',\n    'GoalFollow',\n    'bot.navigate'\n  ]).map(p => `BANNED: ${p}`).join('\\n');\n\n  // Build the required patterns list (simple format)\n  const requiredPatterns = (codePattern.required || [\n    'Object.values(bot.entities).find()',\n    'bot.lookAt(target.position)',\n    'bot.attack(target)',\n    'skills.wait(bot, 300)'\n  ]).map(p => `USE: ${p}`).join('\\n');\n\n  coordinatedTasks[workerName] = `COMBAT MISSION: ${buildRequest}\n\nLocation: Near ${location}\nRole: ${workerName}\nCombat Role: ${(task.combatRole || 'soldier').toUpperCase()}\n\nOBJECTIVE: ${task.objective}\n\nPOSITION: ${task.position}\n\nTARGET: ${task.targetAssignment}\n\nEQUIPMENT: ${equipmentStr || 'Use whatever is in inventory'}\n\nTACTICS:\n${tacticsStr || 'Engage target with melee attacks'}\n\nRETREAT CONDITION: ${task.retreatCondition || 'health below 6 hearts (bot.health < 12)'}\n\nCONSTRAINTS:\n${constraintsStr || '- Do not pursue beyond combat zone'}\n\nBANNED CODE (DO NOT USE - WILL BREAK):\n${bannedPatterns}\n\nREQUIRED CODE PATTERNS:\n${requiredPatterns}\n\nATTACK CODE TEMPLATE (ACTIVE DEBUG VERSION):\nconsole.log('[${workerName}] === COMBAT START ===');\nconsole.log('[${workerName}] Position:', bot.entity.position);\n\nconst weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null;\nconsole.log('[${workerName}] Weapon:', weapon ? weapon.name : 'NONE (fists)');\nif (weapon) await bot.equip(weapon, 'hand');\n\nconst allEntities = Object.values(bot.entities).filter(e => e.name);\nconsole.log('[${workerName}] All entities I see:', allEntities.slice(0, 10).map(e => e.name + '(' + Math.floor(e.position.distanceTo(bot.entity.position)) + 'm)').join(', '));\n\nlet target = Object.values(bot.entities).find(e => e.name && e.name.toLowerCase().includes('${targetName.toLowerCase()}') && e.position.distanceTo(bot.entity.position) < 50);\nconsole.log('[${workerName}] Target ${targetName}:', target ? 'FOUND at ' + Math.floor(target.position.distanceTo(bot.entity.position)) + ' blocks' : 'NOT FOUND');\n\nif (target) {\n  console.log('[${workerName}] Starting attack loop');\n  let hits = 0;\n  while (target && target.isValid) {\n    if (bot.health < 12) {\n      console.log('[${workerName}] Low health, retreating');\n      await skills.moveAway(bot, 10);\n      break;\n    }\n    await bot.lookAt(target.position);\n    await bot.attack(target);\n    hits++;\n    if (hits % 3 === 0) console.log('[${workerName}] Hits: ' + hits);\n    await skills.wait(bot, 300);\n    target = bot.entities[target.id];\n  }\n  console.log('[${workerName}] Combat done, total hits: ' + hits);\n} else {\n  console.log('[${workerName}] ERROR: No ${targetName} found within 50 blocks!');\n}\n\nconsole.log('[${workerName}] Holding position');\n\nREMINDERS:\n- You are ALREADY positioned - do NOT use pathfinder\n- bot.attack() automatically walks into melee range\n- If you write pathfinder anywhere the code will BREAK\n- Use the EXACT code template above including all console.log lines`;\n});\n\nreturn coordinatedTasks;\n\n\n"
+            },
+            "typeVersion": 2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "pid": 741,
+                                "port": 4006,
+                                "status": "spawned",
+                                "workerName": "Soldier1"
+                            },
+                            {
+                                "pid": 742,
+                                "port": 4007,
+                                "status": "spawned",
+                                "workerName": "Soldier2"
+                            }
+                        ],
+                        "location": "near player Mauri67",
+                        "sessionId": "combat_1764784857549",
+                        "workerCount": 2,
+                        "taskDivision": {
+                            "Soldier1": {
+                                "tactics": [
+                                    "Equip best available melee weapon from inventory (sword > axe > fists) using a safe equipment check:",
+                                    "const weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null; if (weapon) { await bot.equip(weapon, 'hand'); }",
+                                    "Combat loop (group clear):",
+                                    "While bot.health >= 12:",
+                                    "  let target = Object.values(bot.entities).find(e => e.name === 'cow' && e.position.distanceTo(bot.entity.position) < 20);",
+                                    "  If no target is found, break the loop.",
+                                    "  While target && target.isValid && bot.health >= 12:",
+                                    "    await bot.lookAt(target.position);",
+                                    "    await bot.attack(target);",
+                                    "    await skills.wait(bot, 300);",
+                                    "    target = bot.entities[target.id];",
+                                    "Maintain a general left/front position relative to the cows; avoid clustering directly with Soldier2.",
+                                    "If you come within 3 blocks of Soldier2, briefly reposition using await skills.moveAway(bot, 3) before re-engaging.",
+                                    "If bot.health < 12 (6 hearts), retreat: await skills.moveAway(bot, 10); await skills.stay(bot, -1); then stop combat.",
+                                    "If any cow you are chasing moves more than 20 blocks from the rally point, disengage from that target and return to rally with skills.stay(bot, -1).",
+                                    "After no cows remain within 20 blocks, hold position near the rally point with skills.stay(bot, -1)."
+                                ],
+                                "position": "Front/left side of the cow group relative to the rally point.",
+                                "equipment": {
+                                    "armor": "whatever equipped",
+                                    "weapon": "best available melee",
+                                    "offhand": "shield if available"
+                                },
+                                "objective": "Engage and kill cows near Mauri67 from one side, clearing targets one by one.",
+                                "combatRole": "tank",
+                                "constraints": [
+                                    "Do NOT use bot.pathfinder, GoalNear, GoalBlock, GoalFollow, or bot.navigate.",
+                                    "Use only bot.lookAt(target.position), bot.attack(target), skills.moveAway, skills.wait, and skills.stay.",
+                                    "Maintain at least 3 blocks spacing from Soldier2 when possible.",
+                                    "Do not pursue any target beyond 20 blocks from the rally point.",
+                                    "Always ensure target && target.isValid before each attack iteration.",
+                                    "Never attack player Mauri67 or any other player."
+                                ],
+                                "retreatCondition": "health below 6 hearts (bot.health < 12) or active target moves beyond 20 blocks from rally point",
+                                "targetAssignment": "Continuously target the nearest cow within 20 blocks near player Mauri67. Never attack player Mauri67 or other players."
+                            },
+                            "Soldier2": {
+                                "tactics": [
+                                    "Equip best available melee weapon (sword > axe > fists) using safe equipment logic:",
+                                    "const weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null; if (weapon) { await bot.equip(weapon, 'hand'); }",
+                                    "Wait briefly for Soldier1 to start engaging: await skills.wait(bot, 1000);",
+                                    "Combat loop (group clear):",
+                                    "While bot.health >= 16:",
+                                    "  let target = Object.values(bot.entities).find(e => e.name === 'cow' && e.position.distanceTo(bot.entity.position) < 20);",
+                                    "  If no target is found, break the loop.",
+                                    "  While target && target.isValid && bot.health >= 16:",
+                                    "    await bot.lookAt(target.position);",
+                                    "    await bot.attack(target);",
+                                    "    await skills.wait(bot, 300);",
+                                    "    target = bot.entities[target.id];",
+                                    "Maintain a right/flanking angle relative to Soldier1 and the cows, avoiding overlap.",
+                                    "If within 3 blocks of Soldier1, use await skills.moveAway(bot, 3) to restore spacing before resuming attacks.",
+                                    "If bot.health < 16 (8 hearts) OR Soldier1 retreats, disengage: await skills.moveAway(bot, 10); await skills.stay(bot, -1).",
+                                    "If any cow you are chasing moves beyond 20 blocks from the rally point, break pursuit and return to rally with skills.stay(bot, -1).",
+                                    "After no cows remain within 20 blocks, stop attacking and remain near the rally point using skills.stay(bot, -1)."
+                                ],
+                                "position": "Front/right or opposite side of the cow group relative to the rally point.",
+                                "equipment": {
+                                    "armor": "whatever equipped",
+                                    "weapon": "best available melee",
+                                    "offhand": "none or shield if available"
+                                },
+                                "objective": "Engage and kill cows from the opposite side of Soldier1 to speed up group clearing.",
+                                "combatRole": "flanker",
+                                "constraints": [
+                                    "Do NOT use bot.pathfinder, GoalNear, GoalBlock, GoalFollow, or bot.navigate.",
+                                    "Use only bot.lookAt(target.position), bot.attack(target), skills.moveAway, skills.wait, and skills.stay.",
+                                    "Maintain at least 3 blocks distance from Soldier1 during combat when feasible.",
+                                    "Do not pursue any target beyond 20 blocks from the rally point.",
+                                    "Always verify target && target.isValid before each attack.",
+                                    "Never attack player Mauri67 or any other player."
+                                ],
+                                "retreatCondition": "health below 8 hearts (bot.health < 16) or Soldier1 retreats or active target moves beyond 20 blocks from rally point",
+                                "targetAssignment": "Continuously target cows within 20 blocks near player Mauri67, preferring different cows than Soldier1 by always re-scanning for the nearest available target."
+                            }
+                        },
+                        "combatRequest": "Deploy 2 soldiers to locate and kill cows near player Mauri67 while avoiding any damage to the player.",
+                        "conversationId": "5415489232"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "5235",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/coordinate-combat",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "5624dd8a-eafb-4f7c-9165-b548053aa27b",
+    "staticData": null,
+    "connections": {
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Format Combat Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [
+                    {
+                        "node": "Get Player Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Get Player Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Location?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Location?": {
+            "main": [
+                [
+                    {
+                        "node": "Get Leader Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Parse Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Session": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Parse Location": {
+            "main": [
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Created": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Distribute Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Workers Created",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Assign Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Reserve Location": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Reserve Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Combat Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Adjust Combat Positions",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Leader Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Player Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Adjust Combat Positions": {
+            "main": [
+                [
+                    {
+                        "node": "Distribute Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

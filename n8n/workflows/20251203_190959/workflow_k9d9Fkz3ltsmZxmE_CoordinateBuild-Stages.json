@@ -1,0 +1,979 @@
+{
+    "id": "k9d9Fkz3ltsmZxmE",
+    "meta": null,
+    "name": "CoordinateBuild-Stages",
+    "nodes": [
+        {
+            "id": "d58c45f2-e49c-4a8c-b87c-83e57f0b1282",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -112,
+                288
+            ],
+            "webhookId": "edbb1887-9aed-49eb-a85b-68406ecff760",
+            "parameters": {
+                "path": "/kodecraft/coordinate-build-stages",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "26187df1-82ea-4894-b420-06326ba3a28f",
+            "name": "Create Session",
+            "type": "n8n-nodes-base.httpRequest",
+            "disabled": true,
+            "position": [
+                -112,
+                -352
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/create-session",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId"
+                        },
+                        {
+                            "name": "buildRequest"
+                        },
+                        {
+                            "name": "workerCount"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "09fa0503-d296-484b-ab81-704d32540ae0",
+            "name": "Get Leader Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                784,
+                144
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
+                "options": {
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "889d14ca-2219-4ba0-b483-3a57e0d2056c",
+            "name": "Reserve Location",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1232,
+                304
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/reserve-location",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "preferredLocation",
+                            "value": "={{ $json.Position }}"
+                        },
+                        {
+                            "name": "minDistance",
+                            "value": "30"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "2da7b32d-91c1-4087-ba4b-a488e37ce0b0",
+            "name": "Teleport Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                1456,
+                304
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/teleport-workers ",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "buildLocation",
+                            "value": "={{ $json.buildLocation }}"
+                        }
+                    ]
+                }
+            },
+            "retryOnFail": true,
+            "typeVersion": 4.3
+        },
+        {
+            "id": "a4f04b17-93a1-406d-862c-41781cec3389",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                1680,
+                192
+            ],
+            "webhookId": "01305a5d-b0b4-4b55-81b6-761dd10a6aed",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "bb0db84e-a6a3-4c70-b7cb-e2d135088148",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                3248,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "955aa650-10b8-4bb2-8dc5-68233f3cce4f",
+            "name": "Distribute Tasks",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "disabled": true,
+            "position": [
+                -112,
+                672
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/distribute-tasks",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $json}}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "2d763f4b-9001-4f4a-a545-93f0834a98ec",
+            "name": "Location?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                112,
+                288
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "b584f29f-d8ea-4bba-8c72-c2eb72168bc9",
+                            "operator": {
+                                "type": "string",
+                                "operation": "empty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.body.location }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "251edafb-8541-4f52-88ea-27e8513541f4",
+            "name": "Get Player Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                784,
+                448
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/player-position",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "playerName",
+                            "value": "={{ $json.location.name }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "18294c24-44d1-41f5-abde-e976eb714ec5",
+            "name": "Parse Location",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                336,
+                368
+            ],
+            "parameters": {
+                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.location; // e.g., \"next to player Mauri67\"\n\nfunction parseLocation(input) {\n    const coordMatch = input.match(/^(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)$/);\n    if (coordMatch) {\n        return {\n            type: 'coordinates',\n            x: parseFloat(coordMatch[1]),\n            y: parseFloat(coordMatch[2]),\n            z: parseFloat(coordMatch[3])\n        };\n    }\n\n    const playerMatch = input.match(/(?:next\\s+to\\s+)?player\\s+(\\w+)/i);\n    if (playerMatch) {\n        return {\n            type: 'player',\n            name: playerMatch[1]\n        };\n    }\n\n    return {\n        type: 'landmark',\n        name: input.trim()\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "9b3368d4-77e1-4454-9e75-d63808ff4e7a",
+            "name": "Switch",
+            "type": "n8n-nodes-base.switch",
+            "position": [
+                560,
+                352
+            ],
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "outputKey": "player",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "e5406d5f-c2d5-4034-a6d3-9152d1ebf7ed",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "player"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "landmark",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "d71606fb-c035-4ea1-86b8-c88518b34888",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "landmark"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "coordinates",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "f66ffc35-989e-4cae-95b8-28bf02c28d07",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.location.type }}",
+                                        "rightValue": "coordinates"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 3.3
+        },
+        {
+            "id": "7f8bb5b4-ab74-4e33-af75-343e839a8dca",
+            "name": "Floor Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1008,
+                304
+            ],
+            "parameters": {
+                "jsCode": "const status = $json;\nreturn {\n  Position: {\n    x: Math.floor(status.position?.x || 0),\n    y: Math.floor(status.position?.y || 64),\n    z: Math.floor(status.position?.z || 0)\n  }\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "45275f79-4afc-4c5f-bdf1-5d85dfa229a7",
+            "name": "Workers Created",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2128,
+                192
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Workers Teleported to task location and tasks assigned.",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "4f5072d2-6e50-4300-b339-483eb59e58c7",
+            "name": "Failed to Teleport",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1680,
+                384
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to teleport Workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "8a685434-8e2a-446b-afe3-c27feb0aac7d",
+            "name": "Failed to Assign Tasks",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                3248,
+                288
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "={\n  \"error\": {{ JSON.stringify($json.error.message) }}\n} "
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "4fd74c63-afac-4a74-95c9-97adf9e2853d",
+            "name": "Stages and  Tasks",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                2352,
+                192
+            ],
+            "parameters": {
+                "jsCode": "// Convert taskDivision into STAGES (Dictionary format)\n// Stages keyed by stage number, Tasks keyed by worker name\n// Dynamically handles ANY number of workers - no hardcoding\n\nconst buildLocation = $('Reserve Location').first().json.buildLocation;\nconst taskDivision = $('Webhook').first().json.body.taskDivision;\nconst workers = $('Webhook').first().json.body.workers;\n\n// Parse build Request\nconst buildRequest = $('Webhook').first().json.body.buildRequest;\nconst dimensionMatch = buildRequest.match(/(\\d+)\\s*x\\s*(\\d+)/i);\nconst houseWidth = dimensionMatch ? parseInt(dimensionMatch[1]) : 9;  // default 9\nconst houseDepth = dimensionMatch ? parseInt(dimensionMatch[2]) : 7;\n\nconst houseX = buildLocation.x;\nconst houseY = buildLocation.y;\nconst houseZ = buildLocation.z;\n\n// Calculate footprint boundaries as per request\n// Calculate footprint from actual dimensions\nconst footprintMinX = Math.floor(houseX - houseWidth / 2);\nconst footprintMaxX = Math.floor(houseX + (houseWidth - 1) / 2);\n\nconst footprintMinZ = Math.floor(houseZ - houseDepth / 2);\nconst footprintMaxZ = Math.floor(houseZ + (houseDepth - 1) / 2);\n\nconst floorY = houseY;\nconst wallHeight = 3;\nconst maxY = houseY + wallHeight;\n\nconst workerNames = Object.keys(taskDivision);\nconst numWorkers = workerNames.length;\nconst footprintWidth = footprintMaxX - footprintMinX + 1; // 7\n\nconsole.log(`House footprint: x:${footprintMinX} to ${footprintMaxX}, z:${footprintMinZ} to ${footprintMaxZ}, y:${floorY} to ${maxY}`);\nconsole.log(`Number of workers: ${numWorkers}`);\n\n// Dynamically determine worker x-ranges (split footprint equally)\nconst workerRanges = {};\nconst blocksPerWorker = footprintWidth / numWorkers;\n\nworkerNames.forEach((workerName, index) => {\n  const rangeStart = footprintMinX + Math.floor(index * blocksPerWorker);\n  const rangeEnd = footprintMinX + Math.floor((index + 1) * blocksPerWorker) - 1;\n  \n  workerRanges[workerName] = { \n    xMin: rangeStart, \n    xMax: rangeEnd,\n    index: index\n  };\n  \n  console.log(`${workerName} (${index + 1}/${numWorkers}): x:${rangeStart} to ${rangeEnd}`);\n});\n\n// Build stages as DICTIONARY (keyed by stage number)\nconst stages = {};\nconst maxSubtasks = Math.max(...Object.values(taskDivision).map(t => t.subtasks.length));\n\nfor (let stageNum = 0; stageNum < maxSubtasks; stageNum++) {\n  const stageTasks = {}; // Dictionary with worker names as keys\n  let hasWorkers = false;\n  \n  workerNames.forEach((workerName) => {\n    const taskObj = taskDivision[workerName];\n    const range = workerRanges[workerName];\n    \n    if (stageNum >= taskObj.subtasks.length) {\n      return; // This worker doesn't have this stage\n    }\n    \n    hasWorkers = true;\n    const subtask = taskObj.subtasks[stageNum];\n    \n    // Replace placeholder coordinates with absolute coordinates\n    let updatedSubtask = subtask\n      .replace(/x:\\s*minX\\s*to\\s*midX/gi, `x:${range.xMin} to ${range.xMax}`)\n      .replace(/x:\\s*midX\\s*to\\s*maxX/gi, `x:${range.xMin} to ${range.xMax}`)\n      .replace(/x:\\s*minX\\s*to\\s*maxX/gi, `x:${footprintMinX} to ${footprintMaxX}`)\n      .replace(/z:\\s*minZ\\s*to\\s*maxZ/gi, `z:${footprintMinZ} to ${footprintMaxZ}`)\n      .replace(/height.*\\(e\\.g\\.,\\s*\\d+\\s*blocks?\\s*tall\\)/gi, `height (${wallHeight} blocks tall)`)\n      .replace(/\\b3\\s*blocks?\\s*tall\\b/gi, `${wallHeight} blocks tall`)\n      .replace(/midX/g, `${range.xMax}`)\n      .replace(/midline/g, `midline at x:${range.xMax}`)\n      .replace(/minX/g, `${footprintMinX}`)\n      .replace(/maxX/g, `${footprintMaxX}`)\n      .replace(/minZ/g, `${footprintMinZ}`)\n      .replace(/maxZ/g, `${footprintMaxZ}`);\n    \n    // Find worker port from workers array\n    const workerData = workers.find(w => w.workerName === workerName);\n    const port = workerData ? workerData.port : null;\n    \n    if (!port) {\n      console.warn(`Warning: No port found for ${workerName}`);\n      return;\n    }\n    \n    // Determine boundary messages based on worker position\n    let boundaryMsg = '';\n    const nextWorkerIndex = range.index + 1;\n    const prevWorkerIndex = range.index - 1;\n    \n    if (nextWorkerIndex < numWorkers) {\n      const nextWorkerName = workerNames[nextWorkerIndex];\n      boundaryMsg += `- Right boundary (shared with ${nextWorkerName}): x:${range.xMax}\\n`;\n    }\n    if (prevWorkerIndex >= 0) {\n      const prevWorkerName = workerNames[prevWorkerIndex];\n      boundaryMsg += `- Left boundary (shared with ${prevWorkerName}): x:${range.xMin}\\n`;\n    }\n    \n    // Build full prompt for this stage/worker\n    const fullPrompt = `${taskObj.objective}\n\nSTAGE ${stageNum + 1} OF ${taskObj.subtasks.length}:\n${updatedSubtask}\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: ${range.xMin} to ${range.xMax}\n- Z range: ${footprintMinZ} to ${footprintMaxZ}\n- Y range: ${floorY} to ${maxY}\n${boundaryMsg}\nHouse center: (${houseX}, ${houseY}, ${houseZ})\n\nScope: ${taskObj.scope}\n\nConstraints: ${taskObj.constraints}\n- Stay within x:${range.xMin} to ${range.xMax}\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.`;\n    \n    // Add task to stageTasks dictionary with worker name as key\n    stageTasks[workerName] = {\n      stageNumber: stageNum + 1,\n      totalStages: taskObj.subtasks.length,\n      worker: workerName,\n      port: port,\n      status: \"not-started\",\n      subtask: updatedSubtask,\n      objective: taskObj.objective,\n      coordinates: {\n        xMin: range.xMin,\n        xMax: range.xMax,\n        zMin: footprintMinZ,\n        zMax: footprintMaxZ,\n        yMin: floorY,\n        yMax: maxY\n      },\n      fullPrompt: fullPrompt,\n      completionTime: null,\n      result: null\n    };\n  });\n  \n  // Only add stage if it has workers\n  if (hasWorkers) {\n    const stageKey = (stageNum + 1).toString();\n    stages[stageKey] = {\n      stageNumber: stageNum + 1,\n      status: \"not-started\",\n      tasks: stageTasks\n    };\n  }\n}\n\nconsole.log(`Generated ${Object.keys(stages).length} stages`);\nObject.keys(stages).forEach(stageKey => {\n  const stage = stages[stageKey];\n  console.log(`Stage ${stage.stageNumber}: ${Object.keys(stage.tasks).join(\", \")} [${stage.status}]`);\n});\n\nreturn { \n  stages: stages,\n  totalStages: Object.keys(stages).length,\n  houseInfo: {\n    center: { x: houseX, y: houseY, z: houseZ },\n    footprint: `${footprintMaxX - footprintMinX + 1}x${footprintMaxZ - footprintMinZ + 1}`,\n    boundaries: { \n      xMin: footprintMinX, \n      xMax: footprintMaxX, \n      zMin: footprintMinZ, \n      zMax: footprintMaxZ, \n      floorY: floorY, \n      maxY: maxY \n    },\n    workers: Object.keys(workerRanges).map(name => ({\n      name: name,\n      xRange: `${workerRanges[name].xMin} to ${workerRanges[name].xMax}`\n    }))\n  }\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "e46c6ddf-52d8-4763-ab17-0e455e51100e",
+            "name": "Adjust Coordinates in Tasks",
+            "type": "n8n-nodes-base.code",
+            "disabled": true,
+            "position": [
+                -112,
+                -128
+            ],
+            "parameters": {
+                "jsCode": "// Convert taskDivision placeholder coordinates (minX, midX, maxX, minZ, maxZ) to absolute\n\nconst buildLocation = $('Teleport Workers').first().json.buildLocation;\nconst taskDivision = $('Webhook').first().json.body.taskDivision;\n\nconst houseX = buildLocation.x;\nconst houseY = buildLocation.y;\nconst houseZ = buildLocation.z;\n\n// 7x7 footprint centered at houseX, houseZ\nconst minX = Math.floor(houseX - 3);\nconst maxX = Math.floor(houseX + 3);\nconst midX = Math.floor(houseX);\n\nconst minZ = Math.floor(houseZ - 3);\nconst maxZ = Math.floor(houseZ + 3);\n\nconst floorY = houseY;\nconst wallHeight = 3;\nconst maxY = houseY + wallHeight;\n\nconsole.log(`House footprint: x:${minX} to ${maxX}, z:${minZ} to ${maxZ}, y:${floorY} to ${maxY}`);\nconsole.log(`Midline: x:${midX}`);\n\nconst updatedTasks = {};\n\nObject.keys(taskDivision).forEach((workerName) => {\n  const taskObj = taskDivision[workerName];\n  \n  // Determine this worker's x-range\n  let workerXMin, workerXMax;\n  if (workerName === \"Worker1\") {\n    workerXMin = minX;\n    workerXMax = midX;\n  } else if (workerName === \"Worker2\") {\n    workerXMin = midX;\n    workerXMax = maxX;\n  }\n  \n  console.log(`${workerName}: x:${workerXMin} to ${workerXMax}`);\n  \n  // ========== RECONSTRUCT TASK STRING WITH ABSOLUTE COORDINATES ==========\n  let taskString = `${taskObj.objective}\n\nScope: ${taskObj.scope}\nABSOLUTE COORDINATES - x:${workerXMin} to ${workerXMax}, z:${minZ} to ${maxZ}, y:${floorY} to ${maxY}.\nYour working region: x:${workerXMin} to ${workerXMax}.\n\nSubtasks:\n${taskObj.subtasks.map((s, i) => {\n  // Replace placeholder coordinates in each subtask\n  let updatedSubtask = s\n    .replace(/x:\\s*minX\\s*to\\s*midX/gi, `x:${workerXMin} to ${workerXMax}`)\n    .replace(/x:\\s*midX\\s*to\\s*maxX/gi, `x:${workerXMin} to ${workerXMax}`)\n    .replace(/x:\\s*minX\\s*to\\s*maxX/gi, `x:${minX} to ${maxX}`)\n    .replace(/z:\\s*minZ\\s*to\\s*maxZ/gi, `z:${minZ} to ${maxZ}`)\n    .replace(/height.*\\(e\\.g\\.,\\s*\\d+\\s*blocks\\s*tall\\)/gi, `height (${wallHeight} blocks tall)`)\n    .replace(/3\\s*blocks?\\s*tall/gi, `${wallHeight} blocks tall`)\n    .replace(/midX/g, `x:${midX}`)\n    .replace(/midline/g, `midline at x:${midX}`)\n    .replace(/minX/g, `${minX}`)\n    .replace(/maxX/g, `${maxX}`)\n    .replace(/minZ/g, `${minZ}`)\n    .replace(/maxZ/g, `${maxZ}`);\n  \n  return `${i + 1}. ${updatedSubtask}`;\n}).join('\\n')}\n\nBlock Break Limit: ${taskObj.blockBreakLimit}\n\nAssumptions: ${taskObj.assumptions}\n\nConstraints: ${taskObj.constraints}\n- Do NOT build outside x:${workerXMin} to ${workerXMax}\n\nCRITICAL: Use ABSOLUTE coordinates x:${workerXMin} to ${workerXMax}, z:${minZ} to ${maxZ}, y:${floorY} to ${maxY}.\nHouse center: (${houseX}, ${houseY}, ${houseZ})\n${workerName === \"Worker1\" ? `Your right boundary: x:${midX}` : `Your left boundary: x:${midX}`}\n\nWork together with nearby workers to create a cohesive structure. Position yourself strategically to connect your work with others.`;\n  \n  updatedTasks[workerName] = taskString;\n});\n\nreturn updatedTasks;"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "dacb4c36-08e9-49a1-bd45-66df20860166",
+            "name": "Store Tasks Request",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                2800,
+                192
+            ],
+            "parameters": {
+                "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, stages, completedStages, startTime",
+                "options": {
+                },
+                "operation": "insert",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "0cad2140-908f-4621-ac7f-c3d49637de65",
+            "name": "Set Tasks",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                2576,
+                192
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "d1a08161-4e0c-48be-9417-226134005628",
+                            "name": "sessionId",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "id": "fb2c9141-f155-47bf-bdd0-2de0b04591a7",
+                            "name": "buildRequest",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.buildRequest }}"
+                        },
+                        {
+                            "id": "3171a908-c54a-4d72-ba04-964e2c61d055",
+                            "name": "conversationId",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "id": "d0445b8d-4978-4b18-a70b-70a1a0747992",
+                            "name": "location",
+                            "type": "object",
+                            "value": "={{ $('Floor Coordinates').item.json.Position }}"
+                        },
+                        {
+                            "id": "bb28eb76-5bdf-414f-98f9-fea6f16a7efb",
+                            "name": "stages",
+                            "type": "object",
+                            "value": "={{ $json.stages }}"
+                        },
+                        {
+                            "id": "31d28d7e-eb9e-4cb7-913a-2aa1d7859dce",
+                            "name": "startTime",
+                            "type": "string",
+                            "value": "={{ $now}} }}"
+                        },
+                        {
+                            "id": "c257a301-de3b-4a3b-a42b-cfa8d7f384b9",
+                            "name": "completedStages",
+                            "type": "number",
+                            "value": 0
+                        },
+                        {
+                            "id": "5a0ca1ca-2e4f-4b90-9654-00f3d6889c50",
+                            "name": "workerCount",
+                            "type": "number",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "ecd53b06-aa23-455a-b8bd-e0b8efa49543",
+            "name": "Distribute Tasks-Stages",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                3024,
+                192
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/distribute-tasks-stages",
+                "method": "POST",
+                "options": {
+                    "timeout": 600000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "stages",
+                            "value": "={{ $json.stages}}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "893653de-81d3-44d7-8abf-95821599081f",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                1120,
+                48
+            ],
+            "parameters": {
+                "width": 336,
+                "height": 416,
+                "content": "#### Must not be not below or above ground"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "6c24b26a-2918-400e-8c3a-f66fea3223ae",
+            "name": "Move Manager",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1904,
+                192
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/agent/move",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "x",
+                            "value": "={{ $json.buildLocation.x +20 }}"
+                        },
+                        {
+                            "name": "y",
+                            "value": "={{ $json.buildLocation.y }}"
+                        },
+                        {
+                            "name": "z",
+                            "value": "={{ $json.buildLocation.z }}"
+                        },
+                        {
+                            "name": "direction",
+                            "value": "away"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "pid": 15289,
+                                "port": 4010,
+                                "status": "existing",
+                                "workerName": "Worker1"
+                            },
+                            {
+                                "pid": 15295,
+                                "port": 4011,
+                                "status": "existing",
+                                "workerName": "Worker2"
+                            }
+                        ],
+                        "location": null,
+                        "sessionId": "build_1764765926743",
+                        "workerCount": "2",
+                        "buildRequest": "Build a small, functional wooden house near the leader’s current position using two workers. The house must be fully enclosed with a continuous floor, solid walls, a unified peaked roof, at least one door, a couple of windows, and basic interior lighting. Target an approximate footprint of 7x5 blocks (7 along X, 5 along Z), wall height 3 blocks, and a simple gable roof with a single center ridge along the X-axis.",
+                        "taskDivision": {
+                            "Worker1": {
+                                "scope": "House footprint: 7 blocks along X and 5 blocks along Z. Let X range from X_start to X_end and Z from Z_start to Z_end. With width 7, define X_center = X_start + 3 (the 4th block in X, center ridge line). Worker1 builds everything within X_start..X_center (inclusive) across Z_start..Z_end, including roof sloping inward toward X_center.",
+                                "subtasks": [
+                                    "Define and lightly prepare the 7x5 footprint: choose X_start..X_end (7 blocks) and Z_start..Z_end (5 blocks) near the leader. Lightly level blocks ONLY within this rectangle to support a flat floor at Y_floor. Avoid deep excavation or clearing outside the footprint.",
+                                    "Place the floor in your half: fill X_start..X_center and Z_start..Z_end at Y_floor with wooden planks (e.g., oak_planks) to create a continuous, gap-free floor inside your region.",
+                                    "Build walls to height 3: (a) West wall along X = X_start for all Z from Z_start..Z_end; (b) your segments of the north and south walls along Z = Z_start and Z = Z_end spanning X_start..X_center. Leave the vertical plane at X_center clean and straight so Worker2 can match without gaps.",
+                                    "Reinforce the northwest and southwest corners (X_start, Z_start) and (X_start, Z_end) with logs or another accent block if available, running from Y_floor+1 up to roof base height.",
+                                    "Add at least one small window opening (1x1 or 1x2) in either your portion of the north or south wall. Leave the opening empty unless window blocks are available.",
+                                    "Construct the west half of a unified gable roof: starting on top of your wall height, place stairs/planks/slabs forming rows that SLOPE UP from X_start toward the central ridge at X_center, for each Z from Z_start..Z_end. Your highest roof row must lie exactly along X_center, creating a straight ridge line segment.",
+                                    "Stop all roof placement exactly at X_center: do not place roof blocks east of X_center. Ensure the ridge along X_center is flat and continuous so Worker2 can attach their roof section cleanly from the other side.",
+                                    "Optionally add one light source (e.g., torch) on an interior wall in your half, keeping the center area clear for shared interior usage.",
+                                    "Check that your half is enclosed: continuous floor, full-height walls, and roof coverage over X_start..X_center with only intentional openings for windows and the shared interior space."
+                                ],
+                                "objective": "Build the west (negative X) half of the house: half of the floor, the west wall, and your portions of both side walls, plus the west half of a unified gable roof that all slopes toward a single center ridge along X_center.",
+                                "assumptions": "Assume Worker2 will match Y_floor, wall height (3 blocks), material palette, and continue the roof up to the same center ridge at X_center, as well as add the main entrance.",
+                                "constraints": "Do not place or break blocks east of X_center + 0.5. Do not modify terrain outside the 7x5 footprint except for minor roof overhang of 1 block if stylistically needed. Once Worker2 places any blocks adjacent to your X_center boundary, do not overwrite them.",
+                                "blockBreakLimit": "Do not break more than 50 terrain blocks. Only modify blocks within X_start..X_end and Z_start..Z_end that interfere with the floor, walls, or roof base."
+                            },
+                            "Worker2": {
+                                "scope": "Use the same 7x5 footprint. Worker2 builds all elements in X_center..X_end (inclusive) across Z_start..Z_end, tying seamlessly into Worker1’s work at X_center, including the shared roof ridge.",
+                                "subtasks": [
+                                    "Inspect Worker1’s half to determine Y_floor, wall height, and material choices. Match these exactly in your half.",
+                                    "Place the floor: fill X_center..X_end and Z_start..Z_end at Y_floor with the same plank type used by Worker1 so the interior is level and uniform.",
+                                    "Build walls to the same height (3): (a) East wall along X = X_end for all Z from Z_start..Z_end; (b) your portions of the north and south walls along Z = Z_start and Z = Z_end spanning X_center..X_end. Join directly with Worker1’s walls along X_center without gaps or overlaps.",
+                                    "Reinforce the northeast and southeast corners (X_end, Z_start) and (X_end, Z_end) with the same accent style as Worker1, if possible.",
+                                    "Create the main entrance: carve a 1-wide (or 2-wide) by 2-tall doorway in either your portion of the north or south wall, or in the east wall if preferred. Place a door if available; otherwise, leave a clearly defined open doorway.",
+                                    "Add at least one window opening on a wall segment in your region, aligning height roughly with Worker1’s window(s) for a balanced look.",
+                                    "Construct the east half of the unified gable roof: starting from the top of your walls, place stairs/planks/slabs that SLOPE UP from X_end toward X_center, for each Z from Z_start..Z_end. Connect your highest roof row directly onto the ridge line already started by Worker1 at X_center, forming one continuous peak.",
+                                    "Ensure the center ridge along X_center is fully sealed: fill any remaining gaps so the roof line from Z_start to Z_end is continuous and watertight.",
+                                    "Place at least one interior light source and optionally one or two functional blocks (e.g., crafting table, furnace, chest) against your walls, leaving a clear path from the door into the center of the house.",
+                                    "Perform a final seal check: confirm that together with Worker1’s half, the house has no unintended holes in floor, walls, or roof, except for the door and window openings."
+                                ],
+                                "objective": "Build the east (positive X) half of the house: remaining floor, east wall, your portions of both side walls, the east half of the unified gable roof converging on the same center ridge, the main door, and minimal interior details.",
+                                "assumptions": "Assume Worker1 has already established the base style and partially built the west half, including the ridge line at X_center that you must connect your roof to.",
+                                "constraints": "Do not modify blocks west of X_center - 0.5. Stay within the 7x5 footprint except for a uniform 1-block roof overhang if needed. Do not overwrite any blocks that Worker1 has placed along the shared boundary or ridge.",
+                                "blockBreakLimit": "Do not break more than 50 terrain blocks. Only adjust blocks within X_start..X_end and Z_start..Z_end that block your floor, walls, or doorway."
+                            }
+                        },
+                        "conversationId": "5415489232"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "6861",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/coordinate-build-stages",
+                    "executionMode": "production"
+                }
+            }
+        ],
+        "Distribute Tasks": [
+            {
+                "json": {
+                    "message": "Workflow was started"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "95cb6605-44e0-4826-9727-a1194f386c2d",
+    "staticData": null,
+    "connections": {
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Move Manager",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [
+                    {
+                        "node": "Get Player Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ],
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Location?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Location?": {
+            "main": [
+                [
+                    {
+                        "node": "Get Leader Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Parse Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Store Tasks Request",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Move Manager": {
+            "main": [
+                [
+                    {
+                        "node": "Workers Created",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Session": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Parse Location": {
+            "main": [
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Created": {
+            "main": [
+                [
+                    {
+                        "node": "Stages and  Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Distribute Tasks": {
+            "main": [
+                [
+                ],
+                [
+                ]
+            ]
+        },
+        "Reserve Location": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Reserve Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Stages and  Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Set Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Leader Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Player Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Store Tasks Request": {
+            "main": [
+                [
+                    {
+                        "node": "Distribute Tasks-Stages",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Distribute Tasks-Stages": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Assign Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Adjust Coordinates in Tasks": {
+            "main": [
+                [
+                ]
+            ]
+        }
+    }
+}

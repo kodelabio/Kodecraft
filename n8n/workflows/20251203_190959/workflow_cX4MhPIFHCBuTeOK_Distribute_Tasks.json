@@ -1,0 +1,183 @@
+{
+    "id": "cX4MhPIFHCBuTeOK",
+    "meta": null,
+    "name": "Distribute Tasks",
+    "nodes": [
+        {
+            "id": "a6cd1f6f-3f5e-450d-89cb-d4ea9be1215d",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -672,
+                0
+            ],
+            "webhookId": "b116f89a-62ea-4d41-beef-b4caccc2188d",
+            "parameters": {
+                "path": "/kodecraft/distribute-tasks",
+                "options": {
+                },
+                "httpMethod": "POST"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "ba50491a-4c48-49f0-bbb3-03f0c7d5ab0b",
+            "name": "Send Task",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                -32,
+                0
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/send-task",
+                "method": "POST",
+                "options": {
+                    "timeout": 900000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "workerPort",
+                            "value": "={{ $json.port }}"
+                        },
+                        {
+                            "name": "taskPrompt",
+                            "value": "={{ $json.task }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "5b66fab8-a93c-4e41-9f03-26a29948349e",
+            "name": "Workers List",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -384,
+                0
+            ],
+            "parameters": {
+                "jsCode": "// Function Node: Build Worker Task List\n\nconst taskDivision = $json.body.taskDivision;\nconst workers = $json.body.workers;\n\n// Create array of workers with their assigned tasks and ports\nconst workerTaskList = workers.map((worker) => {\n  return {\n    workerName: worker.workerName,\n    port: worker.port,\n    task: taskDivision['tasks'][worker.workerName],\n    status: worker.status,\n    pid: worker.pid\n  };\n});\n\nreturn workerTaskList;"
+            },
+            "typeVersion": 2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "pid": 110,
+                                "port": 4002,
+                                "status": "spawned",
+                                "workerName": "Soldier1"
+                            },
+                            {
+                                "pid": 111,
+                                "port": 4003,
+                                "status": "spawned",
+                                "workerName": "Soldier2"
+                            }
+                        ],
+                        "sessionId": "combat_1764781755328",
+                        "workerCount": 2,
+                        "taskDivision": {
+                            "tasks": {
+                                "Soldier1": "════════════════════════════════════════════════════════════════\n🎯 COMBAT MISSION: Deploy 2 soldiers to locate and kill the horse near player Mauri67 while avoiding harm to the player and minimizing risk to the soldiers.\n════════════════════════════════════════════════════════════════\n\nLocation: Near near player Mauri67\n\nYour role as Soldier1:\n\n══════════════════════════════════════════════════════════════\nCOMBAT ROLE: TANK\n══════════════════════════════════════════════════════════════\n\nOBJECTIVE: Engage the horse from the front/one side, draw its movement focus, and keep it controlled so Soldier2 can attack from the opposite side.\n\nPOSITION: You start 5 blocks east of the target at coordinates (121, -60, -183). You will attack from the west.\n\n\n\nTARGET: Prioritize the nearest horse entity within 20 blocks near player Mauri67. Do NOT attack player Mauri67 or any other entity unless it directly attacks you.\n\nEQUIPMENT: Weapon: best available melee, Armor: whatever equipped, Offhand: shield if available\n\n══════════════════════════════════════════════════════════════\nTACTICS (Follow in order):\n══════════════════════════════════════════════════════════════\n1. First, equip the best available melee weapon from inventory (sword > axe > fists) using a safe equipment check:\n2. const weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null; if (weapon) { await bot.equip(weapon, 'hand'); }\n3. Locate a horse near Mauri67 by scanning entities within 20 blocks:\n4. let target = Object.values(bot.entities).find(e => e.name === 'horse' && e.position.distanceTo(new Vec3(116, -60, -183)) < 20);\n5. If a target horse is found, start a combat loop while target exists, target.isValid is true, and bot.health >= 12 (6 hearts).\n6. Inside the loop: await bot.lookAt(target.position) to orient toward the horse (no pathfinder).\n7. Then attack using await bot.attack(target); rely on auto-approach for melee range.\n8. Wait for about 300 ms between attacks: await skills.wait(bot, 300);\n9. Refresh the target reference each iteration: target = bot.entities[target.id]; break if target is missing or !target.isValid.\n10. Maintain a position generally in front of the horse. If closer than 3 blocks to Soldier2, briefly reposition using skills.moveAway(bot, 3) and then re-engage.\n11. Continuously monitor health: if bot.health < 12, retreat with await skills.moveAway(bot, 10) then await skills.stay(bot, -1) and stop pursuing.\n12. If the horse moves more than 20 blocks from the rally point, disengage and call skills.stay(bot, -1).\n13. When the horse dies (target invalid), stop attacking and hold near the rally point with skills.stay(bot, -1).\n\n══════════════════════════════════════════════════════════════\nRETREAT CONDITION: health below 6 hearts (bot.health < 12) or target moves beyond 20 blocks from rally point\n══════════════════════════════════════════════════════════════\n\nCONSTRAINTS:\n• Do NOT use bot.pathfinder or any Goal* classes; only bot.attack(), skills.moveAway, and skills.stay for movement/engagement.\n• Maintain at least 3 blocks separation from Soldier2 whenever possible.\n• Do not pursue beyond 20 blocks from the rally point.\n• Check target && target.isValid before each attack iteration.\n• Never attack player Mauri67.\n\n══════════════════════════════════════════════════════════════\n⛔ BANNED CODE - USING THESE WILL FAIL THE MISSION:\n══════════════════════════════════════════════════════════════\n❌ bot.pathfinder\n❌ GoalNear\n❌ GoalBlock\n❌ GoalFollow\n❌ bot.navigate\n\nDO NOT use pathfinder. DO NOT use Goals. DO NOT navigate.\nIf you write bot.pathfinder ANYWHERE, the code will BREAK.\n\n══════════════════════════════════════════════════════════════\n✅ REQUIRED CODE PATTERNS - USE EXACTLY THESE:\n══════════════════════════════════════════════════════════════\n✅ Object.values(bot.entities).find()\n✅ bot.lookAt(target.position)\n✅ bot.attack(target)\n✅ skills.wait(bot, 300)\n\n══════════════════════════════════════════════════════════════\n📋 COPY THIS EXACT CODE STRUCTURE:\n══════════════════════════════════════════════════════════════\n\n// Step 1: Safe equipment check (handles missing items)\nconst weapon = bot.inventory.items().find(i => i.name.includes('sword')) ||\n               bot.inventory.items().find(i => i.name.includes('axe')) ||\n               null;\nif (weapon) {\n    await bot.equip(weapon, 'hand');\n}\n\n// Step 2: Find target (replace TARGET_TYPE with: hostile mob)\nlet target = Object.values(bot.entities).find(e => \n    e.name === 'hostile mob' && \n    e.position.distanceTo(new Vec3(116, -60, -183)) < 20\n);\n\n// Step 3: Combat loop - NO PATHFINDER\nif (target) {\n    while (target && target.isValid) {\n        // Check retreat condition\n        if (bot.health < 12) {\n            await skills.moveAway(bot, 10);\n            break;\n        }\n        \n        // Attack sequence - bot auto-approaches, NO pathfinder needed\n        await bot.lookAt(target.position);\n        await bot.attack(target);\n        await skills.wait(bot, 300);\n        \n        // Refresh target reference\n        target = bot.entities[target.id];\n    }\n}\n\n// Step 4: Hold position after combat\nawait skills.stay(bot, -1);\n\n══════════════════════════════════════════════════════════════\n\n\n══════════════════════════════════════════════════════════════\n📍 COMBAT ZONE (ABSOLUTE COORDINATES):\n══════════════════════════════════════════════════════════════\nYour Start Position: (121, -60, -183)\nRally Point (Center): (116, -60, -183)\nMaximum Chase Distance: 20 blocks from rally point\nYour Approach Angle: east side, attacking toward west\n\nCombat Zone Boundaries:\n- North limit: z = -203\n- South limit: z = -163\n- East limit:  x = 136\n- West limit:  x = 96\n\nIf target moves outside these boundaries, DISENGAGE and return to rally point.\n\n\n══════════════════════════════════════════════════════════════\n🏃 RETREAT CODE (Use when health low or target escapes):\n══════════════════════════════════════════════════════════════\n```javascript\n// Retreat to rally point\nconst rallyPoint = new Vec3(116, -60, -183);\nconst myPos = bot.entity.position;\nconst distToRally = myPos.distanceTo(rallyPoint);\n\nif (distToRally > 5) {\n    // Look toward rally point and move\n    await bot.lookAt(rallyPoint);\n    await skills.moveAway(bot, -10); // Negative = move toward look direction\n}\nawait skills.stay(bot, -1); // Hold at rally point\n```\n\n══════════════════════════════════════════════════════════════\n👥 TEAMMATE AWARENESS:\n══════════════════════════════════════════════════════════════\nOther soldiers in this operation: Soldier2\nSoldier2 is 5 blocks west at approximately (111, -60, -183)\n\nSpacing Rules:\n- Maintain minimum 3 blocks from teammates AT ALL TIMES\n- If you get too close to a teammate, use: await skills.moveAway(bot, 3)\n- Your attack angle is east - stay on YOUR side of the target\n\nTeammate Avoidance Code:\n```javascript\n// Check distance to teammates before attacking\nconst teammates = Object.values(bot.entities).filter(e => \n    e.username && e.username.startsWith('Soldier') && e.username !== 'Soldier1'\n);\nfor (const teammate of teammates) {\n    if (teammate.position.distanceTo(bot.entity.position) < 3) {\n        await skills.moveAway(bot, 3);\n        await skills.wait(bot, 200);\n    }\n}\n```\n\n════════════════════════════════════════════════════════════════\n⚠️ FINAL REMINDERS - READ CAREFULLY:\n════════════════════════════════════════════════════════════════\n1. You are ALREADY POSITIONED - do NOT move to target with pathfinder\n2. bot.attack() AUTOMATICALLY walks into melee range - no navigation needed\n3. If you write \"pathfinder\" or \"Goal\" anywhere, your code BREAKS\n4. Check inventory BEFORE equipping - items might not exist\n5. Use the EXACT code template above - it is tested and works\n6. Monitor health every loop iteration\n7. After target dies, use skills.stay(bot, -1) to hold position\n════════════════════════════════════════════════════════════════",
+                                "Soldier2": "════════════════════════════════════════════════════════════════\n🎯 COMBAT MISSION: Deploy 2 soldiers to locate and kill the horse near player Mauri67 while avoiding harm to the player and minimizing risk to the soldiers.\n════════════════════════════════════════════════════════════════\n\nLocation: Near near player Mauri67\n\nYour role as Soldier2:\n\n══════════════════════════════════════════════════════════════\nCOMBAT ROLE: FLANKER\n══════════════════════════════════════════════════════════════\n\nOBJECTIVE: Attack the same horse from the opposite side of Soldier1, forming a pincer and increasing hit frequency while avoiding crowding.\n\nPOSITION: You start 5 blocks west of the target at coordinates (111, -60, -183). You will attack from the east.\n\n\n\nTARGET: Focus the same primary horse target as Soldier1 within 20 blocks near player Mauri67. Do NOT attack player Mauri67 or any other entity unless it directly attacks you.\n\nEQUIPMENT: Weapon: best available melee, Armor: whatever equipped, Offhand: shield if available\n\n══════════════════════════════════════════════════════════════\nTACTICS (Follow in order):\n══════════════════════════════════════════════════════════════\n1. Equip the best available melee weapon using the same safe equipment logic (sword > axe > fists):\n2. const weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null; if (weapon) { await bot.equip(weapon, 'hand'); }\n3. Delay engagement slightly so Soldier1 can take initial contact: await skills.wait(bot, 1000);\n4. After the delay, locate a horse within 20 blocks:\n5. let target = Object.values(bot.entities).find(e => e.name === 'horse' && e.position.distanceTo(new Vec3(116, -60, -183)) < 20);\n6. Enter a combat loop while target exists, target.isValid is true, and bot.health >= 16 (8 hearts).\n7. Each iteration: await bot.lookAt(target.position) to face the horse, then await bot.attack(target) to auto-approach and strike.\n8. Add a short cooldown each cycle: await skills.wait(bot, 300);\n9. Refresh target with target = bot.entities[target.id]; break if target is missing or invalid.\n10. Maintain a flanking angle opposite Soldier1; if within 3 blocks of Soldier1, use skills.moveAway(bot, 3), then re-orient and continue attacking.\n11. If bot.health < 16 (8 hearts) OR Soldier1 retreats, disengage with await skills.moveAway(bot, 10) then await skills.stay(bot, -1).\n12. Do not chase the horse beyond 20 blocks from the rally point; disengage if it does.\n13. Stop all attacks once the horse is dead and remain near the rally point using skills.stay(bot, -1).\n\n══════════════════════════════════════════════════════════════\nRETREAT CONDITION: health below 8 hearts (bot.health < 16) or Soldier1 retreats or target moves beyond 20 blocks from rally point\n══════════════════════════════════════════════════════════════\n\nCONSTRAINTS:\n• Do NOT use bot.pathfinder or navigation helpers; only bot.attack(), skills.moveAway, and skills.stay.\n• Maintain at least 3 blocks distance from Soldier1 during combat when feasible.\n• Do not pursue targets beyond 20 blocks from the rally point.\n• Always verify target && target.isValid before attacking.\n• Never attack player Mauri67.\n\n══════════════════════════════════════════════════════════════\n⛔ BANNED CODE - USING THESE WILL FAIL THE MISSION:\n══════════════════════════════════════════════════════════════\n❌ bot.pathfinder\n❌ GoalNear\n❌ GoalBlock\n❌ GoalFollow\n❌ bot.navigate\n\nDO NOT use pathfinder. DO NOT use Goals. DO NOT navigate.\nIf you write bot.pathfinder ANYWHERE, the code will BREAK.\n\n══════════════════════════════════════════════════════════════\n✅ REQUIRED CODE PATTERNS - USE EXACTLY THESE:\n══════════════════════════════════════════════════════════════\n✅ Object.values(bot.entities).find()\n✅ bot.lookAt(target.position)\n✅ bot.attack(target)\n✅ skills.wait(bot, 300)\n\n══════════════════════════════════════════════════════════════\n📋 COPY THIS EXACT CODE STRUCTURE:\n══════════════════════════════════════════════════════════════\n\n// Step 1: Safe equipment check (handles missing items)\nconst weapon = bot.inventory.items().find(i => i.name.includes('sword')) ||\n               bot.inventory.items().find(i => i.name.includes('axe')) ||\n               null;\nif (weapon) {\n    await bot.equip(weapon, 'hand');\n}\n\n// Step 2: Find target (replace TARGET_TYPE with: hostile mob)\nlet target = Object.values(bot.entities).find(e => \n    e.name === 'hostile mob' && \n    e.position.distanceTo(new Vec3(116, -60, -183)) < 20\n);\n\n// Step 3: Combat loop - NO PATHFINDER\nif (target) {\n    while (target && target.isValid) {\n        // Check retreat condition\n        if (bot.health < 12) {\n            await skills.moveAway(bot, 10);\n            break;\n        }\n        \n        // Attack sequence - bot auto-approaches, NO pathfinder needed\n        await bot.lookAt(target.position);\n        await bot.attack(target);\n        await skills.wait(bot, 300);\n        \n        // Refresh target reference\n        target = bot.entities[target.id];\n    }\n}\n\n// Step 4: Hold position after combat\nawait skills.stay(bot, -1);\n\n══════════════════════════════════════════════════════════════\n\n\n══════════════════════════════════════════════════════════════\n📍 COMBAT ZONE (ABSOLUTE COORDINATES):\n══════════════════════════════════════════════════════════════\nYour Start Position: (111, -60, -183)\nRally Point (Center): (116, -60, -183)\nMaximum Chase Distance: 20 blocks from rally point\nYour Approach Angle: west side, attacking toward east\n\nCombat Zone Boundaries:\n- North limit: z = -203\n- South limit: z = -163\n- East limit:  x = 136\n- West limit:  x = 96\n\nIf target moves outside these boundaries, DISENGAGE and return to rally point.\n\n\n══════════════════════════════════════════════════════════════\n🏃 RETREAT CODE (Use when health low or target escapes):\n══════════════════════════════════════════════════════════════\n```javascript\n// Retreat to rally point\nconst rallyPoint = new Vec3(116, -60, -183);\nconst myPos = bot.entity.position;\nconst distToRally = myPos.distanceTo(rallyPoint);\n\nif (distToRally > 5) {\n    // Look toward rally point and move\n    await bot.lookAt(rallyPoint);\n    await skills.moveAway(bot, -10); // Negative = move toward look direction\n}\nawait skills.stay(bot, -1); // Hold at rally point\n```\n\n══════════════════════════════════════════════════════════════\n👥 TEAMMATE AWARENESS:\n══════════════════════════════════════════════════════════════\nOther soldiers in this operation: Soldier1\nSoldier1 is 5 blocks east at approximately (121, -60, -183)\n\nSpacing Rules:\n- Maintain minimum 3 blocks from teammates AT ALL TIMES\n- If you get too close to a teammate, use: await skills.moveAway(bot, 3)\n- Your attack angle is west - stay on YOUR side of the target\n\nTeammate Avoidance Code:\n```javascript\n// Check distance to teammates before attacking\nconst teammates = Object.values(bot.entities).filter(e => \n    e.username && e.username.startsWith('Soldier') && e.username !== 'Soldier2'\n);\nfor (const teammate of teammates) {\n    if (teammate.position.distanceTo(bot.entity.position) < 3) {\n        await skills.moveAway(bot, 3);\n        await skills.wait(bot, 200);\n    }\n}\n```\n\n════════════════════════════════════════════════════════════════\n⚠️ FINAL REMINDERS - READ CAREFULLY:\n════════════════════════════════════════════════════════════════\n1. You are ALREADY POSITIONED - do NOT move to target with pathfinder\n2. bot.attack() AUTOMATICALLY walks into melee range - no navigation needed\n3. If you write \"pathfinder\" or \"Goal\" anywhere, your code BREAKS\n4. Check inventory BEFORE equipping - items might not exist\n5. Use the EXACT code template above - it is tested and works\n6. Monitor health every loop iteration\n7. After target dies, use skills.stay(bot, -1) to hold position\n════════════════════════════════════════════════════════════════"
+                            },
+                            "combatMetadata": {
+                                "sessionId": "combat_1764781755328",
+                                "rallyPoint": {
+                                    "x": 116,
+                                    "y": -60,
+                                    "z": -183
+                                },
+                                "combatRadius": 20,
+                                "soldierCount": 2,
+                                "soldierPositions": [
+                                    {
+                                        "x": 121,
+                                        "y": -60,
+                                        "z": -183,
+                                        "name": "Soldier1",
+                                        "direction": "east"
+                                    },
+                                    {
+                                        "x": 111,
+                                        "y": -60,
+                                        "z": -183,
+                                        "name": "Soldier2",
+                                        "direction": "west"
+                                    }
+                                ]
+                            }
+                        },
+                        "conversationId": "5415489232",
+                        "callbackWebhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/soldier-complete"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "22932",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/distribute-tasks",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "30e8fefb-2b79-4319-923b-ae492cdd80f0",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Workers List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers List": {
+            "main": [
+                [
+                    {
+                        "node": "Send Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -391,8 +391,13 @@ export class OrchestrationAPI {
     }
 
     /**
-    * Reserve a build location, ensuring it's on solid ground
-    * Finds the ground level at proposed location and places build on top
+    * Replace the reserveBuildLocation and findGroundLevel methods with these versions.
+    * These work correctly for superflat worlds (Y=-60 surface) and handle chunk loading issues.
+    */
+
+    /**
+    * Reserve a build location for combat or building
+    * Uses leader's current Y position as ground truth (works for any world type)
     */
     reserveBuildLocation(sessionId, preferredLocation, minDistance = 30) {
         console.log(`📍 Reserving build location for session ${sessionId}`);
@@ -429,16 +434,21 @@ export class OrchestrationAPI {
             attempts++;
         }
 
-        // ✅ NEW: Find ground level at the proposed location
-        console.log(`🔍 Finding ground level at x=${buildLocation.x}, z=${buildLocation.z}`);
-        const groundY = this.findGroundLevel(buildLocation.x, buildLocation.z);
+        // ✅ SIMPLIFIED: Use leader's current Y position as ground truth
+        // This works for ANY world type (normal, superflat, custom)
+        const leaderY = this.getLeaderGroundLevel();
         
-        if (groundY !== null) {
-            buildLocation.y = groundY + 1; // Place on top of ground block
-            console.log(`✓ Found solid ground at Y=${groundY}, setting build location to Y=${buildLocation.y}`);
+        if (leaderY !== null) {
+            buildLocation.y = leaderY;
+            console.log(`✓ Using leader's Y position: ${buildLocation.y} (works for any world type)`);
+        } else if (preferredLocation.y !== undefined) {
+            // Fallback to preferred location Y if leader position unavailable
+            buildLocation.y = preferredLocation.y;
+            console.log(`⚠️ Leader position unavailable, using preferred Y: ${buildLocation.y}`);
         } else {
-            console.warn(`⚠️ Could not find solid ground at x=${buildLocation.x}, z=${buildLocation.z}`);
-            console.warn(`   Using default location Y=${buildLocation.y} (might be in void!)`);
+            // Last resort fallback
+            buildLocation.y = 64;
+            console.warn(`⚠️ No Y reference available, using default Y=64`);
         }
 
         // Reserve the location
@@ -449,14 +459,14 @@ export class OrchestrationAPI {
             sessionId: sessionId,
             buildRequest: this.buildSessions.get(sessionId)?.buildRequest || '',
             timestamp: Date.now(),
-            groundLevel: groundY // Store for reference
+            groundLevel: buildLocation.y
         });
 
         // Update session
         const session = this.buildSessions.get(sessionId);
         if (session) {
             session.buildLocation = buildLocation;
-            session.groundLevel = groundY;
+            session.groundLevel = buildLocation.y;
         }
 
         console.log(`✓ Location reserved: x=${buildLocation.x}, y=${buildLocation.y}, z=${buildLocation.z}`);
@@ -465,17 +475,41 @@ export class OrchestrationAPI {
             success: true,
             sessionId: sessionId,
             buildLocation: buildLocation,
-            groundLevel: groundY,
-            message: groundY !== null ? 
-                `Build location reserved on solid ground` : 
-                `Build location reserved (no ground found - might be in void)`
+            groundLevel: buildLocation.y,
+            message: `Build location reserved at Y=${buildLocation.y}`
         };
     }
 
     /**
+     * Get the leader bot's current Y position (ground level)
+     * This is the most reliable way to determine ground level for any world type
+     * @returns {number|null} Y coordinate or null if unavailable
+     */
+    getLeaderGroundLevel() {
+        try {
+            const bot = this.agent?.bot;
+            if (!bot || !bot.entity || !bot.entity.position) {
+                console.warn(`⚠️ Leader bot position not available`);
+                return null;
+            }
+
+            // Use leader's current Y, floored to block level
+            const leaderY = Math.floor(bot.entity.position.y);
+            console.log(`📍 Leader is at Y=${leaderY}`);
+            return leaderY;
+
+        } catch (error) {
+            console.error(`⚠️ Error getting leader position:`, error.message);
+            return null;
+        }
+    }
+
+    /**
      * Find the ground level (top solid block) at given X,Z coordinates
-     * Scans from Y=320 down to Y=-64 to find the first solid block
-     * Returns the Y coordinate of the top solid block, or null if not found
+     * NOTE: This method has reliability issues due to chunk loading.
+     * Prefer using getLeaderGroundLevel() instead.
+     * 
+     * @deprecated Use getLeaderGroundLevel() for more reliable results
      */
     findGroundLevel(x, z) {
         try {
@@ -485,30 +519,47 @@ export class OrchestrationAPI {
                 return null;
             }
 
-            // Scan from top (Y=320) down to bottom (Y=-64) of world
-            // Stop at first solid block found
+            // First, try using leader's Y as starting point (more efficient)
+            const leaderY = this.getLeaderGroundLevel();
+            if (leaderY !== null) {
+                // Search in a small range around leader's Y
+                for (let y = leaderY + 10; y >= leaderY - 10; y--) {
+                    try {
+                        const block = bot.blockAt(x, y, z);
+                        if (block && block.type !== 0) {
+                            console.log(`✓ Found solid ground: ${block.name} at y=${y}`);
+                            return y;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+
+            // Fallback: full column scan (less reliable due to chunk loading)
             for (let y = 320; y >= -64; y--) {
                 try {
                     const block = bot.blockAt(x, y, z);
-                    
-                    // Found solid block (type 0 is air)
                     if (block && block.type !== 0) {
                         console.log(`✓ Found solid ground: ${block.name} at y=${y}`);
                         return y;
                     }
                 } catch (e) {
-                    // Block might not be loaded, continue searching
                     continue;
                 }
             }
 
-            // No solid blocks found in entire height range
-            console.warn(`⚠️ No solid ground found at x=${x}, z=${z} (Y: -64 to 320)`);
-            console.warn(`   This location is in the void!`);
+            // If nothing found, return leader's Y as best guess
+            if (leaderY !== null) {
+                console.warn(`⚠️ No blocks found at x=${x}, z=${z}, using leader's Y=${leaderY}`);
+                return leaderY;
+            }
+
+            console.warn(`⚠️ No solid ground found at x=${x}, z=${z}`);
             return null;
 
         } catch (error) {
-            console.error(`⚠️ Error finding ground level at x=${x}, z=${z}:`, error.message);
+            console.error(`⚠️ Error finding ground level:`, error.message);
             return null;
         }
     }

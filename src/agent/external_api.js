@@ -157,6 +157,10 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/move-worker-to-player', this.handleMoveWorkerToPlayer.bind(this));
         this.app.post('/api/orchestration/move-worker-to', this.handleMoveWorkerTo.bind(this));
         // (â† NEW SECTION ENDS HERE)
+
+         // Add these lines in setupRoutes() method, in the orchestration section:
+        this.app.post('/api/orchestration/arm-workers', this.handleOrchestrationArmWorkers.bind(this));
+        this.app.post('/api/orchestration/arm-worker', this.handleOrchestrationArmWorker.bind(this));
     }
 
 
@@ -2373,6 +2377,72 @@ async handleOrchestrationSessionTasks(req, res) {
 
         const result = await this.orchestration.moveWorkerToCoordinates(workerName, x, y, z);
         res.json(result);
+    }
+
+
+    /**
+     * Arm all workers in a session with equipment
+     * POST /api/orchestration/arm-workers
+     * Body: { 
+     *   sessionId: "combat_123",
+     *   equipment: {
+     *     weapon: "diamond_sword",        // optional, default: iron_sword
+     *     armor: ["iron_helmet", ...],    // optional, default: full iron
+     *     offhand: "shield",              // optional, default: shield
+     *     extras: ["golden_apple", ...]   // optional, additional items
+     *   }
+     * }
+     */
+    async handleOrchestrationArmWorkers(req, res) {
+        try {
+            const { sessionId, equipment } = req.body;
+
+            if (!sessionId) {
+                return res.status(400).json({
+                    error: 'sessionId parameter required'
+                });
+            }
+
+            const result = await this.orchestration.armWorkers(sessionId, equipment || {});
+
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(404).json(result);
+            }
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationArmWorkers');
+        }
+    }
+
+    /**
+     * Arm a single worker with equipment
+     * POST /api/orchestration/arm-worker
+     * Body: { 
+     *   workerName: "Soldier1",
+     *   equipment: { weapon: "diamond_sword", ... }
+     * }
+     */
+    async handleOrchestrationArmWorker(req, res) {
+        try {
+            const { workerName, equipment } = req.body;
+
+            if (!workerName) {
+                return res.status(400).json({
+                    error: 'workerName parameter required'
+                });
+            }
+
+            const result = await this.orchestration.armWorker(workerName, equipment || {});
+
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(500).json(result);
+            }
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationArmWorker');
+        }
     }
 
     /**

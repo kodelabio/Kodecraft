@@ -1137,7 +1137,9 @@ async armWorkers(sessionId, equipment = {}) {
             if (finalEquipment.armor && Array.isArray(finalEquipment.armor)) {
                 for (const armorPiece of finalEquipment.armor) {
                     try {
-                        bot.chat(`/give ${resolvedName} ${armorPiece} 1`);
+                        const giveCommand = `/give ${worker.name} ${armorPiece} 1`;
+                        console.log(`⚔️ Executing command: "${giveCommand}"`);
+                        bot.chat(giveCommand);
                         workerResult.itemsGiven.push(armorPiece);
                         console.log(`  ✓ Gave ${armorPiece} to ${resolvedName}`);
                         await this._wait(200);
@@ -1150,7 +1152,9 @@ async armWorkers(sessionId, equipment = {}) {
             // Give offhand item (shield)
             if (finalEquipment.offhand) {
                 try {
-                    bot.chat(`/give ${resolvedName} ${finalEquipment.offhand} 1`);
+                    const giveCommand = `/give ${worker.name} ${finalEquipment.offhand} 1`;
+                    console.log(`⚔️ Executing command: "${giveCommand}"`);
+                    bot.chat(giveCommand);
                     workerResult.itemsGiven.push(finalEquipment.offhand);
                     console.log(`  ✓ Gave ${finalEquipment.offhand} to ${resolvedName}`);
                     await this._wait(200);
@@ -1165,7 +1169,9 @@ async armWorkers(sessionId, equipment = {}) {
                     try {
                         const itemName = extra.item || extra;
                         const count = extra.count || 1;
-                        bot.chat(`/give ${resolvedName} ${itemName} ${count}`);
+                        const giveCommand = `/give ${worker.name} ${itemName} ${count}`;
+                        console.log(`⚔️ Executing command: "${giveCommand}"`);  
+                        bot.chat(giveCommand);
                         workerResult.itemsGiven.push(`${itemName} x${count}`);
                         console.log(`  ✓ Gave ${itemName} x${count} to ${resolvedName}`);
                         await this._wait(200);

@@ -16,7 +16,12 @@ export class OrchestrationAPI {
         this.reservedPorts = new Set(); 
         this.workerCounter = 0;  // ADD THIS
     }
-
+    /**
+    * Helper: wait for specified milliseconds
+    */
+    _wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
     /**
      * Check if a port is available by attempting to bind
      */
@@ -356,39 +361,65 @@ export class OrchestrationAPI {
      * Register workers for a build session
      * Called by n8n after workers are ready
      */
-    registerWorkersForSession(sessionId, workers) {
-        console.log(`📝 Registering ${workers.length} workers for session ${sessionId}`);
+    /**
+ * Register workers for a build session
+ * Called by n8n after workers are ready
+ */
+registerWorkersForSession(sessionId, workers) {
+    console.log(`📝 Registering ${workers.length} workers for session ${sessionId}`);
 
-        const session = this.buildSessions.get(sessionId);
-        if (!session) {
-            return {
-                success: false,
-                error: `Build session ${sessionId} not found`
-            };
-        }
-
-        session.workers = workers;
-        session.status = 'workers_assigned';
-        session.lastUpdate = Date.now();
-
-        // Update worker info with session
-        workers.forEach(worker => {
-            const workerInfo = this.workers.get(worker.name);
-            if (workerInfo) {
-                workerInfo.status = 'assigned';
-                workerInfo.currentSession = sessionId;
-            }
-        });
-
-        console.log(`✓ ${workers.length} workers registered for session ${sessionId}`);
-
+    const session = this.buildSessions.get(sessionId);
+    if (!session) {
         return {
-            success: true,
-            sessionId: sessionId,
-            workersRegistered: workers.length,
-            workers: workers
+            success: false,
+            error: `Build session ${sessionId} not found`
         };
     }
+
+    // ✅ FIX: Ensure each worker has a name by looking up from this.workers Map
+    const enrichedWorkers = workers.map(worker => {
+        let workerName = worker.name || worker.workerName;
+        
+        // If no name, try to find by port
+        if (!workerName && worker.port) {
+            for (const [name, info] of this.workers.entries()) {
+                if (info.port === worker.port) {
+                    workerName = name;
+                    break;
+                }
+            }
+        }
+        
+        return {
+            ...worker,
+            name: workerName || `Worker_${worker.port}`  // Fallback name
+        };
+    });
+
+    session.workers = enrichedWorkers;
+    session.status = 'workers_assigned';
+    session.lastUpdate = Date.now();
+
+    // Update worker info with session
+    enrichedWorkers.forEach(worker => {
+        const workerInfo = this.workers.get(worker.name);
+        if (workerInfo) {
+            workerInfo.status = 'assigned';
+            workerInfo.currentSession = sessionId;
+        }
+    });
+
+    console.log(`✓ ${enrichedWorkers.length} workers registered for session ${sessionId}`);
+    console.log(`   Workers: ${enrichedWorkers.map(w => w.name).join(', ')}`);
+
+    return {
+        success: true,
+        sessionId: sessionId,
+        workersRegistered: enrichedWorkers.length,
+        workers: enrichedWorkers
+    };
+    }
+
 
     /**
     * Replace the reserveBuildLocation and findGroundLevel methods with these versions.
@@ -648,7 +679,7 @@ export class OrchestrationAPI {
          * @param {string} callbackWebhookUrl - Optional callback webhook URL
          * @returns {object} Task metadata with taskId
          */
-    async sendTaskStage(sessionId, stageNumber, workerName, port, taskPrompt, callbackWebhookUrl) {
+    async sendTaskStage(sessionId, stageNumber, workerName, port, taskPrompt, conversationId, callbackWebhookUrl) {
         console.log(`📤 [Stage Task] Sending stage ${stageNumber} to ${workerName} on port ${port}`);
         
         // Generate unique task ID
@@ -683,7 +714,7 @@ export class OrchestrationAPI {
             console.log(`   Stage: ${stageNumber}, Worker: ${workerName}, Port: ${port}`);
             
             // Send task to worker
-            const result = await this.sendTaskToWorker(port, taskPrompt, callbackWebhookUrl, taskId);
+            const result = await this.sendTaskToWorker(port, taskPrompt, conversationId, callbackWebhookUrl, taskId);
             
             // Update metadata - task was sent
             taskMetadata.status = 'executing';
@@ -1005,36 +1036,180 @@ export class OrchestrationAPI {
     }
 
     /**
-     * Get current status of all workers and sessions
-     * Called by n8n to monitor progress
+     * Arm workers with weapons and equipment
+     * Uses /give command via leader bot to equip soldiers
+     * 
+     * @param {string} sessionId - Build session ID
+     * @param {object} equipment - Equipment to give: { weapon, armor, offhand }
+     * @returns {object} Results for each worker
      */
-    getStatus() {
-        const workers = Array.from(this.workers.entries()).map(([name, info]) => ({
-            name: name,
-            port: info.port,
-            status: info.status,
-            uptime: Date.now() - info.spawnTime,
-            currentSession: info.currentSession || null
-        }));
+    /**
+ * Arm workers with weapons and equipment
+ * Uses /give command via leader bot to equip soldiers
+ */
+async armWorkers(sessionId, equipment = {}) {
+    console.log(`⚔️ Arming workers for session ${sessionId}`);
 
-        const sessions = Array.from(this.buildSessions.entries()).map(([id, session]) => ({
-            sessionId: id,
-            buildRequest: session.buildRequest,
-            status: session.status,
-            workersAssigned: session.workers.length,
-            tasksQueued: session.tasks.length,
-            buildLocation: session.buildLocation,
-            runtime: Date.now() - session.startTime
-        }));
-
+    const session = this.buildSessions.get(sessionId);
+    if (!session) {
         return {
-            totalWorkers: this.workers.size,
-            readyWorkers: Array.from(this.workers.values()).filter(w => w.status === 'ready').length,
-            activeSessions: this.buildSessions.size,
-            workers: workers,
-            sessions: sessions,
-            buildLocations: this.buildLocations
+            success: false,
+            error: `Build session ${sessionId} not found`
         };
+    }
+
+    if (!session.workers || session.workers.length === 0) {
+        return {
+            success: false,
+            error: `No workers registered for session ${sessionId}`
+        };
+    }
+
+    const bot = this.agent?.bot;
+    if (!bot) {
+        return {
+            success: false,
+            error: 'Leader bot not available'
+        };
+    }
+
+    // Default equipment loadout for combat
+    const defaultEquipment = {
+        weapon: 'iron_sword',
+        armor: ['iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots'],
+        offhand: 'shield',
+        extras: []
+    };
+
+    const finalEquipment = { ...defaultEquipment, ...equipment };
+    const results = [];
+
+    for (const worker of session.workers) {
+        // ✅ FIX: Get worker name from multiple possible sources
+        const workerName = worker.name || worker.workerName || worker.username;
+        
+        // ✅ FIX: If still no name, try to find it from the workers Map using port
+        let resolvedName = workerName;
+        if (!resolvedName && worker.port) {
+            // Search this.workers Map for matching port
+            for (const [name, info] of this.workers.entries()) {
+                if (info.port === worker.port) {
+                    resolvedName = name;
+                    break;
+                }
+            }
+        }
+
+        if (!resolvedName) {
+            console.error(`⚠️ Could not determine worker name for:`, worker);
+            results.push({
+                workerName: 'unknown',
+                success: false,
+                error: 'Could not determine worker name',
+                itemsGiven: [],
+                errors: ['Worker name not found']
+            });
+            continue;
+        }
+
+        const workerResult = {
+            workerName: resolvedName,
+            itemsGiven: [],
+            errors: []
+        };
+
+        try {
+            // Give weapon
+            if (finalEquipment.weapon) {
+                try {
+                    const giveCommand = `/give ${worker.name} ${finalEquipment.weapon} 1`;
+                    console.log(`⚔️ Executing command: "${giveCommand}"`);
+                    bot.chat(giveCommand);
+                    workerResult.itemsGiven.push(finalEquipment.weapon);
+                    console.log(`  ✓ Gave ${finalEquipment.weapon} to ${resolvedName}`);
+                    await this._wait(200); // Slightly longer delay to avoid spam
+                } catch (e) {
+                    workerResult.errors.push(`weapon: ${e.message}`);
+                }
+            }
+
+            // Give armor pieces
+            if (finalEquipment.armor && Array.isArray(finalEquipment.armor)) {
+                for (const armorPiece of finalEquipment.armor) {
+                    try {
+                        bot.chat(`/give ${resolvedName} ${armorPiece} 1`);
+                        workerResult.itemsGiven.push(armorPiece);
+                        console.log(`  ✓ Gave ${armorPiece} to ${resolvedName}`);
+                        await this._wait(200);
+                    } catch (e) {
+                        workerResult.errors.push(`armor ${armorPiece}: ${e.message}`);
+                    }
+                }
+            }
+
+            // Give offhand item (shield)
+            if (finalEquipment.offhand) {
+                try {
+                    bot.chat(`/give ${resolvedName} ${finalEquipment.offhand} 1`);
+                    workerResult.itemsGiven.push(finalEquipment.offhand);
+                    console.log(`  ✓ Gave ${finalEquipment.offhand} to ${resolvedName}`);
+                    await this._wait(200);
+                } catch (e) {
+                    workerResult.errors.push(`offhand: ${e.message}`);
+                }
+            }
+
+            // Give extra items
+            if (finalEquipment.extras && Array.isArray(finalEquipment.extras)) {
+                for (const extra of finalEquipment.extras) {
+                    try {
+                        const itemName = extra.item || extra;
+                        const count = extra.count || 1;
+                        bot.chat(`/give ${resolvedName} ${itemName} ${count}`);
+                        workerResult.itemsGiven.push(`${itemName} x${count}`);
+                        console.log(`  ✓ Gave ${itemName} x${count} to ${resolvedName}`);
+                        await this._wait(200);
+                    } catch (e) {
+                        workerResult.errors.push(`extra ${extra}: ${e.message}`);
+                    }
+                }
+            }
+
+            workerResult.success = workerResult.errors.length === 0;
+
+        } catch (error) {
+            workerResult.success = false;
+            workerResult.errors.push(error.message);
+        }
+
+        results.push(workerResult);
+        // After giving all items to a worker, verify via their API:
+        try {
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/inventory`);
+            const inventory = await response.json();
+            console.log(`  📦 ${worker.name} inventory:`, inventory);
+            
+            const hasSword = inventory.raw?.includes('sword');
+            if (!hasSword) {
+                console.warn(`  ⚠️ ${worker.name} may not have received sword!`);
+            }
+        } catch (e) {
+            console.warn(`  ⚠️ Could not verify ${worker.name} inventory`);
+        }
+    }
+    
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`⚔️ Armed ${successCount}/${session.workers.length} workers`);
+
+    return {
+        success: successCount === session.workers.length,
+        sessionId: sessionId,
+        workersArmed: successCount,
+        totalWorkers: session.workers.length,
+        equipment: finalEquipment,
+        results: results
+    };
     }
 
     /**

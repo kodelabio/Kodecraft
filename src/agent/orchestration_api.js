@@ -600,7 +600,7 @@ registerWorkersForSession(sessionId, workers) {
      * Called by n8n to position workers
      */
     async teleportWorkers(sessionId, buildLocation) {
-        console.log(`🚀 Teleporting workers to a new location`);
+        console.log(`🚀 Teleporting workers to build location`);
 
         const session = this.buildSessions.get(sessionId);
         if (!session) {
@@ -611,57 +611,136 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         const workers = session.workers;
-        const results = [];
+        const TIMEOUT_MS = 10000; // 10 seconds per worker per attempt
+        const MAX_RETRIES = 4; // Try up to 4 different positions (0°, 90°, 180°, 270°)
 
-        // Teleport each worker to a position around the build site
-        for (let i = 0; i < workers.length; i++) {
-            const worker = workers[i];
-            try {
-                // Calculate formation position (tight circle)
-                const angle = (i / workers.length) * 2 * Math.PI;
-                const radius = Math.min(3, workers.length);
+        console.log(`📤 Sending teleport commands to ${workers.length} workers (${TIMEOUT_MS}ms timeout each, max ${MAX_RETRIES} attempts)...`);
 
+        // Create all fetch promises in parallel
+        const teleportPromises = workers.map(async (worker, i) => {
+            const baseAngle = (i / workers.length) * 2 * Math.PI;
+            const radius = Math.max(6, workers.length * 4); // Larger radius to avoid being trapped
+
+            // Try primary position and fallback positions (rotate 90° each attempt)
+            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                const testAngle = baseAngle + (attempt * Math.PI / 2); // Rotate 90° each attempt
+                
                 const targetPos = {
-                    x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
+                    x: Math.floor(buildLocation.x + Math.cos(testAngle) * radius),
                     y: buildLocation.y,
-                    z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
+                    z: Math.floor(buildLocation.z + Math.sin(testAngle) * radius)
                 };
 
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(targetPos),
-                    timeout: 5000
-                });
+                try {
+                    // Create AbortController for this specific request
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-                if (response.ok) {
-                    results.push({
-                        workerName: worker.name,
-                        status: 'teleported',
-                        position: targetPos
+                    const attemptStr = attempt === 0 ? 'primary' : `fallback #${attempt}`;
+                    console.log(`   [${worker.name}] Attempt ${attempt + 1}/${MAX_RETRIES} (${attemptStr}), target: (${targetPos.x}, ${targetPos.y}, ${targetPos.z})`);
+
+                    const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(targetPos),
+                        signal: controller.signal
                     });
-                    console.log(`✓ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
-                } else {
-                    results.push({
-                        workerName: worker.name,
-                        status: 'failed',
-                        error: `HTTP ${response.status}`
-                    });
+
+                    // Clear the timeout if fetch completed before it
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        const responseText = await response.text();
+                        
+                        // Check if pathfinding failed (indicated by specific error messages in response)
+                        if (responseText.toLowerCase().includes('pathfinding stopped') || 
+                            responseText.toLowerCase().includes('unreachable')) {
+                            console.warn(`⚠️  ${worker.name} - Pathfinding failed on attempt ${attempt + 1}, trying alternative position...`);
+                            continue; // Try next angle
+                        }
+                        
+                        console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z} (${attemptStr})`);
+                        return {
+                            workerName: worker.name,
+                            status: 'teleported',
+                            position: targetPos,
+                            success: true,
+                            attempt: attempt + 1
+                        };
+                    } else {
+                        const errorText = await response.text();
+                        console.warn(`⚠️  ${worker.name} attempt ${attempt + 1}: HTTP ${response.status}`);
+                        
+                        // On client error, don't retry
+                        if (response.status >= 400 && response.status < 500) {
+                            return {
+                                workerName: worker.name,
+                                status: 'failed',
+                                error: `HTTP ${response.status}: ${errorText.substring(0, 100)}`,
+                                success: false
+                            };
+                        }
+                        
+                        // On server error, try next position
+                        continue;
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        console.warn(`⚠️  ${worker.name} - Attempt ${attempt + 1} timed out, trying alternative position...`);
+                        continue; // Try next angle
+                    } else {
+                        console.error(`❌ ${worker.name} - ERROR on attempt ${attempt + 1}: ${error.message}`);
+                        continue; // Try next angle
+                    }
                 }
-            } catch (error) {
-                results.push({
-                    workerName: worker.name,
-                    status: 'error',
-                    error: error.message
-                });
             }
-        }
+
+            // All attempts exhausted
+            console.error(`❌ ${worker.name} - Failed to teleport after ${MAX_RETRIES} attempts`);
+            return {
+                workerName: worker.name,
+                status: 'unreachable',
+                error: `Could not find reachable position after ${MAX_RETRIES} attempts`,
+                success: false
+            };
+        });
+
+        // Wait for all promises to settle (not just resolve)
+        // This ensures all workers get teleported in parallel, not sequentially
+        const results = await Promise.allSettled(teleportPromises);
+
+        // Convert settled promises to result objects
+        const teleportResults = results.map((result, index) => {
+            if (result.status === 'fulfilled') {
+                return result.value;
+            } else {
+                // Should rarely happen with allSettled, but handle it
+                return {
+                    workerName: workers[index].name,
+                    status: 'error',
+                    error: result.reason?.message || 'Unknown error',
+                    success: false
+                };
+            }
+        });
+
+        const successCount = teleportResults.filter(r => r.success).length;
+        const unreachableCount = teleportResults.filter(r => r.status === 'unreachable').length;
+        const failureCount = teleportResults.filter(r => !r.success).length;
+
+        console.log(`📊 Teleport results: ${successCount} success, ${unreachableCount} unreachable, ${failureCount - unreachableCount} other failures`);
 
         return {
-            success: true,
+            success: successCount === workers.length,  // true only if ALL succeeded
             sessionId: sessionId,
-            teleportResults: results,
-            buildLocation: buildLocation
+            buildLocation: buildLocation,
+            teleportResults: teleportResults,
+            summary: {
+                total: workers.length,
+                success: successCount,
+                unreachable: unreachableCount,
+                failed: failureCount - unreachableCount
+            }
         };
     }
 
@@ -956,52 +1035,6 @@ registerWorkersForSession(sessionId, workers) {
         }
         }
 
-   /**
-     * Teleport all workers to coordinated positions around build site
-     * Called by n8n to position workers
-     */
-    async teleportWorkers(sessionId, buildLocation) {
-        const session = this.buildSessions.get(sessionId);
-        if (!session) {
-            return { success: false, error: `Build session ${sessionId} not found` };
-        }
-
-        const workers = session.workers;
-        const results = [];
-        const timeout = 30000;  // 30 seconds max wait
-        const checkInterval = 500;
-
-        // Send move commands to all workers
-        for (let i = 0; i < workers.length; i++) {
-            const worker = workers[i];
-            const angle = (i / workers.length) * 2 * Math.PI;
-            const radius = Math.min(3, workers.length);
-
-            const targetPos = {
-                x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
-                y: buildLocation.y,
-                z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
-            };
-
-            try {
-                await fetch(`http://localhost:${worker.port}/api/agent/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(targetPos),
-                    timeout: 5000
-                });
-                results.push({ workerName: worker.name, targetPos: targetPos, arrived: false });
-            } catch (error) {
-                results.push({ workerName: worker.name, status: 'error', error: error.message });
-            }
-        }
-
-        // Wait for pathfinding to complete (15 seconds should be plenty)
-        await new Promise(resolve => setTimeout(resolve, 15000));
-
-        console.log(`✓ All workers should have arrived at teleport positions`);
-        return { success: true, sessionId: sessionId, results: results, buildLocation: buildLocation };
-    }
 
     async moveWorkerToPlayer(workerName, playerName, distance = 3) {
         const worker = this.workers.get(workerName);

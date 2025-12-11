@@ -161,6 +161,10 @@ export class ExternalAPI {
          // Add these lines in setupRoutes() method, in the orchestration section:
         this.app.post('/api/orchestration/arm-workers', this.handleOrchestrationArmWorkers.bind(this));
         this.app.post('/api/orchestration/arm-worker', this.handleOrchestrationArmWorker.bind(this));
+        
+        // Worker status management endpoints
+        this.app.post('/api/orchestration/worker-ready', this.handleOrchestrationWorkerReady.bind(this));
+        this.app.post('/api/orchestration/check-workers', this.handleOrchestrationCheckWorkers.bind(this));
     }
 
 
@@ -2482,6 +2486,37 @@ async handleOrchestrationSessionTasks(req, res) {
             res.json(result);
         } catch (error) {
             this.handleError(res, error, 'orchestrationStopAll');
+        }
+    }
+
+
+    // Mark a worker as ready (available for new tasks)
+
+    async handleOrchestrationWorkerReady(req, res) {
+        try {
+            const { workerName } = req.body;
+            if (!workerName) {
+                return res.status(400).json({ error: 'workerName required' });
+            }
+            const result = this.orchestration.markWorkerReady(workerName);
+            res.json(result);
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationWorkerReady');
+        }
+    }
+
+    // Check if specific workers are available
+
+    async handleOrchestrationCheckWorkers(req, res) {
+        try {
+            const { workerNames } = req.body;
+            if (!Array.isArray(workerNames)) {
+                return res.status(400).json({ error: 'workerNames array required' });
+            }
+            const result = this.orchestration.checkWorkersAvailable(workerNames);
+            res.json(result);
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationCheckWorkers');
         }
     }
 

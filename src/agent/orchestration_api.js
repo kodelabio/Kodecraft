@@ -258,6 +258,57 @@ export class OrchestrationAPI {
         }
     }
 
+     // Mark a worker as ready (idle and available for new tasks)
+
+    markWorkerReady(workerName) {
+        if (!this.workers.has(workerName)) {
+            return { success: false, error: 'Worker not found' };
+        }
+        
+        const worker = this.workers.get(workerName);
+        worker.status = 'ready';
+        worker.sessionId = null; // Clear session assignment
+        worker.lastUpdate = Date.now();
+        
+        console.log(`Worker ${workerName} marked as ready (status: ${worker.status})`);
+        return { success: true, worker: { name: workerName, status: 'ready', port: worker.port } };
+    }
+
+    // Get all workers with status='ready'
+
+    getReadyWorkers() {
+        const readyWorkers = [];
+        for (const [name, worker] of this.workers.entries()) {
+            if (worker.status === 'ready') {
+                readyWorkers.push({ name, port: worker.port, status: worker.status });
+            }
+        }
+        console.log(`Found ${readyWorkers.length} ready workers`);
+        return readyWorkers;
+    }
+
+    // Check if specific workers exist and are availabl
+    checkWorkersAvailable(workerNames) {
+        const available = [];
+        const unavailable = [];
+        
+        for (const name of workerNames) {
+            if (this.workers.has(name)) {
+                const worker = this.workers.get(name);
+                if (worker.status === 'ready') {
+                    available.push({ name, port: worker.port });
+                } else {
+                    unavailable.push({ name, status: worker.status, reason: 'busy' });
+                }
+            } else {
+                unavailable.push({ name, status: null, reason: 'not_found' });
+            }
+        }
+        
+        console.log(`Checked workers: ${available.length} available, ${unavailable.length} unavailable`);
+        return { available, unavailable, allAvailable: unavailable.length === 0 };
+    }
+
     /**
      * Check if a worker is ready by pinging its health endpoint
      */
@@ -1247,6 +1298,37 @@ async armWorkers(sessionId, equipment = {}) {
                 error: error.message
             };
         }
+    }
+
+
+    // Get status of all workers and current build/combat sessions
+
+    getStatus() {
+        const workers = Array.from(this.workers.entries()).map(([name, worker]) => ({
+            name,
+            port: worker.port,
+            status: worker.status,
+            currentTask: worker.currentTask ? worker.currentTask.substring(0, 100) + '...' : null,
+            uptime: worker.spawnTime ? Date.now() - worker.spawnTime : 0
+        }));
+        
+        const sessions = Array.from(this.buildSessions.entries()).map(([id, session]) => ({
+            sessionId: id,
+            buildRequest: session.buildRequest,
+            workers: session.workers?.length || 0,
+            tasks: session.tasks?.length || 0,
+            status: session.status,
+            runtime: Date.now() - session.startTime
+        }));
+        
+        return {
+            totalWorkers: this.workers.size,
+            workers,
+            activeSessions: this.buildSessions.size,
+            sessions,
+            nextPort: this.nextWorkerPort,
+            reservedPorts: Array.from(this.reservedPorts)
+        };
     }
 
     /**

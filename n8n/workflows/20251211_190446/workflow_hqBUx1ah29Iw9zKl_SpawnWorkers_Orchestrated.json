@@ -1,0 +1,304 @@
+{
+    "id": "hqBUx1ah29Iw9zKl",
+    "meta": null,
+    "name": "SpawnWorkers [Orchestrated]",
+    "nodes": [
+        {
+            "id": "df02bd1d-7fbc-4392-b29d-aca8aba40053",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -656,
+                0
+            ],
+            "webhookId": "9cfecb93-6588-4a65-963c-95ef53348b30",
+            "parameters": {
+                "path": "/kodecraft/spawn-workers",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "61421acd-e6c8-426c-9643-981c580b3fad",
+            "name": "Set Name and Port",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -224,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "f8be14a2-cd45-4422-aec3-4ad5920dc6cb",
+                            "name": "worker_name",
+                            "type": "string",
+                            "value": "={{ $json[\"body.workers\"] }}"
+                        },
+                        {
+                            "id": "05dad437-4fed-4a25-9f44-4a8bca399d0d",
+                            "name": "worker_port",
+                            "type": "number",
+                            "value": "={{ 4002+$itemIndex}}"
+                        },
+                        {
+                            "id": "b8f23734-09ac-4c77-8383-f7e9ab0672c8",
+                            "name": "callbackWebhookUrl",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}"
+                        },
+                        {
+                            "id": "803c9224-af5c-4976-b484-2c75c14e6587",
+                            "name": "sessionId",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "1bf3209d-c46b-4979-aec3-441c4e6ce72c",
+            "name": "Spawn workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueRegularOutput",
+            "position": [
+                -16,
+                0
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/spawn-worker",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "value": "={{ $json.worker_name }}"
+                        },
+                        {
+                            "name": "port",
+                            "value": "={{ $json.worker_port }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{$json.callbackWebhookUrl }}"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "0b5f4080-0250-4c07-8baf-2866b1da52ad",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                624,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "b3be650a-d8a4-444d-99ef-df953c989115",
+            "name": "Aggregate",
+            "type": "n8n-nodes-base.aggregate",
+            "position": [
+                384,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "spawnedWorkers"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "5e291d6f-e47f-4bb3-ba02-4e7d3f48d5f9",
+            "name": "Update Workers Status",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                192,
+                0
+            ],
+            "parameters": {
+                "fields": "port, status, pid",
+                "upsert": true,
+                "options": {
+                },
+                "operation": "update",
+                "updateKey": "=workerName",
+                "collection": "Workers"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "a3c3fe63-7b7f-452f-97a4-cd90737ac430",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -448,
+                0
+            ],
+            "parameters": {
+                "options": {
+                    "disableDotNotation": false
+                },
+                "fieldToSplitOut": "body.workers"
+            },
+            "typeVersion": 1
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            "Soldier1",
+                            "Soldier2"
+                        ],
+                        "botstatus": {
+                            "health": 20,
+                            "hunger": 20,
+                            "is_busy": false,
+                            "weather": "clear",
+                            "gamemode": "creative",
+                            "position": {
+                                "x": 200.61779404677884,
+                                "y": -60,
+                                "z": -460.5000153086098
+                            },
+                            "raw_stats": "\nSTATS\n- Position: x: 200.62, y: -60.00, z: -460.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Thunderstorm\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Night- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                            "time_of_day": 15232,
+                            "current_action": "Idle"
+                        },
+                        "sessionId": "combat_1765476372048",
+                        "workercount": "2",
+                        "conversationId": "5415489232",
+                        "callbackWebhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/worker-complete"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "1004",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/spawn-workers",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "f4360256-2e13-488c-a958-9a586da42ac5",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Set Name and Port",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Spawn workers": {
+            "main": [
+                [
+                    {
+                        "node": "Update Workers Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ]
+            ]
+        },
+        "Set Name and Port": {
+            "main": [
+                [
+                    {
+                        "node": "Spawn workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Workers Status": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

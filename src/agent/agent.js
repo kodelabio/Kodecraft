@@ -13,7 +13,7 @@ import convoManager from './conversation.js';
 import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
 import { addBrowserViewer } from './vision/browser_viewer.js';
 import { serverProxy } from './mindserver_proxy.js';
-import settings from './settings.js';
+import settings from '../../settings.js';
 import { Task } from './tasks/tasks.js';
 import { say } from './speak.js';
 import { ExternalAPI } from './external_api.js';

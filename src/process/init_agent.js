@@ -1,6 +1,7 @@
 import { Agent } from '../agent/agent.js';
 import { serverProxy } from '../agent/mindserver_proxy.js';
 import yargs from 'yargs';
+import settings from '../../settings.js';
 
 const args = process.argv.slice(2);
 if (args.length < 1) {
@@ -39,9 +40,11 @@ const argv = yargs(args)
 
 (async () => {
     try {
-        console.log('Connecting to MindServer');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await serverProxy.connect(argv.name, argv.port);
+        // In Docker, use container name instead of localhost
+        const mindserverHost = settings.mindserver_host || 'mindserver';
+        const mindserverPort = settings.mindserver_port || 8080;
+        console.log(`Connecting to MindServer at ${mindserverHost}:${mindserverPort}`);
+        await serverProxy.connect(argv.name, mindserverPort, mindserverHost);
         console.log('Starting agent');
         const agent = new Agent();
         serverProxy.setAgent(agent);

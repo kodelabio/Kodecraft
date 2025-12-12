@@ -17,11 +17,11 @@ class MindServerProxy {
         MindServerProxy.instance = this;
     }
 
-    async connect(name, port) {
+    async connect(name, port, host) {
         if (this.connected) return;
         
         this.name = name;
-        this.socket = io(`http://localhost:${port}`);
+        this.socket = io(`http://${host}:${port}`);;
 
         await new Promise((resolve, reject) => {
             this.socket.on('connect', resolve);

@@ -5,6 +5,7 @@ const settings = {
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
+    "mindserver_host": process.env.MINDSERVER_HOST|| "mindserver",
     "mindserver_port": process.env.MINDSERVER_PORT|| 8080,
     
     "base_profile": "creative", // survival, creative, or god_mode

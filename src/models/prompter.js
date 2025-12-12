@@ -4,7 +4,7 @@ import { getCommandDocs } from '../agent/commands/index.js';
 import { SkillLibrary } from "../agent/library/skill_library.js";
 import { stringifyTurns } from '../utils/text.js';
 import { getCommand } from '../agent/commands/index.js';
-import settings from '../agent/settings.js';
+import settings from '../../settings.js';
 
 import { Gemini } from './gemini.js';
 import { GPT } from './gpt.js';

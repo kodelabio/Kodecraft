@@ -26,8 +26,12 @@ export function blacklistCommands(commands) {
     }
 }
 
-const commandRegex = /!(\w+)(?:\(((?:-?\d+(?:\.\d+)?|true|false|"[^"]*")(?:\s*,\s*(?:-?\d+(?:\.\d+)?|true|false|"[^"]*"))*)\))?/
-const argRegex = /-?\d+(?:\.\d+)?|true|false|"[^"]*"/g;
+//const commandRegex = /!(\w+)(?:\(((?:-?\d+(?:\.\d+)?|true|false|"[^"]*")(?:\s*,\s*(?:-?\d+(?:\.\d+)?|true|false|"[^"]*"))*)\))?/
+//const argRegex = /-?\d+(?:\.\d+)?|true|false|"[^"]*"/g;
+// ✅ NEW
+const commandRegex = /!(\w+)(?:\(((?:-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*")(?:\s*,\s*(?:-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*"))*)\))?/
+const argRegex = /-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*"/g;
+
 
 export function containsCommand(message) {
     const commandMatch = message.match(commandRegex);
@@ -101,18 +105,36 @@ function isCoordinateParam(paramName) {
  * @param {string} message - A message from a player or language model containing a command.
  * @returns {string | Object}
  */
+
 export function parseCommandMessage(message) {
-    const commandMatch = message.match(commandRegex);
+    //console.log(`[parseCommandMessage] Input:`, message.substring(0, 100));
+    
+    const commandMatch = message.match(/!(\w+)/);
     if (!commandMatch) return `Command is incorrectly formatted`;
 
-    const commandName = "!"+commandMatch[1];
-
-    let args;
-    if (commandMatch[2]) args = commandMatch[2].match(argRegex);
-    else args = [];
-
+    const commandName = "!" + commandMatch[1];
     const command = getCommand(commandName);
-    if(!command) return `${commandName} is not a command.`
+    if (!command) return `${commandName} is not a command.`;
+
+    // Special handling for !newAction with multiline quoted string
+    if (commandName === '!newAction') {
+        const stringMatch = message.match(/!newAction\("([\s\S]*)"\)\s*$/);
+        if (!stringMatch) {
+            console.log(`[parseCommandMessage] String extraction failed`);
+            return `${commandName} requires argument: !newAction("prompt")`;
+        }
+        
+        let arg = stringMatch[1];
+        //console.log(`[parseCommandMessage] Extracted arg length:`, arg.length);
+        return { commandName, args: [arg] };
+    }
+
+    // Original logic for other commands
+    const commandRegex = /!(\w+)(?:\(((?:-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*")(?:\s*,\s*(?:-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*"))*)\))?/;
+    const argRegex = /-?\d+(?:\.\d+)?|true|false|"(?:[^"\\]|\\.)*"/g;
+    
+    const match = message.match(commandRegex);
+    let args = match?.[2]?.match(argRegex) || [];
 
     const params = commandParams(command);
     const paramNames = commandParamNames(command);
@@ -123,19 +145,17 @@ export function parseCommandMessage(message) {
     
     for (let i = 0; i < args.length; i++) {
         const param = params[i];
-        //Remove any extra characters
         let arg = args[i].trim();
         if ((arg.startsWith('"') && arg.endsWith('"')) || (arg.startsWith("'") && arg.endsWith("'"))) {
             arg = arg.substring(1, arg.length-1);
+            arg = arg.replace(/\\"/g, '"');
         }
         
-        //Convert to the correct type
         switch(param.type) {
             case 'int':
                 arg = Number.parseInt(arg); break;
             case 'float':
                 arg = Number.parseFloat(arg);
-                // ✅ FIX: Round coordinate parameters to integers to prevent misalignment
                 if (isCoordinateParam(paramNames[i])) {
                     arg = Math.floor(arg);
                 }
@@ -145,7 +165,7 @@ export function parseCommandMessage(message) {
             case 'BlockName':
             case 'ItemName':
                 if (arg.endsWith('plank'))
-                    arg += 's'; // catches common mistakes like "oak_plank" instead of "oak_planks"
+                    arg += 's';
             case 'string':
                 break;
             default:
@@ -154,26 +174,21 @@ export function parseCommandMessage(message) {
         if(arg === null || Number.isNaN(arg))
             return `Error: Param '${paramNames[i]}' must be of type ${param.type}.`
 
-        if(typeof arg === 'number') { //Check the domain of numbers
+        if(typeof arg === 'number') {
             const domain = param.domain;
             if(domain) {
-                /**
-                 * Javascript has a built in object for sets but not intervals.
-                 * Currently the interval (lowerbound,upperbound] is represented as an Array: `[lowerbound, upperbound, '(]']`
-                 */
-                if (!domain[2]) domain[2] = '[)'; //By default, lower bound is included. Upper is not.
+                if (!domain[2]) domain[2] = '[)';
 
                 if(!checkInInterval(arg, ...domain)) {
                     return `Error: Param '${paramNames[i]}' must be an element of ${domain[2][0]}${domain[0]}, ${domain[1]}${domain[2][1]}.`;
-                    //Alternatively arg could be set to the nearest value in the domain.
                 }
             } else if (!suppressNoDomainWarning) {
                 console.warn(`Command '${commandName}' parameter '${paramNames[i]}' has no domain set. Expect any value [-Infinity, Infinity].`)
-                suppressNoDomainWarning = true; //Don't spam console. Only give the warning once.
+                suppressNoDomainWarning = true;
             }
-        } else if(param.type === 'BlockName') { //Check that there is a block with this name
+        } else if(param.type === 'BlockName') {
             if(getBlockId(arg) == null && arg !== 'air') return  `Invalid block type: ${arg}.`
-        } else if(param.type === 'ItemName') { //Check that there is an item with this name
+        } else if(param.type === 'ItemName') {
             if(getItemId(arg) == null) return `Invalid item type: ${arg}.`
         }
         args[i] = arg;

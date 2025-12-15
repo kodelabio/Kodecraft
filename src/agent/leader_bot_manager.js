@@ -75,6 +75,7 @@ export class LeaderBotManager {
         const countId = this.leaderBots.size;
     
         this.nextLeaderPort = port + 1;
+
     
         userId = String(userId);  // ← Normalize to string
         
@@ -108,6 +109,7 @@ export class LeaderBotManager {
             agentProcess.running = true;  // ← ADD THIS
             this.leaderBots.set(userId, leaderInfo);
             this.portToUserId.set(port, userId);
+            console.log(`[LeaderBotManager] Stored port ${port} for user ${userId}`);
 
             console.log(`[LeaderBotManager] ✓ Leader bot spawned for ${userId} (PID: ${agentProcess.process.pid})`);
 

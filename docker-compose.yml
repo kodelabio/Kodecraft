@@ -61,6 +61,9 @@ services:
     container_name: kodecraft-gateway
     ports:
       - "4001:4001"
+      - "5000:5000"
+      - "5001:5001"
+
     environment:
       - DISPLAY=:99  # Keep this only for api-gateway
       - NODE_ENV=production

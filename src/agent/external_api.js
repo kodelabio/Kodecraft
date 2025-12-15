@@ -167,8 +167,10 @@ export class ExternalAPI {
         // Worker status management endpoints
         this.app.post('/api/orchestration/worker-ready', this.handleOrchestrationWorkerReady.bind(this));
         this.app.post('/api/orchestration/check-workers', this.handleOrchestrationCheckWorkers.bind(this));
-    }
 
+        this.app.post('/api/orchestration/verify-permissions', this.handleOrchestrationVerifyPermissions.bind(this));
+    }
+    
 
     // âœ… Helper method for null safety checks
     getBotSafely() {
@@ -2563,6 +2565,22 @@ async handleOrchestrationSessionTasks(req, res) {
             this.handleError(res, error, 'orchestrationCheckWorkers');
         }
     }
+
+    async handleOrchestrationVerifyPermissions(req, res) {
+        try {
+            const { sessionId } = req.body;
+
+            if (!sessionId) {
+                return res.status(400).json({ error: 'sessionId required' });
+            }
+
+            const result = await this.orchestration.verifyWorkerRegistration(sessionId);
+            
+            res.json(result);
+        } catch (error) {
+            this.handleError(res, error, 'verifyPermissions');
+        }
+}
 
     start(port = 4001) {
         return new Promise((resolve) => {

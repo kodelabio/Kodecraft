@@ -56,8 +56,17 @@ export class APIServer {
                 });
             }
 
-            const result = await leaderBotManager.getOrSpawnLeaderBot(userId, botName);
+            // ✅ NEW: Normalize userId to string immediately
+            const normalizedUserId = String(userId);
+            
+            console.log(`[APIServer] Init bot request - userId: ${normalizedUserId} (type: ${typeof normalizedUserId}), botName: ${botName}`);
 
+            const result = await leaderBotManager.getOrSpawnLeaderBot(normalizedUserId, botName);
+            
+            // ✅ Debug: Show what got stored
+            console.log(`[APIServer] Spawn result:`, result);
+            console.log(`[APIServer] LeaderBots map now contains:`, Array.from(leaderBotManager.leaderBots.keys()));
+            
             if (result.success) {
                 res.json(result);
             } else {
@@ -70,15 +79,27 @@ export class APIServer {
 
     async handleAgentRequest(req, res) {
         try {
-            const { userId } = req.params;
-            const action = req.baseUrl.replace(`/api/agent/${userId}`, '');
+            let userId = String(req.params.userId); 
+
+            console.log(`[APIServer] Agent request from user ${userId}`);
+            console.log(`[APIServer] Full URL: ${req.originalUrl}`);
+            const action = req.originalUrl.replace(`/api/agent/${userId}`, '');
+
+            console.log(`[APIServer] Action: ${action}`);
 
             const port = leaderBotManager.getLeaderBotPort(userId);
+            console.log(`[APIServer] Found port for user ${userId}: ${port}`);
+            
             if (!port) {
+                console.warn(`[APIServer] No bot found for user ${userId}`);
+                console.log(`[APIServer] Available bots:`, Array.from(leaderBotManager.leaderBots.keys()));
                 return res.status(404).json({ error: 'User bot not found' });
             }
 
-            const response = await fetch(`http://localhost:${port}/api/agent${action}`, {
+            const fullUrl = `http://localhost:${port}/api/agent${action}`;
+            console.log(`[APIServer] Forwarding to: ${fullUrl}`);
+
+            const response = await fetch(fullUrl, {
                 method: req.method,
                 headers: { 'Content-Type': 'application/json' },
                 body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
@@ -86,8 +107,10 @@ export class APIServer {
             });
 
             const data = await response.json();
+            console.log(`[APIServer] Response status: ${response.status}`);
             res.status(response.status).json(data);
         } catch (error) {
+            console.error(`[APIServer] Error in handleAgentRequest:`, error);
             res.status(500).json({ error: error.message });
         }
     }
@@ -95,12 +118,15 @@ export class APIServer {
     async handleOrchestrationRequest(req, res) {
         try {
             const { userId } = req.params;
-            const action = req.baseUrl.replace(`/api/orchestration/${userId}`, '');
+            // Use originalUrl and strip the gateway prefix correctly
+            const action = req.originalUrl.replace(`/api/orchestration/${userId}`, '');
 
             const port = leaderBotManager.getLeaderBotPort(userId);
             if (!port) {
                 return res.status(404).json({ error: 'User bot not found' });
             }
+
+            console.log(`[APIServer] Forwarding orchestration request: ${action} to port ${port}`);
 
             const response = await fetch(`http://localhost:${port}/api/orchestration${action}`, {
                 method: req.method,
@@ -112,6 +138,7 @@ export class APIServer {
             const data = await response.json();
             res.status(response.status).json(data);
         } catch (error) {
+            console.error(`[APIServer] Orchestration error:`, error);
             res.status(500).json({ error: error.message });
         }
     }

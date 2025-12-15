@@ -3,4 +3,4 @@
 docker compose down
 docker compose up -d
 sleep 5
-docker logs -f api-gateway
+docker logs -f kodecraft-gateway

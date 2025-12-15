@@ -53,6 +53,8 @@ export const WOOL_COLORS = [
 
 
 export function initBot(username) {
+    //console.log('[DEBUG mcdata] Full settings object:', settings);  // ← ADD THIS
+    console.log('[DEBUG mcdata] mc_version:', settings.minecraft_version); 
     mc_version = settings.minecraft_version;
     mcdata = minecraftData(mc_version);
     Item = prismarine_items(mc_version);

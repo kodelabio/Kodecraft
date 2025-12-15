@@ -1,6 +1,7 @@
 import { Agent } from '../agent/agent.js';
-import { serverProxy } from '../agent/mindserver_proxy.js';
+import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import yargs from 'yargs';
+import agentSettings, { setSettings } from '../agent/settings.js';  // ← Fix this import
 import settings from '../../settings.js';
 
 const args = process.argv.slice(2);
@@ -40,15 +41,24 @@ const argv = yargs(args)
 
 (async () => {
     try {
+        // Populate the agent settings object
+        console.log('[DEBUG] Root settings.minecraft_version:', settings.minecraft_version);
+        setSettings(settings);
+        console.log('[DEBUG] Agent settings.minecraft_version:', agentSettings.minecraft_version);  // ← Check it here
+        
+
         // In Docker, use container name instead of localhost
         const mindserverHost = settings.mindserver_host || 'mindserver';
         const mindserverPort = settings.mindserver_port || 8080;
+        // Create fresh instance for this agent process
+        const serverProxy = new MindServerProxy(argv.name);
         console.log(`Connecting to MindServer at ${mindserverHost}:${mindserverPort}`);
         await serverProxy.connect(argv.name, mindserverPort, mindserverHost);
         console.log('Starting agent');
         const agent = new Agent();
+        agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
-        await agent.start(argv.load_memory, argv.init_message, argv.count_id);
+        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
     } catch (error) {
         console.error('Failed to start agent process:');
         console.error(error.message);

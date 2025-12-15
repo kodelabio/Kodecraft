@@ -2,6 +2,7 @@ import { Agent } from '../agent/agent.js';
 import { ExternalAPI } from '../agent/external_api.js';
 import { setSettings } from '../agent/settings.js';
 import { readFileSync, createWriteStream } from 'fs';
+import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import { mkdir } from 'fs/promises';
 import yargs from 'yargs';
 import rootSettings from '../../settings.js';
@@ -185,6 +186,7 @@ async function setupLogging(workerName) {
         workerProfile.name = argv.name;
         
         workerSettings.profile = workerProfile;
+        workerSettings.assigned_api_port = argv.port;
         setSettings(workerSettings);
         
         console.log(`Worker settings initialized:`, { 
@@ -194,8 +196,17 @@ async function setupLogging(workerName) {
         });
         
         // Create and start agent in internal mode
+        // Create MindServer connection for worker
+        const mindserverHost = workerSettings.mindserver_host || 'mindserver';
+        const mindserverPort = workerSettings.mindserver_port || 8080;
+        const serverProxy = new MindServerProxy(argv.name);
+        await serverProxy.connect(argv.name, mindserverPort, mindserverHost);
+
+        // Create and start agent in internal mode
         const agent = new Agent();
-        await agent.start(argv.load_memory, argv.init_message, argv.count_id);
+        agent.serverProxy = serverProxy;
+        serverProxy.setAgent(agent);
+        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
         
         // Start API server for the worker
         console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);

@@ -45,6 +45,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/moveAway', this.handleMoveAway.bind(this));
         this.app.post('/api/agent/searchForBlock', this.handleSearchForBlock.bind(this));
         this.app.post('/api/agent/searchForEntity', this.handleSearchForEntity.bind(this));
+        this.app.post('/api/agent/teleport', this.handleTeleport.bind(this));
         
         // Block operations
         this.app.post('/api/agent/collect', this.handleCollect.bind(this));
@@ -143,6 +144,7 @@ export class ExternalAPI {
             res.json({ status: 'ok' });
         });
         // Orchestration endpoints for n8n for complex tasks(â† NEW SECTION STARTS HERE)
+        this.app.post('/api/orchestration/spawn-workers', this.handleOrchestrationSpawnWorkers.bind(this));
         this.app.post('/api/orchestration/spawn-worker', this.handleOrchestrationSpawnWorker.bind(this));
         this.app.post('/api/orchestration/wait-workers', this.handleOrchestrationWaitWorkers.bind(this));
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
@@ -1631,7 +1633,7 @@ export class ExternalAPI {
             // Simply spawn workers - spawnWorker handles port auto-finding
             for (let i = 0; i < count; i++) {
                 this.orchestration.workerCounter++;
-                const workerName = `Worker_${this.orchestration.workerCounter}`;
+                const workerName = `${this.agent.name}_W${i + 1}`;
                 const requestedPort = basePort + i;
                 
                 console.log(`[API] Spawning ${workerName}, requesting port ${requestedPort}`);
@@ -1783,41 +1785,40 @@ export class ExternalAPI {
         }
     }
 
-    async handleTeleportWorkers(req, res) {
-        try {
-            const { sessionId, position } = req.body;
-            
-            if (!sessionId) {
-                return res.status(400).json({ 
-                    error: 'sessionId parameter required' 
+    async handleTeleport(req, res) {
+            try {
+                const { x, y, z } = req.body;
+                
+                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+                if (typeof coordValidation === 'string') {
+                    return res.status(400).json({ 
+                        error: coordValidation,
+                        code: 'invalid_coordinates'
+                    });
+                }
+
+                const bot = this.getBotSafely();
+                if (!bot) {
+                    return res.status(503).json({ 
+                        error: 'Bot not available',
+                        code: 'bot_unavailable'
+                    });
+                }
+
+                bot.entity.position.x = coordValidation.x;
+                bot.entity.position.y = coordValidation.y;
+                bot.entity.position.z = coordValidation.z;
+
+                res.json({ 
+                    success: true, 
+                    message: `Teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`,
+                    position: coordValidation
                 });
-            }
-            
-            if (!position || typeof position.x !== 'number' || typeof position.y !== 'number' || typeof position.z !== 'number') {
-                return res.status(400).json({ 
-                    error: 'position parameter must contain x, y, z coordinates' 
-                });
-            }
-            
-            // Use OrchestrationAPI instead of deprecated multiBotManager
-            const result = await this.orchestration.teleportWorkers(sessionId, position);
-            
-            if (result.success) {
-                res.json({
-                    success: true,
-                    sessionId: result.sessionId,
-                    teleportResults: result.teleportResults,
-                    buildLocation: result.buildLocation,
-                    message: `Teleported workers to position (${position.x}, ${position.y}, ${position.z})`
-                });
-            } else {
-                res.status(404).json(result);
-            }
-            
-        } catch (error) {
-            this.handleError(res, error, 'teleportWorkers');
-        }
-    }
+            } catch (error) {
+                this.handleError(res, error, 'teleport');
+            }   
+    }   
+
 
     /**
      * Teleport workers to a player's location
@@ -1911,6 +1912,49 @@ export class ExternalAPI {
         } catch (error) {
             this.handleError(res, error, 'orchestrationSpawnWorker');
         }
+    }
+    // For multiple workers
+    async handleOrchestrationSpawnWorkers(req, res) {
+        try {
+            const count = Number(req.body.count);  // ← Convert to number
+            const { basePort = 5002, sessionId, callbackWebhookUrl } = req.body;
+
+            if (!count || typeof count !== 'number' || count <= 0) {
+                return res.status(400).json({ 
+                    error: 'count parameter must be a positive number' 
+                });
+            }
+
+            const spawnResults = [];
+            let currentPort = basePort;
+            
+            for (let i = 0; i < count; i++) {
+                const workerName = `${this.agent.name}_W${i + 1}`;
+                
+                const result = await this.orchestration.spawnWorker(
+                    workerName,
+                    currentPort,
+                    sessionId || `session_${Date.now()}`,
+                    callbackWebhookUrl || settings.n8n_webhook_url
+                );
+                
+                spawnResults.push(result);
+                if (result.success) {
+                    currentPort = result.port + 1; // Next port
+                }
+        }
+
+        const successCount = spawnResults.filter(r => r.success).length;
+        res.status(202).json({
+            success: true,
+            spawned: successCount,
+            totalRequested: count,
+            results: spawnResults
+        });
+        
+    } catch (error) {
+        this.handleError(res, error, 'orchestrationSpawnWorkers');
+    }
     }
 
     /**

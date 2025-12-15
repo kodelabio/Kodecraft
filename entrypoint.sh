@@ -2,17 +2,31 @@
 set -e
 
 echo "Starting Kodecraft application..."
+# Aggressively clean up stale Xvfb
+echo "Cleaning up stale Xvfb..."
+pkill -9 Xvfb 2>/dev/null || true
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
+sleep 1
 
-# Start Xvfb in background
+# Start Xvfb in background with retry
 echo "Starting Xvfb virtual display..."
-Xvfb :99 -screen 0 1920x1080x24 &
-XVFB_PID=$!
+for i in {1..3}; do
+    if Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &
+    then
+        XVFB_PID=$!
+        echo "✓ Xvfb started (PID: $XVFB_PID)"
+        break
+    else
+        echo "Attempt $i/3: Xvfb start failed, retrying..."
+        sleep 2
+    fi
+done
 
 # Set display variable
 export DISPLAY=:99
 
 # Wait for Xvfb to be ready
-sleep 2
+sleep 5
 
 # Trap exit to clean up processes
 trap "kill $XVFB_PID 2>/dev/null || true" EXIT

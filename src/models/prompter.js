@@ -4,7 +4,7 @@ import { getCommandDocs } from '../agent/commands/index.js';
 import { SkillLibrary } from "../agent/library/skill_library.js";
 import { stringifyTurns } from '../utils/text.js';
 import { getCommand } from '../agent/commands/index.js';
-import settings from '../agent/settings.js';
+import settings from '../../settings.js';
 
 import { Gemini } from './gemini.js';
 import { GPT } from './gpt.js';
@@ -32,7 +32,7 @@ const __dirname = path.dirname(__filename);
 export class Prompter {
     constructor(agent, profile) {
         this.agent = agent;
-        this.profile = profile;
+        this.profile = profile || {};
         let default_profile = JSON.parse(readFileSync('./profiles/defaults/_default.json', 'utf8'));
         let base_fp = '';
         if (settings.base_profile.includes('survival')) {

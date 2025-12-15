@@ -5,23 +5,22 @@ import { setSettings } from './settings.js';
 // agents connection to mindserver
 // always connect to localhost
 
-class MindServerProxy {
-    constructor() {
-        if (MindServerProxy.instance) {
-            return MindServerProxy.instance;
-        }
-        
+export class MindServerProxy {
+    constructor(instanceName = null) {
+        this.instanceName = instanceName;
         this.socket = null;
         this.connected = false;
         this.agents = [];
-        MindServerProxy.instance = this;
     }
 
-    async connect(name, port) {
-        if (this.connected) return;
+    async connect(name, port, host) {
+        if (this.connected && this.socket) return;
+        // Reset on reconnect
+        this.connected = false;
+        this.socket = null;
         
         this.name = name;
-        this.socket = io(`http://localhost:${port}`);
+        this.socket = io(`http://${host}:${port}`);;
 
         await new Promise((resolve, reject) => {
             this.socket.on('connect', resolve);
@@ -76,7 +75,7 @@ class MindServerProxy {
                 if (response.error) {
                     return reject(new Error(response.error));
                 }
-                setSettings(response.settings);
+                //setSettings(response.settings);
                 resolve();
             });
         });
@@ -108,7 +107,8 @@ class MindServerProxy {
 }
 
 // Create and export a singleton instance
-export const serverProxy = new MindServerProxy();
+// Each agent file can create its own instance if needed
+//export const serverProxy = new MindServerProxy();
 
 export function sendBotChatToServer(agentName, json) {
     serverProxy.getSocket().emit('chat-message', agentName, json);

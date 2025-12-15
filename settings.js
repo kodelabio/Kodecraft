@@ -5,8 +5,9 @@ const settings = {
     "auth": "offline", // or "microsoft"
 
     // the mindserver manages all agents and hosts the UI
+    "mindserver_host": process.env.MINDSERVER_HOST|| "mindserver",
     "mindserver_port": process.env.MINDSERVER_PORT|| 8080,
-    
+
     "base_profile": "creative", // survival, creative, or god_mode
     "profiles": [
         "./profiles/kodecraft.json",
@@ -53,6 +54,22 @@ const settings = {
     "external_mode_allow_chat": process.env.EXTERNAL_MODE_ALLOW_CHAT === "true" || false,
     "multibot_base_port": parseInt(process.env.MULTIBOT_BASE_PORT || "4000"),
     "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/worker-stage-complete",
+    
+    // Multi-user configuration
+    "api_gateway_port": parseInt(process.env.API_GATEWAY_PORT) || 4001,
+    "leader_bot_base_port": parseInt(process.env.LEADER_BOT_BASE_PORT) || 5000,          // First leader bot on 5000, next on 5001, etc.
+    "worker_base_port": parseInt(process.env.WORKER_BASE_PORT) || 7000,
+    "leader_bot_idle_timeout": parseInt(process.env.LEADER_BOT_IDLE_TIMEOUT) || 3600000,    // 1 hour (ms) before cleaning up idle bots
+    "max_leader_bots": parseInt(process.env.MAX_LEADER_BOTS) || 50,                 // Maximum concurrent leader bots
+
+    
+    // Telegram configuration
+    telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN,
+    
+    // n8n configuration
+    n8n_webhook_url: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook',
+    //n8n_webhook_url_stage_complete: process.env.N8N_WEBHOOK_URL_STAGE || 'http://localhost:5678/webhook/worker-complete'
+
 }
 
 export default settings;

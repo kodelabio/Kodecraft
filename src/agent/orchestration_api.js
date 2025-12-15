@@ -650,7 +650,7 @@ registerWorkersForSession(sessionId, workers) {
      * Teleport all workers to coordinated positions around build site
      * Called by n8n to position workers
      */
-    async teleportWorkers(sessionId, buildLocation) {
+    async teleportWorkers_obsolete(sessionId, buildLocation) {
         console.log(`🚀 Teleporting workers to build location`);
 
         const session = this.buildSessions.get(sessionId);
@@ -662,8 +662,8 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         const workers = session.workers;
-        const TIMEOUT_MS = 10000; // 10 seconds per worker per attempt
-        const MAX_RETRIES = 4; // Try up to 4 different positions (0°, 90°, 180°, 270°)
+        const TIMEOUT_MS = 5000; // 10 seconds per worker per attempt
+        const MAX_RETRIES = 1; // Try up to 4 different positions (0°, 90°, 180°, 270°). Instant teleport won't fail due to pathfinding
 
         console.log(`📤 Sending teleport commands to ${workers.length} workers (${TIMEOUT_MS}ms timeout each, max ${MAX_RETRIES} attempts)...`);
 
@@ -794,6 +794,85 @@ registerWorkersForSession(sessionId, workers) {
             }
         };
     }
+
+
+    async teleportWorkers(sessionId, buildLocation) {
+        console.log(`🚀 Teleporting workers to build location`);
+
+        const session = this.buildSessions.get(sessionId);
+        if (!session) {
+            return {
+                success: false,
+                error: `Build session ${sessionId} not found`
+            };
+        }
+
+        const workers = session.workers;
+        const results = [];
+
+        // Teleport all workers in parallel
+        const teleportPromises = workers.map(async (worker, i) => {
+            const angle = (i / workers.length) * 2 * Math.PI;
+            const radius = Math.min(3, workers.length);
+
+            const targetPos = {
+                x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
+                y: buildLocation.y,
+                z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
+            };
+
+            try {
+                const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(targetPos),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                    return {
+                        workerName: worker.name,
+                        status: 'teleported',
+                        position: targetPos,
+                        success: true
+                    };
+                } else {
+                    console.error(`❌ ${worker.name} teleport failed: HTTP ${response.status}`);
+                    return {
+                        workerName: worker.name,
+                        status: 'failed',
+                        error: `HTTP ${response.status}`,
+                        success: false
+                    };
+                }
+            } catch (error) {
+                console.error(`❌ ${worker.name} teleport error: ${error.message}`);
+                return {
+                    workerName: worker.name,
+                    status: 'error',
+                    error: error.message,
+                    success: false
+                };
+            }
+        });
+
+        const teleportResults = await Promise.all(teleportPromises);
+        const successCount = teleportResults.filter(r => r.success).length;
+
+        return {
+            success: successCount === workers.length,
+            sessionId: sessionId,
+            buildLocation: buildLocation,
+            teleportResults: teleportResults,
+            summary: {
+                total: workers.length,
+                success: successCount,
+                failed: workers.length - successCount
+            }
+        };
+    }
+
 
     // Add this method to the OrchestrationAPI class in orchestration_api.js
 
@@ -1119,188 +1198,208 @@ registerWorkersForSession(sessionId, workers) {
                             { success: false, error: await response.text() };
     }
 
-    /**
-     * Arm workers with weapons and equipment
-     * Uses /give command via leader bot to equip soldiers
+        /**
+     * Arm workers with equipment
+     * 1. Give items via /give (leader chat command)
+     * 2. Wait for item pickup
+     * 3. Equip items on worker
      * 
      * @param {string} sessionId - Build session ID
-     * @param {object} equipment - Equipment to give: { weapon, armor, offhand }
-     * @returns {object} Results for each worker
+     * @param {object} equipment - Equipment loadout
+     * @returns {object} Arming results
      */
-    /**
- * Arm workers with weapons and equipment
- * Uses /give command via leader bot to equip soldiers
- */
-async armWorkers(sessionId, equipment = {}) {
-    console.log(`⚔️ Arming workers for session ${sessionId}`);
+    async armWorkers(sessionId, equipment = {}) {
+        console.log(`⚔️ Arming workers for session ${sessionId}`);
 
-    const session = this.buildSessions.get(sessionId);
-    if (!session) {
-        return {
-            success: false,
-            error: `Build session ${sessionId} not found`
-        };
-    }
-
-    if (!session.workers || session.workers.length === 0) {
-        return {
-            success: false,
-            error: `No workers registered for session ${sessionId}`
-        };
-    }
-
-    const bot = this.agent?.bot;
-    if (!bot) {
-        return {
-            success: false,
-            error: 'Leader bot not available'
-        };
-    }
-
-    // Default equipment loadout for combat
-    const defaultEquipment = {
-        weapon: 'iron_sword',
-        armor: ['iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots'],
-        offhand: 'shield',
-        extras: []
-    };
-
-    const finalEquipment = { ...defaultEquipment, ...equipment };
-    const results = [];
-
-    for (const worker of session.workers) {
-        // ✅ FIX: Get worker name from multiple possible sources
-        const workerName = worker.name || worker.workerName || worker.username;
-        
-        // ✅ FIX: If still no name, try to find it from the workers Map using port
-        let resolvedName = workerName;
-        if (!resolvedName && worker.port) {
-            // Search this.workers Map for matching port
-            for (const [name, info] of this.workers.entries()) {
-                if (info.port === worker.port) {
-                    resolvedName = name;
-                    break;
-                }
-            }
-        }
-
-        if (!resolvedName) {
-            console.error(`⚠️ Could not determine worker name for:`, worker);
-            results.push({
-                workerName: 'unknown',
+        const session = this.buildSessions.get(sessionId);
+        if (!session) {
+            return {
                 success: false,
-                error: 'Could not determine worker name',
-                itemsGiven: [],
-                errors: ['Worker name not found']
-            });
-            continue;
+                error: `Build session ${sessionId} not found`
+            };
         }
 
-        const workerResult = {
-            workerName: resolvedName,
-            itemsGiven: [],
-            errors: []
+        if (!session.workers || session.workers.length === 0) {
+            return {
+                success: false,
+                error: `No workers registered for session ${sessionId}`
+            };
+        }
+
+        const bot = this.agent?.bot;
+        if (!bot) {
+            return {
+                success: false,
+                error: 'Leader bot not available'
+            };
+        }
+
+        // Default equipment loadout for combat
+        const defaultEquipment = {
+            weapon: 'iron_sword',
+            armor: ['iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots'],
+            offhand: 'shield',
+            extras: []
         };
 
-        try {
-            // Give weapon
-            if (finalEquipment.weapon) {
+        const finalEquipment = { ...defaultEquipment, ...equipment };
+
+        // Flatten equipment into single item list for giving
+        const itemList = [
+            finalEquipment.weapon,
+            ...(Array.isArray(finalEquipment.armor) ? finalEquipment.armor : []),
+            finalEquipment.offhand,
+            ...(Array.isArray(finalEquipment.extras) ? finalEquipment.extras.map(e => e.item || e) : [])
+        ].filter(Boolean);
+
+        console.log(`📦 Equipment to distribute: ${itemList.join(', ')}`);
+
+        const results = [];
+
+        for (const worker of session.workers) {
+            // Get worker name from multiple possible sources
+            const workerName = worker.name || worker.workerName || worker.username;
+            const workerPort = worker.port;
+
+            if (!workerName || !workerPort) {
+                console.error(`⚠️ Invalid worker config:`, worker);
+                results.push({
+                    workerName: workerName || 'unknown',
+                    port: workerPort || 'unknown',
+                    success: false,
+                    itemsGiven: [],
+                    itemsEquipped: [],
+                    error: 'Missing worker name or port'
+                });
+                continue;
+            }
+
+            console.log(`\n📦 Arming ${workerName}...`);
+
+            const workerResult = {
+                workerName: workerName,
+                port: workerPort,
+                itemsGiven: [],
+                itemsEquipped: [],
+                errors: []
+            };
+
+            // ===== STEP 1: GIVE items via /give (leader chat command) =====
+            console.log(`   Step 1: Giving items...`);
+            for (const item of itemList) {
                 try {
-                    const giveCommand = `/give ${worker.name} ${finalEquipment.weapon} 1`;
-                    console.log(`⚔️ Executing command: "${giveCommand}"`);
+                    const giveCommand = `/give ${workerName} ${item} 1`;
+                    console.log(`   > ${giveCommand}`);
+                    
+                    // Execute via leader bot chat (not HTTP)
                     bot.chat(giveCommand);
-                    workerResult.itemsGiven.push(finalEquipment.weapon);
-                    console.log(`  ✓ Gave ${finalEquipment.weapon} to ${resolvedName}`);
-                    await this._wait(200); // Slightly longer delay to avoid spam
-                } catch (e) {
-                    workerResult.errors.push(`weapon: ${e.message}`);
+                    workerResult.itemsGiven.push(item);
+                    
+                    // Small delay between /give commands
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                } catch (error) {
+                    workerResult.errors.push(`give ${item}: ${error.message}`);
+                    console.error(`   ❌ Failed to give ${item}: ${error.message}`);
                 }
             }
 
-            // Give armor pieces
-            if (finalEquipment.armor && Array.isArray(finalEquipment.armor)) {
-                for (const armorPiece of finalEquipment.armor) {
-                    try {
-                        const giveCommand = `/give ${worker.name} ${armorPiece} 1`;
-                        console.log(`⚔️ Executing command: "${giveCommand}"`);
-                        bot.chat(giveCommand);
-                        workerResult.itemsGiven.push(armorPiece);
-                        console.log(`  ✓ Gave ${armorPiece} to ${resolvedName}`);
-                        await this._wait(200);
-                    } catch (e) {
-                        workerResult.errors.push(`armor ${armorPiece}: ${e.message}`);
+            console.log(`   ✅ Gave ${workerResult.itemsGiven.length} items`);
+
+            // ===== STEP 2: Wait for items to be picked up =====
+            console.log(`   Step 2: Waiting for item pickup (2 seconds)...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // ===== STEP 3: Verify items were received =====
+            console.log(`   Step 3: Verifying inventory...`);
+            try {
+                const inventoryResponse = await fetch(`http://localhost:${workerPort}/api/agent/inventory`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 5000
+                });
+
+                if (inventoryResponse.ok) {
+                    const inventoryData = await inventoryResponse.json();
+                    const inventoryText = inventoryData.raw || inventoryData.inventory || '';
+                    
+                    console.log(`   📋 Inventory: ${inventoryText.substring(0, 100)}`);
+                    
+                    const hasItems = inventoryText && 
+                                    !inventoryText.includes('Nothing') && 
+                                    inventoryText.length > 20;
+                    
+                    if (!hasItems) {
+                        workerResult.errors.push('Items not received after /give');
+                        console.warn(`   ⚠️ Items not received - may be entity errors on server`);
                     }
                 }
+            } catch (e) {
+                console.warn(`   ⚠️ Could not verify inventory: ${e.message}`);
             }
 
-            // Give offhand item (shield)
-            if (finalEquipment.offhand) {
+            // ===== STEP 4: Equip items on worker =====
+            console.log(`   Step 4: Equipping items...`);
+            for (const item of itemList) {
                 try {
-                    const giveCommand = `/give ${worker.name} ${finalEquipment.offhand} 1`;
-                    console.log(`⚔️ Executing command: "${giveCommand}"`);
-                    bot.chat(giveCommand);
-                    workerResult.itemsGiven.push(finalEquipment.offhand);
-                    console.log(`  ✓ Gave ${finalEquipment.offhand} to ${resolvedName}`);
-                    await this._wait(200);
-                } catch (e) {
-                    workerResult.errors.push(`offhand: ${e.message}`);
-                }
-            }
+                    const equipResponse = await fetch(`http://localhost:${workerPort}/api/agent/equip`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ item: item }),
+                        timeout: 5000
+                    });
 
-            // Give extra items
-            if (finalEquipment.extras && Array.isArray(finalEquipment.extras)) {
-                for (const extra of finalEquipment.extras) {
-                    try {
-                        const itemName = extra.item || extra;
-                        const count = extra.count || 1;
-                        const giveCommand = `/give ${worker.name} ${itemName} ${count}`;
-                        console.log(`⚔️ Executing command: "${giveCommand}"`);  
-                        bot.chat(giveCommand);
-                        workerResult.itemsGiven.push(`${itemName} x${count}`);
-                        console.log(`  ✓ Gave ${itemName} x${count} to ${resolvedName}`);
-                        await this._wait(200);
-                    } catch (e) {
-                        workerResult.errors.push(`extra ${extra}: ${e.message}`);
+                    if (equipResponse.ok) {
+                        const result = await equipResponse.json();
+                        workerResult.itemsEquipped.push(item);
+                        console.log(`   ✅ Equipped ${item}`);
+                    } else {
+                        workerResult.errors.push(`${item}: HTTP ${equipResponse.status}`);
+                        console.warn(`   ⚠️ Failed to equip ${item}: HTTP ${equipResponse.status}`);
                     }
+
+                    await new Promise(resolve => setTimeout(resolve, 150));
+
+                } catch (error) {
+                    workerResult.errors.push(`equip ${item}: ${error.message}`);
+                    console.error(`   ❌ Failed to equip ${item}: ${error.message}`);
                 }
             }
 
-            workerResult.success = workerResult.errors.length === 0;
+            // ===== STEP 5: Final verification =====
+            console.log(`   Step 5: Final verification...`);
+            try {
+                const inventoryResponse = await fetch(`http://localhost:${workerPort}/api/agent/inventory`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 5000
+                });
 
-        } catch (error) {
-            workerResult.success = false;
-            workerResult.errors.push(error.message);
-        }
-
-        results.push(workerResult);
-        // After giving all items to a worker, verify via their API:
-        try {
-            const response = await fetch(`http://localhost:${worker.port}/api/agent/inventory`);
-            const inventory = await response.json();
-            console.log(`  📦 ${worker.name} inventory:`, inventory);
-            
-            const hasSword = inventory.raw?.includes('sword');
-            if (!hasSword) {
-                console.warn(`  ⚠️ ${worker.name} may not have received sword!`);
+                if (inventoryResponse.ok) {
+                    const inventoryData = await inventoryResponse.json();
+                    const inventoryText = inventoryData.raw || inventoryData.inventory || '';
+                    console.log(`   📋 Final inventory: ${inventoryText.substring(0, 80)}`);
+                }
+            } catch (e) {
+                console.warn(`   ⚠️ Could not verify final inventory`);
             }
-        } catch (e) {
-            console.warn(`  ⚠️ Could not verify ${worker.name} inventory`);
+
+            workerResult.success = workerResult.itemsEquipped.length > 0 && workerResult.errors.length === 0;
+            results.push(workerResult);
         }
-    }
-    
 
-    const successCount = results.filter(r => r.success).length;
-    console.log(`⚔️ Armed ${successCount}/${session.workers.length} workers`);
+        const successCount = results.filter(r => r.success).length;
+        console.log(`\n⚔️ Arming complete: ${successCount}/${session.workers.length} workers fully armed`);
 
-    return {
-        success: successCount === session.workers.length,
-        sessionId: sessionId,
-        workersArmed: successCount,
-        totalWorkers: session.workers.length,
-        equipment: finalEquipment,
-        results: results
-    };
-    }
+        return {
+            success: successCount === session.workers.length,
+            sessionId: sessionId,
+            workersArmed: successCount,
+            totalWorkers: session.workers.length,
+            equipment: finalEquipment,
+            results: results
+        };
+}
 
     /**
      * Stop a specific worker

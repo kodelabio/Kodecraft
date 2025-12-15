@@ -44,6 +44,8 @@ export class APIServer {
         this.app.get('/api/admin/status', this.handleStatus.bind(this));
         this.app.post('/api/admin/stop-bot/:userId', this.handleStopBot.bind(this));
         this.app.post('/api/admin/stop-all', this.handleStopAll.bind(this));
+        this.app.get('/api/bots/list', this.handleBotsList.bind(this));
+        
     }
 
     async handleInitBot(req, res) {
@@ -76,6 +78,33 @@ export class APIServer {
             res.status(500).json({ error: error.message });
         }
     }
+
+    async handleBotsList(req, res) {
+        try {
+            const allBots = [];
+            
+            for (const [userId, info] of leaderBotManager.leaderBots.entries()) {
+                //console.log(`[APIServer] Bot info:`, info);  // ✅ ADD THIS
+                //console.log(`[APIServer] Agent name:`, info.agent?.name);  // ✅ ADD THIS
+                
+                allBots.push({
+                    userId: userId,
+                    botName: info.botName,
+                    port: info.port,
+                    running: info.running
+                });
+            }
+            
+            res.json({
+                success: true,
+                leaderBots: allBots,
+                totalLeaderBots: allBots.length
+            });
+        } catch (error) {
+            console.error(`[APIServer] Error in handleBotsList:`, error);
+            res.status(500).json({ error: error.message });
+        }
+}
 
     async handleAgentRequest(req, res) {
         try {

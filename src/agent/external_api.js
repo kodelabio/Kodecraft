@@ -92,6 +92,9 @@ export class ExternalAPI {
         this.app.get('/api/agent/getCraftingPlan', this.handleGetCraftingPlan.bind(this));
         this.app.get('/api/agent/player-position', this.handleGetPlayerPosition.bind(this));
         
+        this.app.get('/api/identify-entity', this.handleIdentifyEntity.bind(this)); // WE made this one public
+        
+        
         // Mode management
         this.app.post('/api/agent/setMode', this.handleSetMode.bind(this));
         
@@ -169,6 +172,7 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/check-workers', this.handleOrchestrationCheckWorkers.bind(this));
 
         this.app.post('/api/orchestration/verify-permissions', this.handleOrchestrationVerifyPermissions.bind(this));
+        
     }
     
 
@@ -218,6 +222,7 @@ export class ExternalAPI {
     async handleMove(req, res) {
         try {
             const { x, y, z, direction, minDistance = 1 } = req.body;
+            console.log(`[API handleMove] Received move request:`, { x, y, z, direction });  // ✅ ADD THIS
             
             const minDistanceValid = this.validateMinDistance(minDistance);
             if (minDistanceValid !== true) {
@@ -309,6 +314,9 @@ export class ExternalAPI {
             const result = await executeCommand(this.agent, command);
             console.log(`[handleMove DEBUG] Command result:`, result);
             console.log(`[handleMove DEBUG] Result type:`, typeof result);
+            console.log(`[API handleMove] Move result:`, result);  // ✅ ADD THIS
+            console.log(`[API handleMove] Bot position after move:`, this.agent.bot.entity.position);  // ✅ ADD THIS
+        
             
             if (!result || typeof result !== 'string' || result.length === 0) {
                 return res.status(503).json({ 
@@ -1217,6 +1225,84 @@ export class ExternalAPI {
         }
     }
 
+    async handleIdentifyEntity(req, res) {
+        try {
+            const { name } = req.query;
+            
+            if (!name) {
+                return res.status(400).json({ error: 'name query parameter required' });
+            }
+
+            const bot = this.agent.bot;
+
+            // Check if worker spawned by this bot FIRST
+            if (this.orchestration && this.orchestration.workers.has(name)) {
+                const workerInfo = this.orchestration.workers.get(name);
+                return res.json({
+                    success: true,
+                    name: name,
+                    type: 'worker',
+                    foundOn: 'current',
+                    port: workerInfo.port,
+                    status: workerInfo.status,
+                    pid: workerInfo.process.pid
+                });
+            }
+
+            // Check if entity (mob, animal)
+            if (bot.entities[name]) {
+                const entity = bot.entities[name];
+                const entityType = this.classifyMobType(entity);
+                
+                return res.json({
+                    success: true,
+                    name: name,
+                    type: entityType,
+                    foundOn: 'current',
+                    position: entity.position,
+                    health: entity.health
+                });
+            }
+
+            // Check if player
+            if (bot.players[name]) {
+                return res.json({
+                    success: true,
+                    name: name,
+                    type: 'player',
+                    foundOn: 'current',
+                    position: bot.players[name].entity.position,
+                    health: bot.players[name].entity.health
+                });
+            }
+
+            return res.status(404).json({
+                success: false,
+                error: `${name} not found on this bot`,
+                code: 'entity_not_found'
+            });
+        } catch (error) {
+            this.handleError(res, error, 'identifyEntity');
+        }
+}
+
+    classifyMobType(entity) {
+        if (!entity) return 'unknown';
+
+        const name = entity.name?.toLowerCase() || '';
+
+        const animals = ['cow', 'pig', 'sheep', 'horse', 'chicken', 'duck', 'rabbit', 'fox', 'cat', 'dog'];
+        if (animals.some(a => name.includes(a))) return 'animal';
+
+        const hostileMobs = ['zombie', 'skeleton', 'creeper', 'spider', 'enderman', 'ghast', 'wither'];
+        if (hostileMobs.some(m => name.includes(m))) return 'mob_hostile';
+
+        const neutralMobs = ['bee', 'dolphin', 'wolf', 'iron_golem', 'snow_golem'];
+        if (neutralMobs.some(m => name.includes(m))) return 'mob_neutral';
+
+        return 'mob_other';
+    }
+
     async handleSetMode(req, res) {
         try {
             const { mode, enabled } = req.body;
@@ -1790,38 +1876,38 @@ export class ExternalAPI {
     }
 
     async handleTeleport(req, res) {
-            try {
-                const { x, y, z } = req.body;
-                
-                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
-                if (typeof coordValidation === 'string') {
-                    return res.status(400).json({ 
-                        error: coordValidation,
-                        code: 'invalid_coordinates'
-                    });
-                }
-
-                const bot = this.getBotSafely();
-                if (!bot) {
-                    return res.status(503).json({ 
-                        error: 'Bot not available',
-                        code: 'bot_unavailable'
-                    });
-                }
-
-                bot.entity.position.x = coordValidation.x;
-                bot.entity.position.y = coordValidation.y;
-                bot.entity.position.z = coordValidation.z;
-
-                res.json({ 
-                    success: true, 
-                    message: `Teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`,
-                    position: coordValidation
+        try {
+            const { x, y, z } = req.body;
+            
+            const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+            if (typeof coordValidation === 'string') {
+                return res.status(400).json({ 
+                    error: coordValidation,
+                    code: 'invalid_coordinates'
                 });
-            } catch (error) {
-                this.handleError(res, error, 'teleport');
-            }   
-    }   
+            }
+
+            const bot = this.getBotSafely();
+            if (!bot) {
+                return res.status(503).json({ 
+                    error: 'Bot not available',
+                    code: 'bot_unavailable'
+                });
+            }
+
+            // Use goToCoordinates command to actually move the bot
+            const command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, 1)`;
+            const result = await executeCommand(this.agent, command);
+
+            res.json({ 
+                success: true, 
+                message: result || `Teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`,
+                position: coordValidation
+            });
+        } catch (error) {
+            this.handleError(res, error, 'teleport');
+        }
+    }
 
 
     /**

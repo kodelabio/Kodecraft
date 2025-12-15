@@ -1,19 +1,19 @@
 {
-    "id": "gxgJlhZZSt7gSfpX",
+    "id": "nzxC7sP3BpaXzKwQ",
     "meta": null,
-    "name": "startCombat",
+    "name": "startCombatMulti",
     "nodes": [
         {
-            "id": "2fbe31b4-0879-4607-b595-581cce9aa6e5",
+            "id": "19397305-46c3-4db9-bec2-6d226a3a7d52",
             "name": "Webhook",
             "type": "n8n-nodes-base.webhook",
             "position": [
                 -752,
                 160
             ],
-            "webhookId": "f0fef20e-f5b4-490c-b0b1-93da057c4323",
+            "webhookId": "1f85c9c6-af80-407c-9f97-f2bb996d8a26",
             "parameters": {
-                "path": "/kodecraft/start-collaborative-combat",
+                "path": "/kodecraft/multibot/start-collaborative-combat",
                 "options": {
                 },
                 "httpMethod": "POST",
@@ -22,7 +22,7 @@
             "typeVersion": 2.1
         },
         {
-            "id": "ef57f7cf-230d-4aa3-885c-182f124e9183",
+            "id": "64115f80-29f4-4d88-a732-9823214dedb3",
             "name": "Respond to Webhook",
             "type": "n8n-nodes-base.respondToWebhook",
             "position": [
@@ -33,12 +33,12 @@
                 "options": {
                 },
                 "respondWith": "json",
-                "responseBody": "={\n     \"sessionId\": \"{{ $('Set Combat Request').item.json.sessionId }}\",\n     \"status\": \"build_started\",\n     \"message\": \"Build orchestration started\",\n     \"workerCount\": {{ $input.all().length}}\n   } "
+                "responseBody": "={\n     \"sessionId\": \"{{ $('Set Combat Request').item.json.sessionId }}\",\n     \"status\": \"combat_started\",\n     \"message\": \"{{ $json.result.text }}\",\n     \"soldiersCount\":{{ $('Arm Soldiers').item.json.workersArmed }} } "
             },
             "typeVersion": 1.4
         },
         {
-            "id": "dfbd5ad4-099e-4a56-b312-b951d7522e15",
+            "id": "58d6323e-c9e7-4d53-bf85-6f0d0359736b",
             "name": "SpawnWorkers",
             "type": "n8n-nodes-base.httpRequest",
             "onError": "continueErrorOutput",
@@ -47,7 +47,7 @@
                 160
             ],
             "parameters": {
-                "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/spawn-workers",
+                "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/multibot/spawn-workers",
                 "method": "POST",
                 "options": {
                 },
@@ -84,7 +84,7 @@
             "typeVersion": 4.3
         },
         {
-            "id": "0f17f276-e966-4ff2-9ad3-efd6eb90f4d8",
+            "id": "8c43177b-3c9e-42fe-ae1e-9050d54b1fe9",
             "name": "Sticky Note",
             "type": "n8n-nodes-base.stickyNote",
             "position": [
@@ -99,7 +99,7 @@
             "typeVersion": 1
         },
         {
-            "id": "44f32dd5-7edc-4923-80cc-8bf050b02b17",
+            "id": "2e4da8cf-6e58-49f6-b880-941f486e6f76",
             "name": "Wait and Register",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
@@ -107,7 +107,7 @@
                 64
             ],
             "parameters": {
-                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/wait-and-register",
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/multibot/wait-and-register",
                 "method": "POST",
                 "options": {
                 },
@@ -116,7 +116,7 @@
                     "parameters": [
                         {
                             "name": "spawnedWorkers",
-                            "value": "={{ $json.spawnedWorkers }}"
+                            "value": "={{$json.spawnedWorkers}}"
                         },
                         {
                             "name": "sessionId",
@@ -139,8 +139,8 @@
                             "value": "={{ $('Set Combat Request').item.json.soldierCount }}"
                         },
                         {
-                            "name": "taskDivision",
-                            "value": "={{ $('Webhook').item.json.body.taskDivision }}"
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
                         }
                     ]
                 }
@@ -148,7 +148,7 @@
             "typeVersion": 4.3
         },
         {
-            "id": "aabb9c6b-c9c5-4f76-b08e-e53caffdd032",
+            "id": "806b261e-35ea-44de-9975-469064b28db5",
             "name": "Failed to spawn workers",
             "type": "n8n-nodes-base.respondToWebhook",
             "position": [
@@ -164,7 +164,7 @@
             "typeVersion": 1.4
         },
         {
-            "id": "9b8b9419-8d43-451a-828f-2a3217eebfd8",
+            "id": "09b75372-da04-4ab0-b1ec-ca5ee095febd",
             "name": "Failed to Build",
             "type": "n8n-nodes-base.respondToWebhook",
             "position": [
@@ -180,7 +180,7 @@
             "typeVersion": 1.4
         },
         {
-            "id": "a03aa951-ce4e-427b-b521-7161ef57c7cd",
+            "id": "8bc657a2-3374-4fa9-91d6-53265fe3a19f",
             "name": "Set Combat Request",
             "type": "n8n-nodes-base.set",
             "position": [
@@ -306,7 +306,7 @@
             "typeVersion": 3.4
         },
         {
-            "id": "a6327767-b4e8-4223-b0b4-bddb45f4e489",
+            "id": "4541de55-4526-4465-8cce-7d35180293b3",
             "name": "Store Combat Request",
             "type": "n8n-nodes-base.mongoDb",
             "position": [
@@ -329,7 +329,7 @@
             "typeVersion": 1.2
         },
         {
-            "id": "66b0a66c-4138-446b-9f4a-18eef7878536",
+            "id": "d72579b5-9a9a-461b-b696-af22ed4d081f",
             "name": "CoordinateCombat",
             "type": "n8n-nodes-base.httpRequest",
             "onError": "continueErrorOutput",
@@ -338,7 +338,7 @@
                 64
             ],
             "parameters": {
-                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/coordinate-combat",
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/multibot/coordinate-combat",
                 "method": "POST",
                 "options": {
                 },
@@ -367,7 +367,7 @@
             "typeVersion": 4.3
         },
         {
-            "id": "f0074244-3c08-4b63-9228-79c5f14f4a9b",
+            "id": "57c61775-2aa0-4d43-b76a-c00a984c13b1",
             "name": "Arm Soldiers",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
@@ -375,7 +375,7 @@
                 64
             ],
             "parameters": {
-                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/arm-workers ",
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/arm-workers ",
                 "method": "POST",
                 "options": {
                 },
@@ -384,7 +384,7 @@
                     "parameters": [
                         {
                             "name": "sessionId",
-                            "value": "={{ $json.sessionId }}"
+                            "value": "={{ $('Wait and Register').item.json.sessionId }}"
                         }
                     ]
                 }
@@ -392,14 +392,14 @@
             "typeVersion": 4.3
         },
         {
-            "id": "3385ef74-0e37-428e-888c-6b077e833242",
+            "id": "4acdc71b-1319-462b-a5c1-d5c88a23bfcf",
             "name": "Soldiers Armed",
             "type": "n8n-nodes-base.telegram",
             "position": [
                 816,
                 64
             ],
-            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "webhookId": "7bda5568-cf84-459a-ada1-72cc396c80fb",
             "parameters": {
                 "text": "={{ $json.results.map(w => w.workerName+' supplied with '+ w.itemsGiven).join('\\n\\n') }}",
                 "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
@@ -416,18 +416,43 @@
             "typeVersion": 1.2
         },
         {
-            "id": "b127c332-87ad-4367-b35f-0045c666813b",
+            "id": "8b82b608-c91e-455e-aa1c-3433af30399a",
             "name": "Wait",
             "type": "n8n-nodes-base.wait",
             "position": [
                 624,
                 64
             ],
-            "webhookId": "2f0239bc-10ed-4c9e-8aff-27232b261606",
+            "webhookId": "cc027b2e-a4a6-49a9-a7f7-077e3f0adfb8",
             "parameters": {
                 "amount": 1
             },
             "typeVersion": 1.1
+        },
+        {
+            "id": "14f90809-0bc3-4c29-a623-a84e13066b66",
+            "name": "Verify Equipment",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                320,
+                -208
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/verify-permissions",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
         }
     ],
     "active": true,
@@ -438,22 +463,12 @@
                     "body": {
                         "plan": {
                             "combatType": "mob_hunt",
-                            "rallyPoint": {
-                                "x": 180.77,
-                                "y": -60.06,
-                                "z": -467.96
-                            },
+                            "rallyPoint": "unknown",
                             "targetInfo": {
                                 "meleeRange": 3.5,
                                 "targetType": "mob",
                                 "searchRange": 30,
-                                "targetCount": "single",
-                                "primaryTarget": "iron_golem",
-                                "targetCoordinates": {
-                                    "x": 180.77,
-                                    "y": -60.06,
-                                    "z": -467.96
-                                }
+                                "primaryTarget": "iron_golem"
                             },
                             "apiEndpoint": "orchestration/send-task",
                             "codePattern": {
@@ -480,24 +495,23 @@
                             "taskDivision": {
                                 "Soldier1": {
                                     "tactics": [
-                                        "Use COMPLETE COMBAT TEMPLATE provided by system.",
+                                        "Use COMPLETE COMBAT TEMPLATE provided.",
                                         "Set SOLDIER_NAME = 'Soldier1'.",
                                         "Set TARGET_TYPE = 'iron_golem'.",
-                                        "Use coordinates to locate the golem near (180.77, -60.06, -467.96).",
-                                        "Maintain frontal position to keep aggro.",
+                                        "Maintain frontal position.",
                                         "Include timeout and melee range checks.",
-                                        "Log weapon status before combat."
+                                        "Log weapon status."
                                     ],
                                     "position": "frontal engagement",
                                     "equipment": {
                                         "armor": "whatever equipped",
                                         "weapon": "best available melee"
                                     },
-                                    "objective": "Engage the iron golem first, drawing aggro from the front.",
+                                    "objective": "Engage iron golem first.",
                                     "combatRole": "tank",
                                     "constraints": [
                                         "Do NOT use bot.pathfinder.",
-                                        "Stay within ~30 blocks of rallyPoint.",
+                                        "Stay within 30 blocks of rallyPoint.",
                                         "Maintain ~3+ blocks spacing from Soldier2."
                                     ],
                                     "engageDelay": 0,
@@ -505,21 +519,20 @@
                                 },
                                 "Soldier2": {
                                     "tactics": [
-                                        "Use COMPLETE COMBAT TEMPLATE provided by system.",
+                                        "Use COMPLETE COMBAT TEMPLATE provided.",
                                         "Set SOLDIER_NAME = 'Soldier2'.",
                                         "Set TARGET_TYPE = 'iron_golem'.",
-                                        "Wait 1.5s before engaging.",
-                                        "Use coordinate-based target search.",
-                                        "Avoid standing directly with Soldier1.",
+                                        "Wait 1.5 seconds before engaging.",
+                                        "Avoid direct angle with Soldier1.",
                                         "Include timeout and melee range checks.",
-                                        "Log weapon status before combat."
+                                        "Log weapon status."
                                     ],
-                                    "position": "opposite side of the golem",
+                                    "position": "flanking position",
                                     "equipment": {
                                         "armor": "whatever equipped",
                                         "weapon": "best available melee"
                                     },
-                                    "objective": "Join the fight after 1.5s, attacking from the opposite side.",
+                                    "objective": "Flank the iron golem after 1.5 seconds.",
                                     "combatRole": "flanker",
                                     "constraints": [
                                         "Do NOT use bot.pathfinder.",
@@ -529,7 +542,7 @@
                                     "retreatCondition": "bot.health < 12"
                                 }
                             },
-                            "combatRequest": "Deploy two soldiers to attack an iron golem at specified coordinates.",
+                            "combatRequest": "Engage an iron golem with two soldiers.",
                             "executionType": "multibot",
                             "combatSettings": {
                                 "meleeRange": 3.5,
@@ -540,10 +553,10 @@
                             "battlefieldInfo": {
                                 "hazards": "unknown",
                                 "terrain": "unknown",
-                                "location": "coords(180.77, -60.06, -467.96)"
+                                "location": "unknown"
                             },
-                            "failureCondition": "Either soldier’s health drops below 12 or target leaves 30-block radius from rally point.",
-                            "victoryCondition": "Target iron golem is killed OR 60-second combat timeout reached.",
+                            "failureCondition": "Either soldier’s health drops below 12 or target is not within 30-block range.",
+                            "victoryCondition": "Iron golem is defeated or 60-second combat timeout reached.",
                             "coordinationStrategy": "pincer"
                         },
                         "username": "Santamm67",
@@ -554,12 +567,12 @@
                             "weather": "clear",
                             "gamemode": "creative",
                             "position": {
-                                "x": 200.61779404677884,
+                                "x": -429.68502214421926,
                                 "y": -60,
-                                "z": -460.5000153086098
+                                "z": 32.50007068017692
                             },
-                            "raw_stats": "\nSTATS\n- Position: x: 200.62, y: -60.00, z: -460.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Night- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
-                            "time_of_day": 19992,
+                            "raw_stats": "\nSTATS\n- Position: x: -429.69, y: -60.00, z: 32.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Night- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                            "time_of_day": 12216,
                             "current_action": "Idle"
                         },
                         "conversationId": "5415489232",
@@ -576,12 +589,12 @@
                         "connection": "close",
                         "user-agent": "axios/1.12.0",
                         "content-type": "application/json",
-                        "content-length": "3561",
+                        "content-length": "3152",
                         "accept-encoding": "gzip, compress, deflate, br",
                         "x-forwarded-for": "3.10.173.248",
                         "x-forwarded-proto": "https"
                     },
-                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/start-collaborative-combat",
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/start-collaborative-combat",
                     "executionMode": "production"
                 }
             }
@@ -590,7 +603,7 @@
     "settings": {
         "executionOrder": "v1"
     },
-    "versionId": "a5d0196c-46bf-4816-9b4d-a8a2a102ed5f",
+    "versionId": "3d86d84d-db7b-4bb9-918f-b33f43d130c3",
     "staticData": null,
     "connections": {
         "Wait": {
@@ -673,11 +686,22 @@
                 ]
             ]
         },
-        "Wait and Register": {
+        "Verify Equipment": {
             "main": [
                 [
                     {
                         "node": "Arm Soldiers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait and Register": {
+            "main": [
+                [
+                    {
+                        "node": "Verify Equipment",
                         "type": "main",
                         "index": 0
                     }

@@ -3,7 +3,7 @@ import { makeCompartment, lockdown } from './library/lockdown.js';
 import * as skills from './library/skills.js';
 import * as world from './library/world.js';
 import { Vec3 } from 'vec3';
-import ESLint from "eslint";
+import { ESLint } from "eslint";
 
 export class Coder {
     constructor(agent) {

@@ -1123,28 +1123,28 @@ registerWorkersForSession(sessionId, workers) {
 
             
             const response = await fetch(`http://localhost:${workerPort}/api/agent/newAction`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody),
-            timeout: 900000  // 15 minutes
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody),
+                timeout: 900000  // 15 minutes
             });
 
             console.log(`   Response status: ${response.status}`);
 
             if (response.ok) {
-            const result = await response.json();
-            console.log(`✅ Task sent successfully to port ${workerPort}`);
-            console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
-            return {
-                success: true,
-                port: workerPort,
-                taskId: taskId,
-                result: result
-            };
+                const result = await response.json();
+                console.log(`✅ Task sent successfully to port ${workerPort}`);
+                console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
+                return {
+                    success: true,
+                    port: workerPort,
+                    taskId: taskId,
+                    result: result
+                };
             } else {
-            const errorText = await response.text();
-            console.error(`❌ Failed to send task to port ${workerPort}: HTTP ${response.status}`);
-            console.error(`   Error: ${errorText.substring(0, 200)}`);
+                const errorText = await response.text();
+                console.error(`❌ Failed to send task to port ${workerPort}: HTTP ${response.status}`);
+                console.error(`   Error: ${errorText.substring(0, 200)}`);
             return {
                 success: false,
                 port: workerPort,

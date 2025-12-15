@@ -1311,12 +1311,14 @@ export class ExternalAPI {
                         this.agent.history.add('user', prompt);
                         
                         const command = `!newAction("${prompt}")`;
+                        //console.log(`[API Background newAction] Command to execute:`, command);  // ✅ ADD THIS
+                        //console.log(`[API Background newAction] Command length:`, command.length);  // ✅ ADD THIS
                         const result = await executeCommand(this.agent, command);
-                        
+                        //console.log(`[API Background newAction] Execute result:`, result);
                         const taskDuration = Date.now() - taskStartTime;
                         //const endBlockCount = getBlockCount(this.agent.bot);
                         //const blocksPlaced = endBlockCount - startBlockCount;
-                        console.log(`[API] Task executed successfully (${taskDuration}ms)`);
+                        //console.log(`[API] Task executed successfully (${taskDuration}ms)`);
                         
                         // Call completion callback
                         if (global.reportTaskCompletion) {
@@ -2120,7 +2122,7 @@ export class ExternalAPI {
             const result = await this.orchestration.sendTaskToWorker(workerPort, 
                                             taskPrompt, 
                                             conversationId,
-                                            callbackWebhookUrl || settings.n8n_webhook_url_stage_complete,
+                                            callbackWebhookUrl || settings.n8n_webhook_url_complete,
                                             taskId || null);
 
             if (result.success) {

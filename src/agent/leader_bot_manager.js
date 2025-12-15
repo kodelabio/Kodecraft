@@ -13,6 +13,28 @@ export class LeaderBotManager {
         
         this.startCleanupTimer();
     }
+    
+    async isPortAvailable(port) {
+        return new Promise((resolve) => {
+            const server = net.createServer();
+            
+            server.once('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    resolve(false);
+                } else {
+                    resolve(false);
+                }
+            });
+            
+            server.once('listening', () => {
+                server.close();
+                resolve(true);
+            });
+            
+            server.listen(port, '127.0.0.1');
+        });
+    }
+
 
     async getOrSpawnLeaderBot(userId, botName) {
         console.log(`[LeaderBotManager] getOrSpawnLeaderBot for user ${userId}`);
@@ -49,7 +71,12 @@ export class LeaderBotManager {
     }
 
     async spawnLeaderBot(userId, botName) {
-        const port = this.nextLeaderPort++;
+        const port = this.nextLeaderPort++; 
+        const countId = this.leaderBots.size;
+    
+        this.nextLeaderPort = port + 1;
+    
+        userId = String(userId);  // ← Normalize to string
         
         console.log(`[LeaderBotManager] 🚀 Spawning leader bot for user ${userId} on port ${port}`);
 
@@ -65,7 +92,7 @@ export class LeaderBotManager {
             });
 
             // Start the agent (load_memory=true, init_message=null, count_id=userId)
-            agentProcess.start(true, null, userId);
+            agentProcess.start(true, null, countId);
 
             // Store leader bot info
             const leaderInfo = {
@@ -77,7 +104,8 @@ export class LeaderBotManager {
                 spawnTime: Date.now(),
                 lastActivity: Date.now()
             };
-
+            
+            agentProcess.running = true;  // ← ADD THIS
             this.leaderBots.set(userId, leaderInfo);
             this.portToUserId.set(port, userId);
 
@@ -148,13 +176,19 @@ export class LeaderBotManager {
     }
 
     getLeaderBotForUser(userId) {
+        console.log(`[LeaderBotManager] Looking for bot for userId: ${userId}`);
+        userId = String(userId);  // ✅ Always convert to string
         const info = this.leaderBots.get(userId);
         
-        if (!info) return null;
-
-        if (!info.agentProcess.running) {
+        if (!info) {
+            console.warn(`[LeaderBotManager] No info found for userId ${userId}`);
+            return null;
+        }
+        console.log(`[LeaderBotManager] Found bot! Port: ${info.port}, Running: ${info.agentProcess.running}`);
+        // Check if bot is actually running
+        if (info.agentProcess && !info.agentProcess.running) {
+            console.warn(`[LeaderBotManager] Bot for ${userId} is not running`);
             this.leaderBots.delete(userId);
-            this.portToUserId.delete(info.port);
             return null;
         }
 

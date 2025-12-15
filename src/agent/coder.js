@@ -12,6 +12,7 @@ export class Coder {
         this.fp = '/bots/'+agent.name+'/action-code/';
         this.code_template = '';
         this.code_lint_template = '';
+        
 
         readFile('./bots/execTemplate.js', 'utf8', (err, data) => {
             if (err) throw err;

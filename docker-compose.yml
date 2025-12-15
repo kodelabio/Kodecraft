@@ -71,6 +71,7 @@ services:
       - MINECRAFT_PORT=55916
       - MINDSERVER_PORT=8080
       - MINDSERVER_HOST=mindserver
+      - N8N_WEBHOOK_URL=http://172.31.14.250:5678/webhook
     volumes:
       - ./src:/app/src 
       - ./logs:/app/logs

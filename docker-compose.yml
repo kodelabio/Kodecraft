@@ -30,39 +30,55 @@ services:
     networks:
       - kodecraft-network
 
-  # Leader bot instance
-  leader:
+
+  mindserver:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kodecraft-leader
+    container_name: kodecraft-mindserver
     ports:
-      - "4001:4001"
+      - "8080:8080"
     environment:
-      - DISPLAY=:99
-      - NODE_ENV=production
-      # Connect to Minecraft server via container name
-      - MINECRAFT_HOST=minecraft-server
-      - MINECRAFT_PORT=55916
+      - MINDSERVER_PORT=8080
     volumes:
-      # Mount logs directory for persistence
-      - ./logs:/app/logs
-      # Mount .env file (create this in your project root)
       - ./.env:/app/.env:ro
-      # Optional: mount source for development
-      # - ./src:/app/src
+      - ./logs:/app/logs
     restart: unless-stopped
     networks:
       - kodecraft-network
-    #depends_on:
-    #  minecraft-server:
-    #    condition: service_healthy
+    entrypoint: node
+    command: src/process/mindserver.js
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4001/api/agent/status"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kodecraft-gateway
+    ports:
+      - "4001:4001"
+    environment:
+      - DISPLAY=:99  # Keep this only for api-gateway
+      - NODE_ENV=production
+      - MINECRAFT_HOST=minecraft-server
+      - MINECRAFT_PORT=55916
+      - MINDSERVER_PORT=8080
+      - MINDSERVER_HOST=mindserver
+    volumes:
+      - ./src:/app/src 
+      - ./logs:/app/logs
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    networks:
+      - kodecraft-network
+    depends_on:
+      - mindserver
+      - minecraft-server
+    command: npm start
 
   # Uncomment the sections below if you want to use MongoDB and n8n in development
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { History } from './history.js';
 import { Coder } from './coder.js';
 import { VisionInterpreter } from './vision/vision_interpreter.js';
@@ -12,7 +13,6 @@ import { SelfPrompter } from './self_prompter.js';
 import convoManager from './conversation.js';
 import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
 import { addBrowserViewer } from './vision/browser_viewer.js';
-import { serverProxy } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
 import { say } from './speak.js';
@@ -24,14 +24,26 @@ const fetch = globalThis.fetch || (async (...args) => {
 });
 
 export class Agent {
-    async start(load_mem = false, init_message = null, count_id = 0) {
+    async start(load_mem = false, init_message = null, count_id = 0, botName = null) {
         this.last_sender = null;
         this.count_id = count_id;
 
+        // Load profile from file
+        let profile = settings.profile || {};
+        if (settings.profiles && settings.profiles.length > 0) {
+            try {
+                const profilePath = settings.profiles[0];
+                profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+                console.log(`Loaded profile from ${profilePath}`);
+            } catch (error) {
+                console.warn(`Failed to load profile from ${settings.profiles[0]}, using defaults:`, error.message);
+            }
+        }
+
         // Initialize components with more detailed error handling
         this.actions = new ActionManager(this);
-        this.prompter = new Prompter(this, settings.profile);
-        this.name = this.prompter.getName();
+        this.prompter = new Prompter(this, profile);
+        this.name = botName || this.prompter.getName();
         console.log(`Initializing agent ${this.name}...`);
         this.history = new History(this);
         this.coder = new Coder(this);
@@ -95,7 +107,7 @@ export class Agent {
             
             // Only login to MindServer if in external brain mode
             if (settings.brain_mode === 'external') {
-                serverProxy.login();
+                this.serverProxy.login();
             }
 
             // Set skin for profile, requires Fabric Tailor. (https://modrinth.com/mod/fabrictailor)
@@ -113,17 +125,22 @@ export class Agent {
                 clearTimeout(spawnTimeout);
                 addBrowserViewer(this.bot, count_id);
                 console.log('Initializing vision intepreter...');
-                this.vision_interpreter = new VisionInterpreter(this, settings.allow_vision);
+                try {
+                    this.vision_interpreter = new VisionInterpreter(this, settings.allow_vision);
+                } catch (visionError) {
+                    console.warn('Vision initialization failed (non-fatal):', visionError.message);
+                    this.vision_interpreter = null;
+                }
+                //this.vision_interpreter = new VisionInterpreter(this, settings.allow_vision);
 
                 // wait for a bit so stats are not undefined
                 await new Promise((resolve) => setTimeout(resolve, 1000));
 
                 console.log(`${this.name} spawned.`);
                 this.clearBotLogs();
-                           this._setupEventHandlers(save_data, init_message);
                 // Setup event handlers based on brain mode
-                if (settings.brain_mode === 'external') {
-                    this._setupExternalMode(save_data, init_message);
+                if (settings.brain_mode === 'external' && !settings.is_worker_bot) {
+                    await this._setupExternalMode(save_data, init_message);
                 } else {
                     this._setupEventHandlers(save_data, init_message);
                 }
@@ -190,7 +207,7 @@ export class Agent {
             this.bot.on('whisper', respondFunc);
 
             this.bot.on('chat', (username, message) => {
-                if (serverProxy.getNumOtherAgents() > 0) return;
+                if (this.serverProxy.getNumOtherAgents() > 0) return;
                 // only respond to open chat messages when there are no other agents
                 respondFunc(username, message);
             });
@@ -597,7 +614,7 @@ export class Agent {
     }
 
     killAll() {
-        serverProxy.shutdown();
+        this.serverProxy.shutdown();
     }
 
     // New method for external brain mode setup
@@ -606,8 +623,11 @@ export class Agent {
         
         // Start the REST API server
         this.externalAPI = new ExternalAPI(this);
-        const apiPort = settings.external_api_port || 4001;
-        await this.externalAPI.start(apiPort);
+        // For workers, use the assigned port; for leader, calculate from count_id
+        const agentApiPort = settings.assigned_api_port || 
+                         (settings.leader_bot_base_port + this.count_id);
+        console.log(`Starting ExternalAPI on port ${agentApiPort}`);
+        await this.externalAPI.start(agentApiPort);
         
         // Setup chat forwarder to n8n webhook
         this.setupChatForwarder();

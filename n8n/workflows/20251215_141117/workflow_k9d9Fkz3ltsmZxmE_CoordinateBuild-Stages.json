@@ -57,8 +57,8 @@
             "name": "Get Leader Position",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                784,
-                144
+                736,
+                96
             ],
             "parameters": {
                 "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/status",
@@ -73,7 +73,7 @@
             "type": "n8n-nodes-base.httpRequest",
             "position": [
                 1232,
-                296
+                304
             ],
             "parameters": {
                 "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/reserve-location",
@@ -107,7 +107,7 @@
             "onError": "continueErrorOutput",
             "position": [
                 1456,
-                296
+                304
             ],
             "parameters": {
                 "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/teleport-workers ",
@@ -168,7 +168,7 @@
             "disabled": true,
             "position": [
                 -112,
-                664
+                672
             ],
             "parameters": {
                 "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/distribute-tasks",
@@ -243,8 +243,8 @@
             "name": "Get Player Position",
             "type": "n8n-nodes-base.httpRequest",
             "position": [
-                784,
-                440
+                816,
+                480
             ],
             "parameters": {
                 "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/player-position",
@@ -271,7 +271,7 @@
                 368
             ],
             "parameters": {
-                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.location; // e.g., \"next to player Mauri67\"\n\nfunction parseLocation(input) {\n    const coordMatch = input.match(/^(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)$/);\n    if (coordMatch) {\n        return {\n            type: 'coordinates',\n            x: parseFloat(coordMatch[1]),\n            y: parseFloat(coordMatch[2]),\n            z: parseFloat(coordMatch[3])\n        };\n    }\n\n    const playerMatch = input.match(/(?:next\\s+to\\s+)?player\\s+(\\w+)/i);\n    if (playerMatch) {\n        return {\n            type: 'player',\n            name: playerMatch[1]\n        };\n    }\n\n    return {\n        type: 'landmark',\n        name: input.trim()\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };\n"
+                "jsCode": "// n8n Code Node - Location Parser\n// Parses location input: coordinates, player name, or landmark\n\nconst input = $input.first().json.body.location; // e.g., \"next to player Mauri67\" or \"-9, -60, 5\"\n\nfunction parseLocation(input) {\n    if (!input || typeof input !== 'string') {\n        return {\n            type: 'invalid',\n            error: 'Location must be a string'\n        };\n    }\n\n    // PATTERN 0: JSON object with x, y, z\n    // Matches: \"{\\\"x\\\":375.26,\\\"y\\\":-60,\\\"z\\\":-505.5}\" or '{\"x\":375.26,\"y\":-60,\"z\":-505.5}'\n    try {\n        const jsonObj = JSON.parse(input);\n        if (jsonObj && typeof jsonObj === 'object' && \n            'x' in jsonObj && 'y' in jsonObj && 'z' in jsonObj) {\n            return {\n                type: 'coordinates',\n                x: parseFloat(jsonObj.x),\n                y: parseFloat(jsonObj.y),\n                z: parseFloat(jsonObj.z),\n                original: input\n            };\n        }\n    } catch (e) {\n        // Not valid JSON, continue to other patterns\n    }\n\n    // PATTERN 1: Explicit coordinates (x, y, z)\n    // Matches: \"100, -60, 200\" or \"100 -60 200\" or \"-100.5 -60.5 200.5\"\n    const coordMatch = input.match(\n        /^\\s*(-?\\d+(?:\\.\\d+)?)\\s*[,\\s]\\s*(-?\\d+(?:\\.\\d+)?)\\s*[,\\s]\\s*(-?\\d+(?:\\.\\d+)?)\\s*$/\n    );\n    if (coordMatch) {\n        return {\n            type: 'coordinates',\n            x: parseFloat(coordMatch[1]),\n            y: parseFloat(coordMatch[2]),\n            z: parseFloat(coordMatch[3]),\n            original: input\n        };\n    }\n\n    // PATTERN 2: Player reference\n    // Matches: \"player Mauri67\", \"near player Mauri67\", \"next to player John\", \"by player X\"\n    const playerMatch = input.match(\n        /(?:near|next\\s+to|by)?\\s*player\\s+(\\w+)/i\n    );\n    if (playerMatch) {\n        return {\n            type: 'player',\n            name: playerMatch[1],\n            original: input\n        };\n    }\n\n    // PATTERN 3: Fallback - treat as landmark\n    // \"at spawn\", \"near village\", etc.\n    return {\n        type: 'landmark',\n        name: input.trim(),\n        original: input\n    };\n}\n\nconst location = parseLocation(input);\n\n// Optional: Log for debugging\nconsole.log('Parsed location:', location);\n\nreturn { location };"
             },
             "typeVersion": 2
         },
@@ -373,36 +373,12 @@
             "type": "n8n-nodes-base.code",
             "position": [
                 1008,
-                296
+                304
             ],
             "parameters": {
-                "jsCode": "const status = $json;\nreturn {\n  Position: {\n    x: Math.floor(status.position?.x || 0),\n    y: Math.floor(status.position?.y || 64),\n    z: Math.floor(status.position?.z || 0)\n  }\n}"
+                "jsCode": "const position = $input.first().json.position || $input.first().json.location;\nreturn {\n  Position: {\n    x: Math.floor(position?.x || 0),\n    y: Math.floor(position?.y || -60),\n    z: Math.floor(position?.z || 0)\n  }\n}"
             },
             "typeVersion": 2
-        },
-        {
-            "id": "45275f79-4afc-4c5f-bdf1-5d85dfa229a7",
-            "name": "Workers Created",
-            "type": "n8n-nodes-base.telegram",
-            "position": [
-                2128,
-                192
-            ],
-            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
-            "parameters": {
-                "text": "=Workers Teleported to task location and tasks assigned.",
-                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
-                "additionalFields": {
-                    "parse_mode": "HTML"
-                }
-            },
-            "credentials": {
-                "telegramApi": {
-                    "id": "4yys1NU8F0wF3Nr3",
-                    "name": "Minecraft-Test"
-                }
-            },
-            "typeVersion": 1.2
         },
         {
             "id": "4f5072d2-6e50-4300-b339-483eb59e58c7",
@@ -446,7 +422,7 @@
                 192
             ],
             "parameters": {
-                "jsCode": "// Convert taskDivision into STAGES (Dictionary format)\n// Stages keyed by stage number, Tasks keyed by worker name\n// Dynamically handles ANY number of workers - no hardcoding\n\nconst buildLocation = $('Reserve Location').first().json.buildLocation;\nconst taskDivision = $('Webhook').first().json.body.taskDivision;\nconst workers = $('Webhook').first().json.body.workers;\n\n// Parse build Request\nconst buildRequest = $('Webhook').first().json.body.buildRequest;\nconst dimensionMatch = buildRequest.match(/(\\d+)\\s*x\\s*(\\d+)/i);\nconst houseWidth = dimensionMatch ? parseInt(dimensionMatch[1]) : 9;  // default 9\nconst houseDepth = dimensionMatch ? parseInt(dimensionMatch[2]) : 7;\n\nconst houseX = buildLocation.x;\nconst houseY = buildLocation.y;\nconst houseZ = buildLocation.z;\n\n// Calculate footprint boundaries as per request\n// Calculate footprint from actual dimensions\nconst footprintMinX = Math.floor(houseX - houseWidth / 2);\nconst footprintMaxX = Math.floor(houseX + (houseWidth - 1) / 2);\n\nconst footprintMinZ = Math.floor(houseZ - houseDepth / 2);\nconst footprintMaxZ = Math.floor(houseZ + (houseDepth - 1) / 2);\n\nconst floorY = houseY;\nconst wallHeight = 3;\nconst maxY = houseY + wallHeight;\n\nconst workerNames = Object.keys(taskDivision);\nconst numWorkers = workerNames.length;\nconst footprintWidth = footprintMaxX - footprintMinX + 1; // 7\n\nconsole.log(`House footprint: x:${footprintMinX} to ${footprintMaxX}, z:${footprintMinZ} to ${footprintMaxZ}, y:${floorY} to ${maxY}`);\nconsole.log(`Number of workers: ${numWorkers}`);\n\n// Dynamically determine worker x-ranges (split footprint equally)\nconst workerRanges = {};\nconst blocksPerWorker = footprintWidth / numWorkers;\n\nworkerNames.forEach((workerName, index) => {\n  const rangeStart = footprintMinX + Math.floor(index * blocksPerWorker);\n  const rangeEnd = footprintMinX + Math.floor((index + 1) * blocksPerWorker) - 1;\n  \n  workerRanges[workerName] = { \n    xMin: rangeStart, \n    xMax: rangeEnd,\n    index: index\n  };\n  \n  console.log(`${workerName} (${index + 1}/${numWorkers}): x:${rangeStart} to ${rangeEnd}`);\n});\n\n// Build stages as DICTIONARY (keyed by stage number)\nconst stages = {};\nconst maxSubtasks = Math.max(...Object.values(taskDivision).map(t => t.subtasks.length));\n\nfor (let stageNum = 0; stageNum < maxSubtasks; stageNum++) {\n  const stageTasks = {}; // Dictionary with worker names as keys\n  let hasWorkers = false;\n  \n  workerNames.forEach((workerName) => {\n    const taskObj = taskDivision[workerName];\n    const range = workerRanges[workerName];\n    \n    if (stageNum >= taskObj.subtasks.length) {\n      return; // This worker doesn't have this stage\n    }\n    \n    hasWorkers = true;\n    const subtask = taskObj.subtasks[stageNum];\n    \n    // Replace placeholder coordinates with absolute coordinates\n    let updatedSubtask = subtask\n      .replace(/x:\\s*minX\\s*to\\s*midX/gi, `x:${range.xMin} to ${range.xMax}`)\n      .replace(/x:\\s*midX\\s*to\\s*maxX/gi, `x:${range.xMin} to ${range.xMax}`)\n      .replace(/x:\\s*minX\\s*to\\s*maxX/gi, `x:${footprintMinX} to ${footprintMaxX}`)\n      .replace(/z:\\s*minZ\\s*to\\s*maxZ/gi, `z:${footprintMinZ} to ${footprintMaxZ}`)\n      .replace(/height.*\\(e\\.g\\.,\\s*\\d+\\s*blocks?\\s*tall\\)/gi, `height (${wallHeight} blocks tall)`)\n      .replace(/\\b3\\s*blocks?\\s*tall\\b/gi, `${wallHeight} blocks tall`)\n      .replace(/midX/g, `${range.xMax}`)\n      .replace(/midline/g, `midline at x:${range.xMax}`)\n      .replace(/minX/g, `${footprintMinX}`)\n      .replace(/maxX/g, `${footprintMaxX}`)\n      .replace(/minZ/g, `${footprintMinZ}`)\n      .replace(/maxZ/g, `${footprintMaxZ}`);\n    \n    // Find worker port from workers array\n    const workerData = workers.find(w => w.workerName === workerName);\n    const port = workerData ? workerData.port : null;\n    \n    if (!port) {\n      console.warn(`Warning: No port found for ${workerName}`);\n      return;\n    }\n    \n    // Determine boundary messages based on worker position\n    let boundaryMsg = '';\n    const nextWorkerIndex = range.index + 1;\n    const prevWorkerIndex = range.index - 1;\n    \n    if (nextWorkerIndex < numWorkers) {\n      const nextWorkerName = workerNames[nextWorkerIndex];\n      boundaryMsg += `- Right boundary (shared with ${nextWorkerName}): x:${range.xMax}\\n`;\n    }\n    if (prevWorkerIndex >= 0) {\n      const prevWorkerName = workerNames[prevWorkerIndex];\n      boundaryMsg += `- Left boundary (shared with ${prevWorkerName}): x:${range.xMin}\\n`;\n    }\n    \n    // Build full prompt for this stage/worker\n    const fullPrompt = `${taskObj.objective}\n\nSTAGE ${stageNum + 1} OF ${taskObj.subtasks.length}:\n${updatedSubtask}\n\nABSOLUTE COORDINATES FOR THIS WORKER:\n- X range: ${range.xMin} to ${range.xMax}\n- Z range: ${footprintMinZ} to ${footprintMaxZ}\n- Y range: ${floorY} to ${maxY}\n${boundaryMsg}\nHouse center: (${houseX}, ${houseY}, ${houseZ})\n\nScope: ${taskObj.scope}\n\nConstraints: ${taskObj.constraints}\n- Stay within x:${range.xMin} to ${range.xMax}\n- Coordinate with other workers at shared boundaries\n\nWork together with nearby workers to create a cohesive structure.`;\n    \n    // Add task to stageTasks dictionary with worker name as key\n    stageTasks[workerName] = {\n      stageNumber: stageNum + 1,\n      totalStages: taskObj.subtasks.length,\n      worker: workerName,\n      port: port,\n      status: \"not-started\",\n      subtask: updatedSubtask,\n      objective: taskObj.objective,\n      coordinates: {\n        xMin: range.xMin,\n        xMax: range.xMax,\n        zMin: footprintMinZ,\n        zMax: footprintMaxZ,\n        yMin: floorY,\n        yMax: maxY\n      },\n      fullPrompt: fullPrompt,\n      completionTime: null,\n      result: null\n    };\n  });\n  \n  // Only add stage if it has workers\n  if (hasWorkers) {\n    const stageKey = (stageNum + 1).toString();\n    stages[stageKey] = {\n      stageNumber: stageNum + 1,\n      status: \"not-started\",\n      tasks: stageTasks\n    };\n  }\n}\n\nconsole.log(`Generated ${Object.keys(stages).length} stages`);\nObject.keys(stages).forEach(stageKey => {\n  const stage = stages[stageKey];\n  console.log(`Stage ${stage.stageNumber}: ${Object.keys(stage.tasks).join(\", \")} [${stage.status}]`);\n});\n\nreturn { \n  stages: stages,\n  totalStages: Object.keys(stages).length,\n  houseInfo: {\n    center: { x: houseX, y: houseY, z: houseZ },\n    footprint: `${footprintMaxX - footprintMinX + 1}x${footprintMaxZ - footprintMinZ + 1}`,\n    boundaries: { \n      xMin: footprintMinX, \n      xMax: footprintMaxX, \n      zMin: footprintMinZ, \n      zMax: footprintMaxZ, \n      floorY: floorY, \n      maxY: maxY \n    },\n    workers: Object.keys(workerRanges).map(name => ({\n      name: name,\n      xRange: `${workerRanges[name].xMin} to ${workerRanges[name].xMax}`\n    }))\n  }\n};"
+                "jsCode": "// Extract stages directly from Planner output\n// No more coordinate replacement or dynamic division needed\n\nconst plan = $('Webhook').first().json.body.plan;\n\n// Validate plan came back successfully\nif (!plan || !plan.stages) {\n  throw new Error('No valid plan received from Planner');\n}\n\n// Extract stages directly (already complete from planner)\nconst stages = plan.stages;\nconst totalStages = plan.metadata.totalStages;\n\nconsole.log(`✅ Plan validated and ready`);\nconsole.log(`Total stages: ${totalStages}`);\nconsole.log(`Stages: ${Object.keys(stages).join(', ')}`);\n\n// Optional: Minimal transformation if needed\n// (e.g., convert stage format or add metadata)\nconst processedStages = {};\nObject.entries(stages).forEach(([stageKey, stageData]) => {\n  processedStages[stageKey] = {\n    ...stageData,\n    startTime: null,\n    completedCount: 0\n  };\n});\n\nreturn {\n  stages: processedStages,\n  totalStages: totalStages,\n  metadata: plan.metadata,\n  buildingRequest: plan.buildingRequest,\n  coordinationStrategy: plan.coordinationStrategy,\n  status: 'ready'\n};\n\n\n\n\n"
             },
             "typeVersion": 2
         },
@@ -473,7 +449,7 @@
                 192
             ],
             "parameters": {
-                "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, stages, completedStages, startTime",
+                "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, taskDivision, metadata, stages, completedStages, startTime",
                 "options": {
                 },
                 "operation": "insert",
@@ -510,7 +486,7 @@
                             "id": "fb2c9141-f155-47bf-bdd0-2de0b04591a7",
                             "name": "buildRequest",
                             "type": "string",
-                            "value": "={{ $('Webhook').item.json.body.buildRequest }}"
+                            "value": "={{ $('Webhook').item.json.body.plan.buildingRequest }}"
                         },
                         {
                             "id": "3171a908-c54a-4d72-ba04-964e2c61d055",
@@ -522,7 +498,7 @@
                             "id": "d0445b8d-4978-4b18-a70b-70a1a0747992",
                             "name": "location",
                             "type": "object",
-                            "value": "={{ $('Floor Coordinates').item.json.Position }}"
+                            "value": "={{ $('Reserve Location').item.json.buildLocation }}"
                         },
                         {
                             "id": "bb28eb76-5bdf-414f-98f9-fea6f16a7efb",
@@ -547,6 +523,18 @@
                             "name": "workerCount",
                             "type": "number",
                             "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "id": "6d0cab68-7f6b-42e3-86d0-a07c9e7c2c7c",
+                            "name": "taskDivision",
+                            "type": "object",
+                            "value": "={{ $('Webhook').item.json.body.plan.taskDivision }}"
+                        },
+                        {
+                            "id": "726fd512-17c3-46a5-b69e-19cb47653330",
+                            "name": "metadata",
+                            "type": "object",
+                            "value": "={{ $('Webhook').item.json.body.plan.metadata }}"
                         }
                     ]
                 }
@@ -577,7 +565,7 @@
                         },
                         {
                             "name": "stages",
-                            "value": "={{ $json.stages}}"
+                            "value": "={{ $('Stages and  Tasks').item.json.stages }}"
                         },
                         {
                             "name": "workerCount",
@@ -601,8 +589,8 @@
             "name": "Sticky Note",
             "type": "n8n-nodes-base.stickyNote",
             "position": [
-                1112,
-                40
+                1120,
+                48
             ],
             "parameters": {
                 "width": 336,
@@ -647,6 +635,30 @@
                 }
             },
             "typeVersion": 4.3
+        },
+        {
+            "id": "45275f79-4afc-4c5f-bdf1-5d85dfa229a7",
+            "name": "Workers Assigned",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2128,
+                192
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Workers Teleported to task location and tasks assigned.",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
         }
     ],
     "active": true,
@@ -655,67 +667,194 @@
             {
                 "json": {
                     "body": {
+                        "plan": {
+                            "stages": {
+                                "1": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Build western section of wall: 3 blocks wide (X: 380-382), 5 blocks long (Z: -532 to -528), 4 blocks tall (Y: -60 to -57) using cobblestone",
+                                        "objective": "Build the western half of the wall",
+                                        "fullPrompt": "You are Worker1, already positioned at the build site. Do NOT move or navigate. Build the WESTERN section of a small cobblestone wall immediately.\n\nSPECIFICATIONS:\n- Material: cobblestone\n- Your section: X: 380 to 382 (3 blocks wide)\n- Z range: -532 to -528 (5 blocks long)\n- Y range: -60 to -57 (4 blocks tall, starting at ground level -60)\n- Wall runs along the Z-axis\n\nBUILD INSTRUCTIONS:\n1. Start at Y=-60 (ground level in flat world)\n2. Place cobblestone in a solid wall pattern\n3. Build up to Y=-57 (4 blocks high total)\n4. Fill the entire western section: all X from 380-382, all Z from -532 to -528\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=383 or beyond (that is Worker2's section)\n- Do NOT break existing blocks\n- Do NOT move from your position - build from where you are\n- Worker2 is simultaneously building the eastern section (X: 383-385)\n\nThis is Stage 1 of 2 total stages. Complete your wall section fully before signaling completion.",
+                                        "constraints": [
+                                            "Do NOT place blocks at or beyond X=383 (Worker2's section)",
+                                            "Do NOT break more than 10 sequential blocks",
+                                            "Do NOT alter terrain outside the wall footprint",
+                                            "Assume Worker2 is building east section simultaneously"
+                                        ],
+                                        "coordinates": {
+                                            "xMax": 382,
+                                            "xMin": 380,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -528,
+                                            "zMin": -532
+                                        },
+                                        "stageNumber": 1,
+                                        "totalStages": 2
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Build eastern section of wall: 3 blocks wide (X: 383-385), 5 blocks long (Z: -532 to -528), 4 blocks tall (Y: -60 to -57) using cobblestone",
+                                        "objective": "Build the eastern half of the wall",
+                                        "fullPrompt": "You are Worker2, already positioned at the build site. Do NOT move or navigate. Build the EASTERN section of a small cobblestone wall immediately.\n\nSPECIFICATIONS:\n- Material: cobblestone\n- Your section: X: 383 to 385 (3 blocks wide)\n- Z range: -532 to -528 (5 blocks long)\n- Y range: -60 to -57 (4 blocks tall, starting at ground level -60)\n- Wall runs along the Z-axis\n\nBUILD INSTRUCTIONS:\n1. Start at Y=-60 (ground level in flat world)\n2. Place cobblestone in a solid wall pattern\n3. Build up to Y=-57 (4 blocks high total)\n4. Fill the entire eastern section: all X from 383-385, all Z from -532 to -528\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=382 or below (that is Worker1's section)\n- Do NOT break existing blocks\n- Do NOT move from your position - build from where you are\n- Worker1 is simultaneously building the western section (X: 380-382)\n\nThis is Stage 1 of 2 total stages. Complete your wall section fully before signaling completion.",
+                                        "constraints": [
+                                            "Do NOT place blocks at or below X=382 (Worker1's section)",
+                                            "Do NOT break more than 10 sequential blocks",
+                                            "Do NOT alter terrain outside the wall footprint",
+                                            "Assume Worker1 is building west section simultaneously"
+                                        ],
+                                        "coordinates": {
+                                            "xMax": 385,
+                                            "xMin": 383,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -528,
+                                            "zMin": -532
+                                        },
+                                        "stageNumber": 1,
+                                        "totalStages": 2
+                                    },
+                                    "stageTitle": "Wall Construction",
+                                    "stageNumber": 1
+                                },
+                                "2": {
+                                    "Worker1": {
+                                        "port": 4002,
+                                        "status": "not-started",
+                                        "worker": "Worker1",
+                                        "subtask": "Inspect and fill any gaps in western wall section, ensure seamless connection at X=382/383 boundary with Worker2's section",
+                                        "objective": "Finish and verify western wall section",
+                                        "fullPrompt": "You are Worker1. This is Stage 2 (final stage). Your wall section should now be complete.\n\nFINISHING TASKS:\n1. Inspect your wall section (X: 380-382, Z: -532 to -528, Y: -60 to -57)\n2. Fill any gaps or missing blocks with cobblestone\n3. Verify the boundary at X=382 connects properly with Worker2's section at X=383\n4. Ensure wall is solid with no holes\n\nCONSTRAINTS:\n- Do NOT modify anything at X=383 or beyond\n- Do NOT break any blocks\n- Only add blocks where gaps exist\n\nOnce inspection and any repairs are complete, signal task completion.",
+                                        "constraints": [
+                                            "Do NOT place blocks at or beyond X=383",
+                                            "Do NOT break Worker2's blocks",
+                                            "Only fill gaps - do not rebuild existing blocks"
+                                        ],
+                                        "coordinates": {
+                                            "xMax": 382,
+                                            "xMin": 380,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -528,
+                                            "zMin": -532
+                                        },
+                                        "stageNumber": 2,
+                                        "totalStages": 2
+                                    },
+                                    "Worker2": {
+                                        "port": 4003,
+                                        "status": "not-started",
+                                        "worker": "Worker2",
+                                        "subtask": "Inspect and fill any gaps in eastern wall section, ensure seamless connection at X=382/383 boundary with Worker1's section",
+                                        "objective": "Finish and verify eastern wall section",
+                                        "fullPrompt": "You are Worker2. This is Stage 2 (final stage). Your wall section should now be complete.\n\nFINISHING TASKS:\n1. Inspect your wall section (X: 383-385, Z: -532 to -528, Y: -60 to -57)\n2. Fill any gaps or missing blocks with cobblestone\n3. Verify the boundary at X=383 connects properly with Worker1's section at X=382\n4. Ensure wall is solid with no holes\n\nCONSTRAINTS:\n- Do NOT modify anything at X=382 or below\n- Do NOT break any blocks\n- Only add blocks where gaps exist\n\nOnce inspection and any repairs are complete, signal task completion.",
+                                        "constraints": [
+                                            "Do NOT place blocks at or below X=382",
+                                            "Do NOT break Worker1's blocks",
+                                            "Only fill gaps - do not rebuild existing blocks"
+                                        ],
+                                        "coordinates": {
+                                            "xMax": 385,
+                                            "xMin": 383,
+                                            "yMax": -57,
+                                            "yMin": -60,
+                                            "zMax": -528,
+                                            "zMin": -532
+                                        },
+                                        "stageNumber": 2,
+                                        "totalStages": 2
+                                    },
+                                    "stageTitle": "Wall Finishing and Integration",
+                                    "stageNumber": 2
+                                }
+                            },
+                            "location": "x:382.5, y:-60, z:-528.5",
+                            "metadata": {
+                                "wallHeight": 4,
+                                "wallLength": 6,
+                                "totalStages": 2,
+                                "wallMaterial": "cobblestone",
+                                "worker1XRange": [
+                                    380,
+                                    382
+                                ],
+                                "worker1ZRange": [
+                                    -532,
+                                    -528
+                                ],
+                                "worker2XRange": [
+                                    383,
+                                    385
+                                ],
+                                "worker2ZRange": [
+                                    -532,
+                                    -528
+                                ],
+                                "flatWorldBaseY": -60,
+                                "stagesPerWorker": 1,
+                                "coordinateSystem": "adjusted-y (flat world -60 base)",
+                                "sharedBoundaries": [
+                                    "X=382/383 boundary between workers"
+                                ]
+                            },
+                            "apiEndpoint": "orchestration/send-task",
+                            "workerCount": 2,
+                            "taskDivision": {
+                                "Worker1": {
+                                    "scope": {
+                                        "xMax": 382,
+                                        "xMin": 380,
+                                        "yMax": -56,
+                                        "yMin": -60,
+                                        "zMax": -528,
+                                        "zMin": -532
+                                    },
+                                    "objective": "Build the western half of the wall (X: 380-382)",
+                                    "stageCount": 1,
+                                    "assumptions": "Flat terrain at Y=-60, cobblestone available in inventory",
+                                    "constraints": "Do NOT place blocks at or beyond X=383, Do NOT break existing structures"
+                                },
+                                "Worker2": {
+                                    "scope": {
+                                        "xMax": 385,
+                                        "xMin": 383,
+                                        "yMax": -56,
+                                        "yMin": -60,
+                                        "zMax": -528,
+                                        "zMin": -532
+                                    },
+                                    "objective": "Build the eastern half of the wall (X: 383-385)",
+                                    "stageCount": 1,
+                                    "assumptions": "Flat terrain at Y=-60, cobblestone available in inventory, Worker1 builds west section simultaneously",
+                                    "constraints": "Do NOT place blocks at or below X=382, Do NOT break existing structures"
+                                }
+                            },
+                            "executionType": "multibot",
+                            "buildingRequest": "Build a small wall at coordinates (382.5, -60, -528.5) using 2 workers collaboratively",
+                            "coordinationStrategy": "spatial-sections"
+                        },
                         "workers": [
                             {
-                                "pid": 467,
-                                "port": 4002,
+                                "pid": 14091,
+                                "port": 4006,
                                 "status": "spawned",
-                                "message": "Worker Worker1 spawned successfully",
-                                "success": true,
                                 "workerName": "Worker1"
                             },
                             {
-                                "pid": 468,
-                                "port": 4003,
+                                "pid": 14097,
+                                "port": 4007,
                                 "status": "spawned",
-                                "message": "Worker Worker2 spawned successfully",
-                                "success": true,
                                 "workerName": "Worker2"
                             }
                         ],
-                        "sessionId": "build_1764156716651",
-                        "workerCount": 2,
-                        "buildRequest": "Build a complete single-storey rectangular house near the leader’s current position using two workers. The house should be fully enclosed and functional with a floor, 4-block-high walls, a full roof, at least one main entrance, windows, and basic interior (lighting and minimal utility/furnishing). Use a footprint of about 9x7 blocks (9 along X, 7 along Z). Use common materials like wood planks for walls, logs for corners if available, and wood or stone slabs/stairs/blocks for the roof. Ensure a continuous, walkable interior space with no unintended openings.",
-                        "taskDivision": {
-                            "Worker1": {
-                                "scope": "House footprint is 9 blocks along X and 7 blocks along Z. Let X range from X_start to X_end (9 positions) and Z from Z_start to Z_end (7 positions). Define X_mid as the central X split. Worker1 owns X_start..X_mid across all Z for floor, walls, roof, and interior.",
-                                "subtasks": [
-                                    "Define the 9x7 footprint near the leader: select X_start..X_end (9 blocks) and Z_start..Z_end (7 blocks). Compute X_mid as the center split between the two halves.",
-                                    "Lightly level terrain ONLY within X_start..X_end and Z_start..Z_end so the base floor Y level is mostly flat. Remove only blocks that interfere with the floor or walls.",
-                                    "Place a continuous floor in your half: fill X_start..X_mid and Z_start..Z_end at the base Y level with a consistent floor material (e.g., planks or stone).",
-                                    "Build exterior walls up to 4 blocks high: (a) complete west outer wall along (X_start, Z_start..Z_end), (b) your portions of the north and south walls along (X_start..X_mid, Z_start) and (X_start..X_mid, Z_end). Leave the X_mid column/edge clean for Worker2 to join.",
-                                    "Add corner supports at northwest (X_start, Z_start) and southwest (X_start, Z_end) using logs or another distinct support material if available.",
-                                    "Create at least one window opening (e.g., 1x2 or 2x2) in your section of the north or south wall. Leave the opening empty unless glass is available.",
-                                    "Begin the roof over your half: from the top of your walls, place sloped or slightly peaked roof blocks (stairs or slabs) rising toward a center ridge along or near X_mid. Keep roof blocks only within X_start..X_mid and Z_start..Z_end, leaving a straight, clean join at X_mid.",
-                                    "Add basic interior elements within X_start..X_mid: at least one light source (e.g., torch on wall) and optionally 1–2 utility blocks (e.g., crafting table, furnace, or chest), ensuring clear walking space.",
-                                    "Check that your half is enclosed (no gaps in floor or walls) except for intentional windows and the shared join at X_mid where Worker2 will connect."
-                                ],
-                                "objective": "Build the west (negative X) half of the house: foundation, floor, west-side walls, partial north/south walls, part of the roof, and basic interior for their half.",
-                                "assumptions": "Assume Worker2 will mirror the style: same floor Y level, materials, wall height, and roof pattern, and will add the main entrance on the east half.",
-                                "constraints": "Do not modify or place blocks east of X_mid+0.5. Do not clear terrain outside the 9x7 footprint except for a possible 1-block roof overhang. Do not alter any blocks placed by Worker2 along the X_mid join.",
-                                "blockBreakLimit": "Do not break more than 60 terrain blocks. Only break blocks inside X_start..X_end and Z_start..Z_end that obstruct the floor, walls, or roof."
-                            },
-                            "Worker2": {
-                                "scope": "Same 9x7 footprint. Worker2 owns X_mid+1..X_end across all Z for floor, walls, roof, and interior.",
-                                "subtasks": [
-                                    "Use the 9x7 footprint and X_mid defined by Worker1. Match the base floor Y level already used on the west half.",
-                                    "Lightly level terrain ONLY within X_start..X_end and Z_start..Z_end in your half so your floor is flush with Worker1’s floor.",
-                                    "Place a continuous floor in your half: fill X_mid+1..X_end and Z_start..Z_end at the base Y level with the same or compatible floor material.",
-                                    "Build exterior walls up to 4 blocks high: (a) complete east outer wall along (X_end, Z_start..Z_end), (b) your sections of the north and south walls along (X_mid+1..X_end, Z_start) and (X_mid+1..X_end, Z_end). Join cleanly with Worker1’s walls at X_mid.",
-                                    "Add corner supports at northeast (X_end, Z_start) and southeast (X_end, Z_end), matching Worker1’s corner style and material.",
-                                    "Create the main entrance on a long wall within your half (recommended on the south wall). Leave a 1–2 block wide, 2-block tall doorway in your X_mid+1..X_end section. If a door item is available, place it; otherwise leave the opening prepared.",
-                                    "Add one or more window openings in your walls, aligning their height and general spacing with Worker1’s windows for a consistent look.",
-                                    "Complete the roof over the entire house: continue and finish the sloped or peaked pattern started by Worker1, forming a continuous ridge along or near X_mid. Ensure full coverage from X_start to X_end and Z_start to Z_end with no gaps or holes.",
-                                    "Add interior elements in your half: at least one light source and 1–2 functional blocks (e.g., bed, crafting table, furnace, or chest) within X_mid+1..X_end, ensuring a clear path from the entrance inward.",
-                                    "Perform a final enclosure check for your half and the join: confirm that walls, floor, and roof form a complete single-storey shell, with only the main entrance and windows as openings."
-                                ],
-                                "objective": "Build the east (positive X) half of the house: foundation, floor, east-side walls, remaining north/south walls, complete roof ridge and coverage, main entrance, and basic interior for their half.",
-                                "assumptions": "Assume Worker1 has already shown the intended style (materials, wall height, roof direction) and that you should mirror and extend it. Assume the X_mid roof edge from Worker1 is ready to connect.",
-                                "constraints": "Do not modify blocks west of X_mid. Stay within the 9x7 footprint except for a possible 1-block roof overhang. Avoid breaking or overwriting any blocks placed by Worker1, especially at the X_mid join.",
-                                "blockBreakLimit": "Do not break more than 60 terrain blocks. Only break blocks inside X_start..X_end and Z_start..Z_end that obstruct your floor, walls, entrance, or roof."
-                            }
-                        },
-                        "conversationId": "5415489232"
+                        "location": "{\"x\":382.5,\"y\":-60,\"z\":-528.5}",
+                        "sessionId": "build_1765463202196",
+                        "workerCount": "2",
+                        "conversationId": 5415489232
                     },
                     "query": {
                     },
@@ -728,7 +867,7 @@
                         "connection": "close",
                         "user-agent": "axios/1.12.0",
                         "content-type": "application/json",
-                        "content-length": "6432",
+                        "content-length": "7123",
                         "accept-encoding": "gzip, compress, deflate, br",
                         "x-forwarded-for": "3.10.173.248",
                         "x-forwarded-proto": "https"
@@ -745,43 +884,22 @@
                 }
             }
         ],
-        "Respond to Webhook": [
+        "Get Leader Position": [
             {
                 "json": {
-                    "ok": true,
-                    "result": {
-                        "chat": {
-                            "id": 5415489232,
-                            "type": "private",
-                            "username": "Santamm67",
-                            "first_name": "Maurizio"
-                        },
-                        "date": 1763552037,
-                        "from": {
-                            "id": 7974568328,
-                            "is_bot": true,
-                            "username": "Kodelab_minecraft_bot",
-                            "first_name": "Kodelab-minecraft-test"
-                        },
-                        "text": "Workers Teleported to task location and tasks assigned.\n\nThis message was sent automatically with n8n",
-                        "entities": [
-                            {
-                                "type": "italic",
-                                "length": 41,
-                                "offset": 57
-                            },
-                            {
-                                "url": "https://n8n.io/?utm_source=n8n-internal&utm_medium=powered_by&utm_campaign=n8n-nodes-base.telegram_e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                                "type": "text_link",
-                                "length": 3,
-                                "offset": 98
-                            }
-                        ],
-                        "message_id": 259,
-                        "link_preview_options": {
-                            "is_disabled": true
-                        }
-                    }
+                    "health": 20,
+                    "hunger": 20,
+                    "is_busy": false,
+                    "weather": "clear",
+                    "gamemode": "creative",
+                    "position": {
+                        "x": 462.3966561676787,
+                        "y": -60,
+                        "z": -497.5
+                    },
+                    "raw_stats": "\nSTATS\n- Position: x: 462.40, y: -60.00, z: -497.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Afternoon- Current Action: Idle\n- Nearby Human Players: Worker1, Worker2\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                    "time_of_day": 11662,
+                    "current_action": "Idle"
                 }
             }
         ]
@@ -789,7 +907,7 @@
     "settings": {
         "executionOrder": "v1"
     },
-    "versionId": "7b9346b7-ff7e-4b44-b4e8-2d9bd15e5a84",
+    "versionId": "2d913090-4150-4bc3-b4fa-206d8b7d25a5",
     "staticData": null,
     "connections": {
         "Wait": {
@@ -813,6 +931,11 @@
                     }
                 ],
                 [
+                    {
+                        "node": "Get Player Position",
+                        "type": "main",
+                        "index": 0
+                    }
                 ],
                 [
                     {
@@ -867,7 +990,7 @@
             "main": [
                 [
                     {
-                        "node": "Workers Created",
+                        "node": "Workers Assigned",
                         "type": "main",
                         "index": 0
                     }
@@ -885,17 +1008,6 @@
                 [
                     {
                         "node": "Switch",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Workers Created": {
-            "main": [
-                [
-                    {
-                        "node": "Stages and  Tasks",
                         "type": "main",
                         "index": 0
                     }
@@ -933,6 +1045,17 @@
                 [
                     {
                         "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Assigned": {
+            "main": [
+                [
+                    {
+                        "node": "Stages and  Tasks",
                         "type": "main",
                         "index": 0
                     }

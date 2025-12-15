@@ -43,7 +43,7 @@
             "name": "If",
             "type": "n8n-nodes-base.if",
             "position": [
-                416,
+                448,
                 -128
             ],
             "parameters": {
@@ -90,7 +90,7 @@
             "name": "Worker Reply",
             "type": "n8n-nodes-base.telegram",
             "position": [
-                976,
+                912,
                 -160
             ],
             "webhookId": "8955f16a-8e55-4728-9c92-184d760ad771",
@@ -165,7 +165,7 @@
             ],
             "parameters": {
                 "query": "={\"sessionId\": \"{{ $json.sessionId }}\"}",
-                "update": "={\n\"$set\": {\n    \"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.tasks.{{$('Webhook').item.json.body.workerName}}.status\": \"{{ $('Webhook').item.json.body.status }}\",\n\"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.tasks.{{$('Webhook').item.json.body.workerName}}.completionTime\": \"{{ $('Webhook').item.json.body.completionTime }}\",\n\"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.tasks.{{$('Webhook').item.json.body.workerName}}.result\": \"{{ $('Webhook').item.json.body.result.status }}\"\n\n}\n}",
+                "update": "={\n\"$set\": {\n    \"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.{{$('Webhook').item.json.body.workerName}}.status\": \"{{ $('Webhook').item.json.body.status }}\",\n\"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.{{$('Webhook').item.json.body.workerName}}.completionTime\": \"{{ $('Webhook').item.json.body.completionTime }}\",\n\"stages.{{ $('Webhook').item.json.body.result.taskId.match(/stage(\\d+)/)[1] }}.{{$('Webhook').item.json.body.workerName}}.result\": \"{{ $('Webhook').item.json.body.result.status }}\"\n\n}\n}",
                 "operation": "update",
                 "collection": "CollaborativeTasks"
             },
@@ -203,7 +203,7 @@
                 -160
             ],
             "parameters": {
-                "jsCode": "// Now get the document (must come from previous MongoDB read or Set node)\nconst currentStage = $('Webhook').first().json.body.result.taskId.match(/stage(\\d+)/)[1];\nconst doc = $('Worker Status Update').first().json.data;\n\nif (!doc.stages || !doc.stages[currentStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${currentStage} not found`\n  };\n}\n\nconst currentStageData = doc.stages[currentStage];\nconst workers = Object.keys(currentStageData.tasks);\n\nconst allComplete = workers.every(w => \n  currentStageData.tasks[w].status === \"completed\"\n);\n\nreturn {\n  stageCompleted: allComplete,\n  currentStage: currentStage,\n  completedWorkers: workers.filter(w => currentStageData.tasks[w].status === \"completed\").length,\n  totalWorkers: workers.length\n};"
+                "jsCode": "// Now get the document (must come from previous MongoDB read or Set node)\nconst currentStage = $('Webhook').first().json.body.result.taskId.match(/stage(\\d+)/)[1];\nconst doc = $('Worker Status Update').first().json.data;\n\nif (!currentStage || !doc.stages || !doc.stages[currentStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${currentStage} not found in document`\n  };\n}\n\n\nif (!doc.stages || !doc.stages[currentStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${currentStage} not found`\n  };\n}\n\nconst currentStageData = doc.stages[currentStage];\n\n// Get worker names (Worker1, Worker2, etc.) - filter out non-worker keys\nconst workers = Object.keys(currentStageData).filter(key => \n  key.startsWith('Worker') && \n  typeof currentStageData[key] === 'object' &&\n  currentStageData[key].status !== undefined\n);\n\n// Check if all workers completed (status === \"completed\")\nconst completedWorkers = workers.filter(w => \n  currentStageData[w].status === \"completed\"\n);\n\nconst allComplete = completedWorkers.length === workers.length;\n\nreturn {\n  stageCompleted: allComplete,\n  canProceed: allComplete,\n  currentStage: currentStage,\n  completedWorkers: completedWorkers,\n  totalWorkers: workers.length,\n  workerStatuses: workers.map(w => ({\n    worker: w,\n    status: currentStageData[w].status\n  })),\n  reason: allComplete ? `Stage ${currentStage} complete` : `Waiting for: ${workers.filter(w => currentStageData[w].status !== \"completed\").join(\", \")}`\n};"
             },
             "typeVersion": 2
         },
@@ -263,6 +263,64 @@
                 }
             },
             "typeVersion": 1
+        },
+        {
+            "id": "88e292fc-c425-4269-9f53-19b26647c065",
+            "name": "All Stages?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                2112,
+                -288
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "96cb15ee-1c45-430f-ada8-f9b41cd17664",
+                            "operator": {
+                                "type": "number",
+                                "operation": "equals"
+                            },
+                            "leftValue": "={{ $('Set Stage Completed').item.json.data.completedStages }}",
+                            "rightValue": "={{ $('Set Stage Completed').item.json.data.stages.keys().length }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "954450e8-c9a9-4dbf-904d-968e7a44d000",
+            "name": "End of Project",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2368,
+                -304
+            ],
+            "webhookId": "2c19a295-d444-4415-94d4-6cb20592d7de",
+            "parameters": {
+                "text": "=All stages tasks have been completed.",
+                "chatId": "={{ $('Retrieve Session').item.json.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
         }
     ],
     "active": true,
@@ -272,15 +330,17 @@
                 "json": {
                     "body": {
                         "result": {
-                            "result": "Agent wrote this code: \n```\n// STAGE 1: Match Worker1's floor Y-level and extend floor material across eastern half\n// Current position: x: -247.50, y: -60.00, z: 51.50\n// Task: Adjust terrain to match Worker1's floor level and create continuous interior floor\n\nconst pos = world.getPosition(bot);\nconst midX = -247; // left boundary (shared with Worker1)\nconst maxX = -244; // right boundary of eastern half\nconst minZ = 48;\nconst maxZ = 54;\nconst floorY = -60; // Target floor level (current Y position)\n\n// Step 1: Scan Worker1's half to determine the floor level they've established\n// We'll work within our range and match any existing floor or create new floor at floorY\n\n// Step 2: Create continuous floor across entire eastern half\n// Floor material: oak_planks (we have 1, but in creative mode we have infinite)\nconsole.log(\"Building continuous floor for eastern half...\");\n\nfor (let x = midX; x <= maxX; x++) {\n  for (let z = minZ; z <= maxZ; z++) {\n    // Place floor blocks at the target Y level\n    await skills.placeBlock(bot, 'oak_planks', x, floorY, z, 'top');\n  }\n}\n\n// Step 3: Verify the floor is complete by checking a few positions\nconsole.log(\"Floor construction complete for eastern half (x:\" + midX + \" to \" + maxX + \", z:\" + minZ + \" to \" + maxZ + \", y:\" + floorY + \")\");\nawait skills.wait(bot, 500);```\nCode Output:\nAction output is very long (1215 chars) and has been shortened.\n\n          First outputs:\nBuilding continuous floor for eastern half...\nPlaced oak_planks at (-247, -60, 48).\nPlaced oak_planks at (-247, -60, 49).\nPlaced oak_planks at (-247, -60, 50).\nFailed to place oak_planks at (-247, -60, 51).\nPlaced oak_planks at (-247, -60, 52).\nPlace\n...skipping many lines.\nFinal outputs:\n .\nPlaced oak_planks at (-244, -60, 51).\nPlaced oak_planks at (-244, -60, 52).\nPlaced oak_planks at (-244, -60, 53).\nPlaced oak_planks at (-244, -60, 54).\nFloor construction complete for eastern half (x:-247 to -244, z:48 to 54, y:-60)\nCode finished.\n",
                             "status": "success",
-                            "taskId": "task_build_1763584349604_stage1_Worker2_1763584368539",
-                            "taskCompleted": "Build the eastern (positive-X) half of the house and complete the main entrance and interior so the "
+                            "taskId": "task_build_1765463803680_stage2_Worker1_1765463853966",
+                            "timeSpent": 10775,
+                            "blocksPlaced": 100,
+                            "taskCompleted": "You are Worker1, already positioned at the build site. Do NOT move or navigate. Add finishing touche",
+                            "conversationId": 5415489232
                         },
                         "status": "completed",
-                        "sessionId": "build_1763584349604",
-                        "workerName": "Worker2",
-                        "completionTime": "2025-11-19T20:33:13.733Z"
+                        "sessionId": "build_1765463803680",
+                        "workerName": "Worker1",
+                        "completionTime": "2025-12-11T14:37:44.746Z"
                     },
                     "query": {
                     },
@@ -293,7 +353,7 @@
                         "connection": "close",
                         "user-agent": "node",
                         "content-type": "application/json",
-                        "content-length": "2385",
+                        "content-length": "402",
                         "sec-fetch-mode": "cors",
                         "accept-encoding": "br, gzip, deflate",
                         "accept-language": "*",
@@ -309,7 +369,7 @@
     "settings": {
         "executionOrder": "v1"
     },
-    "versionId": "37de4887-de9a-47a5-8b73-f51db2c83808",
+    "versionId": "371f79be-eb6e-4544-9e59-ecbe00f8e40d",
     "staticData": null,
     "connections": {
         "If": {
@@ -359,6 +419,17 @@
                 ]
             ]
         },
+        "All Stages?": {
+            "main": [
+                [
+                    {
+                        "node": "End of Project",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
         "Worker Reply": {
             "main": [
                 [
@@ -374,7 +445,7 @@
             "main": [
                 [
                     {
-                        "node": "Respond to Webhook",
+                        "node": "All Stages?",
                         "type": "main",
                         "index": 0
                     }

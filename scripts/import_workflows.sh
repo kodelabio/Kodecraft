@@ -2,6 +2,7 @@
 
 # Default values
 CONTAINER_NAME="n8n_postgres-1"
+N8N="n8n"
 BASE_DIR="./n8n/workflows"
 SUBDIR=""
 
@@ -126,8 +127,8 @@ echo ""
 
 # Import all workflows
 echo "Importing workflows..."
-docker exec "$CONTAINER_NAME" n8n import:workflow --separate --input="$CONTAINER_INPUT_DIR"
-
+#docker exec "$CONTAINER_NAME" n8n import:workflow --separate --input="$CONTAINER_INPUT_DIR"
+docker exec $N8N $n8n import:workflow --separate --input="$CONTAINER_INPUT_DIR"
 # Clean up temporary files in container
 echo ""
 echo "Cleaning up temporary files..."

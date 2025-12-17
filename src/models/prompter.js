@@ -281,9 +281,15 @@ export class Prompter {
             loadEmbeddings();
 
             // Get profile name
-            const profileName = settings.profile?.name || 
-                            (settings.profiles?.[0]?.split('/').pop().replace('.json', '')) ||
-                            'kodecraft';
+            const profileName = this.profile?.name || '_default';
+            const getEmbeddingsWithFallback = (profile, type) => {
+                 const embeddings = getExampleEmbeddings(profile, type);
+                if (!embeddings || Object.keys(embeddings).length === 0) {
+                    console.log(`[Prompter] No ${type} embeddings for ${profile}, falling back to _default`);
+                    return getExampleEmbeddings('_default', type);  // ← Falls back to _default, not kodecraft
+                }
+                return embeddings;
+            };
 
             // Load and cache
             // Now initialize Examples objects for first time
@@ -294,8 +300,9 @@ export class Prompter {
             console.log('[TIMING] Initializing examples from cached embeddings');
             this.constructor.loadingPromise = (async () => {
                 try {
-                    const convEmbeddings = getExampleEmbeddings(profileName, 'conversation');
-                    const codingEmbeddings = getExampleEmbeddings(profileName, 'coding');
+                    // ✅ USE FALLBACK
+                    const convEmbeddings = getEmbeddingsWithFallback(profileName, 'conversation');
+                    const codingEmbeddings = getEmbeddingsWithFallback(profileName, 'coding');
 
                     // Load with pre-computed embeddings
                     await this.convo_examples.loadWithEmbeddings(
@@ -324,6 +331,8 @@ export class Prompter {
             })();
 
             await this.constructor.loadingPromise;
+            await this.skill_libary.initSkillLibrary();
+
 
         } catch (error) {
             console.error('Failed to initialize examples:', error);

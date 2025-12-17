@@ -127,15 +127,19 @@ async function generateEmbeddings() {
         // Embed skill docs
         console.log('\n🛠️  Embedding skill documentation...');
         const skillDocs = getSkillDocs();
-        
+
         console.log(`   📝 Found ${skillDocs.length} skill docs`);
-        
+
         for (let i = 0; i < skillDocs.length; i++) {
             const doc = skillDocs[i];
             const skillName = extractSkillName(doc);
             const embedding = await embeddingModel.embed(doc.substring(0, 200)); // Use first 200 chars
             
-            embeddings.skills[skillName] = embedding;
+            // ✅ CHANGE: Store both the doc string AND the embedding
+            embeddings.skills[skillName] = {
+                doc: doc,           // ← ADD THIS
+                embedding: embedding // ← RENAME from just embedding
+            };
             
             if ((i + 1) % 10 === 0) {
                 process.stdout.write(`\r   🛠️  ${i + 1}/${skillDocs.length}`);

@@ -26,107 +26,120 @@ export class Coder {
     }
 
     async generateCode(agent_history) {
-        this.agent.bot.modes.pause('unstuck');
-        lockdown();
-        // this message history is transient and only maintained in this function
-        let messages = agent_history.getHistory(); 
-        
-        // Add task coordinates to system prompt if available
-        // Add task coordinates to system prompt if available
-        let systemMsg = 'Code generation started. Write code in codeblock in your response:';
-        if (this.agent.taskCoordinates && this.agent.taskCoordinates.xMin !== null) {
-            const coords = this.agent.taskCoordinates;
-            systemMsg += `\n\nUSE THESE EXACT COORDINATES - THIS IS CRITICAL:\n`;
-            systemMsg += `const X_MIN = ${coords.xMin};\n`;
-            systemMsg += `const X_MAX = ${coords.xMax};\n`;
-            systemMsg += `const Z_MIN = ${coords.zMin};\n`;
-            systemMsg += `const Z_MAX = ${coords.zMax};\n`;
-            systemMsg += `const Y_MIN = ${coords.yMin};\n`;
-            systemMsg += `const Y_MAX = ${coords.yMax};\n`;
-            systemMsg += `COPY THESE VARIABLE DECLARATIONS INTO YOUR CODE. DO NOT USE DIFFERENT COORDINATES.`;
-        }
-
-
-        
-        messages.push({role: 'system', content: systemMsg});
-
-        const MAX_ATTEMPTS = 5;
-        const MAX_NO_CODE = 3;
-
-        let code = null;
-        let no_code_failures = 0;
-        for (let i=0; i<MAX_ATTEMPTS; i++) {
-            if (this.agent.bot.interrupt_code)
-                return null;
-            const messages_copy = JSON.parse(JSON.stringify(messages));
-            let res = await this.agent.prompter.promptCoding(messages_copy);
-            if (this.agent.bot.interrupt_code)
-                return null;
-            let contains_code = res.indexOf('```') !== -1;
-            if (!contains_code) {
-                if (res.indexOf('!newAction') !== -1) {
-                    messages.push({
-                        role: 'assistant', 
-                        content: res.substring(0, res.indexOf('!newAction'))
-                    });
-                    continue; // using newaction will continue the loop
-                }
-                
-                if (no_code_failures >= MAX_NO_CODE) {
-                    console.warn("Action failed, agent would not write code.");
-                    return 'Action failed, agent would not write code.';
-                }
-                messages.push({
-                    role: 'system', 
-                    content: 'Error: no code provided. Write code in codeblock in your response. ``` // example ```'}
-                );
-                console.warn("No code block generated. Trying again.");
-                no_code_failures++;
-                continue;
-            }
-            code = res.substring(res.indexOf('```')+3, res.lastIndexOf('```'));
-            const result = await this._stageCode(code);
-            const executionModule = result.func;
-            const lintResult = await this._lintCode(result.src_lint_copy);
-            if (lintResult) {
-                const message = 'Error: Code lint error:'+'\n'+lintResult+'\nPlease try again.';
-                console.warn("Linting error:"+'\n'+lintResult+'\n');
-                messages.push({ role: 'system', content: message });
-                continue;
-            }
-            if (!executionModule) {
-                console.warn("Failed to stage code, something is wrong.");
-                return 'Failed to stage code, something is wrong.';
+        try {
+            this.agent.bot.modes.pause('unstuck');
+            lockdown();
+            // this message history is transient and only maintained in this function
+            let messages = agent_history.getHistory(); 
+            
+            // Add task coordinates to system prompt if available
+            // Add task coordinates to system prompt if available
+            let systemMsg = 'Code generation started. Write code in codeblock in your response:';
+            if (this.agent.taskCoordinates && this.agent.taskCoordinates.xMin !== null) {
+                const coords = this.agent.taskCoordinates;
+                systemMsg += `\n\nUSE THESE EXACT COORDINATES - THIS IS CRITICAL:\n`;
+                systemMsg += `const X_MIN = ${coords.xMin};\n`;
+                systemMsg += `const X_MAX = ${coords.xMax};\n`;
+                systemMsg += `const Z_MIN = ${coords.zMin};\n`;
+                systemMsg += `const Z_MAX = ${coords.zMax};\n`;
+                systemMsg += `const Y_MIN = ${coords.yMin};\n`;
+                systemMsg += `const Y_MAX = ${coords.yMax};\n`;
+                systemMsg += `COPY THESE VARIABLE DECLARATIONS INTO YOUR CODE. DO NOT USE DIFFERENT COORDINATES.`;
             }
 
-            try {
-                console.log('Executing code...');
-                await executionModule.main(this.agent.bot);
 
-                const code_output = this.agent.actions.getBotOutputSummary();
-                const summary = "Agent wrote this code: \n```" + this._sanitizeCode(code) + "```\nCode Output:\n" + code_output;
-                return summary;
-            } catch (e) {
+            
+            messages.push({role: 'system', content: systemMsg});
+
+            const MAX_ATTEMPTS = 5;
+            const MAX_NO_CODE = 3;
+
+            let code = null;
+            let no_code_failures = 0;
+            for (let i=0; i<MAX_ATTEMPTS; i++) {
                 if (this.agent.bot.interrupt_code)
                     return null;
-                
-                console.warn('Generated code threw error: ' + e.toString());
-                console.warn('trying again...');
+                const messages_copy = JSON.parse(JSON.stringify(messages));
+                let res = await this.agent.prompter.promptCoding(messages_copy);
+                if (this.agent.bot.interrupt_code)
+                    return null;
+                // ✅ ADD THIS DEBUG:
+                if (!res) {
+                    console.error(`❌ [${this.agent.name}] promptCoding returned: ${res}`);
+                    console.error(`   Messages sent: ${messages_copy.length}`);
+                    console.error(`   Prompter: ${this.agent.prompter ? 'exists' : 'NULL'}`);
+                    return 'Code generation failed: no response from prompter';
+                }
+                let contains_code = res.indexOf('```') !== -1;
+                if (!contains_code) {
+                    if (res.indexOf('!newAction') !== -1) {
+                        messages.push({
+                            role: 'assistant', 
+                            content: res.substring(0, res.indexOf('!newAction'))
+                        });
+                        continue; // using newaction will continue the loop
+                    }
+                    
+                    if (no_code_failures >= MAX_NO_CODE) {
+                        console.warn("Action failed, agent would not write code.");
+                        return 'Action failed, agent would not write code.';
+                    }
+                    messages.push({
+                        role: 'system', 
+                        content: 'Error: no code provided. Write code in codeblock in your response. ``` // example ```'}
+                    );
+                    console.warn("No code block generated. Trying again.");
+                    no_code_failures++;
+                    continue;
+                }
+                code = res.substring(res.indexOf('```')+3, res.lastIndexOf('```'));
+                const result = await this._stageCode(code);
+                const executionModule = result.func;
+                const lintResult = await this._lintCode(result.src_lint_copy);
+                if (lintResult) {
+                    const message = 'Error: Code lint error:'+'\n'+lintResult+'\nPlease try again.';
+                    console.warn("Linting error:"+'\n'+lintResult+'\n');
+                    messages.push({ role: 'system', content: message });
+                    continue;
+                }
+                if (!executionModule) {
+                    console.warn("Failed to stage code, something is wrong.");
+                    return 'Failed to stage code, something is wrong.';
+                }
 
-                const code_output = this.agent.actions.getBotOutputSummary();
+                try {
+                    console.log('Executing code...');
+                    await executionModule.main(this.agent.bot);
 
-                messages.push({
-                    role: 'assistant',
-                    content: res
-                });
-                messages.push({
-                    role: 'system',
-                    content: `Code Output:\n${code_output}\nCODE EXECUTION THREW ERROR: ${e.toString()}\n Please try again:`
-                });
+                    const code_output = this.agent.actions.getBotOutputSummary();
+                    const summary = "Agent wrote this code: \n```" + this._sanitizeCode(code) + "```\nCode Output:\n" + code_output;
+                    return summary;
+                } catch (e) {
+                    if (this.agent.bot.interrupt_code)
+                        return null;
+                    
+                    console.warn('Generated code threw error: ' + e.toString());
+                    console.warn('trying again...');
+
+                    const code_output = this.agent.actions.getBotOutputSummary();
+
+                    messages.push({
+                        role: 'assistant',
+                        content: res
+                    });
+                    messages.push({
+                        role: 'system',
+                        content: `Code Output:\n${code_output}\nCODE EXECUTION THREW ERROR: ${e.toString()}\n Please try again:`
+                    });
+                }
             }
+            return `Code generation failed after ${MAX_ATTEMPTS} attempts.`;
+        } catch (error) {
+            console.error(`[Coder] FATAL ERROR in generateCode:`, error.message);
+            console.error(`[Coder] Stack:`, error.stack);
+            throw error;
         }
-        return `Code generation failed after ${MAX_ATTEMPTS} attempts.`;
-    }
+    }   
     
     async  _lintCode(code) {
         let result = '#### CODE ERROR INFO ###\n';
@@ -137,8 +150,69 @@ export class Coder {
         while ((match = skillRegex.exec(code)) !== null) {
             skills.push(match[1]);
         }
-        const allDocs = await this.agent.prompter.skill_libary.getAllSkillDocs();
+        // ✅ ADD THESE CHECKS BEFORE getAllSkillDocs:
+        console.log(`[Coder] Linting code for ${this.agent.name}`);
+        console.log(`[Coder]   Code length: ${code.length} chars`);
+        console.log(`[Coder]   Skills referenced: ${skills.join(', ') || 'none'}`);
+        
+        // Safety check 1: Prompter exists
+        if (!this.agent.prompter) {
+            console.error(`❌ [${this.agent.name}] Prompter not available`);
+            return 'Error: Prompter not initialized for code linting';
+        }
+        console.log(`[Coder] ✅ Prompter exists`);
+        
+        // Safety check 2: Skill library exists
+        if (!this.agent.prompter.skill_libary) {
+            console.error(`❌ [${this.agent.name}] Skill library not available`);
+            return 'Error: Skill library not initialized';
+        }
+        console.log(`[Coder] ✅ Skill library exists`);
+        
+        // Safety check 3: getAllSkillDocs is a function
+        if (typeof this.agent.prompter.skill_libary.getAllSkillDocs !== 'function') {
+            console.error(`❌ [${this.agent.name}] getAllSkillDocs is not a function`);
+            return `Error: getAllSkillDocs is ${typeof this.agent.prompter.skill_libary.getAllSkillDocs}`;
+        }
+        console.log(`[Coder] ✅ getAllSkillDocs is a function`);
+        
+        // Safety check 4: Actually call it and handle errors
+        let allDocs;
+        try {
+            console.log(`[Coder] Calling getAllSkillDocs()...`);
+            allDocs = await this.agent.prompter.skill_libary.getAllSkillDocs();
+            console.log(`[Coder] ✅ getAllSkillDocs() returned`);
+        } catch (error) {
+            console.error(`❌ [${this.agent.name}] Failed to get skill docs`);
+            console.error(`   Error: ${error.message}`);
+            console.error(`   Stack: ${error.stack}`);
+            return `Error: Failed to load skill documentation - ${error.message}`;
+        }
+        
+        // Safety check 5: Validate result
+        if (!allDocs) {
+            console.error(`❌ [${this.agent.name}] getAllSkillDocs returned null/undefined`);
+            return 'Error: Skill library returned null';
+        }
+        
+        if (typeof allDocs !== 'object') {
+            console.error(`❌ [${this.agent.name}] getAllSkillDocs returned wrong type: ${typeof allDocs}`);
+            return `Error: Skill library returned ${typeof allDocs} instead of object`;
+        }
+        
+        const skillCount = Object.keys(allDocs).length;
+        if (skillCount === 0) {
+            console.warn(`⚠️  [${this.agent.name}] Skill library is empty (0 skills)`);
+            return 'Error: Skill library has no skills loaded';
+        }
+        
+        console.log(`[Coder] ✅ Skill library has ${skillCount} skills`);
         // check function exists
+        console.log(`[Coder] About to check missingSkills...`);
+        console.log(`[Coder] allDocs type: ${typeof allDocs}`);
+        console.log(`[Coder] allDocs is array: ${Array.isArray(allDocs)}`);
+        console.log(`[Coder] allDocs length: ${allDocs?.length}`);
+        console.log(`[Coder] skills to check: ${JSON.stringify(skills)}`);
         const missingSkills = skills.filter(skill => !!allDocs[skill]);
         if (missingSkills.length > 0) {
             result += 'These functions do not exist.\n';
@@ -211,7 +285,7 @@ export class Coder {
         const mainFn = compartment.evaluate(src);
         
         if (write_result) {
-            console.error('Error writing code execution file: ' + result);
+            console.error('Error writing code execution file: ' + write_result);
             return null;
         }
         return { func:{main: mainFn}, src_lint_copy: src_lint_copy };

@@ -1379,11 +1379,10 @@ export class ExternalAPI {
 
             // Execute task in background (fire and forget)
             setImmediate(async () => {
+                const conversationId = req.body.conversationId; 
+                const taskId = req.body.taskId || null;
                 try {
                     const taskStartTime = Date.now();
-                    const conversationId = req.body.conversationId; 
-                    const taskId = req.body.taskId || null;
-                    //const startBlockCount = getBlockCount(this.agent.bot); // Track initial
                     
                     const originalBrainMode = settings.brain_mode;
                     const originalHistory = this.agent.history;
@@ -1400,11 +1399,17 @@ export class ExternalAPI {
                         const command = `!newAction("${prompt}")`;
                         //console.log(`[API Background newAction] Command to execute:`, command);  // ✅ ADD THIS
                         //console.log(`[API Background newAction] Command length:`, command.length);  // ✅ ADD THIS
-                        const result = await executeCommand(this.agent, command);
-                        //console.log(`[API Background newAction] Execute result:`, result);
+                        
+                        try {
+                            const result = await executeCommand(this.agent, command);
+                            console.log(`[API Background newAction] Execute result:`, result);
+                        } catch (err) {
+                            console.error(`[API Background newAction] Command execution error:`, err);
+                            console.error(`[API Background newAction] Stack trace:`, err.stack);
+                        }
+                        
+                        
                         const taskDuration = Date.now() - taskStartTime;
-                        //const endBlockCount = getBlockCount(this.agent.bot);
-                        //const blocksPlaced = endBlockCount - startBlockCount;
                         //console.log(`[API] Task executed successfully (${taskDuration}ms)`);
                         
                         // Call completion callback

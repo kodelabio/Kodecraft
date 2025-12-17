@@ -153,6 +153,7 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
         this.app.post('/api/orchestration/register-workers', this.handleOrchestrationRegisterWorkers.bind(this));
         this.app.post('/api/orchestration/reserve-location', this.handleOrchestrationReserveLocation.bind(this));
+        this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
         this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
         this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
         this.app.post('/api/orchestration/send-task', this.handleOrchestrationSendTask.bind(this));
@@ -2158,6 +2159,37 @@ export class ExternalAPI {
             this.handleError(res, error, 'orchestrationReserveLocation');
         }
     }
+
+    // Teleport a single worker to location
+    async handleOrchestrationTeleportWorker(req, res) {
+        try {
+            const { sessionId, workerName, buildLocation } = req.body;
+
+            if (!sessionId || !workerName || !buildLocation) {
+                return res.status(400).json({
+                    error: 'sessionId, workerName and buildLocation parameters required'
+                });
+            }
+
+            if (typeof buildLocation.x !== 'number' || 
+                typeof buildLocation.y !== 'number' || 
+                typeof buildLocation.z !== 'number') {
+                return res.status(400).json({
+                    error: 'buildLocation must have x, y, z as numbers'
+                });
+            }
+
+            const result = await this.orchestration.teleportWorker(sessionId, workerName, buildLocation);
+
+            if (result.success) {
+                res.json(result);
+            } else {
+                res.status(404).json(result);
+            }
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationTeleportWorker');
+        }
+}
 
     /**
      * Teleport workers to build location

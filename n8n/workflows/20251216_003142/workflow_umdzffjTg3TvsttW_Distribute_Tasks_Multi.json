@@ -1,0 +1,202 @@
+{
+    "id": "umdzffjTg3TvsttW",
+    "meta": null,
+    "name": "Distribute Tasks Multi",
+    "nodes": [
+        {
+            "id": "de83305b-6b64-4b38-b878-c6bd8ec8dcd4",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -672,
+                0
+            ],
+            "webhookId": "c096d605-60fc-4980-81bf-a27879ffe1f4",
+            "parameters": {
+                "path": "/kodecraft/multibot/distribute-tasks",
+                "options": {
+                },
+                "httpMethod": "POST"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "179b2fd0-bc68-433c-8eff-9b32b38481b7",
+            "name": "Send Task",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                -144,
+                0
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/send-task",
+                "method": "POST",
+                "options": {
+                    "timeout": 900000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "workerPort",
+                            "value": "={{ $json.port }}"
+                        },
+                        {
+                            "name": "taskPrompt",
+                            "value": "={{ JSON.stringify($json.task) }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $('Webhook').item.json.body.callbackWebhookUrl }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "1a198f70-8064-437d-a168-76860d9133dd",
+            "name": "Workers List",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -384,
+                0
+            ],
+            "parameters": {
+                "jsCode": "// Function Node: Build Worker Task List\n\nconst taskDivision = $json.body.taskDivision;\nconst workers = $json.body.workers;  // Changed: directly access workers array\n\n// Get task division keys (in order)\nconst taskKeys = Object.keys(taskDivision.tasks);\n\n// Create array of workers with their assigned tasks\nconst workerTaskList = workers.map((worker, index) => {\n  // Map tasks by index: first worker gets first task, etc.\n  const taskKey = taskKeys[index] || taskKeys[0];\n  \n  return {\n    workerName: worker.workerName,\n    port: worker.port,\n    task: taskDivision.tasks[taskKey],  // Get task by key\n    genericTaskName: taskKey,  // Keep track of original task name\n    status: worker.status,\n    pid: worker.pid\n  };\n});\n\nreturn workerTaskList;"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "01091921-0e0f-47a4-b523-3e76a0ed3539",
+            "name": "Worker Task Sent",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                80,
+                0
+            ],
+            "webhookId": "5b70541e-8a56-43d3-bd0b-78662795a234",
+            "parameters": {
+                "text": "=Worker {{ $('Workers List').item.json.workerName}}: {{ $json.result.message }}",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "pid": 94,
+                                "port": 5002,
+                                "status": "spawned",
+                                "workerName": "TheBoss_W1"
+                            },
+                            {
+                                "pid": 105,
+                                "port": 5003,
+                                "status": "spawned",
+                                "workerName": "TheBoss_W2"
+                            }
+                        ],
+                        "sessionId": "combat_1765825305089",
+                        "workerCount": 2,
+                        "taskDivision": {
+                            "tasks": {
+                                "Soldier1": "COMBAT MISSION: Engage an iron golem with two soldiers.\n\nLocation: Near the target area\nRole: Soldier1\nCombat Role: TANK\n\nOBJECTIVE: Engage iron golem first.\n\nTARGET: iron_golem\n\nEQUIPMENT: Weapon: best available melee, Armor: whatever equipped\n\nTACTICS:\n1. Use the provided attack code template exactly as written\n2. Search for \"iron_golem\" target within 30 blocks\n3. Equip best available melee weapon from inventory\n4. Scan for all entities/players around you\n5. Start attack loop with timeout protection\n6. Log all combat events to console\n7. Retreat if health drops below 12 (6 hearts)\n\nRETREAT CONDITION: bot.health < 12\n\nCONSTRAINTS:\n- Do NOT use bot.pathfinder.\n- Stay within 30 blocks of rallyPoint.\n- Maintain ~3+ blocks spacing from Soldier2.\n\nTARGET INFORMATION:\n- Target Name: iron_golem\n- Target Type: mob\n- Search Range: 30 blocks\n- Melee Range: 3.5 blocks\n\nREQUIRED CODE PATTERNS (MUST USE ALL):\n- const MELEE_RANGE = 3.5\n- const maxCombatTime = 60000\n- const startTime = Date.now()\n- while (target && target.isValid && (Date.now() - startTime) < maxCombatTime)\n- if (distance <= MELEE_RANGE)\n- await bot.attack(target)\n- await skills.wait(bot, 300)\n- console.log('[Soldier1]')\n- bot.setControlState('forward', true)\n\nBANNED CODE (DO NOT USE - WILL BREAK):\n- bot.pathfinder\n- GoalNear, GoalBlock, GoalFollow, GoalXZ\n- bot.navigate\n- skills.stay(bot, -1)\n- while (true)\n\nATTACK CODE TEMPLATE:\nconst MELEE_RANGE = 3.5;\nconst maxCombatTime = 60000;\nconst startTime = Date.now();\n\nconsole.log('[Soldier1] === COMBAT START ===');\nconsole.log('[Soldier1] Position:', bot.entity.position);\n\nconst weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null;\nconsole.log('[Soldier1] Weapon:', weapon ? weapon.name : 'NONE (fists)');\nif (weapon) await bot.equip(weapon, 'hand');\n\nconst allEntities = Object.values(bot.entities).filter(e => e.name);\nconsole.log('[Soldier1] All entities:', allEntities.slice(0, 10).map(e => e.name + ' (' + Math.floor(e.position.distanceTo(bot.entity.position)) + 'm)').join(', '));\n\n// Search for target: iron_golem\nlet target = Object.values(bot.entities).find(e => \n  e.name && \n  e.name.toLowerCase().includes('iron') && e.name.toLowerCase().includes('golem') &&\n  e.position.distanceTo(bot.entity.position) < 30\n);\n\nconsole.log('[Soldier1] Target iron_golem:', target ? 'FOUND at ' + Math.floor(target.position.distanceTo(bot.entity.position)) + 'm' : 'NOT FOUND');\n\nif (target) {\n  console.log('[Soldier1] Starting attack');\n  let hits = 0;\n  \n  while (target && target.isValid && (Date.now() - startTime) < maxCombatTime) {\n    if (bot.health < 12) {\n      console.log('[Soldier1] Low health (' + bot.health + '/20), retreating');\n      await skills.moveAway(bot, 10);\n      break;\n    }\n    \n    const distance = target.position.distanceTo(bot.entity.position);\n    \n    if (distance <= MELEE_RANGE) {\n      await bot.lookAt(target.position);\n      await bot.attack(target);\n      hits++;\n      if (hits % 3 === 0) console.log('[Soldier1] Hits: ' + hits + ', Health: ' + bot.health);\n    } else {\n      // Move closer to target\n      await bot.lookAt(target.position);\n      bot.setControlState('forward', true);\n    }\n    \n    await skills.wait(bot, 300);\n    target = target && target.isValid ? target : null;\n  }\n  \n  console.log('[Soldier1] Combat done - Total hits: ' + hits + ', Final health: ' + bot.health);\n  if ((Date.now() - startTime) >= maxCombatTime) {\n    console.log('[Soldier1] Combat timeout (60 seconds) reached');\n  }\n} else {\n  console.log('[Soldier1] ERROR: No iron_golem found within 30 blocks!');\n}\n\nconsole.log('[Soldier1] Holding position');\nbot.setControlState('forward', false);\n\n\nCOMBAT ZONE:\n- Your Start Position: (-425, -60, 32)\n- Rally Point: (-430, -60, 32)\n- Max Chase Distance: 20 blocks from rally point\n- Your Approach: east side\n\nTEAMMATES: Soldier2\n- Keep 3+ blocks from teammates\n- Stay on YOUR side of target\n\nREMINDERS:\n- You are ALREADY positioned - do NOT use pathfinder to move\n- bot.attack() automatically walks into melee range\n- Use the exact code template above\n- Search for \"iron_golem\" target name\n- Tank role: engage immediately, maintain pressure on target",
+                                "Soldier2": "COMBAT MISSION: Engage an iron golem with two soldiers.\n\nLocation: Near the target area\nRole: Soldier2\nCombat Role: FLANKER\n\nOBJECTIVE: Flank the iron golem after 1.5 seconds.\n\nTARGET: iron_golem\n\nEQUIPMENT: Weapon: best available melee, Armor: whatever equipped\n\nTACTICS:\n1. Use the provided attack code template exactly as written\n2. Search for \"iron_golem\" target within 30 blocks\n3. Equip best available melee weapon from inventory\n4. Scan for all entities/players around you\n5. Start attack loop with timeout protection\n6. Log all combat events to console\n7. Retreat if health drops below 12 (6 hearts)\n8. Wait 1.5 seconds before engaging (let tank engage first)\n\nRETREAT CONDITION: bot.health < 12\n\nCONSTRAINTS:\n- Do NOT use bot.pathfinder.\n- Maintain at least ~3 blocks separation from Soldier1.\n\nTARGET INFORMATION:\n- Target Name: iron_golem\n- Target Type: mob\n- Search Range: 30 blocks\n- Melee Range: 3.5 blocks\n\nREQUIRED CODE PATTERNS (MUST USE ALL):\n- const MELEE_RANGE = 3.5\n- const maxCombatTime = 60000\n- const startTime = Date.now()\n- while (target && target.isValid && (Date.now() - startTime) < maxCombatTime)\n- if (distance <= MELEE_RANGE)\n- await bot.attack(target)\n- await skills.wait(bot, 300)\n- console.log('[Soldier2]')\n- bot.setControlState('forward', true)\n\nBANNED CODE (DO NOT USE - WILL BREAK):\n- bot.pathfinder\n- GoalNear, GoalBlock, GoalFollow, GoalXZ\n- bot.navigate\n- skills.stay(bot, -1)\n- while (true)\n\nATTACK CODE TEMPLATE:\nconst MELEE_RANGE = 3.5;\nconst maxCombatTime = 60000;\nconst startTime = Date.now();\n\nconsole.log('[Soldier2] === COMBAT START ===');\nconsole.log('[Soldier2] Position:', bot.entity.position);\n\n// Flanker: Wait for tank to engage first\nconsole.log('[Soldier2] Waiting 1.5 seconds for primary engagement...');\nawait skills.wait(bot, 1500);\n\nconst weapon = bot.inventory.items().find(i => i.name.includes('sword')) || bot.inventory.items().find(i => i.name.includes('axe')) || null;\nconsole.log('[Soldier2] Weapon:', weapon ? weapon.name : 'NONE (fists)');\nif (weapon) await bot.equip(weapon, 'hand');\n\nconst allEntities = Object.values(bot.entities).filter(e => e.name);\nconsole.log('[Soldier2] All entities:', allEntities.slice(0, 10).map(e => e.name + ' (' + Math.floor(e.position.distanceTo(bot.entity.position)) + 'm)').join(', '));\n\n// Search for target: iron_golem\nlet target = Object.values(bot.entities).find(e => \n  e.name && \n  e.name.toLowerCase().includes('iron') && e.name.toLowerCase().includes('golem') &&\n  e.position.distanceTo(bot.entity.position) < 30\n);\n\nconsole.log('[Soldier2] Target iron_golem:', target ? 'FOUND at ' + Math.floor(target.position.distanceTo(bot.entity.position)) + 'm' : 'NOT FOUND');\n\nif (target) {\n  console.log('[Soldier2] Starting attack');\n  let hits = 0;\n  \n  while (target && target.isValid && (Date.now() - startTime) < maxCombatTime) {\n    if (bot.health < 12) {\n      console.log('[Soldier2] Low health (' + bot.health + '/20), retreating');\n      await skills.moveAway(bot, 10);\n      break;\n    }\n    \n    const distance = target.position.distanceTo(bot.entity.position);\n    \n    if (distance <= MELEE_RANGE) {\n      await bot.lookAt(target.position);\n      await bot.attack(target);\n      hits++;\n      if (hits % 3 === 0) console.log('[Soldier2] Hits: ' + hits + ', Health: ' + bot.health);\n    } else {\n      // Move closer to target\n      await bot.lookAt(target.position);\n      bot.setControlState('forward', true);\n    }\n    \n    await skills.wait(bot, 300);\n    target = target && target.isValid ? target : null;\n  }\n  \n  console.log('[Soldier2] Combat done - Total hits: ' + hits + ', Final health: ' + bot.health);\n  if ((Date.now() - startTime) >= maxCombatTime) {\n    console.log('[Soldier2] Combat timeout (60 seconds) reached');\n  }\n} else {\n  console.log('[Soldier2] ERROR: No iron_golem found within 30 blocks!');\n}\n\nconsole.log('[Soldier2] Holding position');\nbot.setControlState('forward', false);\n\n\nCOMBAT ZONE:\n- Your Start Position: (-435, -60, 32)\n- Rally Point: (-430, -60, 32)\n- Max Chase Distance: 20 blocks from rally point\n- Your Approach: west side\n\nTEAMMATES: Soldier1\n- Keep 3+ blocks from teammates\n- Stay on YOUR side of target\n\nREMINDERS:\n- You are ALREADY positioned - do NOT use pathfinder to move\n- bot.attack() automatically walks into melee range\n- Use the exact code template above\n- Search for \"iron_golem\" target name\n- Flanker role: wait 1.5 seconds then engage from your side"
+                            },
+                            "combatMetadata": {
+                                "sessionId": "combat_1765825305089",
+                                "rallyPoint": {
+                                    "x": -430,
+                                    "y": -60,
+                                    "z": 32
+                                },
+                                "combatRadius": 20,
+                                "soldierCount": 2
+                            }
+                        },
+                        "conversationId": "5415489232",
+                        "callbackWebhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/soldier-complete"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "9433",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/distribute-tasks",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "95410404-02ea-4382-a187-7d50a22fce3f",
+    "staticData": null,
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Workers List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Task": {
+            "main": [
+                [
+                    {
+                        "node": "Worker Task Sent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers List": {
+            "main": [
+                [
+                    {
+                        "node": "Send Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

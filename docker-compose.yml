@@ -62,7 +62,10 @@ services:
     ports:
       - "4001:4001"
       - "5000:5000"
-      - "5001:5001"
+      - "5002:5002"
+      - "5003:5003"
+      - "5004:5004"
+      - "5005:5005"
 
     environment:
       - DISPLAY=:99  # Keep this only for api-gateway
@@ -76,6 +79,7 @@ services:
       - ./src:/app/src 
       - ./logs:/app/logs
       - ./.env:/app/.env:ro
+      - ./data:/app/data
     restart: unless-stopped
     networks:
       - kodecraft-network

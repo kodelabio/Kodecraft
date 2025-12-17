@@ -593,6 +593,24 @@
                 "role": "assistant",
                 "content": "```js\nconst position = world.getPosition(bot);\nconst startX = position.x;\nconst startY = position.y;\nconst startZ = position.z;\nconst width = 7;\nconst depth = 7;\nconst height = 4;\n\n// Build front wall (z = startZ)\nfor (let x = startX; x < startX + width; x++) {\n  for (let y = startY; y < startY + height; y++) {\n    await skills.placeBlock(bot, 'oak_planks', x, y, startZ);\n  }\n}\n\n// Build back wall (z = startZ + depth - 1)\nfor (let x = startX; x < startX + width; x++) {\n  for (let y = startY; y < startY + height; y++) {\n    await skills.placeBlock(bot, 'oak_planks', x, y, startZ + depth - 1);\n  }\n}\n\n// Build left wall (x = startX)\nfor (let z = startZ; z < startZ + depth; z++) {\n  for (let y = startY; y < startY + height; y++) {\n    await skills.placeBlock(bot, 'oak_planks', startX, y, z);\n  }\n}\n\n// Build right wall (x = startX + width - 1)\nfor (let z = startZ; z < startZ + depth; z++) {\n  for (let y = startY; y < startY + height; y++) {\n    await skills.placeBlock(bot, 'oak_planks', startX + width - 1, y, z);\n  }\n}\n\n// Build floor (y = startY)\nfor (let x = startX; x < startX + width; x++) {\n  for (let z = startZ; z < startZ + depth; z++) {\n    await skills.placeBlock(bot, 'oak_planks', x, startY, z);\n  }\n}\n\n// Build ceiling (y = startY + height - 1)\nfor (let x = startX; x < startX + width; x++) {\n  for (let z = startZ; z < startZ + depth; z++) {\n    await skills.placeBlock(bot, 'oak_planks', x, startY + height - 1, z);\n  }\n}\n```"
             }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "COMBAT MISSION: Attack enemy with 2 soldiers\n\nSOLDIER: Soldier1\nROLE: TANK\n\nOBJECTIVE: Engage target immediately, draw attention\n\nTARGET: target_player (player)\n\nINSTRUCTIONS:\nEquip your best sword or axe. Search for the target within 30 blocks. Engage immediately from the front. Keep attacking for up to 60 seconds. If health drops below 7 hearts (14 HP), retreat immediately.\n\nHEALTH & SAFETY:\n- Retreat threshold: 14 HP (7 hearts)\n- Maximum combat duration: 60 seconds\n\nCONSTRAINTS:\n- Stay within 30 blocks of target\n- Do not wander\n- Stay 3 blocks from teammate"
+            },
+            {
+                "role": "assistant",
+                "content": "```js\n// Detect and attack player target - NO PATHFINDING\nlet target = bot.players['target_player'];\n\nif (!target || !target.entity) {\n    console.log('Target not found');\n} else {\n    const distance = target.entity.position.distanceTo(bot.entity.position);\n    console.log('Target found at', Math.floor(distance), 'blocks');\n    \n    if (distance > 30) {\n        console.log('Target too far away');\n    } else {\n        // Attack loop\n        const maxCombatTime = 60000; // 60 seconds\n        const startTime = Date.now();\n        let hits = 0;\n        \n        while (target.entity && Date.now() - startTime < maxCombatTime && bot.health >= 14) {\n            const dist = target.entity.position.distanceTo(bot.entity.position);\n            \n            if (dist <= 3.5) {\n                // In melee range - attack\n                await bot.lookAt(target.entity.position);\n                await bot.attack(target);\n                hits++;\n                if (hits % 5 === 0) console.log('Hits:', hits, '| Health:', bot.health);\n            } else if (dist <= 30) {\n                // Out of range - move closer (no pathfinding)\n                await bot.lookAt(target.entity.position);\n                bot.setControlState('forward', true);\n                bot.setControlState('sprint', true);\n                await skills.wait(bot, 500);\n                bot.setControlState('forward', false);\n                bot.setControlState('sprint', false);\n            } else {\n                // Too far\n                console.log('Target out of range');\n                break;\n            }\n            \n            await skills.wait(bot, 300);\n        }\n        \n        console.log('Combat complete - Total hits:', hits, '| Final health:', bot.health);\n        if (Date.now() - startTime >= maxCombatTime) {\n            console.log('Combat timeout reached');\n        }\n    }\n}\n```"
+            },
+            {
+                "role": "system",
+                "content": "Code execution finished successfully."
+            },
+            {
+                "role": "assistant",
+                "content": "Combat complete. Target was found and engaged."
+            }
         ]
     ]
 }

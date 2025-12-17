@@ -207,11 +207,71 @@ async function setupLogging(workerName) {
         agent.serverProxy = serverProxy;
         serverProxy.setAgent(agent);
         await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
+
+        // ✅ DETAILED VERIFICATION OF SKILL LIBRARY
+        console.log(`\n📚 === SKILL LIBRARY VERIFICATION FOR ${argv.name} ===`);
+        console.log(`Current working directory: ${process.cwd()}`);
+        console.log(`Node process PID: ${process.pid}`);
+        try {
+            // Check 1: Prompter exists
+            if (!agent.prompter) {
+                throw new Error('agent.prompter is null/undefined');
+            }
+            console.log(`✅ agent.prompter exists`);
+            
+            // Check 2: Skill library exists
+            if (!agent.prompter.skill_libary) {
+                throw new Error('agent.prompter.skill_libary is null/undefined');
+            }
+            console.log(`✅ agent.prompter.skill_libary exists`);
+            
+            // Check 3: getAllSkillDocs method exists
+            if (typeof agent.prompter.skill_libary.getAllSkillDocs !== 'function') {
+                throw new Error(`getAllSkillDocs is not a function, got: ${typeof agent.prompter.skill_libary.getAllSkillDocs}`);
+            }
+            console.log(`✅ getAllSkillDocs is a function`);
+            
+            // Check 4: Call getAllSkillDocs
+            console.log(`Calling getAllSkillDocs()...`);
+            const allDocs = await agent.prompter.skill_libary.getAllSkillDocs();
+            console.log(`✅ getAllSkillDocs() succeeded`);
+            
+            // Check 5: Validate result
+            if (!allDocs) {
+                throw new Error(`getAllSkillDocs returned null/undefined`);
+            }
+            if (typeof allDocs !== 'object') {
+                throw new Error(`getAllSkillDocs returned ${typeof allDocs}, expected object`);
+            }
+            const skillCount = Object.keys(allDocs).length;
+            if (skillCount === 0) {
+                console.warn(`⚠️  getAllSkillDocs returned empty object (0 skills)`);
+            } else {
+                console.log(`✅ Skill library loaded: ${skillCount} skills available`);
+                console.log(`   Skills: ${Object.keys(allDocs).slice(0, 5).join(', ')}${skillCount > 5 ? '...' : ''}`);
+            }
+            
+        } catch (error) {
+            console.error(`\n❌ SKILL LIBRARY VERIFICATION FAILED`);
+            console.error(`Error: ${error.message}`);
+            console.error(`Stack: ${error.stack}`);
+            console.error(`\nWorker will likely fail during code generation.`);
+            console.error(`Debug info:`, {
+                prompter_exists: !!agent.prompter,
+                skill_libary_exists: !!agent.prompter?.skill_libary,
+                getAllSkillDocs_type: typeof agent.prompter?.skill_libary?.getAllSkillDocs,
+                working_dir: process.cwd()
+            });
+        }
+        console.log(`📚 === END VERIFICATION ===\n`);
+
         
         // Start API server for the worker
         console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
         const api = new ExternalAPI(agent);
         await api.start(argv.port);
+
+        
         
         console.log(`Worker ${argv.name} ready on port ${argv.port}`);
         

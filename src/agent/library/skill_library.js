@@ -1,5 +1,6 @@
 import { cosineSimilarity } from '../../utils/math.js';
 import { getSkillDocs } from './index.js';
+import { getSkillEmbeddings } from '../../utils/embedding_cache.js'; 
 import { wordOverlapScore } from '../../utils/text.js';
 
 export class SkillLibrary {
@@ -10,23 +11,42 @@ export class SkillLibrary {
         this.skill_docs = null;
         this.always_show_skills = ['skills.placeBlock', 'skills.wait', 'skills.breakBlockAt']
     }
+
     async initSkillLibrary() {
-        const skillDocs = getSkillDocs();
-        this.skill_docs = skillDocs;
-        if (this.embedding_model) {
-            try {
-                const embeddingPromises = skillDocs.map((doc) => {
-                    return (async () => {
-                        let func_name_desc = doc.split('\n').slice(0, 2).join('');
-                        this.skill_docs_embeddings[doc] = await this.embedding_model.embed(func_name_desc);
-                    })();
-                });
-                await Promise.all(embeddingPromises);
-            } catch (error) {
-                console.warn('Error with embedding model, using word-overlap instead.');
-                this.embedding_model = null;
+        const skillEmbeddings = getSkillEmbeddings();
+        
+        if (skillEmbeddings && Object.keys(skillEmbeddings).length > 0) {
+            // Load docs as ARRAY (like getSkillDocs returns)
+            this.skill_docs = Object.values(skillEmbeddings).map(item => item.doc);
+        
+            // Load embeddings by doc string key
+            this.skill_docs_embeddings = {};
+            Object.values(skillEmbeddings).forEach(data => {
+                this.skill_docs_embeddings[data.doc] = data.embedding;
+        });
+        
+        console.log(`[SkillLibrary] Loaded ${this.skill_docs.length} skill docs from file`);
+        } else {
+            // Fallback: dynamic generation
+            const skillDocs = getSkillDocs();
+            this.skill_docs = skillDocs;  // ARRAY
+            
+            if (this.embedding_model) {
+                try {
+                        const embeddingPromises = skillDocs.map((doc) => {
+                            return (async () => {
+                                let func_name_desc = doc.split('\n').slice(0, 2).join('');
+                                this.skill_docs_embeddings[doc] = await this.embedding_model.embed(func_name_desc);
+                            })();
+                        });
+                        await Promise.all(embeddingPromises);
+                    } catch (error) {
+                        console.warn('Error with embedding model, using word-overlap instead.');
+                        this.embedding_model = null;
+                    }
             }
         }
+    
         this.always_show_skills_docs = {};
         for (const skillName of this.always_show_skills) {
             this.always_show_skills_docs[skillName] = this.skill_docs.find(doc => doc.includes(skillName));

@@ -8,6 +8,43 @@ export function log(bot, message) {
     bot.output += message + '\n';
 }
 
+export async function playerDetection(bot, playerName) {
+    /**
+     * Find and attack player targets in combat. CRITICAL: Use ONLY for players, NOT mobs.
+     * 
+     * CORRECT USAGE FOR PLAYERS:
+     * let target = bot.players['PlayerName'];
+     * if (target?.entity) {
+     *     const distance = target.entity.position.distanceTo(bot.entity.position);
+     *     if (distance <= 3.5) {
+     *         await bot.attack(target);  // Pass player object, not entity
+     *     }
+     * }
+     * 
+     * ANTI-PATTERNS - DO NOT USE:
+     * ❌ bot.nearestEntity(entity => entity.username === 'PlayerName')  // WRONG - players are not entities
+     * ❌ Object.values(bot.entities).find(e => e.username === 'PlayerName')  // WRONG - players not in entities
+     * ❌ bot.nearestEntity() for player targets  // WRONG - only works for mobs
+     * 
+     * RULES:
+     * - Players are ONLY in bot.players, NEVER in bot.entities
+     * - Use bot.players[name] for player/bot targets
+     * - Use bot.nearestEntity() or Object.values(bot.entities) for mobs/animals ONLY
+     * - Always check target?.entity exists before using it
+     * - Pass player object to bot.attack(), not the entity
+     * 
+     * @param {MinecraftBot} bot - reference to the minecraft bot
+     * @param {string} playerName - name of the player to find (e.g., 'TheBoss')
+     * @returns {object} player object from bot.players or null if not found
+     * @example
+     * let target = bot.players['TheBoss'];
+     * if (target?.entity && target.entity.position.distanceTo(bot.entity.position) <= 3.5) {
+     *     await bot.attack(target);
+     * }
+     **/
+    return bot.players[playerName] || null;
+}
+
 async function autoLight(bot) {
     if (world.shouldPlaceTorch(bot)) {
         try {

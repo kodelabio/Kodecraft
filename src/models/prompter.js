@@ -1,4 +1,5 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'fs';
+import { loadEmbeddings, getExampleEmbeddings, getSkillEmbeddings } from '../utils/embedding_cache.js';
 import { Examples } from '../utils/examples.js';
 import { getCommandDocs } from '../agent/commands/index.js';
 import { SkillLibrary } from "../agent/library/skill_library.js";
@@ -30,6 +31,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export class Prompter {
+    static cachedExamples = null;
+    static loadingPromise = null;
     constructor(agent, profile) {
         this.agent = agent;
         this.profile = profile || {};
@@ -227,7 +230,7 @@ export class Prompter {
     getInitModes() {
         return this.profile.modes;
     }
-
+    /**  REPLACED WITH new method to load from cache 
     async initExamples() {
         try {
             this.convo_examples = new Examples(this.embedding_model, settings.num_examples);
@@ -252,7 +255,81 @@ export class Prompter {
             throw error; // Re-throw with preserved details
         }
     }
+    */ 
+    // New method: loads embeddings pre-generated and cached to speed up startup
+    async initExamples() {
+        try {
+            // Check if examples are already cached globally
+            if (this.constructor.cachedExamples?.convo && this.constructor.cachedExamples?.coding) {
+                console.log('[TIMING] Reusing cached examples');
+                this.convo_examples = this.constructor.cachedExamples.convo;
+                this.coding_examples = this.constructor.cachedExamples.coding;
+                return;
+            }
 
+            // If loading is in progress, wait for it
+            if (this.constructor.loadingPromise) {
+                console.log('[TIMING] Waiting for examples being loaded...');
+                await this.constructor.loadingPromise;
+                this.convo_examples = this.constructor.cachedExamples.convo;
+                this.coding_examples = this.constructor.cachedExamples.coding;
+                return;
+            }
+
+            // Load embeddings from cache file
+            console.log('[TIMING] Loading pre-generated embeddings...');
+            loadEmbeddings();
+
+            // Get profile name
+            const profileName = settings.profile?.name || 
+                            (settings.profiles?.[0]?.split('/').pop().replace('.json', '')) ||
+                            'kodecraft';
+
+            // Load and cache
+            // Now initialize Examples objects for first time
+            console.log('[TIMING] Initializing examples from cached embeddings');
+            this.convo_examples = new Examples(this.embedding_model, settings.num_examples);
+            this.coding_examples = new Examples(this.embedding_model, settings.num_examples);
+            
+            console.log('[TIMING] Initializing examples from cached embeddings');
+            this.constructor.loadingPromise = (async () => {
+                try {
+                    const convEmbeddings = getExampleEmbeddings(profileName, 'conversation');
+                    const codingEmbeddings = getExampleEmbeddings(profileName, 'coding');
+
+                    // Load with pre-computed embeddings
+                    await this.convo_examples.loadWithEmbeddings(
+                        this.profile.conversation_examples || [],
+                        convEmbeddings
+                    );
+
+                    await this.coding_examples.loadWithEmbeddings(
+                        this.profile.coding_examples || [],
+                        codingEmbeddings
+                    );
+
+                    // Cache globally
+                    this.constructor.cachedExamples = {
+                        convo: this.convo_examples,
+                        coding: this.coding_examples
+                    };
+
+                    console.log('[TIMING] ✅ Examples loaded from cache');
+                    this.constructor.loadingPromise = null;
+                } catch (error) {
+                    console.error('[TIMING] Error loading cached examples:', error);
+                    this.constructor.loadingPromise = null;
+                    throw error;
+                }
+            })();
+
+            await this.constructor.loadingPromise;
+
+        } catch (error) {
+            console.error('Failed to initialize examples:', error);
+            throw error;
+        }
+    }
     async replaceStrings(prompt, messages, examples = null, to_summarize = [], last_goals = null) {
         prompt = prompt.replaceAll('$NAME', this.agent.name);
 

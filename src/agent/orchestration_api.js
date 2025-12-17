@@ -795,6 +795,41 @@ registerWorkersForSession(sessionId, workers) {
         };
     }
 
+    // 
+    async teleportWorker(sessionId, workerName, buildLocation) {
+        const session = this.buildSessions.get(sessionId);
+        if (!session) {
+            return { success: false, error: `Build session ${sessionId} not found` };
+        }
+
+        const worker = session.workers.find(w => w.name === workerName);
+        if (!worker) {
+            return { success: false, error: `Worker ${workerName} not found in session` };
+        }
+
+        try {
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(buildLocation),
+                timeout: 5000
+            });
+
+            if (response.ok) {
+                console.log(`✅ ${workerName} teleported to ${buildLocation.x}, ${buildLocation.y}, ${buildLocation.z}`);
+                return {
+                    success: true,
+                    workerName: workerName,
+                    position: buildLocation
+                };
+            }
+            return { success: false, error: `HTTP ${response.status}` };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+}
+
+    // Simplified teleportWorkers method without retries
 
     async teleportWorkers(sessionId, buildLocation) {
         console.log(`🚀 Teleporting workers to build location`);

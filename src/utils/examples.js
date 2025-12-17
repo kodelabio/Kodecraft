@@ -18,6 +18,31 @@ export class Examples {
         return messages.trim();
     }
 
+    async loadWithEmbeddings(examples, preComputedEmbeddings) {
+        this.examples = examples;
+        
+        if (preComputedEmbeddings) {
+            console.log('[Examples] Using pre-computed embeddings');
+            Object.entries(preComputedEmbeddings).forEach(([index, embedding]) => {
+                const example = examples[parseInt(index)];
+                if (example) {
+                    const turn_text = this.turnsToText(example);
+                    this.embeddings[turn_text] = embedding;
+                }
+            });
+        } else if (this.model) {
+            console.warn('[Examples] Pre-computed embeddings not found, computing...');
+            const embeddingPromises = examples.map(example => {
+                const turn_text = this.turnsToText(example);
+                return this.model.embed(turn_text)
+                    .then(embedding => {
+                        this.embeddings[turn_text] = embedding;
+                    });
+            });
+            await Promise.all(embeddingPromises);
+        }
+    }
+
     async load(examples) {
         this.examples = examples;
         if (!this.model) return; // Early return if no embedding model

@@ -1,0 +1,342 @@
+{
+    "id": "kyIh8pdVMa2aWFYo",
+    "meta": null,
+    "name": "SpawnWorkers [Orchestrated] Multibot",
+    "nodes": [
+        {
+            "id": "181705c2-c53a-40da-ad77-07e17740a6c9",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -416,
+                0
+            ],
+            "webhookId": "a2086d5e-5a53-4309-af92-e357431e546b",
+            "parameters": {
+                "path": "/kodecraft/multibot/spawn-workers",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "989ab113-bd12-4467-8b64-671ea2c4273e",
+            "name": "Spawn workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueRegularOutput",
+            "position": [
+                -128,
+                0
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/spawn-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "count",
+                            "value": "={{ $json.body.workercount }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $json.body.callbackWebhookUrl }}"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.body.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "638f6f81-55ed-4811-88cb-97edca83f628",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                864,
+                0
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "44a382b1-c792-4fc8-8a4b-0b240705743f",
+            "name": "Aggregate",
+            "type": "n8n-nodes-base.aggregate",
+            "position": [
+                624,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "spawnedWorkers"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "e67db3aa-fdd0-4b55-9068-8499fb0f8ab4",
+            "name": "Update Workers Status",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                432,
+                0
+            ],
+            "parameters": {
+                "fields": "port, status, pid",
+                "upsert": true,
+                "options": {
+                },
+                "operation": "update",
+                "updateKey": "=workerName",
+                "collection": "Workers"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2,
+            "alwaysOutputData": true
+        },
+        {
+            "id": "f024d3b5-e4a7-4b0b-b75b-4ec71f125dcc",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                288,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "results"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "13ea9f31-68f3-417d-b78a-40e3d12ea064",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                48,
+                0
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "2ba0241f-6807-4a10-b4e1-1c4d3cc0ad0c",
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            },
+                            "leftValue": "={{ $json.spawned }}",
+                            "rightValue": 0
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "1cdf5d99-d3a1-4b97-bc1b-a5c6801a6f55",
+            "name": "Respond to Webhook1",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                208,
+                160
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to spawn workers\"\n}"
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "botstatus": {
+                            "health": 20,
+                            "hunger": 20,
+                            "is_busy": false,
+                            "weather": "rain",
+                            "gamemode": "creative",
+                            "position": {
+                                "x": -411.5,
+                                "y": -60,
+                                "z": -47.5001226330219
+                            },
+                            "raw_stats": "\nSTATS\n- Position: x: -411.50, y: -60.00, z: -47.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Rain\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Morning- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                            "time_of_day": 71,
+                            "current_action": "Idle"
+                        },
+                        "sessionId": "build_1765859179068",
+                        "taskRequest": "Build a small house with 2 workers collaborating. The house will be a simple 7x7 structure with oak plank walls, a peaked oak stair roof, oak plank floor, glass pane windows, and an oak door entrance.",
+                        "workercount": "2",
+                        "taskDivision": {
+                            "Worker1": {
+                                "scope": {
+                                    "xMax": 3,
+                                    "xMin": 0,
+                                    "yMax": -53,
+                                    "yMin": -60,
+                                    "zMax": 6,
+                                    "zMin": 0
+                                },
+                                "objective": "Build the west half of the small house including west foundation, west walls, west roof slope, and west interior",
+                                "stageCount": 4,
+                                "assumptions": "Worker2 is simultaneously building the east half. Materials available: 256 oak_planks, 64 oak_stairs, 16 glass_pane, 1 oak_door",
+                                "constraints": "Do NOT place blocks beyond X=3 except for shared ridge. Do NOT break blocks in Worker2's section (X>=4). Do NOT break more than 10 sequential blocks."
+                            },
+                            "Worker2": {
+                                "scope": {
+                                    "xMax": 6,
+                                    "xMin": 3,
+                                    "yMax": -53,
+                                    "yMin": -60,
+                                    "zMax": 6,
+                                    "zMin": 0
+                                },
+                                "objective": "Build the east half of the small house including east foundation, east walls, east roof slope, and east interior",
+                                "stageCount": 4,
+                                "assumptions": "Worker1 is simultaneously building the west half. Materials available: 256 oak_planks, 64 oak_stairs, 16 glass_pane",
+                                "constraints": "Do NOT place blocks below X=3 except for shared ridge. Do NOT break blocks in Worker1's section (X<=2). Do NOT break more than 10 sequential blocks."
+                            }
+                        },
+                        "conversationId": "5415489232",
+                        "callbackWebhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/worker-stage-complete"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "2237",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/spawn-workers",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "39fe291b-de3e-41ba-a2ee-6b14336174bb",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respond to Webhook1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Spawn workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Update Workers Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Spawn workers": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ]
+            ]
+        },
+        "Update Workers Status": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

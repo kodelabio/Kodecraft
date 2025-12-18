@@ -1,0 +1,424 @@
+{
+    "id": "e7xPs2CtkPZK85Ab",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "name": "Soldier complete",
+    "nodes": [
+        {
+            "id": "b5a03b69-446e-4967-a4d8-3194301ce561",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                16,
+                -128
+            ],
+            "webhookId": "a0750907-efb5-4932-bd2f-fa44bde8ded0",
+            "parameters": {
+                "path": "/kodecraft/worker-complete",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "7dfc7c4e-f3fe-4240-8446-066155417125",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1472,
+                -16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "1d650b56-ecd4-4927-a459-af59ff60c331",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                416,
+                -128
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "3c7b0407-1d4a-483d-aa53-df07887c1c07",
+                            "operator": {
+                                "type": "object",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "a4e8263e-f659-4a37-b2f8-e9ff1b824d3c",
+            "name": "404 Not found",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                656,
+                80
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 404
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Build not found\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "136d600e-69f8-4a0c-a578-880e121feaad",
+            "name": "All Completed?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                896,
+                -160
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "loose"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "09b9259f-4630-40e0-a5f4-5733190a28f9",
+                            "operator": {
+                                "type": "number",
+                                "operation": "equals"
+                            },
+                            "leftValue": "={{ $json.data.completedWorkers }}",
+                            "rightValue": "={{ $json.data.taskDivision.keys().length }}"
+                        }
+                    ]
+                },
+                "looseTypeValidation": true
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "4b48b4ff-520a-4d08-9987-4d6221131aa3",
+            "name": "Completed",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                1104,
+                -320
+            ],
+            "parameters": {
+                "query": "={\"sessionId\": \"{{ $('If').item.json.sessionId }}\"}",
+                "update": "=\n{\n  \"$set\": {\n    \"status\": \"completed\"\n  }\n  \n}",
+                "operation": "update",
+                "collection": "CollaborativeCombat"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "5871eae4-93a5-4f42-ab15-2449a2b13ce2",
+            "name": "Worker Completed",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                640,
+                -160
+            ],
+            "parameters": {
+                "query": "={\"sessionId\": \"{{ $json.sessionId }}\"}",
+                "update": "=\n{\n  \"$inc\": {\n    \"completedWorkers\": 1\n  },\n  \"$set\": {\n    \"workersStatus.{{ $('Webhook').item.json.body.workerName }}\": \"completed\"\n  }\n  \n}",
+                "operation": "update",
+                "collection": "CollaborativeCombat"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "f3f2714f-6054-4827-b11b-4e35f07498ee",
+            "name": "POST Callback URL",
+            "type": "n8n-nodes-base.noOp",
+            "position": [
+                1504,
+                -256
+            ],
+            "parameters": {
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "0441e75c-e47d-4e90-9633-ec7d958b9b51",
+            "name": "Worker Reply",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                1232,
+                -64
+            ],
+            "webhookId": "c2ffa9b7-c386-4d4a-bfa0-b47d0efd5a7e",
+            "parameters": {
+                "text": "={{ $('Webhook').item.json.body.workerName }} task {{ $('Webhook').item.json.body.status }}.",
+                "chatId": "={{ $('Webhook').item.json.body.result.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "cce18305-94ef-41f1-8504-fd4ea644ba3e",
+            "name": "Workers Reply",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                1312,
+                -320
+            ],
+            "webhookId": "ab32c4e9-3785-408d-9cba-549b9c19e5ca",
+            "parameters": {
+                "text": "=All soldiers' tasks completed.",
+                "chatId": "={{ $('Webhook').item.json.body.result.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "d155c1dd-b9bb-4319-9a15-3a6efa164b3b",
+            "name": "Retrieve session",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                256,
+                -128
+            ],
+            "parameters": {
+                "query": "={\"sessionId\":\"{{ $json.body.sessionId }}\"} ",
+                "options": {
+                },
+                "collection": "CollaborativeCombat"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "result": {
+                            "status": "success",
+                            "taskId": null,
+                            "timeSpent": 67669,
+                            "blocksPlaced": 100,
+                            "taskCompleted": "COMBAT MISSION: Deploy two soldiers to attack an iron golem at specified coordinates.\n\nLocation: Nea",
+                            "conversationId": "5415489232"
+                        },
+                        "status": "completed",
+                        "sessionId": "combat_1765477194347",
+                        "workerName": "Soldier2",
+                        "completionTime": "2025-12-11T18:29:02.168Z"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "*/*",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "node",
+                        "content-type": "application/json",
+                        "content-length": "357",
+                        "sec-fetch-mode": "cors",
+                        "accept-encoding": "br, gzip, deflate",
+                        "accept-language": "*",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/worker-complete",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "1eb24bbf-aa24-42c2-a8d5-af9c4c1162b1",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Worker Completed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "404 Not found",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Retrieve session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Completed": {
+            "main": [
+                [
+                    {
+                        "node": "Workers Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Worker Reply": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Reply": {
+            "main": [
+                [
+                    {
+                        "node": "POST Callback URL",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "All Completed?": {
+            "main": [
+                [
+                    {
+                        "node": "Completed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Worker Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Retrieve session": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Worker Completed": {
+            "main": [
+                [
+                    {
+                        "node": "All Completed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "POST Callback URL": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Respond to Webhook": {
+            "main": [
+                [
+                ]
+            ]
+        }
+    }
+}

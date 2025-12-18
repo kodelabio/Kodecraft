@@ -525,24 +525,6 @@
         [
             {
                 "role": "user",
-                "content": "zZZn98: come here"
-            },
-            {
-                "role": "assistant",
-                "content": "```await skills.goToPlayer(bot, 'zZZn98');\n```"
-            },
-            {
-                "role": "system",
-                "content": "Code execution finished successfully."
-            },
-            {
-                "role": "assistant",
-                "content": "Here!"
-            }
-        ],
-        [
-            {
-                "role": "user",
                 "content": "maya: go to the nearest oak log"
             },
             {
@@ -555,7 +537,7 @@
             },
             {
                 "role": "assistant",
-                "content": "Apologies, I made an error. Let me try that again.```\n// I am navigating to the nearest oak log.\nlet position = world.getNearestBlock(bot, 'oak_log', 20);\nawait skills.goToPosition(bot, position.x, position.y, position.z);\n```"
+                "content": "Apologies, I made an error. Let me try that again.```js\n// I am navigating to the nearest oak log.\nlet position = world.getNearestBlock(bot, 'oak_log', 20);\nif (position) {\n    await bot.lookAt(new Vec3(position.x, position.y, position.z));\n    bot.setControlState('forward', true);\n    await skills.wait(bot, 1500);\n    bot.setControlState('forward', false);\n}\n```"
             },
             {
                 "role": "system",
@@ -610,6 +592,24 @@
             {
                 "role": "assistant",
                 "content": "Combat complete. Target was found and engaged."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "COMBAT MISSION: Attack enemy workers\n\nRole: TANK\nTarget: enemy_worker_1 (hostile player)\nTarget Type: player\n\nOBJECTIVE: Engage the first available enemy worker.\n\nINSTRUCTIONS:\nYou are the tank. Equip your best sword or axe. Search for any enemy worker within 30 blocks of your position. Once found, approach from the front and attack immediately with continuous melee assault. Keep attacking for up to 60 seconds. If your target is destroyed or flees beyond 30 blocks, search for another available worker. Maintain at least 3 blocks distance from your teammate. If your health drops below 7 hearts (14 HP), retreat immediately.\n\nCONSTRAINTS:\n- Stay within 30 blocks of your target\n- Maintain at least 3 blocks distance from teammate\n- If target destroyed or flees, acquire next available target\n- Abort if no targets found after 60 seconds\n- Do NOT use pathfinding - only direct forward movement with setControlState"
+            },
+            {
+                "role": "assistant",
+                "content": "```js\n// Worker-vs-worker combat: Tank role\n// Already positioned, NO PATHFINDING - direct forward movement only\n// Target: primary_target, fallback to any enemy worker\n\nconst targetName = 'enemy_worker_1';\nconst MELEE_RANGE = 3.5;\nconst SEARCH_RANGE = 30;\nconst HEALTH_RETREAT = 14; // 7 hearts\nconst maxCombatTime = 60000;\nconst startTime = Date.now();\n\n// Equip sword\nlet sword = bot.inventory.items().find(item => item.name === 'iron_sword');\nif (sword) await bot.equip(sword, 'hand');\n\nlet hits = 0;\nlet target = bot.players[targetName];\n\nif (!target?.entity) {\n    console.log('Primary target not found, searching for enemies');\n}\n\nwhile ((Date.now() - startTime) < maxCombatTime) {\n    // Health check - retreat if critical\n    if (bot.health < HEALTH_RETREAT) {\n        console.log('Health critical, retreating');\n        break;\n    }\n    \n    // Re-check primary target\n    target = bot.players[targetName];\n    \n    // If primary gone, search for any enemy worker\n    if (!target?.entity) {\n        for (let playerName of Object.keys(bot.players)) {\n            if (playerName.includes('enemy') || playerName.includes('worker')) {\n                target = bot.players[playerName];\n                if (target?.entity) {\n                    console.log('Switched to target: ' + playerName);\n                    break;\n                }\n            }\n        }\n    }\n    \n    // If we have a target, engage\n    if (target?.entity) {\n        const distance = target.entity.position.distanceTo(bot.entity.position);\n        \n        if (distance > SEARCH_RANGE) {\n            console.log('Target out of range');\n            break;\n        }\n        \n        if (distance <= MELEE_RANGE) {\n            // In melee range - attack\n            await bot.lookAt(target.entity.position);\n            await bot.attack(target);\n            hits++;\n        } else {\n            // Move forward toward target - NO PATHFINDING\n            await bot.lookAt(target.entity.position);\n            bot.setControlState('forward', true);\n        }\n    } else {\n        console.log('No target found');\n        break;\n    }\n    \n    await skills.wait(bot, 300);\n}\n\nbot.setControlState('forward', false);\nconsole.log('Combat complete');\n```"
+            },
+            {
+                "role": "system",
+                "content": "Code execution finished successfully."
+            },
+            {
+                "role": "assistant",
+                "content": "Combat engaged. Tank attacking enemy worker."
             }
         ]
     ]

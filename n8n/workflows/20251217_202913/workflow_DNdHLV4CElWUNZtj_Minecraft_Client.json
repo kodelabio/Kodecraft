@@ -1,0 +1,707 @@
+{
+    "id": "DNdHLV4CElWUNZtj",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "name": "Minecraft Client",
+    "nodes": [
+        {
+            "id": "872c366f-acae-4dd1-8e1b-b40a08f5120c",
+            "name": "MCP Client",
+            "type": "n8n-nodes-mcp.mcpClient",
+            "position": [
+                -736,
+                976
+            ],
+            "parameters": {
+            },
+            "credentials": {
+                "mcpClientApi": {
+                    "id": "cRezsfHXqRIksbwo",
+                    "name": "Minecraft Remote"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "f157189d-ee51-40bb-87b6-2a5fb910fa0b",
+            "name": "When clicking ‘Execute workflow’",
+            "type": "n8n-nodes-base.manualTrigger",
+            "position": [
+                -960,
+                976
+            ],
+            "parameters": {
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "15289af4-face-470c-ab50-1365420a884a",
+            "name": "AI Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "position": [
+                -512,
+                448
+            ],
+            "parameters": {
+                "text": "={{ $json.message }}",
+                "options": {
+                    "systemMessage": "=You are an AI Minecraft assistant.\nYour job is to interpret the user's request and output a single JSON object that calls the most appropriate tool from the following list, using the correct parameters and types as defined in the tool schemas.\n\nInstructions:\n\nCarefully read the user's request and determine which tool best matches the intent.\nOutput only a single JSON object, with the following structure:\n\"tool\": the name of the tool to call (from the list below)\n\"parameters\": an object containing the required and optional parameters for that tool, using the correct types and field names as defined in the schema.\nDo not include any extra text, explanation, or commentary—output only the JSON object.\nIf the user request cannot be mapped to any tool, output an empty JSON object: {}\nUse the following parameters to conncet to the server and when required:\nhost: {{ $json.host }}\nusername: {{ $json.username }}\n\nAvailable tools and their parameters:\n[\n  {\n    \"tools\": [\n      {\n        \"name\": \"connectToServer\",\n        \"description\": \"Connect to a Minecraft server with the specified credentials\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"host\": {\n              \"type\": \"string\",\n              \"description\": \"Minecraft server host address\"\n            },\n            \"port\": {\n              \"type\": \"number\",\n              \"description\": \"Minecraft server port\"\n            },\n            \"username\": {\n              \"type\": \"string\",\n              \"description\": \"Minecraft username\"\n            },\n            \"password\": {\n              \"type\": \"string\",\n              \"description\": \"Minecraft password (if using premium account)\"\n            },\n            \"version\": {\n              \"type\": \"string\",\n              \"description\": \"Minecraft version\"\n            }\n          },\n          \"required\": [\n            \"host\",\n            \"username\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"disconnectFromServer\",\n        \"description\": \"Disconnect from the Minecraft server\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"sendChat\",\n        \"description\": \"Send a chat message to the Minecraft server\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"message\": {\n              \"type\": \"string\",\n              \"description\": \"Message to send to the server\"\n            }\n          },\n          \"required\": [\n            \"message\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"getPosition\",\n        \"description\": \"Get the current position of the player in the Minecraft world\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"moveTo\",\n        \"description\": \"Move the player to a specific location\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"x\": {\n              \"type\": \"number\",\n              \"description\": \"X coordinate\"\n            },\n            \"y\": {\n              \"type\": \"number\",\n              \"description\": \"Y coordinate\"\n            },\n            \"z\": {\n              \"type\": \"number\",\n              \"description\": \"Z coordinate\"\n            }\n          },\n          \"required\": [\n            \"x\",\n            \"y\",\n            \"z\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"moveControl\",\n        \"description\": \"Control the player with basic movement commands\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"action\": {\n              \"type\": \"string\",\n              \"description\": \"Movement action to perform\"\n            },\n            \"duration\": {\n              \"type\": \"number\",\n              \"description\": \"Duration to perform the action in seconds\"\n            }\n          },\n          \"required\": [\n            \"action\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"lookAt\",\n        \"description\": \"Make the player look in a specific direction or at coordinates\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"x\": {\n              \"type\": \"number\",\n              \"description\": \"X coordinate to look at\"\n            },\n            \"y\": {\n              \"type\": \"number\",\n              \"description\": \"Y coordinate to look at\"\n            },\n            \"z\": {\n              \"type\": \"number\",\n              \"description\": \"Z coordinate to look at\"\n            }\n          },\n          \"required\": [\n            \"x\",\n            \"y\",\n            \"z\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"digBlock\",\n        \"description\": \"Dig a block at the specified coordinates\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"x\": {\n              \"type\": \"number\",\n              \"description\": \"X coordinate\"\n            },\n            \"y\": {\n              \"type\": \"number\",\n              \"description\": \"Y coordinate\"\n            },\n            \"z\": {\n              \"type\": \"number\",\n              \"description\": \"Z coordinate\"\n            }\n          },\n          \"required\": [\n            \"x\",\n            \"y\",\n            \"z\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"placeBlock\",\n        \"description\": \"Place a block at the specified location\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"x\": {\n              \"type\": \"number\",\n              \"description\": \"X coordinate\"\n            },\n            \"y\": {\n              \"type\": \"number\",\n              \"description\": \"Y coordinate\"\n            },\n            \"z\": {\n              \"type\": \"number\",\n              \"description\": \"Z coordinate\"\n            },\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to place\"\n            }\n          },\n          \"required\": [\n            \"x\",\n            \"y\",\n            \"z\",\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"getNearbyPlayers\",\n        \"description\": \"Get a list of players nearby\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"getServerInfo\",\n        \"description\": \"Get information about the currently connected server\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"checkInventory\",\n        \"description\": \"Check the items in the player inventory\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"equipItem\",\n        \"description\": \"Equip an item from inventory to hand or armor slot\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to equip\"\n            },\n            \"destination\": {\n              \"type\": \"string\",\n              \"description\": \"Slot to equip the item to\"\n            }\n          },\n          \"required\": [\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"inventoryDetails\",\n        \"description\": \"Get detailed information about inventory items\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"tossItem\",\n        \"description\": \"Throw items from inventory\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to throw\"\n            },\n            \"amount\": {\n              \"type\": \"number\",\n              \"description\": \"Amount of items to throw\"\n            }\n          },\n          \"required\": [\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"getNearbyEntities\",\n        \"description\": \"Get a list of all entities nearby\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"range\": {\n              \"type\": \"number\",\n              \"description\": \"Range in blocks to search for entities\"\n            }\n          },\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"attackEntity\",\n        \"description\": \"Attack a specific entity\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"entityId\": {\n              \"type\": \"number\",\n              \"description\": \"ID of the entity to attack\"\n            }\n          },\n          \"required\": [\n            \"entityId\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"useOnEntity\",\n        \"description\": \"Use held item on a specific entity\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"entityId\": {\n              \"type\": \"number\",\n              \"description\": \"ID of the entity to use item on\"\n            }\n          },\n          \"required\": [\n            \"entityId\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"followEntity\",\n        \"description\": \"Follow a specific entity\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"entityId\": {\n              \"type\": \"number\",\n              \"description\": \"ID of the entity to follow\"\n            },\n            \"distance\": {\n              \"type\": \"number\",\n              \"description\": \"Distance to maintain while following\"\n            }\n          },\n          \"required\": [\n            \"entityId\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"openContainer\",\n        \"description\": \"Open a container (chest, furnace, etc.) at specific coordinates\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"x\": {\n              \"type\": \"number\",\n              \"description\": \"X coordinate of the container\"\n            },\n            \"y\": {\n              \"type\": \"number\",\n              \"description\": \"Y coordinate of the container\"\n            },\n            \"z\": {\n              \"type\": \"number\",\n              \"description\": \"Z coordinate of the container\"\n            }\n          },\n          \"required\": [\n            \"x\",\n            \"y\",\n            \"z\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"withdrawItem\",\n        \"description\": \"Take items from an open container\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to withdraw\"\n            },\n            \"amount\": {\n              \"type\": \"number\",\n              \"description\": \"Amount of items to withdraw\"\n            }\n          },\n          \"required\": [\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"depositItem\",\n        \"description\": \"Put items into an open container\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to deposit\"\n            },\n            \"amount\": {\n              \"type\": \"number\",\n              \"description\": \"Amount of items to deposit\"\n            }\n          },\n          \"required\": [\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"closeContainer\",\n        \"description\": \"Close the currently open container\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {},\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"getRecipes\",\n        \"description\": \"Get a list of available crafting recipes\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"filter\": {\n              \"type\": \"string\",\n              \"description\": \"Filter recipes by item name\"\n            }\n          },\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"craftItem\",\n        \"description\": \"Craft an item using available materials\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"itemName\": {\n              \"type\": \"string\",\n              \"description\": \"Name of the item to craft\"\n            },\n            \"count\": {\n              \"type\": \"number\",\n              \"description\": \"Number of items to craft\"\n            }\n          },\n          \"required\": [\n            \"itemName\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"listTrades\",\n        \"description\": \"List available trades from a nearby villager\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"villagerName\": {\n              \"type\": \"string\",\n              \"description\": \"Name or identifier of the villager (optional)\"\n            },\n            \"range\": {\n              \"type\": \"number\",\n              \"description\": \"Range to search for villagers\"\n            }\n          },\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      },\n      {\n        \"name\": \"tradeWithVillager\",\n        \"description\": \"Trade with a nearby villager\",\n        \"schema\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"villagerName\": {\n              \"type\": \"string\",\n              \"description\": \"Name or identifier of the villager (optional)\"\n            },\n            \"tradeIndex\": {\n              \"type\": \"number\",\n              \"description\": \"Index of the trade from listTrades (1-based)\"\n            },\n            \"count\": {\n              \"type\": \"number\",\n              \"description\": \"Number of times to perform the trade\"\n            }\n          },\n          \"required\": [\n            \"tradeIndex\"\n          ],\n          \"additionalProperties\": false,\n          \"$schema\": \"http://json-schema.org/draft-07/schema#\"\n        }\n      }\n    ]\n  }\n]\n#### Examples ####\nUser: \"Connect to server\"\nOutput:\n{\n  \"tool\": \"connectToServer\",\n  \"parameters\": {\n    \"host\": \"minecraft-250712.kodelab.dev\",\n    \"username\":\"pippo\"\n  }\n}\n\n\nUser: \"Say hello to everyone in chat\"\nOutput:\n{\n  \"tool\": \"sendChat\",\n  \"parameters\": {\n    \"message\": \"hello to everyone\"\n  }\n}\n\nUser: \"Move to coordinates 100, 64, -200\"\nOutput:\n{\n  \"tool\": \"moveTo\",\n  \"parameters\": {\n    \"x\": 100,\n    \"y\": 64,\n    \"z\": -200\n  }\n}\n\nUser: \"Dig the block at 10, 65, 20\"\nOutput:\n{\n  \"tool\": \"digBlock\",\n  \"parameters\": {\n    \"x\": 10,\n    \"y\": 65,\n    \"z\": 20\n  }\n}\n\nUser: \"Disconnect from the server\"\nOutput:\n{\n  \"tool\": \"disconnectFromServer\",\n  \"parameters\": {}\n}\n\nUser: \"What items do I have?\"\nOutput:\n{\n  \"tool\": \"checkInventory\",\n  \"parameters\": {}\n}\n\nUser: \"Can I have my position?\"\nOutput:\n{\n  \"tool\": \"getPosition\",\n  \"parameters\": {}\n}\n\n### END EXAMPLES ### \n"
+                },
+                "promptType": "define"
+            },
+            "typeVersion": 2.1,
+            "alwaysOutputData": true
+        },
+        {
+            "id": "7bcd670e-cf4f-48dd-ac00-5fbb34d2016d",
+            "name": "OpenAI Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "position": [
+                -544,
+                624
+            ],
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "gpt-4.1",
+                    "cachedResultName": "gpt-4.1"
+                },
+                "options": {
+                }
+            },
+            "credentials": {
+                "openAiApi": {
+                    "id": "bcAk6fZ6KgqKAt8K",
+                    "name": "OpenAi account"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "e57ff568-7c21-45a9-b8cb-601aea299702",
+            "name": "Reply",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                560,
+                352
+            ],
+            "webhookId": "b40b86d9-ad52-4597-a6f9-b552483f3b3b",
+            "parameters": {
+                "text": "={{ $json.result.content[0].text }}",
+                "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+                "additionalFields": {
+                    "parse_mode": "Markdown"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "DJUqMSuN8PYQPPoL",
+                    "name": "Telegram account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "23c139fc-8fd6-41e5-8bd1-45a9d90d3764",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                112,
+                448
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "f7752fae-fdd6-451a-a89f-5f29256a34de",
+                            "operator": {
+                                "type": "object",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.tool2call }}",
+                            "rightValue": ""
+                        },
+                        {
+                            "id": "7a9e6129-6fca-441d-bad3-f51e6aab2498",
+                            "operator": {
+                                "type": "object",
+                                "operation": "exists",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.tool2call.parameters }}",
+                            "rightValue": ""
+                        },
+                        {
+                            "id": "1cb2d50a-d6de-4599-8ea6-87cf4ef93a73",
+                            "operator": {
+                                "name": "filter.operator.equals",
+                                "type": "string",
+                                "operation": "equals"
+                            },
+                            "leftValue": "",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "76e3076d-2d23-417a-a109-549db0672046",
+            "name": "Error Message",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                336,
+                544
+            ],
+            "webhookId": "b40b86d9-ad52-4597-a6f9-b552483f3b3b",
+            "parameters": {
+                "text": "=Sorry this message is not related to minecraft",
+                "chatId": "={{ $('Settings').first().json.message.from.id }}",
+                "additionalFields": {
+                    "parse_mode": "Markdown"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "DJUqMSuN8PYQPPoL",
+                    "name": "Telegram account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "c9db2434-7ffa-4770-aa55-d79b7c52c5d5",
+            "name": "Telegram Trigger",
+            "type": "n8n-nodes-base.telegramTrigger",
+            "position": [
+                -960,
+                448
+            ],
+            "webhookId": "51942fbb-ca0e-4ec4-9423-5fcc7d3c4281",
+            "parameters": {
+                "updates": [
+                    "message"
+                ],
+                "additionalFields": {
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "DJUqMSuN8PYQPPoL",
+                    "name": "Telegram account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "cd846eb0-d6ab-4106-9816-cfbba22d815b",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -736,
+                448
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "6ed16839-1113-4d9a-a3e5-a18e4a6bfd44",
+                            "name": "message",
+                            "type": "string",
+                            "value": "={{ $json.message.text }}"
+                        },
+                        {
+                            "id": "2584b4cb-ade9-4c3c-af71-a7bc18fa5e72",
+                            "name": "host",
+                            "type": "string",
+                            "value": "minecraft-250712.kodelab.dev"
+                        },
+                        {
+                            "id": "40b4afc2-3ed8-4bd1-a6e3-14e1cfebd5ad",
+                            "name": "username",
+                            "type": "string",
+                            "value": "={{ $json.message.from.id }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "0ded49b9-06c1-476a-bc20-f2cdd18607e5",
+            "name": "Initialize State",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -960,
+                1296
+            ],
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "goal",
+                            "value": "={{$json[\"body\"][\"goal\"]}}"
+                        },
+                        {
+                            "name": "state",
+                            "value": "Starting new task. No current state information."
+                        },
+                        {
+                            "name": "step_count",
+                            "value": "0"
+                        },
+                        {
+                            "name": "max_steps",
+                            "value": "20"
+                        },
+                        {
+                            "name": "completed",
+                            "value": "false"
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "eef271c6-f1a1-459e-89a8-5ed81ebf7c7a",
+            "name": "AI Planner",
+            "type": "n8n-nodes-base.openAi",
+            "position": [
+                -736,
+                1296
+            ],
+            "parameters": {
+                "options": {
+                },
+                "resource": "chat",
+                "requestOptions": {
+                }
+            },
+            "credentials": {
+                "openAiApi": {
+                    "id": "bcAk6fZ6KgqKAt8K",
+                    "name": "OpenAi account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "da5b3640-ebf8-4afd-af6a-105261c4b35c",
+            "name": "Parse AI Response",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                -512,
+                1296
+            ],
+            "parameters": {
+                "functionCode": "// Parse the AI response\nconst response = $json.choices[0].message.content;\nlet parsed;\n\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  // If parsing fails, try to extract JSON from the response\n  const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error('Could not parse AI response as JSON');\n  }\n}\n\n// Add the parsed response to the existing data\nreturn [{\n  json: {\n    ...items[0].json,\n    ai_response: parsed,\n    completed: parsed.completed || false\n  }\n}];"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "401ef2a8-dfa0-4162-b3f3-bec88157670a",
+            "name": "Goal Completed?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -288,
+                1296
+            ],
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{$json[\"completed\"]}}",
+                            "value2": "true"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "25bd6e0d-2f13-425e-94b3-5ca19377e52d",
+            "name": "Respond - Completed",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -64,
+                1200
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"success\": true,\n  \"message\": \"{{$json['ai_response']['message']}}\",\n  \"steps_taken\": {{$json['step_count']}}\n}"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "c0668a81-2ca8-43fd-bb44-160b60d7dabf",
+            "name": "Max Steps Reached?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -64,
+                1392
+            ],
+            "parameters": {
+                "conditions": {
+                    "number": [
+                        {
+                            "value1": "={{parseInt($json['step_count'])}}",
+                            "value2": "={{parseInt($json['max_steps'])}}",
+                            "operation": "largerEqual"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "65f220d1-1fa3-4893-8bd9-2e3b2999b407",
+            "name": "Respond - Max Steps",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                160,
+                1392
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"success\": false,\n  \"message\": \"Maximum steps reached without completing goal\",\n  \"steps_taken\": {{$json['step_count']}},\n  \"goal\": \"{{$json['goal']}}\"\n}"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "8ade2ad4-8d0e-4e67-848a-879fabb685b3",
+            "name": "Update State",
+            "type": "n8n-nodes-base.function",
+            "position": [
+                -960,
+                1616
+            ],
+            "parameters": {
+                "functionCode": "// Update state with the result of the action\nconst currentState = items[0].json.state;\nconst toolResult = items[0].json.result || 'Action completed';\nconst reasoning = items[0].json.ai_response.reasoning || 'No reasoning provided';\nconst stepCount = parseInt(items[0].json.step_count) + 1;\n\nconst newState = `Previous action: ${reasoning}\\nResult: ${toolResult}\\nStep ${stepCount} completed.`;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    state: newState,\n    step_count: stepCount.toString(),\n    completed: false\n  }\n}];"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "87c1c412-1d21-4d58-989f-ec8f8461abb5",
+            "name": "Continue Loop",
+            "type": "n8n-nodes-base.executeWorkflow",
+            "position": [
+                -736,
+                1616
+            ],
+            "parameters": {
+                "options": {
+                },
+                "workflowId": "={{$workflow.id}}"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "59eba932-6fd5-4f9d-8554-c46e0febfca1",
+            "name": "Respond - Continue",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -512,
+                1616
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"success\": true,\n  \"message\": \"Step completed, continuing...\",\n  \"current_step\": {{$json['step_count']}},\n  \"action_taken\": \"{{$json['ai_response']['tool']}}\",\n  \"reasoning\": \"{{$json['ai_response']['reasoning']}}\"\n}"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "a9562ea8-83d0-4aa6-9d2b-dd8dbc13ced0",
+            "name": "Code",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -112,
+                448
+            ],
+            "parameters": {
+                "jsCode": "// Parse the AI response\nconst response = $input.first().json.output;\nlet parsed;\n\ntry {\n  parsed = JSON.parse(response);\n} catch (e) {\n  // If parsing fails, try to extract JSON from the response\n  const jsonMatch = response.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[0]);\n  } else {\n    throw new Error('Could not parse AI response as JSON');\n  }\n}\n\n// Add the parsed response to the existing data\nreturn [{\n  json: {\n    tool2call: parsed,\n    completed: parsed.completed || false\n  }\n}];"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "8c2b5f84-2f46-4b03-951b-d11195632d4b",
+            "name": "HTTP Request",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                -960,
+                112
+            ],
+            "parameters": {
+                "url": "http://minecraft-250712.kodelab.dev:3001/command",
+                "method": "POST",
+                "options": {
+                },
+                "jsonBody": "={\n  \"tool\": \"{{ $json.tool2call.tool }}\",\n  \"parameters\": {{ JSON.stringify($json.tool2call.parameters) }}\n}",
+                "sendBody": true,
+                "specifyBody": "json"
+            },
+            "typeVersion": 4.2
+        },
+        {
+            "id": "2f55ed76-f296-4f3e-a41c-c6b5010cdcfe",
+            "name": "HTTP Request1",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                336,
+                352
+            ],
+            "parameters": {
+                "url": "http://minecraft-250712.kodelab.dev:3000/message",
+                "method": "POST",
+                "options": {
+                },
+                "jsonBody": "={\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"tools/call\",\n  \"params\": {\n      \"name\": \"{{ $json.tool2call.tool }}\",\n  \"arguments\":  {{ JSON.stringify($json.tool2call.parameters) }}\n  }\n}",
+                "sendBody": true,
+                "specifyBody": "json"
+            },
+            "typeVersion": 4.2
+        }
+    ],
+    "active": false,
+    "pinData": {
+        "Telegram Trigger": [
+            {
+                "json": {
+                    "message": {
+                        "chat": {
+                            "id": -1002696664579,
+                            "type": "supergroup",
+                            "title": "n8n-test group"
+                        },
+                        "date": 1752688951,
+                        "from": {
+                            "id": 233992454,
+                            "is_bot": false,
+                            "username": "ltfzwn",
+                            "first_name": "L",
+                            "language_code": "en"
+                        },
+                        "text": "get my position",
+                        "message_id": 50
+                    },
+                    "update_id": 537144478
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "5201341f-91e2-4430-98d4-50ef6bdfc712",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "HTTP Request1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Error Message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Code",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Planner": {
+            "main": [
+                [
+                    {
+                        "node": "Parse AI Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Update State": {
+            "main": [
+                [
+                    {
+                        "node": "Continue Loop",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Continue Loop": {
+            "main": [
+                [
+                    {
+                        "node": "Respond - Continue",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "HTTP Request1": {
+            "main": [
+                [
+                    {
+                        "node": "Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Goal Completed?": {
+            "main": [
+                [
+                    {
+                        "node": "Respond - Completed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Max Steps Reached?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Initialize State": {
+            "main": [
+                [
+                    {
+                        "node": "AI Planner",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Telegram Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse AI Response": {
+            "main": [
+                [
+                    {
+                        "node": "Goal Completed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Max Steps Reached?": {
+            "main": [
+                [
+                    {
+                        "node": "Respond - Max Steps",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "When clicking ‘Execute workflow’": {
+            "main": [
+                [
+                    {
+                        "node": "MCP Client",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -49,33 +49,31 @@ export class APIServer {
     }
 
     async handleInitBot(req, res) {
+        const startTime = Date.now();
         try {
             const { userId, botName } = req.body;
+            console.log(`[APIServer] 📝 Init bot request`);
+            console.log(`   userId: ${userId} (${typeof userId}), botName: ${botName}`);
 
             if (!userId || !botName) {
-                return res.status(400).json({
-                    error: 'userId and botName required'
-                });
+                console.warn(`[APIServer] ⚠️  Missing params`);
+                return res.status(400).json({ error: 'userId and botName required' });
             }
 
-            // ✅ NEW: Normalize userId to string immediately
             const normalizedUserId = String(userId);
-            
-            console.log(`[APIServer] Init bot request - userId: ${normalizedUserId} (type: ${typeof normalizedUserId}), botName: ${botName}`);
+            console.log(`[APIServer] ✓ Normalized: ${normalizedUserId}, map size: ${leaderBotManager.leaderBots.size}/${settings.max_leader_bots}`);
+            console.log(`[APIServer] Current users: ${Array.from(leaderBotManager.leaderBots.keys()).join(', ')}`);
 
             const result = await leaderBotManager.getOrSpawnLeaderBot(normalizedUserId, botName);
+            const duration = Date.now() - startTime;
             
-            // ✅ Debug: Show what got stored
-            console.log(`[APIServer] Spawn result:`, result);
-            console.log(`[APIServer] LeaderBots map now contains:`, Array.from(leaderBotManager.leaderBots.keys()));
-            
-            if (result.success) {
-                res.json(result);
-            } else {
-                res.status(500).json(result);
-            }
+            console.log(`[APIServer] ✓ Completed in ${duration}ms - success: ${result.success}, port: ${result.port}`);
+            res.status(result.success ? 200 : 500).json(result);
         } catch (error) {
-            res.status(500).json({ error: error.message });
+            const duration = Date.now() - startTime;
+            console.error(`[APIServer] 💥 Exception (${duration}ms): ${error.message}`);
+            console.error(error.stack);
+            res.status(500).json({ error: error.message, code: 'init_exception' });
         }
     }
 

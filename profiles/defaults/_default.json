@@ -611,6 +611,24 @@
                 "role": "assistant",
                 "content": "Combat engaged. Tank attacking enemy worker."
             }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "COMBAT MISSION: Attack 2 iron golems with collaboration\n\nSOLDIER: Soldier1\nROLE: TANK\n\nOBJECTIVE: Engage the iron golem immediately to draw its attention.\n\nTARGET: iron_golem (mob)\n\nPOSITION: You start 5 blocks east of the target at coordinates (-394, -60, 20).\n\nEQUIPMENT: Weapon: best available melee, Armor: whatever equipped\n\nTACTIC: Approach head-on and maintain aggro.\n\nINSTRUCTIONS:\nEquip your best sword or axe. Search for the iron golem within 30 blocks of your starting position. Once found, approach from the front/north side and attack immediately. Keep attacking continuously for up to 60 seconds. If the golem gets more than 30 blocks away, stop and retreat. If your health drops below 7 hearts (14 HP), retreat immediately.\n\nHEALTH & SAFETY:\n- Retreat threshold: 14 HP (7 hearts)\n- Retreat action: disengage immediately\n- Maximum combat duration: 60 seconds\n\nCONSTRAINTS:\n- Stay within 30 blocks of the iron golem\n- Maintain at least 3 blocks distance from Soldier2\n- If the golem is more than 30 blocks away, break off and regroup"
+            },
+            {
+                "role": "assistant",
+                "content": "```js\n// MOB COMBAT: Tank attacking iron_golem\n// Entity-based combat (not player-based)\nconst MELEE_RANGE = 3.5;\nconst SEARCH_RANGE = 30;\nconst HEALTH_RETREAT = 14; // 7 hearts\nconst MAX_COMBAT_TIME = 60000; // 60 seconds\nconst startTime = Date.now();\n\n// Step 1: Equip best weapon\nlet weapon = bot.inventory.items().find(i => \n    i.name.includes('sword') || i.name.includes('axe')\n);\nif (weapon) {\n    await bot.equip(weapon, 'hand');\n}\n\nlet hits = 0;\n\n// Step 2: Combat loop\nwhile (Date.now() - startTime < MAX_COMBAT_TIME && bot.health >= HEALTH_RETREAT) {\n    // Search for iron_golem (IMPORTANT: lowercase with underscore)\n    let target = Object.values(bot.entities).find(e => \n        e.name === 'iron_golem' && \n        e.position.distanceTo(bot.entity.position) <= SEARCH_RANGE\n    );\n    \n    if (!target) {\n        console.log('No iron_golem found within ' + SEARCH_RANGE + ' blocks');\n        break;\n    }\n    \n    const dist = target.position.distanceTo(bot.entity.position);\n    \n    // Check if target too far\n    if (dist > SEARCH_RANGE) {\n        console.log('Golem too far away, retreating');\n        break;\n    }\n    \n    // In melee range - attack\n    if (dist <= MELEE_RANGE) {\n        await bot.lookAt(target.position);\n        await bot.attack(target);\n        hits++;\n        if (hits % 5 === 0) {\n            console.log('Hits: ' + hits + ' | Health: ' + bot.health);\n        }\n    } else {\n        // Out of melee range - move closer (no pathfinding, direct movement)\n        await bot.lookAt(target.position);\n        bot.setControlState('forward', true);\n    }\n    \n    await skills.wait(bot, 300);\n}\n\n// Stop movement\nbot.setControlState('forward', false);\n\nif (bot.health < HEALTH_RETREAT) {\n    console.log('Health critical, retreating');\n} else if (Date.now() - startTime >= MAX_COMBAT_TIME) {\n    console.log('Combat timeout reached');\n}\n\nconsole.log('Combat complete. Total hits: ' + hits + ' | Final health: ' + bot.health);\n```"
+            },
+            {
+                "role": "system",
+                "content": "Code execution finished successfully. Hit iron_golem 15 times. Health: 18/20"
+            },
+            {
+                "role": "assistant",
+                "content": "Tank engaged the iron golem and dealt significant damage."
+            }
         ]
     ]
 }

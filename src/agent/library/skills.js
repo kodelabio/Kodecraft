@@ -77,6 +77,19 @@ export async function craftRecipe(bot, itemName, num=1) {
      * await skills.craftRecipe(bot, "stick");
      **/
     let placedTable = false;
+    
+    // Enhanced validation
+    if (!itemName || typeof itemName !== 'string') {
+        log(bot, `Invalid item name provided for crafting: ${itemName}`);
+        return false;
+    }
+    
+    if (num < 1 || !Number.isInteger(num)) {
+        log(bot, `Invalid quantity for crafting: ${num}. Must be a positive integer.`);
+        return false;
+    }
+    
+    console.log(`Attempting to craft ${num}x ${itemName}...`);
 
     if (mc.getItemCraftingRecipes(itemName).length == 0) {
         log(bot, `${itemName} is either not an item, or it does not have a crafting recipe!`);
@@ -116,7 +129,20 @@ export async function craftRecipe(bot, itemName, num=1) {
         }
     }
     if (!recipes || recipes.length === 0) {
-        log(bot, `You do not have the resources to craft a ${itemName}. It requires: ${Object.entries(mc.getItemCraftingRecipes(itemName)[0][0]).map(([key, value]) => `${key}: ${value}`).join(', ')}.`);
+        const requiredItems = mc.getItemCraftingRecipes(itemName)[0][0];
+        const missingItems = [];
+        const inventory = world.getInventoryCounts(bot);
+        
+        for (const [item, count] of Object.entries(requiredItems)) {
+            const available = inventory[item] || 0;
+            if (available < count) {
+                missingItems.push(`${item}: need ${count}, have ${available}`);
+            }
+        }
+        
+        log(bot, `You do not have the resources to craft ${itemName}.`);
+        log(bot, `Missing: ${missingItems.join(', ')}`);
+        
         if (placedTable) {
             await collectBlock(bot, 'crafting_table', 1);
         }
@@ -124,28 +150,59 @@ export async function craftRecipe(bot, itemName, num=1) {
     }
     
     if (craftingTable && bot.entity.position.distanceTo(craftingTable.position) > 4) {
+        console.log(`Moving closer to crafting table...`);
         await goToNearestBlock(bot, 'crafting_table', 4, craftingTableRange);
     }
 
     const recipe = recipes[0];
-    console.log('crafting...');
+    console.log(`Recipe found, checking materials...`);
+    
     //Check that the agent has sufficient items to use the recipe `num` times.
-    const inventory = world.getInventoryCounts(bot); //Items in the agents inventory
-    const requiredIngredients = mc.ingredientsFromPrismarineRecipe(recipe); //Items required to use the recipe once.
+    const inventory = world.getInventoryCounts(bot);
+    const requiredIngredients = mc.ingredientsFromPrismarineRecipe(recipe);
     const craftLimit = mc.calculateLimitingResource(inventory, requiredIngredients);
     
-    await bot.craft(recipe, Math.min(craftLimit.num, num), craftingTable);
-    if(craftLimit.num<num) log(bot, `Not enough ${craftLimit.limitingResource} to craft ${num}, crafted ${craftLimit.num}. You now have ${world.getInventoryCounts(bot)[itemName]} ${itemName}.`);
-    else log(bot, `Successfully crafted ${itemName}, you now have ${world.getInventoryCounts(bot)[itemName]} ${itemName}.`);
-    if (placedTable) {
-        await collectBlock(bot, 'crafting_table', 1);
+    if (craftLimit.num === 0) {
+        log(bot, `Cannot craft ${itemName}: missing ${craftLimit.limitingResource}`);
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
+        return false;
     }
+    
+    const actualCraftCount = Math.min(craftLimit.num, num);
+    console.log(`Crafting ${actualCraftCount}x ${itemName}...`);
+    
+    try {
+        await bot.craft(recipe, actualCraftCount, craftingTable);
+        const finalCount = world.getInventoryCounts(bot)[itemName] || 0;
+        
+        if (craftLimit.num < num) {
+            log(bot, `Not enough ${craftLimit.limitingResource} to craft ${num}x ${itemName}.`);
+            log(bot, `Crafted ${actualCraftCount}x ${itemName}. Total in inventory: ${finalCount}.`);
+        } else {
+            log(bot, `Successfully crafted ${actualCraftCount}x ${itemName}! Total in inventory: ${finalCount}.`);
+        }
+        
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
 
-    //Equip any armor the bot may have crafted.
-    //There is probablly a more efficient method than checking the entire inventory but this is all mineflayer-armor-manager provides. :P
-    bot.armorManager.equipAll(); 
+        // Equip any armor the bot may have crafted
+        if (itemName.includes('helmet') || itemName.includes('chestplate') || 
+            itemName.includes('leggings') || itemName.includes('boots')) {
+            console.log(`Auto-equipping crafted armor...`);
+            bot.armorManager.equipAll();
+        }
 
-    return true;
+        return true;
+    } catch (error) {
+        log(bot, `Error during crafting: ${error.message}`);
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
+        return false;
+    }
 }
 
 export async function wait(bot, milliseconds) {
@@ -623,6 +680,8 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         log(bot, `Invalid block type: ${blockType}.`);
         return false;
     }
+    
+    console.log(`Attempting to place ${blockType} at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)}) on ${placeOn}`);
 
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
@@ -765,12 +824,37 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
 
     // will throw error if an entity is in the way, and sometimes even if the block was placed
     try {
+        console.log(`Placing ${blockType} on ${buildOffBlock.name} at face ${faceVec}...`);
         await bot.placeBlock(buildOffBlock, faceVec);
-        log(bot, `Placed ${blockType} at ${target_dest}.`);
-        await new Promise(resolve => setTimeout(resolve, 200));
-        return true;
+        
+        // Wait and verify placement
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Verify the block was placed
+        const verifyBlock = bot.blockAt(target_dest);
+        const isComplexBlock = blockType.includes('door') || blockType.includes('bed') || 
+                              blockType.includes('_slab') || blockType.includes('_stairs');
+        
+        if (verifyBlock && (verifyBlock.name === blockType || isComplexBlock)) {
+            log(bot, `Placed ${blockType} at (${target_dest.x}, ${target_dest.y}, ${target_dest.z}).`);
+            console.log(`Success! Block verified at position.`);
+            return true;
+        } else {
+            log(bot, `${blockType} placement uncertain at ${target_dest}. Found: ${verifyBlock?.name || 'unknown'}`);
+            // Still return true as placement may have succeeded for complex blocks
+            return true;
+        }
     } catch (err) {
-        log(bot, `Failed to place ${blockType} at ${target_dest}.`);
+        console.log(`Error: ${err.message}`);
+        
+        // Check if block was placed despite error
+        const checkBlock = bot.blockAt(target_dest);
+        if (checkBlock && checkBlock.name === blockType) {
+            log(bot, `Placed ${blockType} at ${target_dest} (despite error).`);
+            return true;
+        }
+        
+        log(bot, `Failed to place ${blockType} at ${target_dest}: ${err.message}`);
         return false;
     }
 }

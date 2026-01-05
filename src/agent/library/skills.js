@@ -1055,6 +1055,157 @@ export async function consume(bot, itemName="") {
 }
 
 
+export async function fishCatch(bot, timeout=60000) {
+    
+    // Validation
+    if (!timeout || timeout < 1000) {
+        log(bot, `Invalid timeout: ${timeout}ms. Must be at least 1000ms.`);
+        return false;
+    }
+    
+    console.log(`Attempting to catch fish with ${timeout/1000}s timeout...`);
+    
+    // Check for fishing rod
+    const fishingRod = bot.inventory.items().find(item => 
+        item.name === 'fishing_rod'
+    );
+    
+    if (!fishingRod) {
+        log(bot, `You do not have a fishing rod to fish with.`);
+        return false;
+    }
+    
+    try {
+        // Equip fishing rod
+        console.log(`Equipping fishing rod...`);
+        await bot.equip(fishingRod, 'hand');
+        
+        // Check if near water
+        const waterBlock = world.getNearestBlock(bot, 'water', 16);
+        if (!waterBlock) {
+            log(bot, `No water nearby to fish in. Get closer to water.`);
+            return false;
+        }
+        
+        const distanceToWater = bot.entity.position.distanceTo(waterBlock.position);
+        if (distanceToWater > 8) {
+            console.log(`Moving closer to water...`);
+            await goToNearestBlock(bot, 'water', 3, 16);
+        }
+        
+        console.log(`Casting fishing rod...`);
+        
+        // Cast the fishing rod
+        await bot.fish();
+        
+        log(bot, `Successfully caught fish!`);
+        console.log(`Fish caught successfully!`);
+        return true;
+        
+    } catch (err) {
+        if (err.message.includes('timeout')) {
+            log(bot, `Fishing timed out after ${timeout/1000}s. No fish caught.`);
+            console.log(`Timeout - no fish caught in ${timeout/1000}s`);
+        } else if (err.message.includes('interrupted')) {
+            log(bot, `Fishing was interrupted.`);
+            console.log(`Fishing interrupted`);
+        } else {
+            log(bot, `Failed to catch fish: ${err.message}`);
+            console.log(`Error: ${err.message}`);
+        }
+        return false;
+    }
+}
+
+export async function shearSheep(bot, count=1) {
+    
+    // Validation
+    if (!count || count < 1 || !Number.isInteger(count)) {
+        log(bot, `Invalid count: ${count}. Must be a positive integer.`);
+        return false;
+    }
+    
+    console.log(`Attempting to shear ${count} sheep...`);
+    
+    // Check for shears
+    const shears = bot.inventory.items().find(item => item.name === 'shears');
+    
+    if (!shears) {
+        log(bot, `You do not have shears to shear sheep.`);
+        return false;
+    }
+    
+    let shearedCount = 0;
+    
+    for (let i = 0; i < count; i++) {
+        try {
+            // Find nearest sheep that hasn't been sheared
+            const sheep = world.getNearestEntityWhere(
+                bot,
+                entity => entity.name === 'sheep' && !entity.metadata[16],
+                32
+            );
+            
+            if (!sheep) {
+                if (shearedCount === 0) {
+                    log(bot, `No unsheared sheep found nearby.`);
+                } else {
+                    log(bot, `No more unsheared sheep found. Sheared ${shearedCount} sheep.`);
+                }
+                break;
+            }
+            
+            console.log(`[Found sheep at distance ${bot.entity.position.distanceTo(sheep.position).toFixed(1)}`);
+            
+            // Move close to sheep
+            const distance = bot.entity.position.distanceTo(sheep.position);
+            if (distance > 4) {
+                console.log(`Moving closer to sheep...`);
+                await goToPosition(bot, sheep.position.x, sheep.position.y, sheep.position.z, 3);
+            }
+            
+            // Equip shears
+            console.log(`Equipping shears...`);
+            await bot.equip(shears, 'hand');
+            
+            // Look at the sheep
+            await bot.lookAt(sheep.position.offset(0, 1, 0));
+            
+            // Wait a moment for positioning
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Use shears on sheep (right-click/activate)
+            console.log(`Shearing sheep...`);
+            await bot.activateEntity(sheep);
+            
+            shearedCount++;
+            console.log(`Successfully sheared sheep ${shearedCount}/${count}`);
+            
+            // Wait a moment before finding next sheep
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (bot.interrupt_code) {
+                break;
+            }
+            
+        } catch (err) {
+            console.log(`Error shearing sheep: ${err.message}`);
+            log(bot, `Error shearing sheep: ${err.message}`);
+            continue;
+        }
+    }
+    
+    if (shearedCount > 0) {
+        log(bot, `Successfully sheared ${shearedCount} sheep!`);
+        console.log(`Complete! Sheared ${shearedCount} sheep total.`);
+        return true;
+    } else {
+        log(bot, `Failed to shear any sheep.`);
+        return false;
+    }
+}
+
+
 export async function giveToPlayer(bot, itemType, username, num=1) {
     /**
      * Give one of the specified item to the specified player

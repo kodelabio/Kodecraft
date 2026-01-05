@@ -228,6 +228,26 @@ export const actionsList = [
         })
     },
     {
+        name: '!fishCatch',
+        description: 'Catch fish using a fishing rod. Bot must have a fishing rod and be near water.',
+        params: {
+            'timeout': { type: 'int', description: 'Maximum time to wait for a fish in milliseconds. Defaults to 60000 (60 seconds).', domain: [1000, 300000] }
+        },
+        perform: runAsAction(async (agent, timeout = 60000) => {
+            await skills.fishCatch(agent.bot, timeout);
+        })
+    },
+    {
+        name: '!shearSheep',
+        description: 'Shear nearby sheep to collect wool. Bot must have shears.',
+        params: {
+            'count': { type: 'int', description: 'Number of sheep to shear. Defaults to 1.', domain: [1, 20] }
+        },
+        perform: runAsAction(async (agent, count = 1) => {
+            await skills.shearSheep(agent.bot, count);
+        })
+    },
+    {
         name: '!equip',
         description: 'Equip the given item.',
         params: {'item_name': { type: 'ItemName', description: 'The name of the item to equip.' }},

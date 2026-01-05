@@ -58,6 +58,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/equip', this.handleEquip.bind(this));
         this.app.post('/api/agent/discard', this.handleDiscard.bind(this));
         this.app.post('/api/agent/consume', this.handleConsume.bind(this));
+        this.app.post('/api/agent/fish', this.handleFish.bind(this));
+        this.app.post('/api/agent/shear', this.handleShear.bind(this));
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
         
         // Chest operations
@@ -828,6 +830,66 @@ export class ExternalAPI {
             res.json({ success: true, message: result || `Consumed ${item}` });
         } catch (error) {
             this.handleError(res, error, 'consume');
+        }
+    }
+
+    async handleFish(req, res) {
+        try {
+            const { timeout = 60000 } = req.body;
+            
+            if (typeof timeout !== 'number' || timeout < 1000 || timeout > 300000) {
+                return res.status(400).json({ 
+                    error: 'timeout must be a number between 1000 and 300000 milliseconds',
+                    code: 'invalid_timeout'
+                });
+            }
+
+            const command = `!fishCatch(${timeout})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_fishing_rod' });
+            }
+            
+            if (result && result.includes('No water nearby')) {
+                return res.status(404).json({ error: result, code: 'no_water_nearby' });
+            }
+            
+            if (result && result.includes('timed out')) {
+                return res.status(408).json({ error: result, code: 'fishing_timeout' });
+            }
+            
+            res.json({ success: true, message: result || 'Fishing attempt completed' });
+        } catch (error) {
+            this.handleError(res, error, 'fish');
+        }
+    }
+
+    async handleShear(req, res) {
+        try {
+            const { count = 1 } = req.body;
+            
+            if (typeof count !== 'number' || count < 1 || count > 20) {
+                return res.status(400).json({ 
+                    error: 'count must be a number between 1 and 20',
+                    code: 'invalid_count'
+                });
+            }
+
+            const command = `!shearSheep(${count})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_shears' });
+            }
+            
+            if (result && result.includes('No unsheared sheep')) {
+                return res.status(404).json({ error: result, code: 'no_sheep_nearby' });
+            }
+            
+            res.json({ success: true, message: result || 'Shearing completed' });
+        } catch (error) {
+            this.handleError(res, error, 'shear');
         }
     }
 

@@ -61,11 +61,7 @@ services:
     container_name: kodecraft-gateway
     ports:
       - "4001:4001"
-      - "5000:5000"
-      - "5002:5002"
-      - "5003:5003"
-      - "5004:5004"
-      - "5005:5005"
+      - "5000-5050:5000-5050" # map ports from leaders, workers, etc.
 
     environment:
       - DISPLAY=:99  # Keep this only for api-gateway

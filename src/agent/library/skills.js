@@ -76,12 +76,30 @@ export async function craftRecipe(bot, itemName, num=1) {
      * @example
      * await skills.craftRecipe(bot, "stick");
      **/
+
+    // ✅ NEW: Normalize plank names (oak_planks -> oak_plank)
+    if (itemName.endsWith('planks')) {
+        itemName = itemName.slice(0, -1); // Remove the 's'
+    }
+
+    console.log(`[craftRecipe] Input itemName after normalization: "${itemName}"`);
+    
     let placedTable = false;
 
-    if (mc.getItemCraftingRecipes(itemName).length == 0) {
-        log(bot, `${itemName} is either not an item, or it does not have a crafting recipe!`);
-        return false;
+    // ✅ NEW: In creative mode, skip all validation and just create the item
+    if (bot.game.gameMode === 'creative') {
+        // log(bot, `Creative mode: creating ${num} ${itemName} without recipe`);
+        const itemId = mc.getItemId(itemName);
+        if (!itemId) {
+            log(bot, `${itemName} is not a valid item.`);
+            return false;
+        }
+        await bot.creative.setInventorySlot(36, mc.makeItem(itemName, num));
+        log(bot, `Successfully created ${num} ${itemName}.`);
+        bot.armorManager.equipAll();
+        return true;
     }
+
 
     // get recipes that don't require a crafting table
     let recipes = bot.recipesFor(mc.getItemId(itemName), null, 1, null); 
@@ -189,6 +207,42 @@ export async function smeltItem(bot, itemName, num=1) {
         log(bot, `Cannot smelt ${itemName}. Hint: make sure you are smelting the 'raw' item.`);
         return false;
     }
+
+    // ✅ NEW: In creative mode, skip all checks and just smelt
+    if (bot.game.gameMode === 'creative') {
+        //log(bot, `Creative mode: smelting ${num} ${itemName} without resource checks`);
+        // Map raw items to their smelted output
+        const smeltMap = {
+            'raw_iron': 'iron_ingot',
+            'raw_copper': 'copper_ingot',
+            'raw_gold': 'gold_ingot',
+            'beef': 'cooked_beef',
+            'chicken': 'cooked_chicken',
+            'porkchop': 'cooked_porkchop',
+            'wood': 'charcoal',
+            'cobblestone': 'stone'
+        };
+        
+        const smeltedName = smeltMap[itemName] || itemName;
+        try {
+            // Use the same method that works in craftRecipe
+            const item = mc.makeItem(smeltedName, num);
+            if (!item) {
+                log(bot, `Cannot create item: ${smeltedName}`);
+                return false;
+            }
+            
+            // Add to first available hotbar slot
+            await bot.creative.setInventorySlot(36, item); // 36 is first hotbar slot
+            
+            log(bot, `Successfully smelted ${num} ${itemName} to ${smeltedName}.`);
+            return true;
+        } catch (error) {
+            log(bot, `Error smelting in creative mode: ${error.message}`);
+            return false;
+        }
+    }
+
 
     let placedFurnace = false;
     let furnaceBlock = undefined;

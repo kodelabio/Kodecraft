@@ -179,6 +179,26 @@ export class ExternalAPI {
         
     }
     
+
+    // New helper: wait for bot to finish current action
+    async waitForBotIdle(bot, timeoutMs = 5000) {
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < timeoutMs) {
+            // Check if bot is idle (not executing an action)
+            if (this.agent.actions && !this.agent.actions.executing) {
+                console.log(`✅ Bot idle after ${Date.now() - startTime}ms`);
+                return true;
+            }
+            
+            // Wait 100ms before checking again
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        console.warn(`⚠️  Bot did not become idle within ${timeoutMs}ms`);
+        return false;
+    }
+
     // âœ… FIXED handleWorldInfo
     async handleWorldInfo(req, res) {
         try {
@@ -693,7 +713,9 @@ export class ExternalAPI {
                     });
                 }
             }
-            
+
+            // CRITICAL: Wait for bot to become idle
+            await this.waitForBotIdle(bot, 5000);
             res.json({ success: true, message: result || `Placed ${material}` });
         } catch (error) {
             this.handleError(res, error, 'place');
@@ -1005,6 +1027,16 @@ export class ExternalAPI {
 
             const command = `!craftRecipe("${item}", ${quantity})`;
             const result = await executeCommand(this.agent, command);
+
+            // Extract the actual message if result is stringified JSON
+            let errorMessage = result;
+            try {
+                const parsed = JSON.parse(result);
+                errorMessage = parsed.error || result;
+            } catch (e) {
+                // Not JSON, use as-is
+            }
+
             
             if (result && (result.includes('do not have') || result.includes('requires:'))) {
                 return res.status(422).json({ error: result, code: 'insufficient_materials' });
@@ -1029,6 +1061,7 @@ export class ExternalAPI {
             }
 
             const command = `!smeltItem("${item}", ${quantity})`;
+            console.log(`[handleSmelt] Executing command: ${command}`); 
             const result = await executeCommand(this.agent, command);
             
             if (result && result.includes('Cannot smelt')) {

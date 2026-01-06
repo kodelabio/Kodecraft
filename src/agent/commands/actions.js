@@ -310,10 +310,14 @@ export const actionsList = [
         },
         perform: runAsAction(async (agent, item_name, num) => {
             let success = await skills.smeltItem(agent.bot, item_name, num);
+            
             if (success) {
-                setTimeout(() => {
-                    agent.cleanKill('Safely restarting to update inventory.');
-                }, 500);
+                // Don't auto-restart on success in creative mode
+                if (agent.bot.game.gameMode !== 'creative') {
+                    setTimeout(() => {
+                        agent.cleanKill('Safely restarting to update inventory.');
+                    }, 500);
+                }
             }
         })
     },

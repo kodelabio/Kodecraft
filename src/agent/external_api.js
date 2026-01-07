@@ -675,6 +675,7 @@ export class ExternalAPI {
                 isNaN(x) || isNaN(y) || isNaN(z)) {
                 const command = `!placeHere("${material}")`;
                 result = await executeCommand(this.agent, command);
+
             } else {
                 const coordValidation = this.validateAndRoundCoordinates(x, y, z);
                 if (typeof coordValidation === 'string') {
@@ -696,7 +697,15 @@ export class ExternalAPI {
                         result = await executeCommand(this.agent, command);
                     } else {
                         const skills = await import('./library/skills.js');
+                        console.log(`[handlePlace] Calling placeBlock with:`, {
+                                material: material,
+                                x: coordValidation.x,
+                                y: coordValidation.y,
+                                z: coordValidation.z,
+                                face: face
+                            });
                         const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, face);
+                        console.log(`[handlePlace] placeBlock returned:`, success);
                         if (success) {
                             result = `Placed ${material} at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
                         } else {
@@ -714,8 +723,11 @@ export class ExternalAPI {
                 }
             }
 
-            // CRITICAL: Wait for bot to become idle
-            await this.waitForBotIdle(bot, 5000);
+            
+            //const bot = this.getBotSafely();
+            //if (bot) {
+            //    await this.waitForBotIdle(bot, 5000);
+            //}   
             res.json({ success: true, message: result || `Placed ${material}` });
         } catch (error) {
             this.handleError(res, error, 'place');
@@ -1812,7 +1824,7 @@ export class ExternalAPI {
                     workerName,
                     requestedPort,
                     sessionId || `session_${Date.now()}`,
-                    settings.n8n_webhook_url
+                    settings.n8n_callback_url
                 );
                 
                 spawnResults.push(result);
@@ -2071,7 +2083,7 @@ export class ExternalAPI {
                 name,
                 port,
                 sessionId || `session_${Date.now()}`,
-                callbackWebhookUrl || settings.n8n_webhook_url
+                callbackWebhookUrl || settings.n8n_callback_url
             );
 
             if (result.success) {
@@ -2087,7 +2099,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const count = Number(req.body.count);  // ← Convert to number
-            const { basePort = 5002, sessionId, callbackWebhookUrl } = req.body;
+            const { basePort = settings.multibot_base_port, sessionId, callbackWebhookUrl } = req.body;
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2105,7 +2117,7 @@ export class ExternalAPI {
                     workerName,
                     currentPort,
                     sessionId || `session_${Date.now()}`,
-                    callbackWebhookUrl || settings.n8n_webhook_url
+                    callbackWebhookUrl || settings.n8n_callback_url
                 );
                 
                 spawnResults.push(result);
@@ -2327,7 +2339,7 @@ export class ExternalAPI {
             const result = await this.orchestration.sendTaskToWorker(workerPort, 
                                             taskPrompt, 
                                             conversationId,
-                                            callbackWebhookUrl || settings.n8n_webhook_url_complete,
+                                            callbackWebhookUrl || settings.n8n_callback_url,
                                             taskId || null);
 
             if (result.success) {
@@ -2469,7 +2481,7 @@ export class ExternalAPI {
       port,
       taskPrompt,
       conversationId,
-      callbackWebhookUrl || settings.n8n_webhook_url_stage_complete
+      callbackWebhookUrl || settings.n8n_callback_url
     );
 
     if (result.success) {

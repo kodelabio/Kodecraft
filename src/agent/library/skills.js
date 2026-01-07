@@ -673,7 +673,9 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
      * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
      * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
      **/
+    console.log(`[placeBlock] START - blockType: ${blockType}, pos: (${x}, ${y}, ${z}), placeOn: ${placeOn}`);
     if (!mc.getBlockId(blockType) && blockType !== 'air') {
+        console.log(`[placeBlock] FAIL - invalid block type`);
         log(bot, `Invalid block type: ${blockType}.`);
         return false;
     }
@@ -681,6 +683,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
     if (blockType === 'air') {
+        console.log(`[placeBlock] REMOVE - breaking block`);
         log(bot, `Placing air (removing block) at ${target_dest}.`);
         return await breakBlockAt(bot, x, y, z);
     }
@@ -736,21 +739,25 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         item_name = "redstone";
     let block = bot.inventory.items().find(item => item.name === item_name);
     if (!block && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
+        console.log(`[placeBlock] CREATIVE - adding item to inventory`);
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
         block = bot.inventory.items().find(item => item.name === item_name);
     }
     if (!block) {
+        console.log(`[placeBlock] FAIL - no block in inventory`);
         log(bot, `Don't have any ${blockType} to place.`);
         return false;
     }
 
     const targetBlock = bot.blockAt(target_dest);
     if (targetBlock.name === blockType) {
+        console.log(`[placeBlock] SKIP - block already there`);
         log(bot, `${blockType} already at ${targetBlock.position}.`);
         return false;
     }
     const empty_blocks = ['air', 'water', 'lava', 'grass', 'short_grass', 'tall_grass', 'snow', 'dead_bush', 'fern'];
     if (!empty_blocks.includes(targetBlock.name)) {
+        console.log(`[placeBlock] BREAKING - block in the way: ${targetBlock.name}`);
         log(bot, `${blockType} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
@@ -792,15 +799,18 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     }
     if (!buildOffBlock) {
+        console.log(`[placeBlock] FAIL - nothing to place on`);
         log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
 
+    console.log(`[placeBlock] MOVING & EQUIPPING - buildOffBlock: ${buildOffBlock.name}`);
     const pos = bot.entity.position;
     const pos_above = pos.plus(Vec3(0,1,0));
     const dont_move_for = ['torch', 'redstone_torch', 'redstone_wire', 'lever', 'button', 'rail', 'detector_rail', 'powered_rail', 'activator_rail', 'tripwire_hook', 'tripwire', 'water_bucket'];
     if (!dont_move_for.includes(blockType) && (pos.distanceTo(targetBlock.position) < 1 || pos_above.distanceTo(targetBlock.position) < 1)) {
         // too close
+        console.log(`[placeBlock] Moving away - too close`);
         let goal = new pf.goals.GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 2);
         let inverted_goal = new pf.goals.GoalInvert(goal);
         bot.pathfinder.setMovements(new pf.Movements(bot));
@@ -808,6 +818,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     if (bot.entity.position.distanceTo(targetBlock.position) > 4.5) {
         // too far
+        console.log(`[placeBlock] Moving closer - too far`);
         let pos = targetBlock.position;
         let movements = new pf.Movements(bot);
         bot.pathfinder.setMovements(movements);
@@ -816,14 +827,26 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     
     await bot.equip(block, 'hand');
     await bot.lookAt(buildOffBlock.position);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // will throw error if an entity is in the way, and sometimes even if the block was placed
+    // ✅ ADD THESE LOGS
+    console.log(`[placeBlock] Final check before placement:`);
+    console.log(`  Bot pos:`, bot.entity.position);
+    console.log(`  Target dest:`, target_dest);
+    console.log(`  BuildOff block:`, buildOffBlock.name, `at`, buildOffBlock.position);
+    console.log(`  FaceVec:`, faceVec);
+    console.log(`  Distance to buildoff:`, bot.entity.position.distanceTo(buildOffBlock.position));
     try {
+        console.log(`[placeBlock] PLACING - on block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
         await bot.placeBlock(buildOffBlock, faceVec);
+        //await bot.activateBlock(buildOffBlock);
         log(bot, `Placed ${blockType} at ${target_dest}.`);
+        console.log(`[placeBlock] SUCCESS`);
         await new Promise(resolve => setTimeout(resolve, 200));
         return true;
     } catch (err) {
+        console.log(`[placeBlock] FAIL - exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
         return false;
     }

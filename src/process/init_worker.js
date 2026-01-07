@@ -171,6 +171,7 @@ async function setupLogging(workerName) {
         workerSettings.external_mode_allow_chat = false; // No chat commands
         workerSettings.only_chat_with = []; // Don't listen to anyone in chat
         workerSettings.is_worker_bot = true; // Flag to identify this as a worker bot
+        workerSettings.cheat_mode_enabled = true; // ✅ NEW: Enable cheat mode for workers
         
         // Load and set the first profile (workers use the same profile as the leader)
         let profilePath = workerSettings.profiles[0];

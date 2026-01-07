@@ -197,48 +197,7 @@ export class OrchestrationAPI {
                 throw new Error(`Worker ${name} API not responding after 30 seconds`);
             }
 
-            // Move worker to safe location
-            /**
-            try {
-                const leaderPos = this.agent.bot.entity.position;
-                console.log(`📍 Leader position: x=${leaderPos.x.toFixed(2)}, y=${leaderPos.y.toFixed(2)}, z=${leaderPos.z.toFixed(2)}`);
-                const safePos = {
-                    x: Math.floor(leaderPos.x) + 1,
-                    y: Math.floor(leaderPos.y),
-                    z: Math.floor(leaderPos.z) + 1
-                };
-                console.log(`🎯 Moving ${name} to safe location: x=${safePos.x}, y=${safePos.y}, z=${safePos.z}`);
-
-
-                const response = await fetch(`http://localhost:${port}/api/agent/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(safePos),
-                    timeout: 15000
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Move failed with status ${response.status}`);
-                }
-
-                console.log(`✓ Worker ${name} moved to safe location`);
-
-            } catch (error) {
-                console.error(`❌ Worker ${name} failed to move to safe location: ${error.message}`);
-                // Kill the stuck worker
-                workerProcess.kill('SIGTERM');
-                this.workers.delete(name);
-                
-                return {
-                    success: false,
-                    workerName: name,
-                    port: actualPort,
-                    status: 'spawned',
-                    pid: workerProcess.pid,
-                    error: `Failed to move to safe location: ${error.message}`
-                };
-            }
-            */
+            
             return {
                 success: true,
                 workerName: name,

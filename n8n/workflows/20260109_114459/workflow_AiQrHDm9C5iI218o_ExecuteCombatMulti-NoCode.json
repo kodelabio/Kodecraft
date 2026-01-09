@@ -1,0 +1,1970 @@
+{
+    "id": "AiQrHDm9C5iI218o",
+    "meta": null,
+    "name": "ExecuteCombatMulti-NoCode",
+    "nodes": [
+        {
+            "id": "b1352bd9-179c-48ee-bf38-0968d3eab182",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -656,
+                496
+            ],
+            "webhookId": "8bac3f58-b6ac-479e-8fda-d1508e085cc4",
+            "parameters": {
+                "path": "/kodecraft/multibot/execute-combat-plan",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "34fd09fb-855a-4524-8174-03addeedd5d7",
+            "name": "Teleport Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                1104,
+                1472
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/teleport-worker",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "workerName",
+                            "value": "={{ $json.myWorker.workerName }}"
+                        },
+                        {
+                            "name": "taskLocation",
+                            "value": "={{ $json.enemyTarget.position }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "bc44b01d-ec56-4937-945d-114867655486",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                2032,
+                1264
+            ],
+            "webhookId": "e0fa3fc2-19b5-4e4d-88c0-c8ddbd0c8796",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "0dbdfa64-305a-4920-8909-bf2e21e03ff3",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -656,
+                1856
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "69203fe6-5320-45af-8576-da69b9a160b5",
+            "name": "Distribute Tasks",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                -208,
+                2080
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/multibot/distribute-tasks",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $json}}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $json.tasks.keys().length }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/soldier-complete"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "adcfff23-3d89-4d39-baac-71a4205c0818",
+            "name": "Parse Location",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                80,
+                192
+            ],
+            "parameters": {
+                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.combatPlan.targetInfo;\n\nfunction parseLocation(input) {\n    // Check if input is already a structured object\n    if (typeof input === 'object' && input !== null) {\n        \n        // Handle targetLocation string: \"coordinates [-460, -60, 17]\"\n        if (input.targetLocation && typeof input.targetLocation === 'string') {\n            const coordMatch = input.targetLocation.match(/\\[(-?\\d+\\.?\\d*)\\s*,\\s*(-?\\d+\\.?\\d*)\\s*,\\s*(-?\\d+\\.?\\d*)\\]/);\n            if (coordMatch) {\n                return {\n                    type: 'coordinates',\n                    x: parseInt(coordMatch[1]),\n                    y: parseInt(coordMatch[2]),\n                    z: parseInt(coordMatch[3]),\n                    targetType: input.targetType,\n                    target: input.target,\n                    targetCount: input.targetCount\n                };\n            }\n        }\n        \n        // Handle nested coordinates: { targetCoordinates: { x, y, z }, ... }\n        if (input.targetCoordinates && \n            typeof input.targetCoordinates.x === 'number' && \n            typeof input.targetCoordinates.y === 'number' && \n            typeof input.targetCoordinates.z === 'number') {\n            return {\n                type: 'coordinates',\n                x: input.targetCoordinates.x,\n                y: input.targetCoordinates.y,\n                z: input.targetCoordinates.z,\n                targetType: input.targetType,\n                target: input.target\n            };\n        }\n        \n        // Handle flat coordinates: { x, y, z }\n        if (typeof input.x === 'number' && \n            typeof input.y === 'number' && \n            typeof input.z === 'number') {\n            return {\n                type: 'coordinates',\n                x: input.x,\n                y: input.y,\n                z: input.z\n            };\n        }\n        \n        // Handle mob target: { targetType: 'mob', target: 'iron golem', ... }\n        if (input.targetType === 'mob' && input.target) {\n            return {\n                type: 'mob',\n                name: input.target,\n                targetCount: input.targetCount || 1,\n                searchRange: input.searchRange\n            };\n        }\n\n        // Handle player target: { targetType: 'player', target: '...' }\n        if (input.targetType === 'player' && input.target) {\n            return {\n                type: 'player',\n                name: input.target,\n                searchRange: input.searchRange\n            };\n        }\n    }\n    \n    // If input is a string, parse it as before\n    if (typeof input === 'string') {\n        const coordMatch = input.match(/\\[(-?\\d+\\.?\\d*)\\s*,\\s*(-?\\d+\\.?\\d*)\\s*,\\s*(-?\\d+\\.?\\d*)\\]/);\n        if (coordMatch) {\n            return {\n                type: 'coordinates',\n                x: parseInt(coordMatch[1]),\n                y: parseInt(coordMatch[2]),\n                z: parseInt(coordMatch[3])\n            };\n        }\n\n        return {\n            type: 'landmark',\n            name: input.trim()\n        };\n    }\n    \n    // Fallback for unexpected types\n    return {\n        type: 'unknown',\n        raw: input\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "c7f78cef-dd2b-4fd3-b98d-e6b55c8d6410",
+            "name": "Floor Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                480,
+                1472
+            ],
+            "parameters": {
+                "jsCode": "const input = $input.item.json;\n\n// Handle multiple entities\nif (input.entities && Array.isArray(input.entities)) {\n  return {\n    success: input.success,\n    targetCount: input.targetCount,\n    found: input.found,\n    entities: input.entities.map(entity => ({\n      id: entity.id,\n      name: entity.name,\n      type: entity.type,\n      position: {\n        x: Math.floor(entity.position?.x || 0),\n        y: Math.floor(entity.position?.y || -60),\n        z: Math.floor(entity.position?.z || 0)\n      }\n    }))\n  };\n}\n\n// Handle single entity\nreturn {\n  success: input.success,\n  id: input.id,\n  name: input.name,\n  type: input.type,\n  position: {\n    x: Math.floor(input.position?.x || 0),\n    y: Math.floor(input.position?.y || -60),\n    z: Math.floor(input.position?.z || 0)\n  }\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "12027c67-cc46-41e3-bf06-5f53550cef33",
+            "name": "Failed to Teleport",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2000,
+                1104
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "={\n  \"error\": \"Failed to teleport Workers\",\n  \"details\": \"{{ JSON.stringify($json.teleportResults) }}\"\"\n} "
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "22919d4b-56b9-410f-bdaa-97dd14d8e471",
+            "name": "Failed to Assign Tasks",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -656,
+                1632
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to assign tasks to workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "45179b0d-893b-484a-a6d8-d72f7158e691",
+            "name": "Adjust Combat Positions",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -432,
+                2080
+            ],
+            "parameters": {
+                "jsCode": "const targetLocation = $('Teleport Workers').first().json.buildLocation;\nconst tasks = $input.first().json;\nconst targetInfo = $('Webhook').first().json.body.targetInfo || {};\nconst sessionId = $('Webhook').first().json.body.sessionId || 'combat_session';\nconst COMBAT_RADIUS = 20;\nconst OFFSET_DISTANCE = 5;\nconst MIN_TEAMMATE_SPACING = 3;\n\nconst rallyPoint = {\n  x: Math.floor(targetLocation.x),\n  y: Math.floor(targetLocation.y),\n  z: Math.floor(targetLocation.z)\n};\n\nconst getCardinalDirection = (angleRadians) => {\n  const normalized = ((angleRadians % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);\n  if (normalized < Math.PI / 4 || normalized >= 7 * Math.PI / 4) return 'east';\n  if (normalized < 3 * Math.PI / 4) return 'north';\n  if (normalized < 5 * Math.PI / 4) return 'west';\n  return 'south';\n};\n\nconst soldierNames = Object.keys(tasks).sort((a, b) => {\n  const numA = parseInt(a.match(/\\d+/)?.[0] || 0);\n  const numB = parseInt(b.match(/\\d+/)?.[0] || 0);\n  return numA - numB;\n});\n\nconst numSoldiers = soldierNames.length;\nconst updatedTasks = {};\n\nsoldierNames.forEach((soldierName, index) => {\n  const angleRadians = (index / numSoldiers) * 2 * Math.PI;\n  \n  const startX = Math.floor(rallyPoint.x + Math.cos(angleRadians) * OFFSET_DISTANCE);\n  const startZ = Math.floor(rallyPoint.z + Math.sin(angleRadians) * OFFSET_DISTANCE);\n  const startY = rallyPoint.y;\n  \n  const cardinalDirection = getCardinalDirection(angleRadians);\n  const otherSoldiers = soldierNames.filter(s => s !== soldierName);\n  \n  let task = tasks[soldierName];\n  \n  // Update TARGET field\n  task = task.replace(\n    /TARGET: undefined/,\n    `TARGET: Iron Golem`\n  );\n  \n  // Update POSITION\n  const newPosition = `You start ${OFFSET_DISTANCE} blocks ${cardinalDirection} of the target at coordinates (${startX}, ${startY}, ${startZ}).`;\n  task = task.replace(\n    /POSITION:[\\s\\S]*?(?=\\n\\nEQUIPMENT:|EQUIPMENT:)/,\n    `POSITION: ${newPosition}\\n\\n`\n  );\n  \n  // Add combat zone info\n  const combatZoneInfo = `\nCOMBAT ZONE:\n- Your Start Position: (${startX}, ${startY}, ${startZ})\n- Rally Point: (${rallyPoint.x}, ${rallyPoint.y}, ${rallyPoint.z})\n- Max Chase Distance: ${COMBAT_RADIUS} blocks from rally point\n- Your Approach: ${cardinalDirection} side\n\nTEAMMATES: ${otherSoldiers.join(', ') || 'None'}\n- Keep ${MIN_TEAMMATE_SPACING}+ blocks from teammates\n- Stay on YOUR side of target`;\n  \n  if (task.includes('REMINDERS:')) {\n    task = task.replace('REMINDERS:', `${combatZoneInfo}\\n\\nREMINDERS:`);\n  } else {\n    task += '\\n' + combatZoneInfo;\n  }\n  \n  updatedTasks[soldierName] = task;\n});\n\nreturn {\n  tasks: updatedTasks,\n  combatMetadata: {\n    sessionId: sessionId,\n    rallyPoint: rallyPoint,\n    combatRadius: COMBAT_RADIUS,\n    soldierCount: numSoldiers\n  }\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "c9aa9836-ef60-423a-9149-556c9c75deb7",
+            "name": "Format Combat Tasks",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -656,
+                2080
+            ],
+            "parameters": {
+                "jsCode": "// Code Node: Generate Combat Tasks from Tactical Plan (NO CODE)\n\nconst plan = $('Webhook').first().json.body.combatPlan;\nconst soldierInstructions = plan.soldierInstructions;\nconst combatRequest = plan.combatRequest;\nconst targetInfo = plan.targetInfo;\nconst battlefieldAssessment = plan.battlefieldAssessment;\n\nlet coordinatedTasks = {};\n\nsoldierInstructions.forEach((soldier) => {\n  const soldierName = soldier.soldierName;\n  const objective = soldier.objective;\n  const target = soldier.target;\n  const positioning = soldier.positioning;\n  const tactic = soldier.tactic;\n  const healthThreshold = soldier.healthManagement.retreatThreshold;\n  const combatDuration = soldier.combatDuration;\n  const engagement = soldier.engagement;\n  const equipment = soldier.equipment || {};\n  const constraints = soldier.constraints || [];\n  const instructionText = soldier.instructionText;\n\n  // Format equipment\n  const equipmentStr = [\n    equipment.weapon ? `Weapon: ${equipment.weapon}` : null,\n    equipment.armor ? `Armor: ${equipment.armor}` : null\n  ].filter(Boolean).join(', ') || 'Whatever equipped';\n\n  // Format constraints\n  const constraintsStr = constraints\n    .map(c => `- ${c}`)\n    .join('\\n');\n\n  // Build task description (plain English, no code)\n  coordinatedTasks[soldierName] = `COMBAT MISSION: ${combatRequest}\n\nSOLDIER: ${soldierName}\nROLE: ${soldier.role.toUpperCase()}\n\nOBJECTIVE: ${objective}\n\nTARGET: ${target} (${targetInfo.targetType})\n\nPOSITION: Attack from ${positioning}\n\nENGAGEMENT TIMING: ${engagement.delay === 0 ? 'Engage immediately (no delay)' : `Wait ${engagement.delay}ms before engaging`}\n\nEQUIPMENT: ${equipmentStr}\n\nTACTIC: ${tactic}\n\nBATTLEFIELD:\n- Terrain: ${battlefieldAssessment.terrain}\n- Hazards: ${battlefieldAssessment.hazards}\n- Recommendations: ${battlefieldAssessment.recommendations}\n\nINSTRUCTIONS:\n${instructionText}\n\nHEALTH & SAFETY:\n- Retreat threshold: ${healthThreshold} HP (${Math.ceil(healthThreshold / 2)} hearts)\n- Retreat action: ${soldier.healthManagement.action}\n- Maximum combat duration: ${combatDuration} seconds\n\nCONSTRAINTS:\n${constraintsStr}\n\nVICTORY CONDITION: ${plan.victoryCondition}\nFAILURE CONDITION: ${plan.failureCondition}\n\nSAFETY NOTES: ${plan.safetyNotes}`;\n});\n\nreturn coordinatedTasks;"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "722d9c8c-e533-47f2-9c77-3c728336c5cd",
+            "name": "Workers Task Assigned",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2720,
+                480
+            ],
+            "webhookId": "6d1f9b2e-e7b1-46a8-b309-a7c0bc4b0a3a",
+            "parameters": {
+                "text": "=Workers Teleported to task location and tasks assigned.",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "a9af658b-35c4-4026-bcf5-d75526608c4e",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                1616,
+                1456
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "26020f65-ebc6-4255-bcb1-84e787d2dc74",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.success }}",
+                            "rightValue": false
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "d588184a-2cb7-41b5-a7ff-d18258b3049f",
+            "name": "Identify Target",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                -112,
+                432
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/{{ $('Webhook').item.json.body.conversationId }}/identify-entity",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "value": "={{ $('Webhook').item.json.body.combatPlan.targetInfo.target }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "7248300b-5775-48a3-a17d-345465644743",
+            "name": "Bot List",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueRegularOutput",
+            "position": [
+                16,
+                784
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/bots/list",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "7e72e3bf-e714-4074-b185-48df9f20ee8d",
+            "name": "Bot Workers List",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                464,
+                784
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $json.leader.userId }}/status",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "value": "={{ $json.leader.botName }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "cfdb0eac-909e-455d-8ee4-8699df192ea0",
+            "name": "Failed to Identify Target",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                752,
+                1088
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "={\n  \"error\": \"Failed to identify target\"\n} "
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "3e6976af-9fb9-4232-85ec-2621a9d24c9d",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                688,
+                784
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "workers"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "7045370e-ffcf-4dea-9f70-4ea8b2572269",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -656,
+                1616
+            ],
+            "parameters": {
+                "width": 3440,
+                "height": 400,
+                "content": "## Single Target\n"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "56eadd09-4d85-4350-aa38-3f5ace589065",
+            "name": "Sticky Note1",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                2208,
+                16
+            ],
+            "parameters": {
+                "width": 1360,
+                "height": 320,
+                "content": "## Multiple Targets\n"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "39975692-f775-4d55-b9d5-c039235af339",
+            "name": "Set Targets",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1584,
+                592
+            ],
+            "parameters": {
+                "jsCode": "const myWorkers =  $('Webhook').first().json.body.workers;\nconst enemyWorkers = $('Bot Workers List').first().json.workers;\nconst locationData = $('Floor Enemy Coordinates').first().json;\n\n\nconst assignments = myWorkers.map((worker, i) => ({\n  myWorker: worker,\n  enemyTarget: enemyWorkers[i % enemyWorkers.length],\n  targetLocation: locationData.Position,  // From location node\n  sessionId: $('Webhook').first().json.body.sessionId,\n  role: 'tank',\n  engageDelay: i === 0 ? 0 : 1500\n}));\n\nreturn [{ json: { assignments } }];"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "9a30319a-cbd3-4ea5-8816-eb340dd12984",
+            "name": "Wait1",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                2256,
+                496
+            ],
+            "webhookId": "caa31c21-1715-4194-a81e-faafaae53eb3",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "f4f1b447-ddd4-4e37-87c6-f0249f10da38",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                2272,
+                1264
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "a630d5a8-b8c6-469b-bc9c-a3351d71664f",
+                            "name": "target",
+                            "type": "string",
+                            "value": "={{ $('Split Out3').item.json.enemyTarget.name }}"
+                        },
+                        {
+                            "id": "ab909c16-a90a-4e6c-acb8-ab09da23cb5d",
+                            "name": "worker",
+                            "type": "string",
+                            "value": "={{ $('Split Out3').item.json.myWorker.workerName }}"
+                        },
+                        {
+                            "id": "d4296c2c-722a-4f84-bce4-45b4838dad05",
+                            "name": "port",
+                            "type": "number",
+                            "value": "={{ $('Split Out3').item.json.myWorker.port }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "d28c10dc-b1e3-4988-8810-42e10aa4dd47",
+            "name": "Sticky Note2",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -192,
+                -608
+            ],
+            "parameters": {
+                "width": 944,
+                "height": 624,
+                "content": "# Target selection (use cases covered)\n## Single target\n- attack a player\n- attack an iron golem or other mob\n- attack an animal\n- if target location is unspecified, teleport workers to leader location (must get coordinates of the leader)\n\n\n## Multiple targets\n-  leader <leader name> workers\n\n\n## Workers (warriors)\n- teleport-workers teleports all workers in the session to target locatiok"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "07370040-0275-4c78-b470-b593840977b4",
+            "name": "Target Location Specified",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -304,
+                208
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "f9e976cb-8243-4097-b8fd-2f7ea7daf675",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEquals"
+                            },
+                            "leftValue": "={{ $json.body.combatPlan.targetInfo.targetLocation }}",
+                            "rightValue": "unspecified"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "3720d9d6-25e7-4aa5-bbc7-09375a90ed4f",
+            "name": "Split Out2",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                1136,
+                208
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "warriors"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "9c8bd347-4b32-4fb4-a8b1-9ca0bd176895",
+            "name": "Warriors List",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                912,
+                208
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "7356d901-6379-401e-9ecc-91254b1cdb7b",
+                            "name": "warriors",
+                            "type": "array",
+                            "value": "={{ $('Webhook').item.json.body.workers }}"
+                        },
+                        {
+                            "id": "67fb5c7c-b1a6-46c7-b35f-f0b3ee1098c1",
+                            "name": "targetPosition",
+                            "type": "object",
+                            "value": "={{ $json.position }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "5cf27f73-c050-42ea-ac16-60c3b0a7d143",
+            "name": "Wait2",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                1584,
+                208
+            ],
+            "webhookId": "e0fa3fc2-19b5-4e4d-88c0-c8ddbd0c8796",
+            "parameters": {
+                "amount": 1
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "c83a6bc9-550e-499a-99e6-b0bcfe3d7fa6",
+            "name": "Set Attack",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                1808,
+                208
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "a630d5a8-b8c6-469b-bc9c-a3351d71664f",
+                            "name": "target",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.combatPlan.targetInfo.target }}"
+                        },
+                        {
+                            "id": "4d155f83-76cc-4072-82db-d927ac450b4a",
+                            "name": "targetType",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.combatPlan.targetInfo.targetType }}"
+                        },
+                        {
+                            "id": "4d3ddc13-2f46-433d-a884-f12de7286f3f",
+                            "name": "warrior",
+                            "type": "string",
+                            "value": "={{ $json.workerName }}"
+                        },
+                        {
+                            "id": "5933828a-1f96-43a6-9303-98207a1e8f88",
+                            "name": "port",
+                            "type": "number",
+                            "value": "={{ $('Split Out2').item.json.port }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "41da85a8-ce30-4dc5-8fa9-92fdcc770ea2",
+            "name": "Respond to Webhook1",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2256,
+                112
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "768613b4-a938-4d59-ac71-06ddacf71089",
+            "name": "Floor Coordinates2",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                688,
+                192
+            ],
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "const status = $input.item.json.location || $input.item.json.position;\nreturn {\n  position: {\n    x: Math.floor(status?.x || 0),\n    y: Math.floor(status?.y || -60),\n    z: Math.floor(status?.z || 0)\n  }\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "743d3b4c-6eac-41cc-9bdc-0d8eaba211a4",
+            "name": "Attack Target",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2032,
+                208
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $json.port }}/api/agent/attack",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "target",
+                            "value": "={{ $json.target }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "08fd1905-74d9-48ab-81cf-57e8017eb54b",
+            "name": "Failed to Teleport1",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1584,
+                400
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "={\n  \"error\": \"Failed to teleport Workers\",\n  \"details\": \"{{ JSON.stringify($json.teleportResults) }}\"\"\n} "
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "a62daa93-5ebc-4e19-af43-6a81a683d502",
+            "name": "Attack Failed",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2256,
+                304
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "={\n  \"result\": \"Attack failed\",\n  \"message\": {{JSON.stringify($json.error.message) }}\n} "
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "5b82c31b-2918-4902-8982-aa6dceaa1e08",
+            "name": "Targets Location Specified",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -176,
+                640
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "f9e976cb-8243-4097-b8fd-2f7ea7daf675",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEquals"
+                            },
+                            "leftValue": "={{ $json.body.combatPlan.targetInfo.targetLocation }}",
+                            "rightValue": "unspecified"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "f92621da-330c-4b00-91d8-e92c5a230f5e",
+            "name": "Parse Location2",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                688,
+                592
+            ],
+            "parameters": {
+                "jsCode": "// n8n Code Node\nconst input = $input.first().json.body.combatPlan.targetInfo;\n\nfunction parseLocation(input) {\n    // Check if input is already a structured object\n    if (typeof input === 'object' && input !== null) {\n        \n        // Handle nested coordinates: { targetCoordinates: { x, y, z }, ... }\n        if (input.targetCoordinates && \n            typeof input.targetCoordinates.x === 'number' && \n            typeof input.targetCoordinates.y === 'number' && \n            typeof input.targetCoordinates.z === 'number') {\n            return {\n                type: 'coordinates',\n                x: input.targetCoordinates.x,\n                y: input.targetCoordinates.y,\n                z: input.targetCoordinates.z,\n                targetType: input.targetType || input.primaryTarget,\n                searchRange: input.searchRange,\n                meleeRange: input.meleeRange\n            };\n        }\n        \n        // Handle flat coordinates: { x, y, z }\n        if (typeof input.x === 'number' && \n            typeof input.y === 'number' && \n            typeof input.z === 'number') {\n            return {\n                type: 'coordinates',\n                x: input.x,\n                y: input.y,\n                z: input.z\n            };\n        }\n        \n        // Handle player object: { type: 'player', name: '...' }\n        if (input.type === 'player' && input.name) {\n            return {\n                type: 'player',\n                name: input.name\n            };\n        }\n\n        // Handle player object: { targetType: 'player', primaryTarget: '...' }\n        if (input.targetType === 'player' && input.primaryTarget) {\n            return {\n                type: 'player',\n                name: input.primaryTarget,\n                searchRange: input.searchRange,\n                meleeRange: input.meleeRange\n            };\n        }\n        \n        // Handle landmark object: { name: '...' }\n        if (input.name && !input.type) {\n            return {\n                type: 'landmark',\n                name: input.name\n            };\n        }\n    }\n    \n    // If input is a string, parse it as before\n    if (typeof input === 'string') {\n        const coordMatch = input.match(/^(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)\\s*[,\\s]\\s*(-?\\d+\\.?\\d*)$/);\n        if (coordMatch) {\n            return {\n                type: 'coordinates',\n                x: parseFloat(coordMatch[1]),\n                y: parseFloat(coordMatch[2]),\n                z: parseFloat(coordMatch[3])\n            };\n        }\n\n        const playerMatch = input.match(/(?:next\\s+to\\s+)?player\\s+(\\w+)/i);\n        if (playerMatch) {\n            return {\n                type: 'player',\n                name: playerMatch[1]\n            };\n        }\n\n        return {\n            type: 'landmark',\n            name: input.trim()\n        };\n    }\n    \n    // Fallback for unexpected types\n    return {\n        type: 'unknown',\n        raw: input\n    };\n}\n\nconst location = parseLocation(input);\nreturn { location };"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "98e5706e-5500-4153-a717-434da190c104",
+            "name": "Enemy Leader",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                240,
+                784
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "691d6212-3758-4d3a-b940-37bd4b250059",
+                            "name": "leader",
+                            "type": "object",
+                            "value": "={{ $input.first().json.leaderBots.find(bot => bot.botName === $('Webhook').item.json.body.combatPlan.targetInfo.targetLeader) }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "1ced0d88-2eb6-42f4-9b62-8f07ff382820",
+            "name": "Get Enemy Workers Positions",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                912,
+                784
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/{{ $('Enemy Leader').item.json.leader.userId }}/status",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "playerName",
+                            "value": "={{ $json.name }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "f62a3fd6-6546-43c4-96d3-34dcc4c876fe",
+            "name": "Aggregate",
+            "type": "n8n-nodes-base.aggregate",
+            "position": [
+                1360,
+                592
+            ],
+            "parameters": {
+                "options": {
+                },
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "positions"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "f72c7a8d-49b0-4ac4-bc7d-3f6d0d7b338f",
+            "name": "Floor Enemy Coordinates",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                1136,
+                592
+            ],
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "const status = $input.item.json.location || $input.item.json.position;\nreturn {\n  Position: {\n    x: Math.floor(status?.x || 0),\n    y: Math.floor(status?.y || -60),\n    z: Math.floor(status?.z || 0)\n  }\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "ed399e04-ac1e-4ac2-b728-cbe5a6cffbf7",
+            "name": "Teleport Soldiers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2032,
+                592
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').first().json.body.conversationId }}/teleport-worker",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "taskLocation",
+                            "value": "={{ $json.targetLocation }}"
+                        },
+                        {
+                            "name": "workerName",
+                            "value": "={{ $json.myWorker.workerName }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "5edf2335-c89a-4ab2-9f2e-f364c2d5a276",
+            "name": "Attack Enemy Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2480,
+                496
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $('Split Tasks').item.json.myWorker.port }}/api/agent/attack",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "target",
+                            "value": "={{ $('Split Tasks').item.json.enemyTarget.name }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "11d93554-b4cb-4898-91da-7856f6e92b1e",
+            "name": "Split Tasks",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                1808,
+                592
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "assignments"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "d76bcd88-94ee-451e-b687-add0f93b9d51",
+            "name": "Leader Position",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                368,
+                400
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/{{ $('Webhook').item.json.body.conversationId }}/status",
+                "options": {
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "f30d1c3e-17b4-41e3-830b-2438b5d54ad7",
+            "name": "Teleport Workers1",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                1360,
+                208
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/teleport-worker ",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "taskLocation",
+                            "value": "={{ $('Floor Coordinates2').item.json.position }}"
+                        },
+                        {
+                            "name": "workerName",
+                            "value": "={{ $json.workerName }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "2de7dce4-db5b-433e-926e-412b8fa5002a",
+            "name": "Target Classification",
+            "type": "n8n-nodes-base.switch",
+            "position": [
+                -432,
+                480
+            ],
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "outputKey": "leader",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "7be5234f-23a0-40d3-b992-2d77767c9929",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "notEmpty",
+                                            "singleValue": true
+                                        },
+                                        "leftValue": "={{ $json.body.combatPlan.targetInfo.targetLeader }}",
+                                        "rightValue": 1
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "single",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "059f87ce-6ea3-4735-b849-79e82937b0ea",
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $('Webhook').item.json.body.combatPlan.targetInfo.targetCount }}",
+                                        "rightValue": 1
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "multiple",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "fe76b35d-3138-4b17-8b51-63b70e442b0b",
+                                        "operator": {
+                                            "type": "number",
+                                            "operation": "gt"
+                                        },
+                                        "leftValue": "={{ $('Webhook').item.json.body.combatPlan.targetInfo.targetCount }}",
+                                        "rightValue": 1
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 3.3
+        },
+        {
+            "id": "d814b9be-ff35-4039-a9ff-89a8a609e2e1",
+            "name": "If1",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                96,
+                384
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "ca4ad9b8-336c-40bd-88d3-f15986bcc3fe",
+                            "operator": {
+                                "type": "object",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.position }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "2a5aafed-da78-4444-bbea-9d870d752c3a",
+            "name": "Targets Locations Specified",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -400,
+                944
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "f9e976cb-8243-4097-b8fd-2f7ea7daf675",
+                            "operator": {
+                                "type": "string",
+                                "operation": "notEquals"
+                            },
+                            "leftValue": "={{ $json.body.combatPlan.targetInfo.targetLocation }}",
+                            "rightValue": "unspecified"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "e19e82f1-5767-4dba-99b4-5a3b622a25d3",
+            "name": "Identify Targets",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                -80,
+                1072
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/{{ $('Webhook').item.json.body.conversationId }}/identify-entity",
+                "options": {
+                },
+                "sendQuery": true,
+                "queryParameters": {
+                    "parameters": [
+                        {
+                            "name": "name",
+                            "value": "={{ $json.body.combatPlan.targetInfo.target }}"
+                        },
+                        {
+                            "name": "count",
+                            "value": "={{ $json.body.combatPlan.targetInfo.targetCount }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "e0671ae8-f372-483d-92ca-29cf586dcf80",
+            "name": "Split Out1",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -144,
+                1264
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "body.combatPlan.soldierInstructions"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "5e731576-01f9-4374-a846-c578e1cef34f",
+            "name": "Split Out3",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                864,
+                1472
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "assignments"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "ab29dbaf-fa36-4286-9179-b3fb098b9d93",
+            "name": "Set workers targets",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                656,
+                1472
+            ],
+            "parameters": {
+                "jsCode": "const myWorkers = $('Webhook').first().json.body.workers;\nconst locationData = $('Floor Coordinates').first().json;\n\n// Handle multiple entities from locationData\nconst enemyTargets = locationData.entities && Array.isArray(locationData.entities) \n  ? locationData.entities \n  : [locationData];\n\nconst assignments = myWorkers.map((worker, i) => ({\n  myWorker: worker,\n  enemyTarget: enemyTargets[i % enemyTargets.length],\n  targetLocation: enemyTargets[i % enemyTargets.length].position,\n  targetId: enemyTargets[i % enemyTargets.length].id,\n  targetName: enemyTargets[i % enemyTargets.length].name,\n  targetType: enemyTargets[i % enemyTargets.length].type,\n  sessionId: $('Webhook').first().json.body.sessionId,\n  role: i === 0 ? 'tank' : 'flanker',\n  engageDelay: i === 0 ? 0 : 1500\n}));\n\nreturn [{ json: { assignments } }];"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "0b61b6c3-b8eb-44c4-b41f-bbd046bd8dfd",
+            "name": "Attack Targets",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                2496,
+                1264
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $json.port }}/api/agent/attack",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "target",
+                            "value": "={{ $json.target }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "37776738-ddab-4b74-b753-6ad2a57251bb",
+            "name": "Attack Results",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2784,
+                1248
+            ],
+            "webhookId": "6d1f9b2e-e7b1-46a8-b309-a7c0bc4b0a3a",
+            "parameters": {
+                "text": "={{ $json.message }}",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "75f7939e-37dd-4f2d-99c6-0b49f03ce309",
+            "name": "Respond to Webhook2",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                2992,
+                1248
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "workers": [
+                            {
+                                "port": 5003,
+                                "ready": true,
+                                "workerName": "Lead329_W1"
+                            },
+                            {
+                                "port": 5004,
+                                "ready": true,
+                                "workerName": "Lead329_W2"
+                            }
+                        ],
+                        "sessionId": "combat_1767727477743",
+                        "combatPlan": {
+                            "combatType": "pvp_player",
+                            "targetInfo": {
+                                "target": "TheBoss' worker",
+                                "targetType": "player",
+                                "targetCount": 1,
+                                "targetLeader": "TheBoss",
+                                "targetSource": "API call required",
+                                "targetLocation": "unspecified"
+                            },
+                            "safetyNotes": "Watch for reinforcements from TheBoss' side.",
+                            "workerCount": 2,
+                            "combatRequest": "Attacking TheBoss' worker using two soldiers.",
+                            "executionType": "multibot",
+                            "tacticalsummary": "Coordination between two soldiers to engage TheBoss' worker.",
+                            "failureCondition": "Abort if soldiers health drop below retreat thresholds or target is not found.",
+                            "victoryCondition": "Successfully defeat TheBoss' worker with coordinated attack.",
+                            "soldierInstructions": [
+                                {
+                                    "role": "tank",
+                                    "tactic": "Aggressive engagement from the front to draw attention.",
+                                    "target": "TheBoss' worker",
+                                    "equipment": {
+                                        "armor": "whatever equipped",
+                                        "weapon": "best available melee"
+                                    },
+                                    "objective": "Engage TheBoss' worker and draw aggro.",
+                                    "engagement": {
+                                        "delay": "0",
+                                        "priority": "primary",
+                                        "targetReference": null,
+                                        "targetCoordinates": null
+                                    },
+                                    "constraints": [
+                                        "Stay within 30 blocks of your target",
+                                        "Maintain at least 3 blocks distance from Soldier2",
+                                        "If target destroyed or flees, acquire next available target"
+                                    ],
+                                    "positioning": "front",
+                                    "soldierName": "Soldier1",
+                                    "assignedTarget": "TheBoss' worker",
+                                    "combatDuration": 60,
+                                    "instructionText": "You are the tank. Equip your best sword or axe. Search for TheBoss' worker within 30 blocks of your position. Once found, approach from the front and attack immediately with continuous melee assault. Keep attacking for up to 60 seconds. Maintain at least 3 blocks distance from Soldier2. If your health drops below 7 hearts (14 HP), retreat immediately.",
+                                    "healthManagement": {
+                                        "action": "disengage immediately and move to rally point",
+                                        "retreatThreshold": 14
+                                    }
+                                },
+                                {
+                                    "role": "flanker",
+                                    "tactic": "Engage from the flank after the tank initiates.",
+                                    "target": "TheBoss' worker",
+                                    "equipment": {
+                                        "armor": "whatever equipped",
+                                        "weapon": "best available melee"
+                                    },
+                                    "objective": "Engage TheBoss' worker from a position of surprise.",
+                                    "engagement": {
+                                        "delay": "1500",
+                                        "priority": "secondary",
+                                        "targetReference": null,
+                                        "targetCoordinates": null
+                                    },
+                                    "constraints": [
+                                        "Wait 1.5 seconds before engaging",
+                                        "Stay within 30 blocks of your target",
+                                        "Maintain at least 3 blocks distance from Soldier1",
+                                        "If target destroyed or flees, support Soldier1"
+                                    ],
+                                    "positioning": "flank",
+                                    "soldierName": "Soldier2",
+                                    "assignedTarget": "TheBoss' worker",
+                                    "combatDuration": 60,
+                                    "instructionText": "You are the flanker. Wait 1.5 seconds, then equip your best sword or axe. Search for TheBoss' worker within 30 blocks of your position. Once found, approach from the rear and attack. Maintain at least 3 blocks distance from Soldier1. If your health drops below 7 hearts (14 HP), retreat immediately.",
+                                    "healthManagement": {
+                                        "action": "disengage immediately and move to rally point",
+                                        "retreatThreshold": 14
+                                    }
+                                }
+                            ],
+                            "battlefieldAssessment": {
+                                "hazards": "none",
+                                "terrain": "open field",
+                                "recommendations": "Maintain awareness of surroundings to avoid surprises."
+                            }
+                        },
+                        "conversationId": "8517506310"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "3129",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/execute-combat-plan",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "7f6987a6-80b8-48ad-921c-c6e70a744784",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If1": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Leader Position",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait1": {
+            "main": [
+                [
+                    {
+                        "node": "Attack Enemy Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait2": {
+            "main": [
+                [
+                    {
+                        "node": "Set Attack",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Target Classification",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Bot List": {
+            "main": [
+                [
+                    {
+                        "node": "Enemy Leader",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ]
+            ]
+        },
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "Set Targets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Get Enemy Workers Positions",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Attack": {
+            "main": [
+                [
+                    {
+                        "node": "Attack Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out1": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Split Out2": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Workers1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out3": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Attack Targets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Targets": {
+            "main": [
+                [
+                    {
+                        "node": "Split Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Teleport Soldiers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Enemy Leader": {
+            "main": [
+                [
+                    {
+                        "node": "Bot Workers List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Attack Target": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Attack Failed",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Warriors List": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Attack Results": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Attack Targets": {
+            "main": [
+                [
+                    {
+                        "node": "Attack Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Location": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Identify Target": {
+            "main": [
+                [
+                    {
+                        "node": "If1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Identify Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leader Position": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Location2": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Enemy Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Bot Workers List": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Identify Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Distribute Tasks": {
+            "main": [
+                [
+                ],
+                [
+                ]
+            ]
+        },
+        "Identify Targets": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Identify Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Workers": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Set workers targets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Soldiers": {
+            "main": [
+                [
+                    {
+                        "node": "Wait1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Teleport Workers1": {
+            "main": [
+                [
+                    {
+                        "node": "Wait2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Teleport1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Coordinates2": {
+            "main": [
+                [
+                    {
+                        "node": "Warriors List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Combat Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "Adjust Combat Positions",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set workers targets": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out3",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Attack Enemy Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Workers Task Assigned",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Target Classification": {
+            "main": [
+                [
+                    {
+                        "node": "Targets Location Specified",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Target Location Specified",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Targets Locations Specified",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Workers Task Assigned": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Adjust Combat Positions": {
+            "main": [
+                [
+                    {
+                        "node": "Distribute Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Floor Enemy Coordinates": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Target Location Specified": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Location",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Identify Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Targets Location Specified": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Location2",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Bot List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Enemy Workers Positions": {
+            "main": [
+                [
+                    {
+                        "node": "Floor Enemy Coordinates",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to Identify Target",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Targets Locations Specified": {
+            "main": [
+                [
+                ],
+                [
+                    {
+                        "node": "Identify Targets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

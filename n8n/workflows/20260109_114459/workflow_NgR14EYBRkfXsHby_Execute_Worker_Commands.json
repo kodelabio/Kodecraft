@@ -1,0 +1,667 @@
+{
+    "id": "NgR14EYBRkfXsHby",
+    "meta": null,
+    "name": "Execute Worker Commands",
+    "nodes": [
+        {
+            "id": "7015b5ad-31ff-425b-8cbb-8f0dc68ca867",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -1040,
+                320
+            ],
+            "webhookId": "f6712c60-895c-4be1-b690-c6223bd664ca",
+            "parameters": {
+                "path": "/kodecraft/multibot/execute-worker-commands",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "46aac574-36bc-4145-b9c0-19bb7a62960b",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                480,
+                -160
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "allIncomingItems"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "b3d89116-ee34-4410-a927-8c1cd7771a7b",
+            "name": "Execute Equip",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                256,
+                32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $('Webhook').item.json.body.port }}/api/agent/equip",
+                "method": "POST",
+                "options": {
+                    "timeout": 1000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "item",
+                            "value": "={{ $json.commands.item }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "622607cd-0933-44d1-8274-5dfa6e09375d",
+            "name": "Switch",
+            "type": "n8n-nodes-base.switch",
+            "position": [
+                32,
+                304
+            ],
+            "parameters": {
+                "rules": {
+                    "values": [
+                        {
+                            "outputKey": "equip",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "5e2432b3-d601-4328-ad28-297b9ba98542",
+                                        "operator": {
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.commands.action }}",
+                                        "rightValue": "equip"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "place",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "529d1b00-5a04-42b4-acb2-b6a2042cd8de",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.commands.action }}",
+                                        "rightValue": "place"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "craft",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "f337e6e4-08df-4e56-bd61-f9eca2e1d050",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.commands.action }}",
+                                        "rightValue": "craft"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        },
+                        {
+                            "outputKey": "activate",
+                            "conditions": {
+                                "options": {
+                                    "version": 2,
+                                    "leftValue": "",
+                                    "caseSensitive": true,
+                                    "typeValidation": "strict"
+                                },
+                                "combinator": "and",
+                                "conditions": [
+                                    {
+                                        "id": "04049592-57c0-4d9b-927d-fa303ab339ad",
+                                        "operator": {
+                                            "name": "filter.operator.equals",
+                                            "type": "string",
+                                            "operation": "equals"
+                                        },
+                                        "leftValue": "={{ $json.commands.action }}",
+                                        "rightValue": "activate"
+                                    }
+                                ]
+                            },
+                            "renameOutput": true
+                        }
+                    ]
+                },
+                "options": {
+                }
+            },
+            "typeVersion": 3.3
+        },
+        {
+            "id": "85343312-d1dc-448f-a643-10c138c4599a",
+            "name": "Execute Place",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                256,
+                224
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $('Webhook').item.json.body.port }}/api/agent/place",
+                "method": "POST",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "material",
+                            "value": "={{ $json.commands.material }}"
+                        },
+                        {
+                            "name": "x",
+                            "value": "={{ $json.commands.x }}"
+                        },
+                        {
+                            "name": "y",
+                            "value": "={{ $json.commands.y }}"
+                        },
+                        {
+                            "name": "z",
+                            "value": "={{ $json.commands.z }}"
+                        },
+                        {
+                            "name": "facing",
+                            "value": "={{           \n  $json.commands.facing           \n}}"
+                        },
+                        {
+                            "name": "placeOn",
+                            "value": "={{$json.commands.placeOn }}"
+                        },
+                        {
+                            "name": "rotation",
+                            "value": "={{$json.commands.rotation }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "db69871f-68a5-4213-bce2-bc266e524fb3",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -432,
+                320
+            ],
+            "parameters": {
+                "include": "allOtherFields",
+                "options": {
+                },
+                "fieldToSplitOut": "commands"
+            },
+            "typeVersion": 1,
+            "alwaysOutputData": false
+        },
+        {
+            "id": "5c9a56f8-d093-40ce-a720-baee6ac92a81",
+            "name": "Aggregate",
+            "type": "n8n-nodes-base.aggregate",
+            "position": [
+                32,
+                -160
+            ],
+            "parameters": {
+                "options": {
+                },
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "output"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "bc60f7b4-b6ea-4b83-81fc-a7f9f94f2e53",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -800,
+                320
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "82d25dd8-0059-421f-b83f-ab99c74aa5eb",
+                            "name": "commands",
+                            "type": "array",
+                            "value": "={{ $json.body.commands }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "e9b69a68-96c6-49a4-aae2-513ef77011ec",
+            "name": "Loop Over Items",
+            "type": "n8n-nodes-base.splitInBatches",
+            "position": [
+                -208,
+                320
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 3,
+            "alwaysOutputData": false
+        },
+        {
+            "id": "4b524938-c2e7-4c3f-827f-8473ee5a0be2",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                480,
+                416
+            ],
+            "webhookId": "e292f4c3-b0d2-48d5-92c7-c30d88e5959b",
+            "parameters": {
+                "amount": 0.5
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "707cd091-0efc-43e7-aa92-5c648c37a722",
+            "name": "Format Results",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                256,
+                -160
+            ],
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "const item = $input.item.json;\nconst output = item.output || [];\n\nconst results = {\n  total: output.length,\n  successful: 0,\n  failed: 0,\n  errors: [],\n  successes: []\n};\n\noutput.forEach((result, index) => {\n  if (result.error) {\n    results.failed++;\n    results.errors.push({\n      index: index,\n      message: result.error.message,\n      code: result.error.code,\n      status: result.error.status\n    });\n  } else if (result.success) {\n    results.successful++;\n    results.successes.push({\n      index: index,\n      message: result.message\n    });\n  }\n});\n\nreturn {\n  summary: results,\n  allSucceeded: results.failed === 0,\n  allFailed: results.successful === 0\n};"
+            },
+            "executeOnce": false,
+            "typeVersion": 2
+        },
+        {
+            "id": "f5003cdc-db00-4c6b-b1fb-aa21c1d07ed7",
+            "name": "Execute Craft",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                256,
+                416
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $('Webhook').item.json.body.port }}/api/agent/craft",
+                "method": "POST",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "item",
+                            "value": "={{ $json.commands.item }}"
+                        },
+                        {
+                            "name": "quantity",
+                            "value": "={{ $json.commands.quantity }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "73b1cf77-52ae-4b50-91ff-03959a4b1136",
+            "name": "Execute Activate",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                256,
+                608
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_AGENT_URL}}:{{ $('Webhook').item.json.body.port }}/api/agent/activate",
+                "method": "POST",
+                "options": {
+                    "timeout": 30000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "blockType",
+                            "value": "={{ $json.commands.blockType }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2,
+            "continueOnFail": true
+        },
+        {
+            "id": "b54600b7-0752-4051-bcea-07be3fc80cac",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -656,
+                320
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 3,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "14262ab9-441c-4cde-a9cf-4e051833fce2",
+                            "operator": {
+                                "type": "array",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.commands }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.3
+        },
+        {
+            "id": "1855e5d6-6f28-494f-b35e-65fb17d2b800",
+            "name": "Respond to Webhook1",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -544,
+                608
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "\n{\"summary\": \n{  \n\"total\": \n0,  \n\"successful\": \n0,  \n\"failed\": \n0}\n}"
+            },
+            "typeVersion": 1.4
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "port": 5003,
+                        "stage": 3,
+                        "worker": "TheBoss_W2",
+                        "commands": [
+                        ]
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "59",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/execute-worker-commands",
+                    "executionMode": "production"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "db3831ea-c98e-419e-9d61-0766c69161a6",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respond to Webhook1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Switch": {
+            "main": [
+                [
+                    {
+                        "node": "Execute Equip",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Execute Place",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Execute Craft",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Execute Activate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "Format Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Craft": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Equip": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Place": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Format Results": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Over Items": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Switch",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Activate": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

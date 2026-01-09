@@ -1,0 +1,421 @@
+{
+    "id": "jjggzke29eqqDozC",
+    "meta": null,
+    "name": "WaitandRegister Multi",
+    "nodes": [
+        {
+            "id": "045d3c47-6e9c-4820-8a50-69b276936b9b",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -1376,
+                -720
+            ],
+            "parameters": {
+                "width": 704,
+                "height": 512,
+                "content": "### Workflow\n\nInput from SpawnWorkers\n  ↓\nHTTP POST: Wait for Workers Ready\n  ↓\nIF: All workers ready?\n  ├─ YES: Continue\n  └─ NO: Warn and continue anyway\n  ↓\nHTTP POST: Register Workers for Session\n  ↓\nExecute Workflow (Async): CoordinateBuild"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "23109da7-ae37-4efa-8ef5-4d5e0c594c45",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -592,
+                112
+            ],
+            "webhookId": "66fac814-cef8-4c72-97d6-f6724d9d2dd8",
+            "parameters": {
+                "path": "/kodecraft/multibot/wait-and-register",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "95a1aa62-efc1-4c47-b824-5207b0b6ea7d",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                528,
+                -32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "respondWith": "json",
+                "responseBody": "={{{\n  sessionId: $('Webhook').item.json.body.sessionId,\n  spawnedWorkers: $('Webhook').item.json.body.spawnedWorkers,\n  buildRequest: $('Webhook').item.json.body.buildRequest,\n  leaderBotUrl: $('Webhook').item.json.body.leaderBotUrl,\n  callbackUrl: $('Webhook').item.json.body.callbackUrl,\n  workerCount: $('Webhook').item.json.body.workerCount\n}\n}}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "53a2aff1-a1f6-473e-8f16-f8821883a449",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                80,
+                112
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "24ce174b-edd5-4e38-a8aa-9a2856abf784",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.allReady }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "9f18415f-0aab-41a4-b726-6240a7f30cc7",
+            "name": "Register Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                304,
+                -32
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/register-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $json.workers }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "82df1cdc-8f25-4581-a776-4928b7ab934d",
+            "name": "Wait Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                -144,
+                112
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/wait-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Webhook').item.json.body.spawnedWorkers.map(w => ({name: w.workerName, port: w.port}))"
+                        },
+                        {
+                            "name": "timeoutMs",
+                            "value": "30000"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "e296161d-222e-4fa5-bca3-6ca36773ba09",
+            "name": "CoordinateBuild",
+            "type": "n8n-nodes-base.httpRequest",
+            "disabled": true,
+            "position": [
+                -592,
+                -256
+            ],
+            "parameters": {
+                "url": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/coordinate-build",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "=workerCount",
+                            "value": "={{ $('Webhook').item.json.body.workerCount }}"
+                        },
+                        {
+                            "name": "taskDivision",
+                            "value": "={{ $('Webhook').item.json.body.taskDivision }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $json.workers }}"
+                        },
+                        {
+                            "name": "buildRequest",
+                            "value": "={{ $('Webhook').item.json.body.buildRequest }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "ed72178e-26ec-4081-87f7-f64ee7b73cdb",
+            "name": "Create Session",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                -368,
+                112
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/create-session",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.body.sessionId }}"
+                        },
+                        {
+                            "name": "buildRequest",
+                            "value": "={{ $json.body.taskRequest }}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $json.body.workerCount }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "4cb24304-0438-4447-b58f-2625f6a003a1",
+            "name": "Sticky Note1",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -240,
+                -512
+            ],
+            "parameters": {
+                "color": 4,
+                "width": 272,
+                "height": 784,
+                "content": "### Wait Workers (Summary)\nPolls worker health endpoints to verify they're online and ready to receive commands. It doesn't do any work itself—it just \"knocks on the door\" of each worker repeatedly until they answer or timeout.Think of it as: \"Is anyone home? Is anyone home? Is anyone home?\" (asks every 500ms until they respond or 30 seconds pass)\n\n#### TL;DR\n/api/orchestration/wait-workers = \"Are all the worker processes actually online and responding to requests?\"\n\nPolls each worker's /api/health endpoint\nWaits up to 30 seconds for them to respond\nChecks every 500ms to be responsive\nChecks in parallel (fast)\nReturns success even if some fail (soft fail)\nUsed right after spawning to verify workers booted properly\n\nIt's the \"health check before proceeding\" step! ✅"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "f773d2eb-f0a3-40b7-9ddc-175616dd9f09",
+            "name": "Sticky Note2",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                -464,
+                -512
+            ],
+            "parameters": {
+                "color": 4,
+                "width": 272,
+                "height": 784,
+                "content": "### Create Session(Summary)\nCreates a new tracking record for a multi-worker build project. It's essentially a \"session bookmark\" that stores metadata about a collaborative build, but doesn't spawn workers or do any actual work. It just registers the build in memory."
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "cee49234-cf30-443b-be6d-69f79ff2835a",
+            "name": "Sticky Note3",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                224,
+                -672
+            ],
+            "parameters": {
+                "color": 4,
+                "width": 272,
+                "height": 800,
+                "content": "### Register Workers (Summary)\n\nLinks spawned workers to a build session. It's the \"add these workers to this team/project\" operation. This creates the association: \"These 3 workers belong to build session XYZ\"\nThink of it as: \"I have 3 workers and a build session. Connect them together.\"\n\n\n####TL;DR\n\n/api/orchestration/register-workers = \"Associate these workers with this build session\"\n\nRequires: Session to exist (404 if not)\nDoes: Links workers list to session, updates statuses\nChanges: Session status → workers_assigned, Worker status → assigned\nBlocks: No (instant operation)\nUsed after: wait-workers (workers are ready)\nUsed before: reserve-location (need workers in session to position them)\n\nIt's the \"Team formation\" step! ✅"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "da2068aa-6cf9-4491-ab9e-a2cf384481f8",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                624,
+                128
+            ],
+            "webhookId": "6764ebd6-8249-46e6-abfd-f5a1ec4464cd",
+            "parameters": {
+                "amount": 2
+            },
+            "typeVersion": 1.1
+        }
+    ],
+    "active": false,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "sessionId": "build_1766070532350",
+                        "callbackUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/worker-complete",
+                        "taskRequest": "Build a house collaboratively using 2 workers. The house will be a standard single-story structure with foundation, walls, roof, and basic interior. Workers will divide the building spatially - Worker1 handles the west half, Worker2 handles the east half.",
+                        "workerCount": "2",
+                        "leaderBotUrl": "http://172.31.14.250:4001",
+                        "conversationId": 5415489232,
+                        "spawnedWorkers": [
+                            {
+                                "pid": 115,
+                                "port": 5002,
+                                "status": "existing",
+                                "workerName": "TheBoss_W1"
+                            },
+                            {
+                                "pid": 296,
+                                "port": 5004,
+                                "status": "existing",
+                                "workerName": "TheBoss_W2"
+                            }
+                        ]
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "637",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/wait-and-register",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "b6c84591-199e-49e8-929d-cfe7e1ea6a5f",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Register Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Wait Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Create Session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait Workers": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Create Session": {
+            "main": [
+                [
+                    {
+                        "node": "Wait Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "CoordinateBuild": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Register Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

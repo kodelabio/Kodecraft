@@ -657,23 +657,50 @@ export async function breakBlockAt(bot, x, y, z) {
 }
 
 
-export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false) {
-    /**
-     * Place the given block type at the given position. It will build off from any adjacent blocks. Will fail if there is a block in the way or nothing to build off of.
-     * @param {MinecraftBot} bot, reference to the minecraft bot.
-     * @param {string} blockType, the type of block to place.
-     * @param {number} x, the x coordinate of the block to place.
-     * @param {number} y, the y coordinate of the block to place.
-     * @param {number} z, the z coordinate of the block to place.
-     * @param {string} placeOn, the preferred side of the block to place on. Can be 'top', 'bottom', 'north', 'south', 'east', 'west', or 'side'. Defaults to bottom. Will place on first available side if not possible.
-     * @param {boolean} dontCheat, overrides cheat mode to place the block normally. Defaults to false.
-     * @returns {Promise<boolean>} true if the block was placed, false otherwise.
-     * @example
-     * let p = world.getPosition(bot);
-     * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
-     * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
-     **/
-    console.log(`[placeBlock] START - blockType: ${blockType}, pos: (${x}, ${y}, ${z}), placeOn: ${placeOn}`);
+/**
+ * Place a block at the given position with optional orientation modifiers
+ * 
+ * Supports both cheat mode (using /setblock commands) and survival mode (physical placement)
+ * Handles orientation for special blocks like stairs, doors, slabs, beds, torches, etc.
+ * 
+ * @param {MinecraftBot} bot - Reference to the minecraft bot
+ * @param {string} blockType - The type of block to place (e.g., "oak_stairs", "torch", "oak_bed")
+ * @param {number} x - The x coordinate of the block to place (will be floored to integer)
+ * @param {number} y - The y coordinate of the block to place (will be floored to integer)
+ * @param {number} z - The z coordinate of the block to place (will be floored to integer)
+ * @param {string} placeOn - The preferred side of adjacent block to place on
+ *                          Valid: "top", "bottom", "north", "south", "east", "west", "side"
+ *                          Default: "bottom"
+ *                          Will place on first available side if specified side not possible
+ * @param {boolean} dontCheat - If true, forces survival mode placement even if cheat mode is on
+ *                             Default: false
+ * @param {string} facing - Minecraft block state property for direction (stairs, doors, slabs)
+ *                         Valid: "north", "south", "east", "west"
+ *                         Only used for: stairs, slabs, doors, glass_pane, ladder, repeater, comparator, buttons, levers
+ * @param {number} rotation - Minecraft block state property for rotation (beds, logs, chains)
+ *                           Valid: 0 (north), 1 (east), 2 (south), 3 (west)
+ *                           Only used for: beds, logs, chains
+ * 
+ * @returns {Promise<boolean>} true if the block was placed successfully, false otherwise
+ * 
+ * @example
+ * // Place cobblestone on top surface
+ * await placeBlock(bot, "cobblestone", 10, 64, 20);
+ * 
+ * @example
+ * // Place stairs facing east
+ * await placeBlock(bot, "oak_stairs", 10, 64, 20, "top", false, "east", null);
+ * 
+ * @example
+ * // Place bed with head pointing south (rotation=2)
+ * await placeBlock(bot, "oak_bed", 10, 64, 20, "top", false, null, 2);
+ * 
+ * @example
+ * // Place torch on north wall surface
+ * await placeBlock(bot, "torch", 10, 64, 20, "north", false, null, null);
+ */
+export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false, facing=null, rotation=null) {
+    console.log(`[placeBlock] START - blockType: ${blockType}, pos: (${x}, ${y}, ${z}), placeOn: ${placeOn}, facing: ${facing}, rotation: ${rotation}`);
     if (!mc.getBlockId(blockType) && blockType !== 'air') {
         console.log(`[placeBlock] FAIL - invalid block type`);
         log(bot, `Invalid block type: ${blockType}.`);
@@ -697,39 +724,67 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             }
         }
 
-        // invert the facing direction
+        // invert the facing direction for placement calculation
         let face = placeOn === 'north' ? 'south' : placeOn === 'south' ? 'north' : placeOn === 'east' ? 'west' : 'east';
+        
+        // Build block state string with orientation modifiers
+        let blockState = blockType;
+        
         if (blockType.includes('torch') && placeOn !== 'bottom') {
             // insert wall_ before torch
             blockType = blockType.replace('torch', 'wall_torch');
             if (placeOn !== 'side' && placeOn !== 'top') {
-                blockType += `[facing=${face}]`;
+                blockState = blockType + `[facing=${face}]`;
             }
         }
         if (blockType.includes('button') || blockType === 'lever') {
             if (placeOn === 'top') {
-                blockType += `[face=ceiling]`;
+                blockState = blockType + `[face=ceiling]`;
             }
             else if (placeOn === 'bottom') {
-                blockType += `[face=floor]`;
+                blockState = blockType + `[face=floor]`;
             }
             else {
-                blockType += `[facing=${face}]`;
+                blockState = blockType + `[facing=${face}]`;
             }
         }
         if (blockType === 'ladder' || blockType === 'repeater' || blockType === 'comparator') {
-            blockType += `[facing=${face}]`;
+            blockState = blockType + `[facing=${face}]`;
         }
         if (blockType.includes('stairs')) {
-            blockType += `[facing=${face}]`;
+            // Use facing from parameter if provided, otherwise use inverted placeOn direction
+            blockState = blockType + `[facing=${facing || face}]`;
         }
-        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockType;
+        if (blockType.includes('slab')) {
+            // Use facing from parameter if provided for slab orientation
+            if (facing) {
+                blockState = blockType + `[facing=${facing}]`;
+            }
+        }
+        if (blockType.includes('door')) {
+            // Use facing from parameter if provided
+            blockState = blockType + (facing ? `[facing=${facing}]` : '');
+        }
+        if (blockType.includes('bed')) {
+            // Use rotation from parameter if provided (0=north, 1=east, 2=south, 3=west)
+            if (rotation !== null && rotation !== undefined) {
+                blockState = blockType + `[rotation=${rotation}]`;
+            }
+        }
+        if (blockType.includes('glass_pane')) {
+            // Use facing from parameter if provided for glass_pane orientation
+            if (facing) {
+                blockState = blockType + `[facing=${facing}]`;
+            }
+        }
+        
+        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockState;
         bot.chat(msg);
-        if (blockType.includes('door'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockType + '[half=upper]');
-        if (blockType.includes('bed'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
-        log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
+        if (blockState.includes('door'))
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockState + '[half=upper]');
+        if (blockState.includes('bed'))
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockState + '[part=head]');
+        log(bot, `Used /setblock to place ${blockState} at ${target_dest}.`);
         return true;
     }
 
@@ -829,18 +884,9 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     await bot.lookAt(buildOffBlock.position);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // will throw error if an entity is in the way, and sometimes even if the block was placed
-    // ✅ ADD THESE LOGS
-    console.log(`[placeBlock] Final check before placement:`);
-    console.log(`  Bot pos:`, bot.entity.position);
-    console.log(`  Target dest:`, target_dest);
-    console.log(`  BuildOff block:`, buildOffBlock.name, `at`, buildOffBlock.position);
-    console.log(`  FaceVec:`, faceVec);
-    console.log(`  Distance to buildoff:`, bot.entity.position.distanceTo(buildOffBlock.position));
     try {
         console.log(`[placeBlock] PLACING - on block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
         await bot.placeBlock(buildOffBlock, faceVec);
-        //await bot.activateBlock(buildOffBlock);
         log(bot, `Placed ${blockType} at ${target_dest}.`);
         console.log(`[placeBlock] SUCCESS`);
         await new Promise(resolve => setTimeout(resolve, 200));

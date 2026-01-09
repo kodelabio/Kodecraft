@@ -659,10 +659,62 @@ export class ExternalAPI {
         }
     }
 
-    // âœ… FIXED handlePlace
+    /**
+     * Place a block at specified coordinates with optional orientation modifiers
+     * 
+     * POST /api/agent/place
+     * 
+     * Request body:
+     * {
+     *   "material": STRING (required) - Block type to place (e.g., "oak_stairs", "torch", "oak_bed")
+     *   "x": NUMBER (required) - X coordinate (integer)
+     *   "y": NUMBER (required) - Y coordinate (integer)
+     *   "z": NUMBER (required) - Z coordinate (integer)
+     *   "placeOn": STRING (optional, default: "top") - Which surface of adjacent block to place on
+     *              Valid: "top", "bottom", "north", "south", "east", "west", "side"
+     *   "facing": STRING (optional) - Direction block faces (for stairs, doors, slabs)
+     *             Valid: "north", "south", "east", "west"
+     *   "rotation": NUMBER (optional) - Block rotation (for beds, logs, chains)
+     *              Valid: 0 (north), 1 (east), 2 (south), 3 (west)
+     * }
+     * 
+     * Response on success (200):
+     * { "success": true, "message": "Placed [material] at x, y, z" }
+     * 
+     * Response on failure (4xx/5xx):
+     * { "error": "error message", "code": "error_code" }
+     * 
+     * Error codes:
+     * - "invalid_coordinates" - x, y, z are not valid integers or out of range
+     * - "placement_failed" - Block could not be placed at location
+     * - "bot_unavailable" - Bot is not connected or initialized
+     * 
+     * Examples:
+     * 
+     * 1. Place regular block:
+     * POST /api/agent/place
+     * { "material": "cobblestone", "x": 0, "y": -60, "z": 0 }
+     * 
+     * 2. Place stairs with facing direction:
+     * POST /api/agent/place
+     * { "material": "oak_stairs", "x": 0, "y": -60, "z": 0, "facing": "east" }
+     * 
+     * 3. Place bed with rotation:
+     * POST /api/agent/place
+     * { "material": "oak_bed", "x": 1, "y": -59, "z": 0, "rotation": 2 }
+     * 
+     * 4. Place torch on wall surface:
+     * POST /api/agent/place
+     * { "material": "torch", "x": 2, "y": -58, "z": 0, "placeOn": "north" }
+     * 
+     * @param {Object} req - Express request object
+     * @param {Object} req.body - Request body with material and coordinates
+     * @param {Object} res - Express response object
+     * @returns {void} Sends JSON response with success status or error
+     */
     async handlePlace(req, res) {
         try {
-            const { material, x, y, z, face = 'top' } = req.body;
+            const { material, x, y, z, placeOn = 'top', facing, rotation } = req.body;
             
             if (!material) {
                 return res.status(400).json({ error: 'material parameter required' });
@@ -697,14 +749,18 @@ export class ExternalAPI {
                         result = await executeCommand(this.agent, command);
                     } else {
                         const skills = await import('./library/skills.js');
+                        
                         console.log(`[handlePlace] Calling placeBlock with:`, {
-                                material: material,
-                                x: coordValidation.x,
-                                y: coordValidation.y,
-                                z: coordValidation.z,
-                                face: face
-                            });
-                        const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, face);
+                            material: material,
+                            x: coordValidation.x,
+                            y: coordValidation.y,
+                            z: coordValidation.z,
+                            placeOn: placeOn,
+                            facing: facing,
+                            rotation: rotation
+                        });
+                        // Pass: bot, material, x, y, z, placeOn, dontCheat, facing, rotation
+                        const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, placeOn, false, facing, rotation);
                         console.log(`[handlePlace] placeBlock returned:`, success);
                         if (success) {
                             result = `Placed ${material} at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
@@ -723,11 +779,6 @@ export class ExternalAPI {
                 }
             }
 
-            
-            //const bot = this.getBotSafely();
-            //if (bot) {
-            //    await this.waitForBotIdle(bot, 5000);
-            //}   
             res.json({ success: true, message: result || `Placed ${material}` });
         } catch (error) {
             this.handleError(res, error, 'place');
@@ -831,6 +882,20 @@ export class ExternalAPI {
             if (!item) {
                 return res.status(400).json({ error: 'item parameter required' });
             }
+
+            // Check if bot is in creative mode: the bot's inventory isn't automatically populated. 
+            // You need to explicitly give items to the bot before equipping them 
+            const bot = this.getBotSafely();
+            if (bot && bot.game.gameMode === 1) { // 1 = Creative
+                // In creative mode, give the item first
+                try {
+                    await bot.creative.setInventorySlot(36, new bot.Item(bot.registry.itemsByName[item], 64));
+                    console.log(`[Equip] Creative mode: gave ${item} to inventory`);
+                } catch (e) {
+                    console.warn(`[Equip] Failed to give creative item: ${e.message}`);
+                }
+            }
+            
 
             const command = `!equip("${item}")`;
             const result = await executeCommand(this.agent, command);

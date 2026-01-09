@@ -59,6 +59,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/discard', this.handleDiscard.bind(this));
         this.app.post('/api/agent/consume', this.handleConsume.bind(this));
         this.app.post('/api/agent/fish', this.handleFish.bind(this));
+        this.app.post('/api/agent/catchFish', this.handleCatchFish.bind(this));
         this.app.post('/api/agent/shear', this.handleShear.bind(this));
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
         
@@ -844,7 +845,7 @@ export class ExternalAPI {
                 });
             }
 
-            const command = `!fishCatch(${timeout})`;
+            const command = `!fish(${timeout})`;
             const result = await executeCommand(this.agent, command);
             
             if (result && result.includes('do not have')) {
@@ -859,9 +860,45 @@ export class ExternalAPI {
                 return res.status(408).json({ error: result, code: 'fishing_timeout' });
             }
             
-            res.json({ success: true, message: result || 'Fishing attempt completed' });
+            res.json({ success: true, message: result || 'Fishing completed' });
         } catch (error) {
             this.handleError(res, error, 'fish');
+        }
+    }
+
+    async handleCatchFish(req, res) {
+        try {
+            const { fishType = 'cod', count = 1 } = req.body;
+            
+            const validFish = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
+            if (!validFish.includes(fishType)) {
+                return res.status(400).json({ 
+                    error: `fishType must be one of: ${validFish.join(', ')}`,
+                    code: 'invalid_fish_type'
+                });
+            }
+            
+            if (typeof count !== 'number' || count < 1 || count > 20) {
+                return res.status(400).json({ 
+                    error: 'count must be a number between 1 and 20',
+                    code: 'invalid_count'
+                });
+            }
+
+            const command = `!catchFishWithBucket("${fishType}", ${count})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_water_bucket' });
+            }
+            
+            if (result && result.includes('not found nearby')) {
+                return res.status(404).json({ error: result, code: 'no_fish_nearby' });
+            }
+            
+            res.json({ success: true, message: result || `Caught ${fishType}` });
+        } catch (error) {
+            this.handleError(res, error, 'catchFish');
         }
     }
 

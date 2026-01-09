@@ -228,13 +228,24 @@ export const actionsList = [
         })
     },
     {
-        name: '!fishCatch',
-        description: 'Catch fish using a fishing rod. Bot must have a fishing rod and be near water.',
+        name: '!fish',
+        description: 'Fish using a fishing rod to catch fish items. Bot must have a fishing rod and be near water.',
         params: {
             'timeout': { type: 'int', description: 'Maximum time to wait for a fish in milliseconds. Defaults to 60000 (60 seconds).', domain: [1000, 300000] }
         },
         perform: runAsAction(async (agent, timeout = 60000) => {
-            await skills.fishCatch(agent.bot, timeout);
+            await skills.fish(agent.bot, timeout);
+        })
+    },
+    {
+        name: '!catchFishWithBucket',
+        description: 'Catch live fish with a water bucket. Bot must have water buckets.',
+        params: {
+            'fish_type': { type: 'string', description: 'Type of fish to catch: cod, salmon, tropical_fish, or pufferfish. Defaults to cod.' },
+            'count': { type: 'int', description: 'Number of fish to catch. Defaults to 1.', domain: [1, 20] }
+        },
+        perform: runAsAction(async (agent, fish_type = 'cod', count = 1) => {
+            await skills.catchFishWithBucket(agent.bot, fish_type, count);
         })
     },
     {

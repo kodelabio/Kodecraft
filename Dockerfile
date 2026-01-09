@@ -23,8 +23,7 @@ RUN npm ci --only=production || npm install
 
 # Apply patches and fixes to node_modules
 RUN sed -i "s/'physicTick'/'physicsTick'/g" /app/node_modules/mineflayer-pvp/lib/PVP.js && \
-    sed -i 's/throw new Error(`Unknown entity/return; \/\/throw new Error(`Unknown entity/g' /app/node_modules/prismarine-viewer/viewer/lib/en
-tity/Entity.js
+    sed -i 's/throw new Error(`Unknown entity/return; \/\/throw new Error(`Unknown entity/g' /app/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js
 
 
 # Copy application code

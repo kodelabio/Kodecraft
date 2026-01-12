@@ -1,0 +1,884 @@
+{
+    "id": "XhhI2KhNz1NRKJjR",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "name": "Distribute Tasks in Stages Multi",
+    "nodes": [
+        {
+            "id": "31540dd2-4499-4056-9eb4-f3c72dd83ede",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -672,
+                80
+            ],
+            "webhookId": "17e8f124-d397-4cf7-b2ee-cfd928bda189",
+            "parameters": {
+                "path": "/kodecraft/multibot/distribute-tasks-stages",
+                "options": {
+                },
+                "httpMethod": "POST"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "83ce7bdb-da61-42c1-b2d8-84164673f5ac",
+            "name": "Send Task",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                1840,
+                96
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/send-task-stage",
+                "method": "POST",
+                "options": {
+                    "timeout": 900000
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "taskPrompt",
+                            "value": "={{ $json.taskPrompt }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.conversationId }}"
+                        },
+                        {
+                            "name": "worker",
+                            "value": "={{ $json.worker }}"
+                        },
+                        {
+                            "name": "stageNumber",
+                            "value": "={{ $json.stageNumber }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $env.WEBHOOK_URL }}/webhook/kodecraft/worker-stage-complete"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.sessionId }}"
+                        },
+                        {
+                            "name": "port",
+                            "value": "={{ $json.port }}"
+                        }
+                    ]
+                }
+            },
+            "retryOnFail": true,
+            "typeVersion": 4.3
+        },
+        {
+            "id": "db9ad9ed-1e30-4dce-9feb-dcbc710deb50",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                912,
+                -128
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "859ac19a-3949-45aa-aeae-724467994e2a",
+            "name": "Stages List",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -448,
+                80
+            ],
+            "parameters": {
+                "jsCode": "// Convert Planner stages dictionary to array format\n// Maps planner Worker1/Worker2 to actual spawned worker names\n\nconst input = $input.first().json.body;\nconst stages = input.stages;\nconst sessionId = input.sessionId;\nconst workers = input.workers || [];\n\nconsole.log(`🚀 Starting stage conversion for session: ${sessionId}`);\n\nif (!stages || typeof stages !== 'object') {\n  throw new Error('No stages found');\n}\n\nif (!workers || workers.length === 0) {\n  throw new Error('No workers found');\n}\n\n// ===== Build simple worker lookup by index =====\nconst workersByIndex = {};\nworkers.forEach((w, idx) => {\n  workersByIndex[idx] = {\n    name: w.workerName,\n    port: w.port\n  };\n  console.log(`Worker ${idx}: ${w.workerName} on port ${w.port}`);\n});\n\n// ===== Convert stages =====\nconst stagesArray = [];\n\n// Process each stage in numeric order\nconst stageKeys = Object.keys(stages).sort((a, b) => parseInt(a) - parseInt(b));\n\nstageKeys.forEach(stageKeyStr => {\n  const stageNum = parseInt(stageKeyStr);\n  const stage = stages[stageKeyStr];\n  \n  console.log(`\\nProcessing Stage ${stageNum}: ${stage.stageTitle}`);\n  \n  const tasks = [];\n  let workerIdx = 0;\n  \n  // Direct iteration - only process objects that have required fields\n  for (const key in stage) {\n    const taskData = stage[key];\n    \n    // Skip metadata - these have simple values, not objects with coordinates\n    if (!taskData || typeof taskData !== 'object' || !taskData.coordinates) {\n      continue;\n    }\n    \n    // This is a worker task\n    const actualWorker = workersByIndex[workerIdx];\n    if (!actualWorker) {\n      console.warn(`No worker at index ${workerIdx}`);\n      continue;\n    }\n    \n    console.log(`  Task ${key} → ${actualWorker.name} (port ${actualWorker.port})`);\n    \n    tasks.push({\n      sessionId: sessionId,\n      stageNumber: stageNum,\n      worker: actualWorker.name,\n      port: actualWorker.port,\n      taskPrompt: taskData.fullPrompt || '',\n      coordinates: taskData.coordinates,\n      status: taskData.status || 'queued'\n    });\n    \n    workerIdx++;\n  }\n  \n  stagesArray.push({\n    stageNumber: stageNum,\n    stageTitle: stage.stageTitle,\n    status: stage.status || 'not-started',\n    taskCount: tasks.length,\n    tasks: tasks\n  });\n});\n\nconsole.log(`\\n✅ Conversion complete: ${stagesArray.length} stages`);\n\nreturn { \n  stagesArray: stagesArray,\n  totalStages: stagesArray.length,\n  sessionId: sessionId,\n  workerCount: workers.length\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "06c657f0-a557-44c0-8c6c-ee12c614aa9e",
+            "name": "Split Stages",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                -224,
+                80
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "stagesArray"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "10b89110-5724-47fd-a5bf-97020fff70fa",
+            "name": "Loop Over Items",
+            "type": "n8n-nodes-base.splitInBatches",
+            "position": [
+                0,
+                80
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 3
+        },
+        {
+            "id": "45b68ec1-f2a8-4345-be88-d79ba0a4af87",
+            "name": "Start Stage",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2464,
+                96
+            ],
+            "webhookId": "413ee9dc-2d69-4942-8608-c372e5fe9a34",
+            "parameters": {
+                "text": "=Starting Worker {{ $('Split Workers').item.json.worker }} on stage {{ $('Split Workers').item.json.stageNumber }}..",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "7afbed5e-b7e7-4357-8293-e8b877441480",
+            "name": "Split Workers",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                1568,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "tasks"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "13f3662d-dbf4-4cc8-84b4-f361b7d9f793",
+            "name": "Update Tasks Request",
+            "type": "n8n-nodes-base.mongoDb",
+            "disabled": true,
+            "position": [
+                -672,
+                -224
+            ],
+            "parameters": {
+                "fields": "conversationId, sessionId, location, buildRequest, location, workerCount, stages, completedStages, startTime",
+                "options": {
+                },
+                "operation": "update",
+                "updateKey": "sessionId",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "0f6688ad-21c8-4f88-88a9-305febe1e51d",
+            "name": "Update Task",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                2016,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "2082892d-1066-4f03-bb74-00af9befd498",
+                            "name": "sessionId",
+                            "type": "string",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "id": "1923c62e-4fa3-462f-9b05-ccf80f886ca2",
+                            "name": "stageNumber",
+                            "type": "number",
+                            "value": "={{ $('Split Workers').item.json.stageNumber }}"
+                        },
+                        {
+                            "id": "9dada34f-e7a4-4842-af3c-a9e91ac3e768",
+                            "name": "worker",
+                            "type": "string",
+                            "value": "={{ $('Split Workers').item.json.worker }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "15c2ec2f-a5fc-424d-a43b-1009119238b3",
+            "name": "Edit Fields",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                1344,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "db737727-f14c-4794-a32e-6ae58da50280",
+                            "name": "tasks",
+                            "type": "array",
+                            "value": "={{ $('Loop Over Items').item.json.tasks }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "27651b5d-e3b0-42ea-ae6c-7d7861f2284c",
+            "name": "Set Stage started",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                1040,
+                96
+            ],
+            "parameters": {
+                "query": "={\"sessionId\":\"{{ $json.sessionId }}\"}",
+                "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.status\": \"started\"\n  }\n}",
+                "operation": "update",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "0130bfe9-1d61-4c13-bf29-eb7f9950e103",
+            "name": "Sticky Note",
+            "type": "n8n-nodes-base.stickyNote",
+            "position": [
+                2288,
+                176
+            ],
+            "parameters": {
+                "width": 464,
+                "height": 352,
+                "content": "## Stages workflow\n- Work is organized in sequential stages\n- each stage has parallel tasks\n- each stage can only start once the previous stage taske are completed"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "82d208e5-597d-4fe9-b0d4-4f255ecfcf5f",
+            "name": "Retrieve Session",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                224,
+                192
+            ],
+            "parameters": {
+                "query": "={\"sessionId\": \"{{ $('Webhook').item.json.body.sessionId }}\"} ",
+                "options": {
+                },
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "a1cce9d4-816b-4759-a891-c0777db55945",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                688,
+                448
+            ],
+            "webhookId": "d5a5d250-c483-4a9f-aabc-12d155847d86",
+            "parameters": {
+                "amount": 10
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "6463bb0d-34ff-4b97-ae01-2f916f2fa56d",
+            "name": "Code in JavaScript",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                448,
+                192
+            ],
+            "parameters": {
+                "jsCode": "// Get stage number from current loop item\nconst currentStage = $('Loop Over Items').first().json.stageNumber;\nconst previousStage = currentStage - 1;\nconst sessionId = $input.first().json.sessionId;\n\nif (currentStage === 1) {\n  return {\n    sessionId: sessionId,\n    stageNumber: 1, \n    canProceed: true,\n    reason: \"First stage\"\n  };\n}\n\n// Now get the document (must come from previous MongoDB read or Set node)\nconst doc = $input.first().json;\n\nif (!doc.stages || !doc.stages[previousStage]) {\n  return {\n    stageNumber: currentStage,\n    canProceed: false,\n    reason: `Stage ${previousStage} not found`\n  };\n}\n\nconst previousStageData = doc.stages[previousStage];\nconst workers = Object.keys(previousStageData.tasks);\n\n//const allComplete = workers.every(w => \n//  previousStageData.tasks[w].status === \"completed\"\n//);\nconst allComplete = previousStageData.status === \"completed\";\n\nreturn {\n  sessionId: sessionId,\n  canProceed: allComplete,\n  previousStage: previousStage,\n  stageNumber: currentStage,\n  completedWorkers: workers.filter(w => previousStageData.tasks[w].status === \"completed\").length,\n  totalWorkers: workers.length\n};\n"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "3b88817a-3c2a-4c39-a580-d3849a454996",
+            "name": "Proceed?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                672,
+                192
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                        {
+                            "id": "2567a554-030d-4fa0-afd3-89e9315e65cd",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.canProceed }}",
+                            "rightValue": "1"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "6647eda3-89a8-41f3-9d37-9925edf5e036",
+            "name": "Set Task Started",
+            "type": "n8n-nodes-mongodb-upgraded.mongoDbOperations",
+            "position": [
+                2240,
+                96
+            ],
+            "parameters": {
+                "query": "={\"sessionId\":\"{{ $json.sessionId }}\"}",
+                "update": "={\n  \"$set\": {\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.status\": \"started\",\n    \"stages.{{$json.stageNumber}}.tasks.{{$json.worker}}.startedAt\": \"{{new Date().toISOString()}}\"\n  }\n}",
+                "operation": "update",
+                "collection": "CollaborativeTasks"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "37d73b96-17e4-41d1-a4c5-eda58bfe5a5d",
+            "name": "End Reply",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                192,
+                -48
+            ],
+            "webhookId": "551d24f4-92e1-49fc-b7f3-59cd74e07ef0",
+            "parameters": {
+                "text": "=All tasks submitted. ",
+                "chatId": "={{ $('Webhook').item.json.body.conversationId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "executeOnce": true,
+            "typeVersion": 1.2
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "stages": {
+                            "1": {
+                                "Worker1": {
+                                    "port": 3001,
+                                    "status": "not-started",
+                                    "worker": "Worker1",
+                                    "subtask": "Build foundation and floor for WEST half of house. Place cobblestone foundation at Y=-60, then oak_planks floor at Y=-59. Cover area X=-420 to X=-418, Z=20 to Z=26.",
+                                    "objective": "Build the WEST half of the house",
+                                    "fullPrompt": "You are Worker1, positioned at X=-420, Y=-60, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build foundation and floor for WEST half of a 7x7 house.\n\nCOORDINATES:\n- X range: -420 to -418 (3 blocks wide - your section)\n- Z range: 20 to 26 (7 blocks deep)\n- Y=-60: cobblestone foundation layer\n- Y=-59: oak_planks floor layer\n\nSTEPS:\n1. Place cobblestone at Y=-60 for X=-420 to -418, Z=20 to 26 (21 blocks)\n2. Place oak_planks at Y=-59 for X=-420 to -418, Z=20 to 26 (21 blocks)\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-417 or beyond (Worker2's area)\n- Do NOT break existing blocks\n- Do NOT move from your position\n- Assume you have 64 cobblestone and 64 oak_planks\n\nThis is Stage 1 of 4. Worker2 is building the east foundation simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or beyond X=-417",
+                                        "Do NOT break more than 20 sequential blocks",
+                                        "Worker2 is building east foundation simultaneously - do not interfere"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -418,
+                                        "xMin": -420,
+                                        "yMax": -59,
+                                        "yMin": -60,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 1,
+                                    "totalStages": 4
+                                },
+                                "Worker2": {
+                                    "port": 3002,
+                                    "status": "not-started",
+                                    "worker": "Worker2",
+                                    "subtask": "Build foundation and floor for EAST half of house. Place cobblestone foundation at Y=-60, then oak_planks floor at Y=-59. Cover area X=-417 to X=-414, Z=20 to Z=26.",
+                                    "objective": "Build the EAST half of the house",
+                                    "fullPrompt": "You are Worker2, positioned at X=-414, Y=-60, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build foundation and floor for EAST half of a 7x7 house.\n\nCOORDINATES:\n- X range: -417 to -414 (4 blocks wide - your section)\n- Z range: 20 to 26 (7 blocks deep)\n- Y=-60: cobblestone foundation layer\n- Y=-59: oak_planks floor layer\n\nSTEPS:\n1. Place cobblestone at Y=-60 for X=-417 to -414, Z=20 to 26 (28 blocks)\n2. Place oak_planks at Y=-59 for X=-417 to -414, Z=20 to 26 (28 blocks)\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-418 or below (Worker1's area)\n- Do NOT break existing blocks\n- Do NOT move from your position\n- Assume you have 64 cobblestone and 64 oak_planks\n\nThis is Stage 1 of 4. Worker1 is building the west foundation simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or below X=-418",
+                                        "Do NOT break more than 20 sequential blocks",
+                                        "Worker1 is building west foundation simultaneously - do not interfere"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -414,
+                                        "xMin": -417,
+                                        "yMax": -59,
+                                        "yMin": -60,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 1,
+                                    "totalStages": 4
+                                },
+                                "startTime": null,
+                                "stageTitle": "Foundation & Floor",
+                                "stageNumber": 1,
+                                "completedCount": 0
+                            },
+                            "2": {
+                                "Worker1": {
+                                    "port": 3001,
+                                    "status": "not-started",
+                                    "worker": "Worker1",
+                                    "subtask": "Build WEST walls of house. Oak_log corners, oak_planks walls, glass_pane windows. Walls from Y=-58 to Y=-55 (4 blocks tall). Cover perimeter at X=-420 and partial walls along Z=20 and Z=26.",
+                                    "objective": "Build the WEST half of the house",
+                                    "fullPrompt": "You are Worker1, positioned at X=-420, Y=-59, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build WEST walls of house (4 blocks tall, Y=-58 to Y=-55).\n\nWALL STRUCTURE:\n- Oak_log corner posts at: (-420,Y,20), (-420,Y,26) for Y=-58 to -55\n- Oak_planks west wall: X=-420, Z=21 to 25, Y=-58 to -55 (leave door gap at Z=23)\n- Oak_planks partial north wall: X=-419 to -418, Z=20, Y=-58 to -55\n- Oak_planks partial south wall: X=-419 to -418, Z=26, Y=-58 to -55\n- Glass_pane windows: Place at Y=-57 and Y=-56 in wall sections (2 per wall minimum)\n\nDOOR OPENING:\n- Leave gap at X=-420, Z=23, Y=-58 to Y=-56 (no blocks here)\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-417 or beyond\n- Do NOT break floor (Y=-59) or foundation (Y=-60)\n- Do NOT place solid blocks where windows should go\n- Assume you have 64 oak_logs, 128 oak_planks, 32 glass_pane\n\nThis is Stage 2 of 4. Worker2 is building east walls simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or beyond X=-417",
+                                        "Do NOT break floor at Y=-59",
+                                        "Leave door opening at X=-420, Z=23, Y=-58 to Y=-56 (2 blocks wide, 3 tall)",
+                                        "Worker2 is building east walls simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -418,
+                                        "xMin": -420,
+                                        "yMax": -55,
+                                        "yMin": -58,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 2,
+                                    "totalStages": 4
+                                },
+                                "Worker2": {
+                                    "port": 3002,
+                                    "status": "not-started",
+                                    "worker": "Worker2",
+                                    "subtask": "Build EAST walls of house. Oak_log corners, oak_planks walls, glass_pane windows. Walls from Y=-58 to Y=-55 (4 blocks tall). Cover perimeter at X=-414 and complete walls along Z=20 and Z=26.",
+                                    "objective": "Build the EAST half of the house",
+                                    "fullPrompt": "You are Worker2, positioned at X=-414, Y=-59, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build EAST walls of house (4 blocks tall, Y=-58 to Y=-55).\n\nWALL STRUCTURE:\n- Oak_log corner posts at: (-414,Y,20), (-414,Y,26) for Y=-58 to -55\n- Oak_planks east wall: X=-414, Z=21 to 25, Y=-58 to -55\n- Oak_planks partial north wall: X=-417 to -415, Z=20, Y=-58 to -55\n- Oak_planks partial south wall: X=-417 to -415, Z=26, Y=-58 to -55\n- Glass_pane windows: Place at Y=-57 and Y=-56 in wall sections (2 per wall minimum)\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-418 or below (Worker1's area)\n- Do NOT break floor (Y=-59) or foundation (Y=-60)\n- Do NOT place solid blocks where windows should go\n- Assume you have 64 oak_logs, 128 oak_planks, 32 glass_pane\n\nThis is Stage 2 of 4. Worker1 is building west walls simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or below X=-418",
+                                        "Do NOT break floor at Y=-59",
+                                        "Worker1 is building west walls simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -414,
+                                        "xMin": -417,
+                                        "yMax": -55,
+                                        "yMin": -58,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 2,
+                                    "totalStages": 4
+                                },
+                                "startTime": null,
+                                "stageTitle": "Walls",
+                                "stageNumber": 2,
+                                "completedCount": 0
+                            },
+                            "3": {
+                                "Worker1": {
+                                    "port": 3001,
+                                    "status": "not-started",
+                                    "worker": "Worker1",
+                                    "subtask": "Build WEST roof slope. Oak_stairs sloping UP toward center ridge at X=-417. Start at X=-420, Y=-54, slope up to ridge at X=-417, Y=-53. Cover Z=20 to Z=26.",
+                                    "objective": "Build the WEST half of the house",
+                                    "fullPrompt": "You are Worker1, positioned at X=-420, Y=-55, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build WEST roof slope toward center ridge at X=-417, Y=-53.\n\nROOF STRUCTURE (sloped toward center):\n- Row 1: oak_stairs at X=-420, Y=-54, Z=20 to 26, facing EAST\n- Row 2: oak_stairs at X=-419, Y=-53, Z=20 to 26, facing EAST\n- Row 3: oak_stairs at X=-418, Y=-53, Z=20 to 26, facing EAST (meets ridge level)\n\nCENTER RIDGE: X=-417, Y=-53 (Worker2 will complete the ridge line)\nYour stairs must ALIGN with this ridge - ensure Y=-53 at X=-418.\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-417 or beyond\n- All stairs must face EAST (toward ridge at X=-417)\n- Do NOT break walls below (Y=-55 and below)\n- Assume you have 64 oak_stairs\n\nThis is Stage 3 of 4. Worker2 is building the east roof slope simultaneously toward the same ridge.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or beyond X=-417 (roof ridge is Worker2's to complete)",
+                                        "Roof MUST slope toward center ridge at X=-417",
+                                        "Use oak_stairs facing EAST (toward ridge)",
+                                        "Worker2 is building east roof slope simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -418,
+                                        "xMin": -420,
+                                        "yMax": -53,
+                                        "yMin": -54,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 3,
+                                    "totalStages": 4
+                                },
+                                "Worker2": {
+                                    "port": 3002,
+                                    "status": "not-started",
+                                    "worker": "Worker2",
+                                    "subtask": "Build EAST roof slope and CENTER RIDGE. Oak_stairs sloping UP toward center ridge at X=-417. Start at X=-414, Y=-54, slope up to ridge at X=-417, Y=-53. Complete the ridge line at X=-417.",
+                                    "objective": "Build the EAST half of the house",
+                                    "fullPrompt": "You are Worker2, positioned at X=-414, Y=-55, Z=20. Do NOT move or navigate. Begin building immediately.\n\nTASK: Build EAST roof slope and complete CENTER RIDGE at X=-417, Y=-53.\n\nROOF STRUCTURE (sloped toward center):\n- Row 1: oak_stairs at X=-414, Y=-54, Z=20 to 26, facing WEST\n- Row 2: oak_stairs at X=-415, Y=-53, Z=20 to 26, facing WEST\n- Row 3: oak_stairs at X=-416, Y=-53, Z=20 to 26, facing WEST\n- RIDGE: oak_planks at X=-417, Y=-53, Z=20 to 26 (7 blocks - the center peak)\n\nCENTER RIDGE COMPLETION:\nYou are responsible for placing the ridge line at X=-417, Y=-53.\nUse oak_planks (not stairs) for a flat ridge peak.\nWorker1's west slope will meet this ridge from the other side.\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-418 or below (Worker1's area)\n- All stairs must face WEST (toward ridge at X=-417)\n- Ridge line at X=-417 uses oak_planks, not stairs\n- Do NOT break walls below (Y=-55 and below)\n- Assume you have 64 oak_stairs, 16 oak_planks\n\nThis is Stage 3 of 4. Worker1 is building the west roof slope toward this same ridge.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or below X=-418",
+                                        "Roof MUST slope toward center ridge at X=-417",
+                                        "Use oak_stairs facing WEST (toward ridge)",
+                                        "YOU are responsible for completing the ridge line at X=-417",
+                                        "Worker1 is building west roof slope simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -414,
+                                        "xMin": -417,
+                                        "yMax": -53,
+                                        "yMin": -54,
+                                        "zMax": 26,
+                                        "zMin": 20
+                                    },
+                                    "stageNumber": 3,
+                                    "totalStages": 4
+                                },
+                                "startTime": null,
+                                "stageTitle": "Roof Structure",
+                                "stageNumber": 3,
+                                "completedCount": 0
+                            },
+                            "4": {
+                                "Worker1": {
+                                    "port": 3001,
+                                    "status": "not-started",
+                                    "worker": "Worker1",
+                                    "subtask": "Add interior furnishings to WEST half. Place door at entrance, crafting_table, torch lighting. Interior area X=-419 to -418, Z=21 to 25.",
+                                    "objective": "Build the WEST half of the house",
+                                    "fullPrompt": "You are Worker1, positioned at X=-419, Y=-59, Z=23. Do NOT move or navigate. Begin building immediately.\n\nTASK: Add interior furnishings to WEST half of house.\n\nINTERIOR ITEMS:\n1. DOOR: Place oak_door at X=-420, Z=23, Y=-58 (bottom) and Y=-57 (top)\n2. CRAFTING TABLE: Place crafting_table at X=-419, Y=-59, Z=21\n3. TORCH: Place torch at X=-419, Y=-57, Z=23 (on wall or floor for lighting)\n4. CHEST: Place chest at X=-419, Y=-59, Z=25\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-417 or beyond\n- Do NOT break existing structure\n- Keep pathways clear for movement\n- Assume you have 1 oak_door, 1 crafting_table, 4 torches, 1 chest\n\nThis is Stage 4 of 4 (FINAL). Worker2 is furnishing the east half simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or beyond X=-417",
+                                        "Do NOT break existing walls or floor",
+                                        "Door placement at X=-420, Z=23",
+                                        "Worker2 is furnishing east half simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -418,
+                                        "xMin": -420,
+                                        "yMax": -57,
+                                        "yMin": -59,
+                                        "zMax": 25,
+                                        "zMin": 21
+                                    },
+                                    "stageNumber": 4,
+                                    "totalStages": 4
+                                },
+                                "Worker2": {
+                                    "port": 3002,
+                                    "status": "not-started",
+                                    "worker": "Worker2",
+                                    "subtask": "Add interior furnishings to EAST half. Place furnace, bed, torch lighting. Interior area X=-417 to -415, Z=21 to 25.",
+                                    "objective": "Build the EAST half of the house",
+                                    "fullPrompt": "You are Worker2, positioned at X=-416, Y=-59, Z=23. Do NOT move or navigate. Begin building immediately.\n\nTASK: Add interior furnishings to EAST half of house.\n\nINTERIOR ITEMS:\n1. FURNACE: Place furnace at X=-415, Y=-59, Z=21\n2. BED: Place bed at X=-415, Y=-59, Z=25 (head) and Z=24 (foot)\n3. TORCH: Place torch at X=-416, Y=-57, Z=23 (on wall or floor for lighting)\n4. TORCH: Place torch at X=-415, Y=-57, Z=21 (near furnace)\n\nCONSTRAINTS:\n- Do NOT place any blocks at X=-418 or below (Worker1's area)\n- Do NOT break existing structure\n- Keep pathways clear for movement\n- Assume you have 1 furnace, 1 bed, 4 torches\n\nThis is Stage 4 of 4 (FINAL). Worker1 is furnishing the west half simultaneously.",
+                                    "constraints": [
+                                        "Do NOT place blocks at or below X=-418",
+                                        "Do NOT break existing walls or floor",
+                                        "Worker1 is furnishing west half simultaneously"
+                                    ],
+                                    "coordinates": {
+                                        "xMax": -415,
+                                        "xMin": -417,
+                                        "yMax": -57,
+                                        "yMin": -59,
+                                        "zMax": 25,
+                                        "zMin": 21
+                                    },
+                                    "stageNumber": 4,
+                                    "totalStages": 4
+                                },
+                                "startTime": null,
+                                "stageTitle": "Interior & Finishing",
+                                "stageNumber": 4,
+                                "completedCount": 0
+                            }
+                        },
+                        "workers": [
+                            {
+                                "pid": 101,
+                                "port": 5002,
+                                "status": "existing",
+                                "workerName": "K-L-Leader1_W1"
+                            },
+                            {
+                                "pid": 112,
+                                "port": 5003,
+                                "status": "existing",
+                                "workerName": "K-L-Leader1_W2"
+                            }
+                        ],
+                        "sessionId": "build_1766061802549",
+                        "workerCount": "2",
+                        "conversationId": 233992454
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "12234",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/distribute-tasks-stages",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "20fb727a-187d-49c4-baf2-8248e8a42e53",
+    "staticData": null,
+    "connections": {
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Retrieve Session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Stages List",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Proceed?": {
+            "main": [
+                [
+                    {
+                        "node": "Set Stage started",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "End Reply": {
+            "main": [
+                [
+                ]
+            ]
+        },
+        "Send Task": {
+            "main": [
+                [
+                    {
+                        "node": "Update Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Split Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Stages List": {
+            "main": [
+                [
+                    {
+                        "node": "Split Stages",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Start Stage": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Task": {
+            "main": [
+                [
+                    {
+                        "node": "Set Task Started",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Stages": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Send Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Over Items": {
+            "main": [
+                [
+                    {
+                        "node": "End Reply",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Retrieve Session",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Retrieve Session": {
+            "main": [
+                [
+                    {
+                        "node": "Code in JavaScript",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Task Started": {
+            "main": [
+                [
+                    {
+                        "node": "Start Stage",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Stage started": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Code in JavaScript": {
+            "main": [
+                [
+                    {
+                        "node": "Proceed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Tasks Request": {
+            "main": [
+                [
+                ]
+            ]
+        }
+    }
+}

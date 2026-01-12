@@ -53,7 +53,6 @@ const settings = {
     "external_api_port": parseInt(process.env.EXTERNAL_API_PORT || "4001"),
     "external_mode_allow_chat": process.env.EXTERNAL_MODE_ALLOW_CHAT === "true" || false,
     "multibot_base_port": parseInt(process.env.MULTIBOT_BASE_PORT || "4000"),
-    "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || "http://localhost:5678/webhook/worker-stage-complete",
     
     // Multi-user configuration
     "api_gateway_port": parseInt(process.env.API_GATEWAY_PORT) || 4001,
@@ -64,12 +63,12 @@ const settings = {
 
     
     // Telegram configuration
-    telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN,
+    "telegram_bot_token": process.env.TELEGRAM_BOT_TOKEN,
     
     // n8n configuration
-    n8n_webhook_url: process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook',
-    //n8n_webhook_url_stage_complete: process.env.N8N_WEBHOOK_URL_STAGE || 'http://localhost:5678/webhook/worker-complete'
+    "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/kodecraft',
+    "n8n_callback_url": process.env.N8N_CALLBACK_URL || 'http://localhost:5678/webhook/kodecraft/worker-complete'
 
-}
+};
 
 export default settings;

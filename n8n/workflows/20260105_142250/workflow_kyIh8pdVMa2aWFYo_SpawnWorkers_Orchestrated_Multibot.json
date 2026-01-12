@@ -1,0 +1,469 @@
+{
+    "id": "kyIh8pdVMa2aWFYo",
+    "meta": null,
+    "name": "SpawnWorkers [Orchestrated] Multibot",
+    "nodes": [
+        {
+            "id": "181705c2-c53a-40da-ad77-07e17740a6c9",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -640,
+                200
+            ],
+            "webhookId": "a2086d5e-5a53-4309-af92-e357431e546b",
+            "parameters": {
+                "path": "/kodecraft/multibot/spawn-workers",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "responseNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "989ab113-bd12-4467-8b64-671ea2c4273e",
+            "name": "Spawn workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueRegularOutput",
+            "position": [
+                -416,
+                200
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL }}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/spawn-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "count",
+                            "value": "={{ $json.body.workercount }}"
+                        },
+                        {
+                            "name": "callbackWebhookUrl",
+                            "value": "={{ $json.body.callbackWebhookUrl }}"
+                        },
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $json.body.sessionId }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "638f6f81-55ed-4811-88cb-97edca83f628",
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                1376,
+                -16
+            ],
+            "parameters": {
+                "options": {
+                }
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "44a382b1-c792-4fc8-8a4b-0b240705743f",
+            "name": "Aggregate",
+            "type": "n8n-nodes-base.aggregate",
+            "position": [
+                1152,
+                -16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "spawnedWorkers"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "e67db3aa-fdd0-4b55-9068-8499fb0f8ab4",
+            "name": "Update Workers Status",
+            "type": "n8n-nodes-base.mongoDb",
+            "position": [
+                928,
+                -16
+            ],
+            "parameters": {
+                "fields": "port, ready",
+                "upsert": true,
+                "options": {
+                },
+                "operation": "update",
+                "updateKey": "=workerName",
+                "collection": "Workers"
+            },
+            "credentials": {
+                "mongoDb": {
+                    "id": "96R7SDP9Z6t0aXMB",
+                    "name": "Minecraft"
+                }
+            },
+            "typeVersion": 1.2,
+            "alwaysOutputData": true
+        },
+        {
+            "id": "f024d3b5-e4a7-4b0b-b75b-4ec71f125dcc",
+            "name": "Split Out",
+            "type": "n8n-nodes-base.splitOut",
+            "position": [
+                704,
+                -16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "fieldToSplitOut": "workers"
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "13ea9f31-68f3-417d-b78a-40e3d12ea064",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                -192,
+                200
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "2ba0241f-6807-4a10-b4e1-1c4d3cc0ad0c",
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            },
+                            "leftValue": "={{ $json.spawned }}",
+                            "rightValue": 0
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "1cdf5d99-d3a1-4b97-bc1b-a5c6801a6f55",
+            "name": "Respond to Webhook1",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "position": [
+                -176,
+                416
+            ],
+            "parameters": {
+                "options": {
+                    "responseCode": 500
+                },
+                "respondWith": "json",
+                "responseBody": "{\n  \"error\": \"Failed to spawn workers\"\n}"
+            },
+            "typeVersion": 1.4
+        },
+        {
+            "id": "f8565967-6553-475d-9fa4-4d5b5a1ee2b7",
+            "name": "Register Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                480,
+                -16
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/register-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "sessionId",
+                            "value": "={{ $('Webhook').item.json.body.sessionId }}"
+                        },
+                        {
+                            "name": "workers",
+                            "value": "={{ $json.workers }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "b29bd258-f626-41d8-a3bb-dfe73cd94f29",
+            "name": "Wait",
+            "type": "n8n-nodes-base.wait",
+            "position": [
+                480,
+                200
+            ],
+            "webhookId": "6764ebd6-8249-46e6-abfd-f5a1ec4464cd",
+            "parameters": {
+                "amount": 2
+            },
+            "typeVersion": 1.1
+        },
+        {
+            "id": "bdf02ae0-4c19-44cf-bc52-39a26549791a",
+            "name": "If1",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                256,
+                32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "24ce174b-edd5-4e38-a8aa-9a2856abf784",
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.allReady }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "65ee93bd-bea1-40ab-98f4-2349648955d3",
+            "name": "Wait Workers",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                32,
+                112
+            ],
+            "parameters": {
+                "url": "={{ $env.KODECRAFT_SERVER_URL}}/api/orchestration/{{ $('Webhook').item.json.body.conversationId }}/wait-workers",
+                "method": "POST",
+                "options": {
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "workers",
+                            "value": "={{ $('Spawn workers').item.json.results.map(w => ({name: w.workerName, port: w.port}))}}"
+                        },
+                        {
+                            "name": "timeoutMs",
+                            "value": "30000"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        }
+    ],
+    "active": true,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "botstatus": {
+                            "health": 20,
+                            "hunger": 20,
+                            "is_busy": false,
+                            "weather": "clear",
+                            "gamemode": "creative",
+                            "position": {
+                                "x": -457.50933679656276,
+                                "y": -61,
+                                "z": 29.68608099294022
+                            },
+                            "raw_stats": "\nSTATS\n- Position: x: -457.51, y: -61.00, z: 29.69\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: oak_leaves (3 blocks up)\n- Time: Night- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                            "time_of_day": 16065,
+                            "current_action": "Idle"
+                        },
+                        "sessionId": "combat_1766160377086",
+                        "workercount": "2",
+                        "conversationId": "5415489232",
+                        "callbackWebhookUrl": "http://172.31.14.250:5678/webhook/kodecraft/worker-complete"
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "976",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/multibot/spawn-workers",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "beedb9ea-03fd-4c5d-b5db-7098c0edef10",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Wait Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respond to Webhook1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If1": {
+            "main": [
+                [
+                    {
+                        "node": "Register Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Wait Workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Spawn workers",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Aggregate": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Split Out": {
+            "main": [
+                [
+                    {
+                        "node": "Update Workers Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait Workers": {
+            "main": [
+                [
+                    {
+                        "node": "If1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Spawn workers": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                ]
+            ]
+        },
+        "Register Workers": {
+            "main": [
+                [
+                    {
+                        "node": "Split Out",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Update Workers Status": {
+            "main": [
+                [
+                    {
+                        "node": "Aggregate",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -37,38 +37,36 @@ export class LeaderBotManager {
 
 
     async getOrSpawnLeaderBot(userId, botName) {
-        console.log(`[LeaderBotManager] getOrSpawnLeaderBot for user ${userId}`);
+            const startTime = Date.now();
+            console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
+            console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
 
-        if (this.leaderBots.has(userId)) {
-            const existing = this.leaderBots.get(userId);
-            
-            if (existing.agentProcess.running) {
-                console.log(`[LeaderBotManager] ♻️  Reusing existing leader bot for ${userId} on port ${existing.port}`);
-                existing.lastActivity = Date.now();
-                return {
-                    success: true,
-                    userId: userId,
-                    port: existing.port,
-                    status: 'existing'
-                };
-            } else {
-                console.log(`[LeaderBotManager] ⚠️  Existing bot for ${userId} is dead, respawning...`);
-                this.leaderBots.delete(userId);
-                this.portToUserId.delete(existing.port);
+            if (this.leaderBots.has(userId)) {
+                const existing = this.leaderBots.get(userId);
+                console.log(`[LeaderBotManager] 📋 Found existing - port: ${existing.port}, running: ${existing.agentProcess?.running}`);
+                
+                if (existing.agentProcess?.running) {
+                    console.log(`[LeaderBotManager] ✅ Reusing on port ${existing.port}`);
+                    existing.lastActivity = Date.now();
+                    return { success: true, userId, port: existing.port, status: 'existing' };
+                } else {
+                    console.warn(`[LeaderBotManager] ⚠️  Bot dead, cleaning up`);
+                    this.leaderBots.delete(userId);
+                    this.portToUserId.delete(existing.port);
+                }
             }
-        }
 
-        if (this.leaderBots.size >= settings.max_leader_bots) {
-            console.error(`[LeaderBotManager] ❌ Maximum leader bots reached`);
-            return {
-                success: false,
-                error: `Cannot spawn more leader bots. Maximum (${settings.max_leader_bots}) reached.`,
-                code: 'capacity_exceeded'
-            };
-        }
+            if (this.leaderBots.size >= settings.max_leader_bots) {
+                console.error(`[LeaderBotManager] ❌ CAPACITY EXCEEDED: ${this.leaderBots.size}/${settings.max_leader_bots}`);
+                console.error(`   Active users: ${Array.from(this.leaderBots.keys()).join(', ')}`);
+                return { success: false, error: `Max bots (${settings.max_leader_bots}) reached`, code: 'capacity_exceeded' };
+            }
 
-        return await this.spawnLeaderBot(userId, botName);
-    }
+            console.log(`[LeaderBotManager] 🚀 Spawning new bot...`);
+            const result = await this.spawnLeaderBot(userId, botName);
+            console.log(`[LeaderBotManager] ⏱️  Done in ${Date.now() - startTime}ms - success: ${result.success}`);
+            return result;
+        }
 
     async spawnLeaderBot(userId, botName) {
         const port = this.nextLeaderPort++; 

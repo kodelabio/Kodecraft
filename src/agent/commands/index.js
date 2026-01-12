@@ -164,8 +164,9 @@ export function parseCommandMessage(message) {
                 arg = parseBoolean(arg); break;
             case 'BlockName':
             case 'ItemName':
-                if (arg.endsWith('plank'))
-                    arg += 's';
+                //if (arg.endsWith('plank'))
+                //    arg += 's';
+                break;
             case 'string':
                 break;
             default:

@@ -1,5 +1,5 @@
 // src/agent/orchestration_api.js
-// n8n-friendly orchestration API for collaborative building
+// n8n-friendly orchestration API for collaborative tasks
 // Exposes worker spawning and coordination as simple REST endpoints
 
 import { spawn } from 'child_process';
@@ -10,11 +10,11 @@ export class OrchestrationAPI {
     constructor(agent) {
         this.agent = agent;
         this.workers = new Map();           // workerName -> { process, port, status, spawnTime }
-        this.buildSessions = new Map();     // sessionId -> { buildRequest, workers, status, startTime }
-        this.buildLocations = [];           // Track reserved build locations
+        this.taskSessions = new Map();     // sessionId -> { taskRequest, workers, status, startTime }
+        this.taskLocations = [];           // Track reserved task locations
         this.nextWorkerPort = settings.multibot_base_port + 2;
         this.reservedPorts = new Set(); 
-        this.workerCounter = 0;  // ADD THIS
+        this.workerCounter = 0;
     }
     /**
     * Helper: wait for specified milliseconds
@@ -197,48 +197,7 @@ export class OrchestrationAPI {
                 throw new Error(`Worker ${name} API not responding after 30 seconds`);
             }
 
-            // Move worker to safe location
-            /**
-            try {
-                const leaderPos = this.agent.bot.entity.position;
-                console.log(`📍 Leader position: x=${leaderPos.x.toFixed(2)}, y=${leaderPos.y.toFixed(2)}, z=${leaderPos.z.toFixed(2)}`);
-                const safePos = {
-                    x: Math.floor(leaderPos.x) + 1,
-                    y: Math.floor(leaderPos.y),
-                    z: Math.floor(leaderPos.z) + 1
-                };
-                console.log(`🎯 Moving ${name} to safe location: x=${safePos.x}, y=${safePos.y}, z=${safePos.z}`);
-
-
-                const response = await fetch(`http://localhost:${port}/api/agent/move`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(safePos),
-                    timeout: 15000
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Move failed with status ${response.status}`);
-                }
-
-                console.log(`✓ Worker ${name} moved to safe location`);
-
-            } catch (error) {
-                console.error(`❌ Worker ${name} failed to move to safe location: ${error.message}`);
-                // Kill the stuck worker
-                workerProcess.kill('SIGTERM');
-                this.workers.delete(name);
-                
-                return {
-                    success: false,
-                    workerName: name,
-                    port: actualPort,
-                    status: 'spawned',
-                    pid: workerProcess.pid,
-                    error: `Failed to move to safe location: ${error.message}`
-                };
-            }
-            */
+            
             return {
                 success: true,
                 workerName: name,
@@ -370,7 +329,7 @@ export class OrchestrationAPI {
             readyCount: results.filter(r => r).length,
             totalCount: workers.length,
             workers: workers.map((w, i) => ({
-                name: w.name,
+                workerName: w.name,
                 port: w.port,
                 ready: results[i]
             }))
@@ -378,52 +337,48 @@ export class OrchestrationAPI {
     }
 
     /**
-     * Create a build session to track collaborative work
-     * Called by n8n to initialize a build
+     * Create a session to track collaborative work
+     * Called by n8n to initialize a task
      */
-    createBuildSession(sessionId, buildRequest, workerCount) {
-        console.log(`📋 Creating build session ${sessionId}`);
+    createTaskSession(sessionId, taskRequest, workerCount) {
+        console.log(`📋 Creating collaborative task session ${sessionId}`);
 
         const session = {
             sessionId: sessionId,
-            buildRequest: buildRequest,
+            taskRequest: taskRequest,
             workerCount: workerCount,
             workers: [],
             tasks: [],
             status: 'created',
             startTime: Date.now(),
-            buildLocation: null,
+            taskLocation: null,
             completedWorkers: 0
         };
 
-        this.buildSessions.set(sessionId, session);
+        this.taskSessions.set(sessionId, session);
 
-        console.log(`✓ Build session ${sessionId} created`);
+        console.log(`✓ Task session ${sessionId} created`);
 
         return {
             success: true,
             sessionId: sessionId,
             status: 'created',
-            message: `Build session created for: "${buildRequest}"`
+            message: `Task session created for: "${taskRequest}"`
         };
     }
 
     /**
-     * Register workers for a build session
+     * Register workers for a task session
      * Called by n8n after workers are ready
      */
-    /**
- * Register workers for a build session
- * Called by n8n after workers are ready
- */
 registerWorkersForSession(sessionId, workers) {
     console.log(`📝 Registering ${workers.length} workers for session ${sessionId}`);
 
-    const session = this.buildSessions.get(sessionId);
+    const session = this.taskSessions.get(sessionId);
     if (!session) {
         return {
             success: false,
-            error: `Build session ${sessionId} not found`
+            error: `Task session ${sessionId} not found`
         };
     }
 
@@ -443,7 +398,7 @@ registerWorkersForSession(sessionId, workers) {
         
         return {
             ...worker,
-            name: workerName || `Worker_${worker.port}`  // Fallback name
+            workerName: workerName || `Worker_${worker.port}`  // Fallback name
         };
     });
 
@@ -473,21 +428,16 @@ registerWorkersForSession(sessionId, workers) {
 
 
     /**
-    * Replace the reserveBuildLocation and findGroundLevel methods with these versions.
-    * These work correctly for superflat worlds (Y=-60 surface) and handle chunk loading issues.
-    */
-
-    /**
-    * Reserve a build location for combat or building
+    * Reserve a task location for combat or building
     * Uses leader's current Y position as ground truth (works for any world type)
     */
     reserveBuildLocation(sessionId, preferredLocation, minDistance = 30) {
-        console.log(`📍 Reserving build location for session ${sessionId}`);
+        console.log(`📍 Reserving task location for session ${sessionId}`);
 
-        let buildLocation = { ...preferredLocation };
+        let taskLocation = { ...preferredLocation };
 
         // Check for conflicts with other sessions
-        const otherBuilds = this.buildLocations.filter(
+        const otherBuilds = this.taskLocations.filter(
             build => build.sessionId !== sessionId
         );
 
@@ -496,8 +446,8 @@ registerWorkersForSession(sessionId, workers) {
         while (attempts < 5) {
             const hasConflict = otherBuilds.some(build => {
                 const distance = Math.sqrt(
-                    Math.pow(buildLocation.x - build.x, 2) +
-                    Math.pow(buildLocation.z - build.z, 2)
+                    Math.pow(taskLocation.x - build.x, 2) +
+                    Math.pow(taskLocation.z - build.z, 2)
                 );
                 return distance < minDistance;
             });
@@ -508,7 +458,7 @@ registerWorkersForSession(sessionId, workers) {
 
             // Move to new location if conflict found
             const angle = (attempts * 72) * (Math.PI / 180);
-            buildLocation = {
+            taskLocation = {
                 x: Math.floor(preferredLocation.x + Math.cos(angle) * minDistance),
                 y: preferredLocation.y,
                 z: Math.floor(preferredLocation.z + Math.sin(angle) * minDistance)
@@ -521,44 +471,46 @@ registerWorkersForSession(sessionId, workers) {
         const leaderY = this.getLeaderGroundLevel();
         
         if (leaderY !== null) {
-            buildLocation.y = leaderY;
-            console.log(`✓ Using leader's Y position: ${buildLocation.y} (works for any world type)`);
+            taskLocation.y = leaderY;
+            console.log(`✓ Using leader's Y position: ${taskLocation.y} (works for any world type)`);
         } else if (preferredLocation.y !== undefined) {
             // Fallback to preferred location Y if leader position unavailable
-            buildLocation.y = preferredLocation.y;
-            console.log(`⚠️ Leader position unavailable, using preferred Y: ${buildLocation.y}`);
+            taskLocation.y = preferredLocation.y;
+            console.log(`⚠️ Leader position unavailable, using preferred Y: ${taskLocation.y}`);
         } else {
             // Last resort fallback
-            buildLocation.y = 64;
-            console.warn(`⚠️ No Y reference available, using default Y=64`);
+            // Use world's minY as fallback (handles superflat, custom worlds)
+            const minY = preferredLocation.minY ?? -64;
+            taskLocation.y = minY + 1;
+            console.warn(`⚠️ No Y reference available, using world minY: ${taskLocation.y}`);
         }
 
         // Reserve the location
-        this.buildLocations.push({
-            x: buildLocation.x,
-            y: buildLocation.y,
-            z: buildLocation.z,
+        this.taskLocations.push({
+            x: taskLocation.x,
+            y: taskLocation.y,
+            z: taskLocation.z,
             sessionId: sessionId,
-            buildRequest: this.buildSessions.get(sessionId)?.buildRequest || '',
+            taskRequest: this.taskSessions.get(sessionId)?.taskRequest || '',
             timestamp: Date.now(),
-            groundLevel: buildLocation.y
+            groundLevel: taskLocation.y
         });
 
         // Update session
-        const session = this.buildSessions.get(sessionId);
+        const session = this.taskSessions.get(sessionId);
         if (session) {
-            session.buildLocation = buildLocation;
-            session.groundLevel = buildLocation.y;
+            session.taskLocation = taskLocation;
+            session.groundLevel = taskLocation.y;
         }
 
-        console.log(`✓ Location reserved: x=${buildLocation.x}, y=${buildLocation.y}, z=${buildLocation.z}`);
+        console.log(`✓ Location reserved: x=${taskLocation.x}, y=${taskLocation.y}, z=${taskLocation.z}`);
 
         return {
             success: true,
             sessionId: sessionId,
-            buildLocation: buildLocation,
-            groundLevel: buildLocation.y,
-            message: `Build location reserved at Y=${buildLocation.y}`
+            taskLocation: taskLocation,
+            groundLevel: taskLocation.y,
+            message: `Task location reserved at Y=${taskLocation.y}`
         };
     }
 
@@ -647,43 +599,42 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     /**
-     * Teleport all workers to coordinated positions around build site
+     * Teleport all workers to coordinated positions around task site
      * Called by n8n to position workers
      */
-    async teleportWorkers_obsolete(sessionId, buildLocation) {
-        console.log(`🚀 Teleporting workers to build location`);
+    async teleportWorkers_obsolete(sessionId, taskLocation) {
+        console.log(`🚀 Teleporting workers to task location`);
 
-        const session = this.buildSessions.get(sessionId);
+        const session = this.taskSessions.get(sessionId);
         if (!session) {
             return {
                 success: false,
-                error: `Build session ${sessionId} not found`
+                error: `Task session ${sessionId} not found`
             };
         }
 
         const workers = session.workers;
-        const TIMEOUT_MS = 5000; // 10 seconds per worker per attempt
-        const MAX_RETRIES = 1; // Try up to 4 different positions (0°, 90°, 180°, 270°). Instant teleport won't fail due to pathfinding
+        const TIMEOUT_MS = 5000;
+        const MAX_RETRIES = 1;
 
         console.log(`📤 Sending teleport commands to ${workers.length} workers (${TIMEOUT_MS}ms timeout each, max ${MAX_RETRIES} attempts)...`);
 
         // Create all fetch promises in parallel
         const teleportPromises = workers.map(async (worker, i) => {
             const baseAngle = (i / workers.length) * 2 * Math.PI;
-            const radius = Math.max(6, workers.length * 4); // Larger radius to avoid being trapped
+            const radius = Math.max(6, workers.length * 4);
 
             // Try primary position and fallback positions (rotate 90° each attempt)
             for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-                const testAngle = baseAngle + (attempt * Math.PI / 2); // Rotate 90° each attempt
+                const testAngle = baseAngle + (attempt * Math.PI / 2);
                 
                 const targetPos = {
-                    x: Math.floor(buildLocation.x + Math.cos(testAngle) * radius),
-                    y: buildLocation.y,
-                    z: Math.floor(buildLocation.z + Math.sin(testAngle) * radius)
+                    x: Math.floor(taskLocation.x + Math.cos(testAngle) * radius),
+                    y: taskLocation.y,
+                    z: Math.floor(taskLocation.z + Math.sin(testAngle) * radius)
                 };
 
                 try {
-                    // Create AbortController for this specific request
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -697,17 +648,15 @@ registerWorkersForSession(sessionId, workers) {
                         signal: controller.signal
                     });
 
-                    // Clear the timeout if fetch completed before it
                     clearTimeout(timeoutId);
 
                     if (response.ok) {
                         const responseText = await response.text();
                         
-                        // Check if pathfinding failed (indicated by specific error messages in response)
                         if (responseText.toLowerCase().includes('pathfinding stopped') || 
                             responseText.toLowerCase().includes('unreachable')) {
                             console.warn(`⚠️  ${worker.name} - Pathfinding failed on attempt ${attempt + 1}, trying alternative position...`);
-                            continue; // Try next angle
+                            continue;
                         }
                         
                         console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z} (${attemptStr})`);
@@ -722,7 +671,6 @@ registerWorkersForSession(sessionId, workers) {
                         const errorText = await response.text();
                         console.warn(`⚠️  ${worker.name} attempt ${attempt + 1}: HTTP ${response.status}`);
                         
-                        // On client error, don't retry
                         if (response.status >= 400 && response.status < 500) {
                             return {
                                 workerName: worker.name,
@@ -732,21 +680,19 @@ registerWorkersForSession(sessionId, workers) {
                             };
                         }
                         
-                        // On server error, try next position
                         continue;
                     }
                 } catch (error) {
                     if (error.name === 'AbortError') {
                         console.warn(`⚠️  ${worker.name} - Attempt ${attempt + 1} timed out, trying alternative position...`);
-                        continue; // Try next angle
+                        continue;
                     } else {
                         console.error(`❌ ${worker.name} - ERROR on attempt ${attempt + 1}: ${error.message}`);
-                        continue; // Try next angle
+                        continue;
                     }
                 }
             }
 
-            // All attempts exhausted
             console.error(`❌ ${worker.name} - Failed to teleport after ${MAX_RETRIES} attempts`);
             return {
                 workerName: worker.name,
@@ -756,16 +702,12 @@ registerWorkersForSession(sessionId, workers) {
             };
         });
 
-        // Wait for all promises to settle (not just resolve)
-        // This ensures all workers get teleported in parallel, not sequentially
         const results = await Promise.allSettled(teleportPromises);
 
-        // Convert settled promises to result objects
         const teleportResults = results.map((result, index) => {
             if (result.status === 'fulfilled') {
                 return result.value;
             } else {
-                // Should rarely happen with allSettled, but handle it
                 return {
                     workerName: workers[index].name,
                     status: 'error',
@@ -782,9 +724,9 @@ registerWorkersForSession(sessionId, workers) {
         console.log(`📊 Teleport results: ${successCount} success, ${unreachableCount} unreachable, ${failureCount - unreachableCount} other failures`);
 
         return {
-            success: successCount === workers.length,  // true only if ALL succeeded
+            success: successCount === workers.length,
             sessionId: sessionId,
-            buildLocation: buildLocation,
+            taskLocation: taskLocation,
             teleportResults: teleportResults,
             summary: {
                 total: workers.length,
@@ -796,13 +738,13 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     // 
-    async teleportWorker(sessionId, workerName, buildLocation) {
-        const session = this.buildSessions.get(sessionId);
+    async teleportWorker(sessionId, workerName, taskLocation) {
+        const session = this.taskSessions.get(sessionId);
         if (!session) {
-            return { success: false, error: `Build session ${sessionId} not found` };
+            return { success: false, error: `Task session ${sessionId} not found` };
         }
 
-        const worker = session.workers.find(w => w.name === workerName);
+        const worker = session.workers.find(w => w.workerName === workerName);
         if (!worker) {
             return { success: false, error: `Worker ${workerName} not found in session` };
         }
@@ -811,16 +753,16 @@ registerWorkersForSession(sessionId, workers) {
             const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(buildLocation),
+                body: JSON.stringify(taskLocation),
                 timeout: 5000
             });
 
             if (response.ok) {
-                console.log(`✅ ${workerName} teleported to ${buildLocation.x}, ${buildLocation.y}, ${buildLocation.z}`);
+                console.log(`✅ ${workerName} teleported to ${taskLocation.x}, ${taskLocation.y}, ${taskLocation.z}`);
                 return {
                     success: true,
                     workerName: workerName,
-                    position: buildLocation
+                    position: taskLocation
                 };
             }
             return { success: false, error: `HTTP ${response.status}` };
@@ -831,14 +773,14 @@ registerWorkersForSession(sessionId, workers) {
 
     // Simplified teleportWorkers method without retries
 
-    async teleportWorkers(sessionId, buildLocation) {
-        console.log(`🚀 Teleporting workers to build location`);
+    async teleportWorkers(sessionId, taskLocation) {
+        console.log(`🚀 Teleporting workers to task location`);
 
-        const session = this.buildSessions.get(sessionId);
+        const session = this.taskSessions.get(sessionId);
         if (!session) {
             return {
                 success: false,
-                error: `Build session ${sessionId} not found`
+                error: `Task session ${sessionId} not found`
             };
         }
 
@@ -851,9 +793,9 @@ registerWorkersForSession(sessionId, workers) {
             const radius = Math.min(3, workers.length);
 
             const targetPos = {
-                x: Math.floor(buildLocation.x + Math.cos(angle) * radius),
-                y: buildLocation.y,
-                z: Math.floor(buildLocation.z + Math.sin(angle) * radius)
+                x: Math.floor(taskLocation.x + Math.cos(angle) * radius),
+                y: taskLocation.y,
+                z: Math.floor(taskLocation.z + Math.sin(angle) * radius)
             };
 
             try {
@@ -898,7 +840,7 @@ registerWorkersForSession(sessionId, workers) {
         return {
             success: successCount === workers.length,
             sessionId: sessionId,
-            buildLocation: buildLocation,
+            taskLocation: taskLocation,
             teleportResults: teleportResults,
             summary: {
                 total: workers.length,
@@ -915,7 +857,7 @@ registerWorkersForSession(sessionId, workers) {
          * Send a task for a specific stage to a worker
          * Tracks task metadata and correlates callbacks with original request
          * 
-         * @param {string} sessionId - Build session ID
+         * @param {string} sessionId - Task session ID
          * @param {number} stageNumber - Stage number (1, 2, 3, etc.)
          * @param {string} workerName - Worker name (Worker1, Worker2, etc.)
          * @param {number} port - Worker port
@@ -947,7 +889,7 @@ registerWorkersForSession(sessionId, workers) {
                 sentAt: null,
                 completedAt: null,
                 callbackWebhookUrl: callbackWebhookUrl || null,
-                taskPrompt: taskPrompt.substring(0, 200), // Store first 200 chars for reference
+                taskPrompt: taskPrompt.substring(0, 200),
                 result: null,
                 error: null
             };
@@ -1234,21 +1176,21 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     /**
- * Arm workers in CREATIVE MODE
- * Workers have instant access to all items, just need to equip
- * 
- * @param {string} sessionId - Build session ID
- * @param {object} equipment - Equipment to equip
- * @returns {object} Arming results
- */
+     * Arm workers in CREATIVE MODE
+     * Workers have instant access to all items, just need to equip
+     * 
+     * @param {string} sessionId - Task session ID
+     * @param {object} equipment - Equipment to equip
+     * @returns {object} Arming results
+     */
     async armWorkers(sessionId, equipment = {}) {
         console.log(`⚔️ Arming workers for session ${sessionId}`);
 
-        const session = this.buildSessions.get(sessionId);
+        const session = this.taskSessions.get(sessionId);
         if (!session) {
             return {
                 success: false,
-                error: `Build session ${sessionId} not found`
+                error: `Task session ${sessionId} not found`
             };
         }
 
@@ -1267,7 +1209,6 @@ registerWorkersForSession(sessionId, workers) {
             };
         }
 
-        // Default equipment loadout for combat
         const defaultEquipment = {
             weapon: 'iron_sword',
             armor: ['iron_helmet', 'iron_chestplate', 'iron_leggings', 'iron_boots'],
@@ -1277,15 +1218,12 @@ registerWorkersForSession(sessionId, workers) {
 
         const finalEquipment = { ...defaultEquipment, ...equipment };
 
-        // Flatten equipment into single item list
         const itemList = [
             finalEquipment.weapon,
             ...(Array.isArray(finalEquipment.armor) ? finalEquipment.armor : []),
             finalEquipment.offhand,
             ...(Array.isArray(finalEquipment.extras) ? finalEquipment.extras.map(e => e.item || e) : [])
         ].filter(Boolean);
-
-        console.log(`📦 Equipment to distribute: ${itemList.join(', ')}`);
 
         const results = [];
 
@@ -1311,22 +1249,59 @@ registerWorkersForSession(sessionId, workers) {
                 workerName: workerName,
                 port: workerPort,
                 itemsGiven: [],
+                itemsEquipped: [],
                 errors: []
             };
 
             try {
-                // ===== STEP 1: GIVE items via /give (leader chat command) =====
+                // ===== STEP 0: Check if already wearing all equipment =====
+                console.log(`   Step 0: Checking current equipment...`);
+                let fullyEquipped = false;
+                try {
+                    const inventoryResponse = await fetch(`http://localhost:${workerPort}/api/agent/inventory`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 5000
+                    });
+
+                    if (inventoryResponse.ok) {
+                        const inventoryData = await inventoryResponse.json();
+                        const inventoryText = (inventoryData.raw || inventoryData.inventory || '').toLowerCase();
+                        
+                        console.log(`   📋 Inventory text (lowercase):`, inventoryText.substring(0, 200));
+                        
+                        // Check if wearing all required items
+                        const wearingHead = inventoryText.includes('head: iron_helmet');
+                        const wearingTorso = inventoryText.includes('torso: iron_chestplate');
+                        const wearingLegs = inventoryText.includes('legs: iron_leggings');
+                        const wearingFeet = inventoryText.includes('feet: iron_boots');
+                        
+                        fullyEquipped = wearingHead && wearingTorso && wearingLegs && wearingFeet;
+                        
+                        if (fullyEquipped) {
+                            console.log(`   ✅ ${workerName} already fully equipped. Skipping...`);
+                            workerResult.success = true;
+                            workerResult.fullyEquipped = true;
+                            results.push(workerResult);
+                            continue;
+                        }
+                        
+                        console.log(`   ℹ️ Missing equipment - will equip now`);
+                    }
+                } catch (e) {
+                    console.warn(`   ⚠️ Could not check inventory: ${e.message}. Proceeding with arming...`);
+                }
+
+                // ===== STEP 1: GIVE items via /give =====
                 console.log(`   Step 1: Giving items...`);
                 for (const item of itemList) {
                     try {
                         const giveCommand = `/give ${workerName} ${item} 1`;
                         console.log(`   > ${giveCommand}`);
                         
-                        // Execute via leader bot chat
                         bot.chat(giveCommand);
                         workerResult.itemsGiven.push(item);
                         
-                        // Delay between /give commands
                         await new Promise(resolve => setTimeout(resolve, 300));
 
                     } catch (error) {
@@ -1338,12 +1313,50 @@ registerWorkersForSession(sessionId, workers) {
                 console.log(`   ✅ Gave ${workerResult.itemsGiven.length} items`);
 
                 // ===== STEP 2: Wait for items to be picked up =====
-                console.log(`   Step 2: Waiting for item pickup (4 seconds)...`);
-                await new Promise(resolve => setTimeout(resolve, 4000));
+                console.log(`   Step 2: Waiting for item pickup (2 seconds)...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
 
-                // ===== STEP 3: Verify items were received =====
-                console.log(`   Step 3: Verifying inventory...`);
-                let hasItems = false;
+                // ===== STEP 3: Equip the items =====
+                console.log(`   Step 3: Equipping items...`);
+                const equipmentMap = {
+                    'iron_helmet': 'head',
+                    'iron_chestplate': 'torso',
+                    'iron_leggings': 'legs',
+                    'iron_boots': 'feet',
+                    'iron_sword': 'hand',
+                    'shield': 'offhand'
+                };
+
+                for (const item of itemList) {
+                    const equipSlot = equipmentMap[item];
+                    if (!equipSlot) continue;
+
+                    try {
+                        const equipResponse = await fetch(`http://localhost:${workerPort}/api/agent/equip`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ item: item, destination: equipSlot }),
+                            timeout: 5000
+                        });
+
+                        if (equipResponse.ok) {
+                            workerResult.itemsEquipped.push(item);
+                            console.log(`   > Equipped ${item} to ${equipSlot}`);
+                        } else {
+                            console.error(`   ❌ Failed to equip ${item}: HTTP ${equipResponse.status}`);
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                    } catch (error) {
+                        console.error(`   ❌ Error equipping ${item}: ${error.message}`);
+                    }
+                }
+
+                console.log(`   ✅ Equipped ${workerResult.itemsEquipped.length} items`);
+
+                // ===== STEP 4: Verify equipment =====
+                console.log(`   Step 4: Verifying equipment...`);
                 try {
                     const inventoryResponse = await fetch(`http://localhost:${workerPort}/api/agent/inventory`, {
                         method: 'GET',
@@ -1355,25 +1368,14 @@ registerWorkersForSession(sessionId, workers) {
                         const inventoryData = await inventoryResponse.json();
                         const inventoryText = inventoryData.raw || inventoryData.inventory || '';
                         
-                        console.log(`   📋 Inventory: ${inventoryText.substring(0, 100)}`);
-                        
-                        hasItems = inventoryText && 
-                                !inventoryText.includes('Nothing') && 
-                                inventoryText.length > 20;
-                        
-                        if (!hasItems) {
-                            console.warn(`   ⚠️ Items not showing in inventory (may still be available)`);
-                        }
+                        console.log(`   📋 Final inventory: ${inventoryText.substring(0, 150)}`);
                     }
                 } catch (e) {
-                    console.warn(`   ⚠️ Could not verify inventory: ${e.message}`);
+                    console.warn(`   ⚠️ Could not verify: ${e.message}`);
                 }
 
-                // In creative mode, don't try to equip - items are available via creative menu
-                // Just trust that /give worked
-                workerResult.success = workerResult.itemsGiven.length > 0;
-
-                console.log(`   ✅ ${workerName} armed with ${workerResult.itemsGiven.length} items`);
+                workerResult.success = workerResult.itemsEquipped.length > 0;
+                console.log(`   ✅ ${workerName} equipped with ${workerResult.itemsEquipped.length} items`);
 
             } catch (error) {
                 workerResult.errors.push(error.message);
@@ -1395,7 +1397,7 @@ registerWorkersForSession(sessionId, workers) {
             equipment: finalEquipment,
             results: results
         };
-}
+    }
 
     /**
      * Stop a specific worker
@@ -1430,7 +1432,7 @@ registerWorkersForSession(sessionId, workers) {
     }
 
 
-    // Get status of all workers and current build/combat sessions
+    // Get status of all workers and current task sessions
 
     getStatus() {
         const workers = Array.from(this.workers.entries()).map(([name, worker]) => ({
@@ -1441,9 +1443,9 @@ registerWorkersForSession(sessionId, workers) {
             uptime: worker.spawnTime ? Date.now() - worker.spawnTime : 0
         }));
         
-        const sessions = Array.from(this.buildSessions.entries()).map(([id, session]) => ({
+        const sessions = Array.from(this.taskSessions.entries()).map(([id, session]) => ({
             sessionId: id,
-            buildRequest: session.buildRequest,
+            taskRequest: session.taskRequest,
             workers: session.workers?.length || 0,
             tasks: session.tasks?.length || 0,
             status: session.status,
@@ -1453,17 +1455,13 @@ registerWorkersForSession(sessionId, workers) {
         return {
             totalWorkers: this.workers.size,
             workers,
-            activeSessions: this.buildSessions.size,
+            activeSessions: this.taskSessions.size,
             sessions,
             nextPort: this.nextWorkerPort,
             reservedPorts: Array.from(this.reservedPorts)
         };
     }
 
-    /**
- * Verify server permissions and worker registration
- * Checks if /give command works and workers are valid targets
- */
     /**
  * Verify worker registration (diagnostic)
  */
@@ -1497,7 +1495,7 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         // Test 2: Try worker-give
-        const session = this.buildSessions.get(sessionId);
+        const session = this.taskSessions.get(sessionId);
         if (session && session.workers.length > 0) {
             console.log(`\n2️⃣ Testing /give to workers...`);
             
@@ -1588,8 +1586,8 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         this.workers.clear();
-        this.buildSessions.clear();
-        this.buildLocations = [];
+        this.taskSessions.clear();
+        this.taskLocations = [];
         this.nextWorkerPort = settings.multibot_base_port + 2;
 
         return {
@@ -1606,15 +1604,15 @@ registerWorkersForSession(sessionId, workers) {
         const maxAge = 3600000; // 1 hour
 
         // Remove old sessions
-        for (const [id, session] of this.buildSessions) {
+        for (const [id, session] of this.taskSessions) {
             if (currentTime - session.startTime > maxAge) {
                 console.log(`Cleaning up old session: ${id}`);
-                this.buildSessions.delete(id);
+                this.taskSessions.delete(id);
             }
         }
 
         // Remove old location reservations
-        this.buildLocations = this.buildLocations.filter(
+        this.taskLocations = this.taskLocations.filter(
             loc => currentTime - loc.timestamp < maxAge
         );
     }

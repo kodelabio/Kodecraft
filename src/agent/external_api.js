@@ -836,16 +836,22 @@ export class ExternalAPI {
 
     async handleFish(req, res) {
         try {
-            const { timeout = 60000 } = req.body;
+            let { count = 1 } = req.body;
             
-            if (typeof timeout !== 'number' || timeout < 1000 || timeout > 300000) {
+            // Support old 'timeout' or 'duration' parameters for backwards compatibility
+            // If they're provided, just catch 1 fish with that timeout logic (not ideal but maintains compatibility)
+            if (req.body.timeout !== undefined || req.body.duration !== undefined) {
+                count = 1;
+            }
+            
+            if (typeof count !== 'number' || count < 1 || count > 50) {
                 return res.status(400).json({ 
-                    error: 'timeout must be a number between 1000 and 300000 milliseconds',
-                    code: 'invalid_timeout'
+                    error: 'count must be a number between 1 and 50',
+                    code: 'invalid_count'
                 });
             }
 
-            const command = `!fish(${timeout})`;
+            const command = `!fish(${count})`;
             const result = await executeCommand(this.agent, command);
             
             if (result && result.includes('do not have')) {

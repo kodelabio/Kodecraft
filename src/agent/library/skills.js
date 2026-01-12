@@ -1055,204 +1055,238 @@ export async function consume(bot, itemName="") {
 }
 
 
-export async function fish(bot, timeout=60000) {
+export async function fish(bot, count = 1) {
     
-    // Validation
-    if (!timeout || timeout < 1000) {
-        log(bot, `Invalid timeout: ${timeout}ms. Must be at least 1000ms.`);
+    if (!count || count < 1) count = 1;
+    
+    const rod = bot.inventory.items().find(item => item.name === 'fishing_rod');
+    if (!rod) {
+        log(bot, `You do not have a fishing rod.`);
         return false;
     }
     
-    console.log(`Attempting to fish with ${timeout/1000}s timeout...`);
+    // find water nearby
+    const waterBlocks = bot.findBlocks({
+        matching: (block) => block && block.name === 'water',
+        maxDistance: 32,
+        count: 100
+    });
     
-    // Check for fishing rod
-    const fishingRod = bot.inventory.items().find(item => 
-        item.name === 'fishing_rod'
-    );
-    
-    if (!fishingRod) {
-        log(bot, `You do not have a fishing rod to fish with.`);
+    if (waterBlocks.length === 0) {
+        log(bot, `No water nearby to fish in.`);
         return false;
     }
     
-    try {
-        // Equip fishing rod
-        console.log(`Equipping fishing rod...`);
-        await bot.equip(fishingRod, 'hand');
+    // get surface water only (air above it)
+    const surfaceWater = [];
+    for (const pos of waterBlocks) {
+        const above = bot.blockAt(pos.offset(0, 1, 0));
+        if (above && above.name === 'air') {
+            surfaceWater.push({ pos: pos, dist: bot.entity.position.distanceTo(pos) });
+        }
+    }
+    
+    surfaceWater.sort((a, b) => a.dist - b.dist);
+    
+    if (surfaceWater.length === 0) {
+        log(bot, `No surface water found nearby to fish in.`);
+        return false;
+    }
+    
+    log(bot, `Starting to fish... target: ${count} fish`);
+    
+    let totalCaught = 0;
+    const caughtItems = [];
+    
+    while (totalCaught < count && !bot.interrupt_code) {
+        const nearest = surfaceWater[0].pos;
+        const dist = bot.entity.position.distanceTo(nearest);
         
-        // Check if near water
-        let waterBlock = world.getNearestBlock(bot, 'water', 16);
-        if (!waterBlock) {
-            log(bot, `No water nearby to fish in. Get closer to water.`);
-            return false;
+        // move closer if too far
+        if (dist > 6) {
+            await goToPosition(bot, nearest.x, nearest.y + 1, nearest.z, 4);
+            await new Promise(resolve => setTimeout(resolve, 300));
         }
         
-        const distanceToWater = bot.entity.position.distanceTo(waterBlock.position);
-        console.log(`Water found at distance: ${distanceToWater.toFixed(1)} blocks`);
+        await bot.equip(rod, 'hand');
+        await new Promise(resolve => setTimeout(resolve, 300));
         
-        // If water is too close, find water that's 2-4 blocks away
-        if (distanceToWater < 2) {
-            console.log(`Water too close, finding better fishing spot...`);
-            const allWaterBlocks = bot.findBlocks({
-                matching: bot.registry.blocksByName.water.id,
-                maxDistance: 16,
-                count: 20
-            });
+        const botPos = bot.entity.position;
+        
+        // find good water to cast at (prefer 3-8 blocks away)
+        let target = null;
+        for (const w of surfaceWater) {
+            if (w.dist >= 3 && w.dist <= 8) {
+                target = w.pos;
+                break;
+            }
+        }
+        if (!target) target = nearest;
+        
+        // aim at water surface and cast
+        await bot.lookAt(new Vec3(target.x + 0.5, target.y + 1, target.z + 0.5));
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        bot.activateItem();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        let bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+        if (!bobber) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+        }
+        
+        if (!bobber) {
+            log(bot, `Failed to cast fishing line.`);
+            break;
+        }
+        
+        // check if bobber landed in water
+        const blockBelow = bot.blockAt(bobber.position.offset(0, -0.5, 0));
+        const blockBelow2 = bot.blockAt(bobber.position.offset(0, -1, 0));
+        const inWater = (blockBelow && blockBelow.name === 'water') || 
+                        (blockBelow2 && blockBelow2.name === 'water');
+        
+        if (!inWater) {
+            // retry once
+            bot.activateItem();
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            // Find water block that's 2-4 blocks away
-            waterBlock = null;
-            for (const pos of allWaterBlocks) {
-                const block = bot.blockAt(pos);
-                const dist = bot.entity.position.distanceTo(pos);
-                if (dist >= 2 && dist <= 6) {
-                    waterBlock = block;
-                    console.log(`Found water at better distance: ${dist.toFixed(1)} blocks`);
+            await goToPosition(bot, nearest.x, nearest.y + 1, nearest.z, 2);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await bot.lookAt(new Vec3(nearest.x + 0.5, nearest.y + 1, nearest.z + 0.5));
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            bot.activateItem();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+            if (!bobber) {
+                log(bot, `Failed to cast fishing line on retry.`);
+                break;
+            }
+            
+            const retry1 = bot.blockAt(bobber.position.offset(0, -0.5, 0));
+            const retry2 = bot.blockAt(bobber.position.offset(0, -1, 0));
+            if (!((retry1 && retry1.name === 'water') || (retry2 && retry2.name === 'water'))) {
+                bot.activateItem();
+                log(bot, `Could not cast line into water.`);
+                break;
+            }
+        }
+        
+        let caught = false;
+        let done = false;
+        const start = Date.now();
+        let lastY = bobber.position.y;
+        const castTimeout = 60000; // max 60 sec per cast
+        
+        const check = setInterval(() => {
+            if (done || bot.interrupt_code) {
+                clearInterval(check);
+                return;
+            }
+            
+            const b = bot.nearestEntity(e => e.name === 'fishing_bobber');
+            if (!b) {
+                done = true;
+                clearInterval(check);
+                return;
+            }
+            
+            const yDiff = lastY - b.position.y;
+            if (yDiff > 0.2) {
+                caught = true;
+                done = true;
+                clearInterval(check);
+                bot.activateItem();
+            }
+            
+            lastY = b.position.y;
+            
+            if (Date.now() - start > castTimeout) {
+                done = true;
+                clearInterval(check);
+                bot.activateItem();
+            }
+        }, 100);
+        
+        while (!done && !bot.interrupt_code) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (Date.now() - start > castTimeout + 1000) {
+                done = true;
+                clearInterval(check);
+                break;
+            }
+        }
+        
+        clearInterval(check);
+        
+        if (bot.interrupt_code) {
+            bot.activateItem();
+            log(bot, `Fishing interrupted.`);
+            break;
+        }
+        
+        if (caught) {
+            // Get inventory snapshot BEFORE reeling in
+            const inventoryBefore = world.getInventoryCounts(bot);
+            
+            // Wait for items to spawn and be collected
+            await new Promise(resolve => setTimeout(resolve, 800));
+            await pickupNearbyItems(bot);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const inventoryAfter = world.getInventoryCounts(bot);
+            
+            // Find what was caught by comparing inventories
+            const fishTypes = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
+            const treasureItems = ['bow', 'enchanted_book', 'name_tag', 'saddle', 'nautilus_shell', 'fishing_rod'];
+            const junkItems = ['lily_pad', 'bowl', 'leather', 'leather_boots', 'rotten_flesh', 'stick', 'string', 'water_bottle', 'bone', 'ink_sac', 'tripwire_hook', 'bamboo'];
+            
+            let caughtItem = null;
+            
+            // Check all item types
+            const allItems = [...fishTypes, ...treasureItems, ...junkItems];
+            for (const item of allItems) {
+                const before = inventoryBefore[item] || 0;
+                const after = inventoryAfter[item] || 0;
+                if (after > before) {
+                    caughtItem = item;
                     break;
                 }
             }
             
-            if (!waterBlock) {
-                log(bot, `Could not find suitable water for fishing. Need water 2-6 blocks away.`);
-                return false;
-            }
-        }
-        
-        // Optimal fishing distance is 2-6 blocks from water
-        const finalDistance = bot.entity.position.distanceTo(waterBlock.position);
-        if (finalDistance > 8) {
-            console.log(`Moving closer to water (optimal: 2-6 blocks)...`);
-            await goToNearestBlock(bot, 'water', 4, 16);
-        }
-        
-        // Water block position is the BOTTOM corner, so we need to add 1 to y for the TOP surface
-        const waterSurface = waterBlock.position.offset(0.5, 0.9, 0.5);
-        const botPos = bot.entity.position;
-        console.log(`Bot at (${botPos.x.toFixed(1)}, ${botPos.y.toFixed(1)}, ${botPos.z.toFixed(1)})`);
-        console.log(`Looking at water surface at (${waterSurface.x.toFixed(1)}, ${waterSurface.y.toFixed(1)}, ${waterSurface.z.toFixed(1)})...`);
-        
-        await bot.lookAt(waterSurface);
-        
-        // Wait for bot to aim properly
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log(`Casting fishing rod into water...`);
-        
-        // Cast the fishing rod with timeout
-        await bot.fish();
-        
-        log(bot, `Successfully caught fish!`);
-        console.log(`Fish caught successfully!`);
-        return true;
-        
-    } catch (err) {
-        if (err.message.includes('timeout')) {
-            log(bot, `Fishing timed out after ${timeout/1000}s. No fish caught.`);
-            console.log(`Timeout - no fish caught in ${timeout/1000}s`);
-        } else if (err.message.includes('interrupted')) {
-            log(bot, `Fishing was interrupted.`);
-            console.log(`Fishing interrupted`);
-        } else {
-            log(bot, `Failed to catch fish: ${err.message}`);
-            console.log(`Error: ${err.message}`);
-        }
-        return false;
-    }
-}
-
-export async function catchFishWithBucket(bot, fishType='cod', count=1) {
-    
-    // Validation
-    const validFish = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
-    if (!validFish.includes(fishType)) {
-        log(bot, `Invalid fish type: ${fishType}. Must be one of: ${validFish.join(', ')}`);
-        return false;
-    }
-    
-    if (!count || count < 1 || !Number.isInteger(count)) {
-        log(bot, `Invalid count: ${count}. Must be a positive integer.`);
-        return false;
-    }
-    
-    console.log(`Attempting to catch ${count} ${fishType} with bucket...`);
-    
-    let caughtCount = 0;
-    
-    for (let i = 0; i < count; i++) {
-        try {
-            // Check for water bucket
-            const waterBucket = bot.inventory.items().find(item => item.name === 'water_bucket');
-            
-            if (!waterBucket) {
-                if (caughtCount === 0) {
-                    log(bot, `You do not have a water bucket to catch fish.`);
-                } else {
-                    log(bot, `No more water buckets. Caught ${caughtCount} ${fishType}.`);
+            // If still not found, check all inventory for any increase
+            if (!caughtItem) {
+                for (const item in inventoryAfter) {
+                    const before = inventoryBefore[item] || 0;
+                    const after = inventoryAfter[item];
+                    if (after > before && item !== 'fishing_rod') {
+                        caughtItem = item;
+                        break;
+                    }
                 }
-                break;
             }
             
-            // Find nearby fish of the specified type
-            const fishEntity = world.getNearestEntityWhere(
-                bot,
-                entity => entity.name === fishType,
-                16
-            );
+            totalCaught++;
+            caughtItems.push(caughtItem || 'something');
+            log(bot, `Caught ${caughtItem || 'something'}! (${totalCaught}/${count})`);
             
-            if (!fishEntity) {
-                if (caughtCount === 0) {
-                    log(bot, `No ${fishType} found nearby.`);
-                } else {
-                    log(bot, `No more ${fishType} found. Caught ${caughtCount} fish.`);
-                }
-                break;
-            }
-            
-            console.log(`Found ${fishType} at distance ${bot.entity.position.distanceTo(fishEntity.position).toFixed(1)}`);
-            
-            // Move close to the fish
-            const distance = bot.entity.position.distanceTo(fishEntity.position);
-            if (distance > 4) {
-                console.log(`Moving closer to ${fishType}...`);
-                await goToPosition(bot, fishEntity.position.x, fishEntity.position.y, fishEntity.position.z, 2);
-            }
-            
-            // Equip water bucket
-            console.log(`Equipping water bucket...`);
-            await bot.equip(waterBucket, 'hand');
-            
-            // Look at the fish
-            await bot.lookAt(fishEntity.position);
-            
-            // Wait for proper positioning
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
-            // Use bucket on fish
-            console.log(`Catching ${fishType} with bucket...`);
-            await bot.activateEntity(fishEntity);
-            
-            caughtCount++;
-            console.log(`Successfully caught ${fishType} ${caughtCount}/${count}`);
-            
-            // Wait before catching next fish
+            // short pause before next cast
             await new Promise(resolve => setTimeout(resolve, 500));
-            
-            if (bot.interrupt_code) {
-                break;
-            }
-            
-        } catch (err) {
-            console.log(`Error catching ${fishType}: ${err.message}`);
-            log(bot, `Error catching ${fishType}: ${err.message}`);
-            continue;
+        } else {
+            log(bot, `No bite on this cast, trying again...`);
         }
     }
     
-    if (caughtCount > 0) {
-        log(bot, `Successfully caught ${caughtCount} ${fishType} in buckets!`);
-        console.log(`Complete! Caught ${caughtCount} ${fishType} total.`);
+    if (totalCaught > 0) {
+        const summary = caughtItems.join(', ');
+        log(bot, `Finished fishing! Caught ${totalCaught} items: ${summary}`);
         return true;
     } else {
-        log(bot, `Failed to catch any ${fishType}.`);
+        log(bot, `Failed to catch any fish.`);
         return false;
     }
 }
@@ -1276,13 +1310,14 @@ export async function shearSheep(bot, count=1) {
     }
     
     let shearedCount = 0;
+    const shearedIds = new Set(); // Track already-sheared sheep by entity ID
     
     for (let i = 0; i < count; i++) {
         try {
             // Find nearest sheep that hasn't been sheared
             const sheep = world.getNearestEntityWhere(
                 bot,
-                entity => entity.name === 'sheep' && !entity.metadata[16],
+                entity => entity.name === 'sheep' && !entity.metadata[16] && !shearedIds.has(entity.id),
                 32
             );
             
@@ -1295,7 +1330,7 @@ export async function shearSheep(bot, count=1) {
                 break;
             }
             
-            console.log(`[Found sheep at distance ${bot.entity.position.distanceTo(sheep.position).toFixed(1)}`);
+            console.log(`Found sheep (ID: ${sheep.id}) at distance ${bot.entity.position.distanceTo(sheep.position).toFixed(1)}`);
             
             // Move close to sheep
             const distance = bot.entity.position.distanceTo(sheep.position);
@@ -1318,10 +1353,13 @@ export async function shearSheep(bot, count=1) {
             console.log(`Shearing sheep...`);
             await bot.activateEntity(sheep);
             
+            // Mark this sheep as sheared immediately
+            shearedIds.add(sheep.id);
+            
             shearedCount++;
             console.log(`Successfully sheared sheep ${shearedCount}/${count}`);
             
-            // Wait a moment before finding next sheep
+            // Wait longer for metadata to update and to find next sheep
             await new Promise(resolve => setTimeout(resolve, 500));
             
             if (bot.interrupt_code) {

@@ -231,10 +231,10 @@ export const actionsList = [
         name: '!fish',
         description: 'Fish using a fishing rod to catch fish items. Bot must have a fishing rod and be near water.',
         params: {
-            'timeout': { type: 'int', description: 'Maximum time to wait for a fish in milliseconds. Defaults to 60000 (60 seconds).', domain: [1000, 300000] }
+            'count': { type: 'int', description: 'Number of fish to catch. Defaults to 1.', domain: [1, 50] }
         },
-        perform: runAsAction(async (agent, timeout = 60000) => {
-            await skills.fish(agent.bot, timeout);
+        perform: runAsAction(async (agent, count = 1) => {
+            await skills.fish(agent.bot, count);
         })
     },
     {

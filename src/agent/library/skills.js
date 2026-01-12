@@ -76,12 +76,30 @@ export async function craftRecipe(bot, itemName, num=1) {
      * @example
      * await skills.craftRecipe(bot, "stick");
      **/
+
+    // ✅ NEW: Normalize plank names (oak_planks -> oak_plank)
+    if (itemName.endsWith('planks')) {
+        itemName = itemName.slice(0, -1); // Remove the 's'
+    }
+
+    console.log(`[craftRecipe] Input itemName after normalization: "${itemName}"`);
+    
     let placedTable = false;
 
-    if (mc.getItemCraftingRecipes(itemName).length == 0) {
-        log(bot, `${itemName} is either not an item, or it does not have a crafting recipe!`);
-        return false;
+    // ✅ NEW: In creative mode, skip all validation and just create the item
+    if (bot.game.gameMode === 'creative') {
+        // log(bot, `Creative mode: creating ${num} ${itemName} without recipe`);
+        const itemId = mc.getItemId(itemName);
+        if (!itemId) {
+            log(bot, `${itemName} is not a valid item.`);
+            return false;
+        }
+        await bot.creative.setInventorySlot(36, mc.makeItem(itemName, num));
+        log(bot, `Successfully created ${num} ${itemName}.`);
+        bot.armorManager.equipAll();
+        return true;
     }
+
 
     // get recipes that don't require a crafting table
     let recipes = bot.recipesFor(mc.getItemId(itemName), null, 1, null); 
@@ -189,6 +207,42 @@ export async function smeltItem(bot, itemName, num=1) {
         log(bot, `Cannot smelt ${itemName}. Hint: make sure you are smelting the 'raw' item.`);
         return false;
     }
+
+    // ✅ NEW: In creative mode, skip all checks and just smelt
+    if (bot.game.gameMode === 'creative') {
+        //log(bot, `Creative mode: smelting ${num} ${itemName} without resource checks`);
+        // Map raw items to their smelted output
+        const smeltMap = {
+            'raw_iron': 'iron_ingot',
+            'raw_copper': 'copper_ingot',
+            'raw_gold': 'gold_ingot',
+            'beef': 'cooked_beef',
+            'chicken': 'cooked_chicken',
+            'porkchop': 'cooked_porkchop',
+            'wood': 'charcoal',
+            'cobblestone': 'stone'
+        };
+        
+        const smeltedName = smeltMap[itemName] || itemName;
+        try {
+            // Use the same method that works in craftRecipe
+            const item = mc.makeItem(smeltedName, num);
+            if (!item) {
+                log(bot, `Cannot create item: ${smeltedName}`);
+                return false;
+            }
+            
+            // Add to first available hotbar slot
+            await bot.creative.setInventorySlot(36, item); // 36 is first hotbar slot
+            
+            log(bot, `Successfully smelted ${num} ${itemName} to ${smeltedName}.`);
+            return true;
+        } catch (error) {
+            log(bot, `Error smelting in creative mode: ${error.message}`);
+            return false;
+        }
+    }
+
 
     let placedFurnace = false;
     let furnaceBlock = undefined;
@@ -603,23 +657,52 @@ export async function breakBlockAt(bot, x, y, z) {
 }
 
 
-export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false) {
-    /**
-     * Place the given block type at the given position. It will build off from any adjacent blocks. Will fail if there is a block in the way or nothing to build off of.
-     * @param {MinecraftBot} bot, reference to the minecraft bot.
-     * @param {string} blockType, the type of block to place.
-     * @param {number} x, the x coordinate of the block to place.
-     * @param {number} y, the y coordinate of the block to place.
-     * @param {number} z, the z coordinate of the block to place.
-     * @param {string} placeOn, the preferred side of the block to place on. Can be 'top', 'bottom', 'north', 'south', 'east', 'west', or 'side'. Defaults to bottom. Will place on first available side if not possible.
-     * @param {boolean} dontCheat, overrides cheat mode to place the block normally. Defaults to false.
-     * @returns {Promise<boolean>} true if the block was placed, false otherwise.
-     * @example
-     * let p = world.getPosition(bot);
-     * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
-     * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
-     **/
+/**
+ * Place a block at the given position with optional orientation modifiers
+ * 
+ * Supports both cheat mode (using /setblock commands) and survival mode (physical placement)
+ * Handles orientation for special blocks like stairs, doors, slabs, beds, torches, etc.
+ * 
+ * @param {MinecraftBot} bot - Reference to the minecraft bot
+ * @param {string} blockType - The type of block to place (e.g., "oak_stairs", "torch", "oak_bed")
+ * @param {number} x - The x coordinate of the block to place (will be floored to integer)
+ * @param {number} y - The y coordinate of the block to place (will be floored to integer)
+ * @param {number} z - The z coordinate of the block to place (will be floored to integer)
+ * @param {string} placeOn - The preferred side of adjacent block to place on
+ *                          Valid: "top", "bottom", "north", "south", "east", "west", "side"
+ *                          Default: "bottom"
+ *                          Will place on first available side if specified side not possible
+ * @param {boolean} dontCheat - If true, forces survival mode placement even if cheat mode is on
+ *                             Default: false
+ * @param {string} facing - Minecraft block state property for direction (stairs, doors, slabs)
+ *                         Valid: "north", "south", "east", "west"
+ *                         Only used for: stairs, slabs, doors, glass_pane, ladder, repeater, comparator, buttons, levers
+ * @param {number} rotation - Minecraft block state property for rotation (beds, logs, chains)
+ *                           Valid: 0 (north), 1 (east), 2 (south), 3 (west)
+ *                           Only used for: beds, logs, chains
+ * 
+ * @returns {Promise<boolean>} true if the block was placed successfully, false otherwise
+ * 
+ * @example
+ * // Place cobblestone on top surface
+ * await placeBlock(bot, "cobblestone", 10, 64, 20);
+ * 
+ * @example
+ * // Place stairs facing east
+ * await placeBlock(bot, "oak_stairs", 10, 64, 20, "top", false, "east", null);
+ * 
+ * @example
+ * // Place bed with head pointing south (rotation=2)
+ * await placeBlock(bot, "oak_bed", 10, 64, 20, "top", false, null, 2);
+ * 
+ * @example
+ * // Place torch on north wall surface
+ * await placeBlock(bot, "torch", 10, 64, 20, "north", false, null, null);
+ */
+export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false, facing=null, rotation=null) {
+    console.log(`[placeBlock] START - blockType: ${blockType}, pos: (${x}, ${y}, ${z}), placeOn: ${placeOn}, facing: ${facing}, rotation: ${rotation}`);
     if (!mc.getBlockId(blockType) && blockType !== 'air') {
+        console.log(`[placeBlock] FAIL - invalid block type`);
         log(bot, `Invalid block type: ${blockType}.`);
         return false;
     }
@@ -627,6 +710,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
     if (blockType === 'air') {
+        console.log(`[placeBlock] REMOVE - breaking block`);
         log(bot, `Placing air (removing block) at ${target_dest}.`);
         return await breakBlockAt(bot, x, y, z);
     }
@@ -640,39 +724,67 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             }
         }
 
-        // invert the facing direction
+        // invert the facing direction for placement calculation
         let face = placeOn === 'north' ? 'south' : placeOn === 'south' ? 'north' : placeOn === 'east' ? 'west' : 'east';
+        
+        // Build block state string with orientation modifiers
+        let blockState = blockType;
+        
         if (blockType.includes('torch') && placeOn !== 'bottom') {
             // insert wall_ before torch
             blockType = blockType.replace('torch', 'wall_torch');
             if (placeOn !== 'side' && placeOn !== 'top') {
-                blockType += `[facing=${face}]`;
+                blockState = blockType + `[facing=${face}]`;
             }
         }
         if (blockType.includes('button') || blockType === 'lever') {
             if (placeOn === 'top') {
-                blockType += `[face=ceiling]`;
+                blockState = blockType + `[face=ceiling]`;
             }
             else if (placeOn === 'bottom') {
-                blockType += `[face=floor]`;
+                blockState = blockType + `[face=floor]`;
             }
             else {
-                blockType += `[facing=${face}]`;
+                blockState = blockType + `[facing=${face}]`;
             }
         }
         if (blockType === 'ladder' || blockType === 'repeater' || blockType === 'comparator') {
-            blockType += `[facing=${face}]`;
+            blockState = blockType + `[facing=${face}]`;
         }
         if (blockType.includes('stairs')) {
-            blockType += `[facing=${face}]`;
+            // Use facing from parameter if provided, otherwise use inverted placeOn direction
+            blockState = blockType + `[facing=${facing || face}]`;
         }
-        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockType;
+        if (blockType.includes('slab')) {
+            // Use facing from parameter if provided for slab orientation
+            if (facing) {
+                blockState = blockType + `[facing=${facing}]`;
+            }
+        }
+        if (blockType.includes('door')) {
+            // Use facing from parameter if provided
+            blockState = blockType + (facing ? `[facing=${facing}]` : '');
+        }
+        if (blockType.includes('bed')) {
+            // Use rotation from parameter if provided (0=north, 1=east, 2=south, 3=west)
+            if (rotation !== null && rotation !== undefined) {
+                blockState = blockType + `[rotation=${rotation}]`;
+            }
+        }
+        if (blockType.includes('glass_pane')) {
+            // Use facing from parameter if provided for glass_pane orientation
+            if (facing) {
+                blockState = blockType + `[facing=${facing}]`;
+            }
+        }
+        
+        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockState;
         bot.chat(msg);
-        if (blockType.includes('door'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockType + '[half=upper]');
-        if (blockType.includes('bed'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
-        log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
+        if (blockState.includes('door'))
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockState + '[half=upper]');
+        if (blockState.includes('bed'))
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockState + '[part=head]');
+        log(bot, `Used /setblock to place ${blockState} at ${target_dest}.`);
         return true;
     }
 
@@ -682,21 +794,25 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         item_name = "redstone";
     let block = bot.inventory.items().find(item => item.name === item_name);
     if (!block && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
+        console.log(`[placeBlock] CREATIVE - adding item to inventory`);
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
         block = bot.inventory.items().find(item => item.name === item_name);
     }
     if (!block) {
+        console.log(`[placeBlock] FAIL - no block in inventory`);
         log(bot, `Don't have any ${blockType} to place.`);
         return false;
     }
 
     const targetBlock = bot.blockAt(target_dest);
     if (targetBlock.name === blockType) {
+        console.log(`[placeBlock] SKIP - block already there`);
         log(bot, `${blockType} already at ${targetBlock.position}.`);
         return false;
     }
     const empty_blocks = ['air', 'water', 'lava', 'grass', 'short_grass', 'tall_grass', 'snow', 'dead_bush', 'fern'];
     if (!empty_blocks.includes(targetBlock.name)) {
+        console.log(`[placeBlock] BREAKING - block in the way: ${targetBlock.name}`);
         log(bot, `${blockType} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
@@ -738,15 +854,18 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     }
     if (!buildOffBlock) {
+        console.log(`[placeBlock] FAIL - nothing to place on`);
         log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
 
+    console.log(`[placeBlock] MOVING & EQUIPPING - buildOffBlock: ${buildOffBlock.name}`);
     const pos = bot.entity.position;
     const pos_above = pos.plus(Vec3(0,1,0));
     const dont_move_for = ['torch', 'redstone_torch', 'redstone_wire', 'lever', 'button', 'rail', 'detector_rail', 'powered_rail', 'activator_rail', 'tripwire_hook', 'tripwire', 'water_bucket'];
     if (!dont_move_for.includes(blockType) && (pos.distanceTo(targetBlock.position) < 1 || pos_above.distanceTo(targetBlock.position) < 1)) {
         // too close
+        console.log(`[placeBlock] Moving away - too close`);
         let goal = new pf.goals.GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 2);
         let inverted_goal = new pf.goals.GoalInvert(goal);
         bot.pathfinder.setMovements(new pf.Movements(bot));
@@ -754,6 +873,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     if (bot.entity.position.distanceTo(targetBlock.position) > 4.5) {
         // too far
+        console.log(`[placeBlock] Moving closer - too far`);
         let pos = targetBlock.position;
         let movements = new pf.Movements(bot);
         bot.pathfinder.setMovements(movements);
@@ -762,14 +882,17 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     
     await bot.equip(block, 'hand');
     await bot.lookAt(buildOffBlock.position);
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    // will throw error if an entity is in the way, and sometimes even if the block was placed
     try {
+        console.log(`[placeBlock] PLACING - on block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
         await bot.placeBlock(buildOffBlock, faceVec);
         log(bot, `Placed ${blockType} at ${target_dest}.`);
+        console.log(`[placeBlock] SUCCESS`);
         await new Promise(resolve => setTimeout(resolve, 200));
         return true;
     } catch (err) {
+        console.log(`[placeBlock] FAIL - exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
         return false;
     }

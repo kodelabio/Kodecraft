@@ -1,0 +1,1084 @@
+{
+    "id": "4XdqrYQZSFIJRelp",
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "name": "Smart Builder",
+    "nodes": [
+        {
+            "id": "d9ba44bf-a0a1-4f3b-abd6-c7ce9b234f9c",
+            "name": "Route Building Execution",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                2608,
+                -32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 1,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "multibot-route",
+                            "operator": {
+                                "name": "filter.operator.equals",
+                                "type": "string",
+                                "operation": "equals"
+                            },
+                            "leftValue": "={{ $json.executionType}}",
+                            "rightValue": "multibot"
+                        },
+                        {
+                            "id": "b4c36be9-0c60-4b4c-a852-dd1e43a72945",
+                            "operator": {
+                                "type": "number",
+                                "operation": "gt"
+                            },
+                            "leftValue": "={{ $json.workerCount }}",
+                            "rightValue": 1
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "6709dfcd-3ac7-4389-9634-d3f7289063bd",
+            "name": "Execute Building API Call",
+            "type": "n8n-nodes-base.httpRequest",
+            "position": [
+                2832,
+                64
+            ],
+            "parameters": {
+                "url": "={{$env.KODECRAFT_SERVER_URL}}/api/agent/newAction",
+                "method": "POST",
+                "options": {
+                    "timeout": 3600000
+                },
+                "sendBody": true,
+                "sendHeaders": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "prompt",
+                            "value": "={{ $('Parse Plan').item.json.plan.buildingRequest }} at {{ $json.location.replaceAll('\\\"','\\'') }}"
+                        }
+                    ]
+                },
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.2
+        },
+        {
+            "id": "f29aa909-0af0-4ef1-b894-472d10d2f7cc",
+            "name": "Format Building Response",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                3056,
+                64
+            ],
+            "parameters": {
+                "jsCode": "// Format Building Response for Telegram\nconst input = $input.first().json;\n\nconsole.log('=== FORMAT BUILDING RESPONSE ===');\nconsole.log('Smart AI Response:', JSON.stringify(input, null, 2));\n\n// Get conversation data from Execute Building Plan node\nconst conversationData = $('Route by Intent').item.json;\nconsole.log('Retrieved conversation data', {\n      chatId: conversationData.chatId,\n      playerName: conversationData.playerName,\n      source: conversationData.source\n    });\n\n// Parse smart AI API response\nconst apiSuccess = input.success || false;\nconst userMessage = input.userMessage || '';\nconst executionResult = input.executionResult || 'No execution details';\nconst apiMessage = input.message || '';\n\n// Create formatted response message\nlet responseMessage = '';\nif (apiSuccess) {\n  // Check if the AI provided clarification or alternative suggestions\n  if (executionResult.toLowerCase().includes('not possible') || \n      executionResult.toLowerCase().includes('alternative') ||\n      executionResult.toLowerCase().includes('instead')) {\n    responseMessage = ` **Smart AI Response**\\n\\n` +\n                     ` **Your Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **AI Analysis:** ${executionResult.substring(0, 300)}${executionResult.length > 300 ? '...' : ''}\\n\\n` +\n                     ` The AI has analyzed your request and provided intelligent feedback!`;\n  } else {\n    responseMessage = ` **Building Task Completed!**\\n\\n` +\n                     ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                     ` **Status:** ${apiMessage}\\n\\n` +\n                     ` **AI Execution:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n` +\n                     ` The smart AI successfully processed your building request!`;\n  }\n} else {\n  const errorMessage = input.error || input.details || 'Unknown error occurred';\n  responseMessage = ` **Building Task Failed**\\n\\n` +\n                   ` **Request:** ${userMessage.substring(0, 100)}${userMessage.length > 100 ? '...' : ''}\\n\\n` +\n                   ` **Error:** ${errorMessage}\\n\\n`;\n  \n  if (executionResult && executionResult !== 'No execution details') {\n    responseMessage += ` **AI Response:** ${executionResult.substring(0, 200)}${executionResult.length > 200 ? '...' : ''}\\n\\n`;\n  }\n  \n  responseMessage += ` **Tip:** The AI might have suggestions or alternatives. Check the response above!`;\n}\n\nconsole.log('Formatted response:', responseMessage);\n\n// Extract code output between \"Code Output\" and \"Code finished\"\nlet ai_actions = '';\nconst codeOutputMatch = apiMessage.match(/Code Output([\\s\\S]*?)Code finished/i);\nif (codeOutputMatch && codeOutputMatch[1]) {\n  ai_actions = codeOutputMatch[1].trim();\n  console.log('Extracted code output:', ai_actions);\n} else {\n  console.log('No code output found between markers');\n}\n\n// Return formatted response with conversation data for Telegram\nreturn {\n  json: {\n    chatId: conversationData.chatId || input.chatId || 'unknown',\n    text: responseMessage,\n    playerName: conversationData.playerName || 'User',\n    source: conversationData.source || 'telegram',\n    conversationHistory: conversationData.conversationHistory || [],\n    executionResult: {\n      type: 'smart_ai_building',\n      success: apiSuccess,\n      response: responseMessage,\n      apiResult: input,\n      aiResponse: executionResult,\n      aiActions: ai_actions\n    }\n  }\n};"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "f58b0533-87c8-40d2-9055-0eee45e352c7",
+            "name": "Building Plan Result",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                2384,
+                -32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "building-plan-assignment",
+                            "name": "buildingRequest",
+                            "type": "string",
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.plan.buildingRequest : $('Parse Plan').item.json.plan.buildingRequest }}"
+                        },
+                        {
+                            "id": "task-type-assignment",
+                            "name": "task_type",
+                            "type": "string",
+                            "value": "smart_building"
+                        },
+                        {
+                            "id": "2e6eb1c5-f68a-4bd1-a4e3-18c8b5d42887",
+                            "name": "executionType",
+                            "type": "string",
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.plan.executionType : $('Parse Plan').item.json.plan.executionType }}"
+                        },
+                        {
+                            "id": "d4ca63ac-baae-4fd4-82b7-90b7dcec370f",
+                            "name": "stages",
+                            "type": "object",
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.plan.stages : $('Parse Plan').item.json.plan.stages }}"
+                        },
+                        {
+                            "id": "ac45a162-49a2-45dd-aee5-01d07cb1149f",
+                            "name": "location",
+                            "type": "string",
+                            "value": "={{ $('Set Prompts').item.json.instructions.params.location }}"
+                        },
+                        {
+                            "id": "012ac539-300b-4776-aef2-ffcf6432fcde",
+                            "name": "tasksDivision",
+                            "type": "object",
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.plan.tasksDivision : $('Parse Plan').item.json.plan.tasksDivision }}"
+                        },
+                        {
+                            "id": "f88fd0c0-c267-4140-bc7d-8655fba6f178",
+                            "name": "workerCount",
+                            "type": "number",
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.plan.workerCount : $('Parse Plan').item.json.plan.workerCount }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 3.4
+        },
+        {
+            "id": "2d780c3f-92ef-4cb3-bf85-34a0483119b8",
+            "name": "Smart Building Planner",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "onError": "continueErrorOutput",
+            "position": [
+                -464,
+                96
+            ],
+            "parameters": {
+                "text": "=TASK: {{ JSON.stringify($json.instructions) }}\n\nCONTEXT: {{ $json.instructions.params.workers ? 'Collaborative execution with ' + $json.instructions.params.workers + ' workers requested' : 'Single bot execution request' }}\n\n{{ $json.user_template }}",
+                "options": {
+                    "systemMessage": "={{ $json.generation_system_prompt }}"
+                },
+                "promptType": "define"
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "b8886104-a10d-4db4-bdf8-bf8c28f92608",
+            "name": "Parse Plan",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                -112,
+                16
+            ],
+            "parameters": {
+                "jsCode": "// Get the output string from the previous node\nconst outputString = $input.first().json.output;\n\nconsole.log('Raw output:', outputString);\n\ntry {\n  let parsedData;\n  \n  // Try to parse directly as JSON first\n  try {\n    parsedData = JSON.parse(outputString);\n    console.log('Parsed as direct JSON');\n  } catch (e) {\n    // If direct parsing fails, try to extract JSON from code blocks\n    \n    // Match various code block formats: ```json ... ```, ```...```, or just raw JSON\n    const codeBlockMatch = outputString.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    \n    if (codeBlockMatch && codeBlockMatch[1]) {\n      console.log('Extracted from code block');\n      parsedData = JSON.parse(codeBlockMatch[1]);\n    } else {\n      // Try to find JSON object/array patterns in the string\n      const jsonMatch = outputString.match(/(\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\])/);\n      \n      if (jsonMatch) {\n        console.log('Extracted JSON pattern');\n        parsedData = JSON.parse(jsonMatch[1]);\n      } else {\n        throw new Error('No JSON found in output');\n      }\n    }\n  }\n  \n  console.log('Parsed data:', JSON.stringify(parsedData, null, 2));\n  \n  // Return the parsed data as-is (generic, no assumptions about structure)\n  return {\n    plan: parsedData\n  };\n  \n} catch (error) {\n  console.log('Error parsing JSON:', error.message);\n  return [{\n    json: {\n      error: 'Failed to parse JSON',\n      message: error.message,\n      rawOutput: outputString\n    }\n  }];\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "c3f90157-a627-4ef3-9ca3-b6d836a2c48f",
+            "name": "StartCollaborativeBuild",
+            "type": "n8n-nodes-base.httpRequest",
+            "onError": "continueErrorOutput",
+            "position": [
+                3056,
+                -128
+            ],
+            "parameters": {
+                "url": "={{$env.WEBHOOK_URL}}/webhook/kodecraft/start-collaborative-build-stages",
+                "method": "POST",
+                "options": {
+                    "timeout": 600000,
+                    "response": {
+                        "response": {
+                            "neverError": true
+                        }
+                    }
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "plan",
+                            "value": "={{ $('Parse Plan').item.json.plan }}"
+                        },
+                        {
+                            "name": "workerCount",
+                            "value": "={{ $('Building Plan Result').item.json.workerCount }}"
+                        },
+                        {
+                            "name": "conversationId",
+                            "value": "={{ $('Webhook').item.json.body.chatId }}"
+                        },
+                        {
+                            "name": "username",
+                            "value": "={{ $('Webhook').item.json.body.username }}"
+                        },
+                        {
+                            "name": "botStatus",
+                            "value": "={{ $('Webhook').item.json.body.botStatus }}"
+                        },
+                        {
+                            "name": "location",
+                            "value": "={{ $('Building Plan Result').item.json.location }}"
+                        },
+                        {
+                            "value": "={{ $('Parse Final Plan').isExecuted ? $('Parse Final Plan').item.json.regeneratedPlan : $('Parse Plan').item.json.plan }}"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 4.3
+        },
+        {
+            "id": "dcffde39-25e5-4e45-a090-c869374b5691",
+            "name": "Message Plan",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                2832,
+                -128
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Plan design completed!.\nI will proceed to {{ $json.buildingRequest }} at {{ $json.location }}\nI will be using {{ $json.workerCount }} workers.",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "02bb6ac8-a043-4d00-82cf-5a9f86cef48d",
+            "name": "OpenRouter Chat Model1",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+            "position": [
+                -464,
+                304
+            ],
+            "parameters": {
+                "model": "anthropic/claude-opus-4.5",
+                "options": {
+                }
+            },
+            "credentials": {
+                "openRouterApi": {
+                    "id": "tbowxCxxOyjLzQXX",
+                    "name": "OpenRouter account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "86d7e55e-947e-4794-8f89-44ac26b0e0a5",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "position": [
+                -1584,
+                96
+            ],
+            "webhookId": "a2451f18-13ce-4077-9afa-2127ef95f63d",
+            "parameters": {
+                "path": "/kodecraft/smart-builder",
+                "options": {
+                },
+                "httpMethod": "POST",
+                "responseMode": "lastNode"
+            },
+            "typeVersion": 2.1
+        },
+        {
+            "id": "5c1bd1df-72b3-43ec-a892-d3add5f015bd",
+            "name": "Get Prompts",
+            "type": "n8n-nodes-base.dataTable",
+            "position": [
+                -1136,
+                96
+            ],
+            "parameters": {
+                "operation": "get",
+                "dataTableId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "fiybiQlR805maJNt",
+                    "cachedResultUrl": "/projects/RXobmFXaajAvtGNa/datatables/fiybiQlR805maJNt",
+                    "cachedResultName": "KodecraftPrompts"
+                }
+            },
+            "executeOnce": false,
+            "typeVersion": 1
+        },
+        {
+            "id": "48705b04-b9af-4577-ac1a-8d5564804129",
+            "name": "Filter",
+            "type": "n8n-nodes-base.filter",
+            "position": [
+                -912,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "or",
+                    "conditions": [
+                        {
+                            "id": "8cd98843-a8dc-4708-9ee2-741fe64da4af",
+                            "operator": {
+                                "type": "string",
+                                "operation": "contains"
+                            },
+                            "leftValue": "={{ $json.agent }}",
+                            "rightValue": "Smart Building Planner: Generation"
+                        },
+                        {
+                            "id": "abbcd1b8-25f5-4b1d-ab4e-bf31565209d3",
+                            "operator": {
+                                "type": "string",
+                                "operation": "contains"
+                            },
+                            "leftValue": "={{ $json.agent }}",
+                            "rightValue": "Smart Building Planner: Validation"
+                        },
+                        {
+                            "id": "ec60f572-cf41-47af-980e-d316303d5bbb",
+                            "operator": {
+                                "name": "filter.operator.equals",
+                                "type": "string",
+                                "operation": "equals"
+                            },
+                            "leftValue": "={{ $json.agent }}",
+                            "rightValue": "Smart Building Planner: Fix and Regenerate"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "653fb310-58d9-44d9-b19d-551ed811dc4f",
+            "name": "Message Plan Design",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                -1360,
+                96
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Designing building plan, it will take a minute or two...",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "fe3dc4ba-d4cf-45bf-aa7f-a82fe41fb32e",
+            "name": "If",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                112,
+                16
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "839645f1-8f6d-4600-81ce-7ac31b7a3407",
+                            "operator": {
+                                "type": "object",
+                                "operation": "notEmpty",
+                                "singleValue": true
+                            },
+                            "leftValue": "={{ $json.plan }}",
+                            "rightValue": ""
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "bdaaeb76-dc62-43d3-94a2-95c7a73f3075",
+            "name": "OpenRouter Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+            "position": [
+                640,
+                192
+            ],
+            "parameters": {
+                "model": "anthropic/claude-haiku-4.5",
+                "options": {
+                }
+            },
+            "credentials": {
+                "openRouterApi": {
+                    "id": "tbowxCxxOyjLzQXX",
+                    "name": "OpenRouter account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "077ddf8d-a574-4686-a9ad-e7284a4c697a",
+            "name": "Validate Plan",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "position": [
+                560,
+                -32
+            ],
+            "parameters": {
+                "text": "=Validate the plan:\n{{ JSON.stringify($('Parse Plan').item.json.plan) }}",
+                "options": {
+                    "systemMessage": "={{ $('Set Prompts').item.json.validation_system_prompt }}"
+                },
+                "promptType": "define"
+            },
+            "typeVersion": 3
+        },
+        {
+            "id": "37a28805-7585-4afb-b4c3-e8a9dc02dfd5",
+            "name": "Message Validation Results",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                1136,
+                -32
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Plan validation results: {{ $json.plan.validationResult }}\n\n{{ JSON.stringify($json.plan.summary) }}",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "5f6e280b-93c1-4e24-8f48-25cdabb94be2",
+            "name": "Failed to build Plan",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                336,
+                192
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Failed to design a suitable building plan, sorry.",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "5c64fa95-5a0a-4dee-a21b-319db318863c",
+            "name": "Message Plan Results",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                336,
+                -32
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Plan design completed to {{ $json.plan.buildingRequest }}.\nValidating the plan...\n\n",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "0ba1e4a2-a993-432b-b2d6-7ab5504300c9",
+            "name": "Validated",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                912,
+                -32
+            ],
+            "parameters": {
+                "jsCode": "// Get the output string from the previous node\nconst outputString = $input.first().json.output;\n\nconsole.log('Raw output:', outputString);\n\ntry {\n  let parsedData;\n  \n  // Try to parse directly as JSON first\n  try {\n    parsedData = JSON.parse(outputString);\n    console.log('Parsed as direct JSON');\n  } catch (e) {\n    // If direct parsing fails, try to extract JSON from code blocks\n    \n    // Match various code block formats: ```json ... ```, ```...```, or just raw JSON\n    const codeBlockMatch = outputString.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    \n    if (codeBlockMatch && codeBlockMatch[1]) {\n      console.log('Extracted from code block');\n      parsedData = JSON.parse(codeBlockMatch[1]);\n    } else {\n      // Try to find JSON object/array patterns in the string\n      const jsonMatch = outputString.match(/(\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\])/);\n      \n      if (jsonMatch) {\n        console.log('Extracted JSON pattern');\n        parsedData = JSON.parse(jsonMatch[1]);\n      } else {\n        throw new Error('No JSON found in output');\n      }\n    }\n  }\n  \n  console.log('Parsed data:', JSON.stringify(parsedData, null, 2));\n  \n  // Return the parsed data as-is (generic, no assumptions about structure)\n  return {\n    plan: parsedData\n  };\n  \n} catch (error) {\n  console.log('Error parsing JSON:', error.message);\n  return [{\n    json: {\n      error: 'Failed to parse JSON',\n      message: error.message,\n      rawOutput: outputString\n    }\n  }];\n}"
+            },
+            "typeVersion": 2
+        },
+        {
+            "id": "f0c6a2b6-0e6a-4cb5-9560-4557da64d4a5",
+            "name": "Failed?",
+            "type": "n8n-nodes-base.if",
+            "position": [
+                1360,
+                -32
+            ],
+            "parameters": {
+                "options": {
+                },
+                "conditions": {
+                    "options": {
+                        "version": 2,
+                        "leftValue": "",
+                        "caseSensitive": true,
+                        "typeValidation": "strict"
+                    },
+                    "combinator": "and",
+                    "conditions": [
+                        {
+                            "id": "044d4ec0-d44a-4046-9ec3-90767ba7408f",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            },
+                            "leftValue": "={{ $('Validated').item.json.plan.validationResult }}",
+                            "rightValue": "FAIL"
+                        }
+                    ]
+                }
+            },
+            "typeVersion": 2.2
+        },
+        {
+            "id": "86f9bcdb-329a-49e3-ad77-f1813a0a62af",
+            "name": "OpenRouter Chat Model2",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+            "position": [
+                1808,
+                320
+            ],
+            "parameters": {
+                "model": "anthropic/claude-opus-4.5",
+                "options": {
+                }
+            },
+            "credentials": {
+                "openRouterApi": {
+                    "id": "tbowxCxxOyjLzQXX",
+                    "name": "OpenRouter account"
+                }
+            },
+            "typeVersion": 1
+        },
+        {
+            "id": "8cd9e271-40ff-4f41-8e18-3e2ad3025460",
+            "name": "Plan Fixer",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "position": [
+                1808,
+                96
+            ],
+            "parameters": {
+                "text": "=Fix the plan below:\n{{ $('Parse Plan').item.json.plan }}",
+                "options": {
+                    "systemMessage": "=You are a helpful assistant {{ $('Set Prompts').item.json.regenarate_system_prompt }}"
+                },
+                "promptType": "define"
+            },
+            "typeVersion": 3
+        },
+        {
+            "id": "00629ccd-5861-4e6e-a2be-28d6caeab4dd",
+            "name": "Set Prompts",
+            "type": "n8n-nodes-base.set",
+            "position": [
+                -688,
+                96
+            ],
+            "parameters": {
+                "options": {
+                },
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "56c13f11-8528-4905-9399-4b5869faa74f",
+                            "name": "generation_system_prompt",
+                            "type": "string",
+                            "value": "={{ $items().find(item => item.json.agent === \"Smart Building Planner: Generation\")?.json.system_prompt }}"
+                        },
+                        {
+                            "id": "c0e48a62-b6a6-4e90-bcfb-61bcee658d00",
+                            "name": "validation_system_prompt",
+                            "type": "string",
+                            "value": "={{ $items().find(item => item.json.agent === \"Smart Building Planner: Validation\")?.json.system_prompt }}"
+                        },
+                        {
+                            "id": "43c67c7c-a680-403d-846e-120a1ec76324",
+                            "name": "instructions",
+                            "type": "object",
+                            "value": "={{ $('Webhook').item.json.body.instructions }}"
+                        },
+                        {
+                            "id": "01eaa171-f94a-4c25-9bd5-fd1a0b17b947",
+                            "name": "regenerate_system_prompt",
+                            "type": "string",
+                            "value": "={{ $items().find(item => item.json.agent === \"Smart Building Planner: Fix and Regenerate\")?.json.system_prompt }}"
+                        }
+                    ]
+                }
+            },
+            "executeOnce": true,
+            "typeVersion": 3.4
+        },
+        {
+            "id": "70afc7c8-acd4-4dec-9b91-de8c26e42d98",
+            "name": "Message Validation Results1",
+            "type": "n8n-nodes-base.telegram",
+            "position": [
+                1584,
+                96
+            ],
+            "webhookId": "523b2d8a-44ab-4b9e-b67f-4faae79f75fc",
+            "parameters": {
+                "text": "=Fixing the plan...",
+                "chatId": "={{ $('Webhook').item.json.body.chatId }}",
+                "additionalFields": {
+                    "parse_mode": "HTML"
+                }
+            },
+            "credentials": {
+                "telegramApi": {
+                    "id": "4yys1NU8F0wF3Nr3",
+                    "name": "Minecraft-Test"
+                }
+            },
+            "typeVersion": 1.2
+        },
+        {
+            "id": "4cb92f35-33d8-4259-8e53-00811130e985",
+            "name": "Parse Final Plan",
+            "type": "n8n-nodes-base.code",
+            "position": [
+                2160,
+                96
+            ],
+            "parameters": {
+                "jsCode": "// Get the output string from the previous node\nconst outputString = $input.first().json.output;\n\nconsole.log('Raw output:', outputString);\n\ntry {\n  let parsedData;\n  \n  // Try to parse directly as JSON first\n  try {\n    parsedData = JSON.parse(outputString);\n    console.log('Parsed as direct JSON');\n  } catch (e) {\n    // If direct parsing fails, try to extract JSON from code blocks\n    \n    // Match various code block formats: ```json ... ```, ```...```, or just raw JSON\n    const codeBlockMatch = outputString.match(/```(?:json)?\\s*([\\s\\S]*?)\\s*```/);\n    \n    if (codeBlockMatch && codeBlockMatch[1]) {\n      console.log('Extracted from code block');\n      parsedData = JSON.parse(codeBlockMatch[1]);\n    } else {\n      // Try to find JSON object/array patterns in the string\n      const jsonMatch = outputString.match(/(\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\])/);\n      \n      if (jsonMatch) {\n        console.log('Extracted JSON pattern');\n        parsedData = JSON.parse(jsonMatch[1]);\n      } else {\n        throw new Error('No JSON found in output');\n      }\n    }\n  }\n  \n  console.log('Parsed data:', JSON.stringify(parsedData, null, 2));\n  \n  // Return the parsed data as-is (generic, no assumptions about structure)\n  return {\n    plan: parsedData\n  };\n  \n} catch (error) {\n  console.log('Error parsing JSON:', error.message);\n  return [{\n    json: {\n      error: 'Failed to parse JSON',\n      message: error.message,\n      rawOutput: outputString\n    }\n  }];\n}"
+            },
+            "typeVersion": 2
+        }
+    ],
+    "active": false,
+    "pinData": {
+        "Webhook": [
+            {
+                "json": {
+                    "body": {
+                        "chatId": 5415489232,
+                        "player": "Mauri67",
+                        "username": "Santamm67",
+                        "botStatus": {
+                            "health": 20,
+                            "hunger": 20,
+                            "is_busy": false,
+                            "weather": "clear",
+                            "gamemode": "creative",
+                            "position": {
+                                "x": 431.5,
+                                "y": -60,
+                                "z": -528.4996980093323
+                            },
+                            "raw_stats": "\nSTATS\n- Position: x: 431.50, y: -60.00, z: -528.50\n- Gamemode: creative\n- Health: 20 / 20\n- Hunger: 20 / 20\n- Biome: plains\n- Weather: Clear\n- Block Below: grass_block\n- Block at Legs: air\n- Block at Head: air\n- First Solid Block Above Head: none\n- Time: Night- Current Action: Idle\n- Nearby Human Players: Mauri67\n- Nearby Bot Players: None.\nAgent Modes:\n- self_preservation(OFF)\n- unstuck(OFF)\n- cowardice(OFF)\n- self_defense(OFF)\n- hunting(OFF)\n- item_collecting(OFF)\n- torch_placing(OFF)\n- elbow_room(ON)\n- idle_staring(ON)\n- cheat(OFF)\n\n",
+                            "time_of_day": 15072,
+                            "current_action": "Idle"
+                        },
+                        "botInventory": [
+                            {
+                                "name": "oak_planks",
+                                "type": "oak_planks",
+                                "count": 1
+                            },
+                            {
+                                "name": "lead",
+                                "type": "lead",
+                                "count": 6
+                            },
+                            {
+                                "name": "porkchop",
+                                "type": "porkchop",
+                                "count": 1
+                            },
+                            {
+                                "name": "poppy",
+                                "type": "poppy",
+                                "count": 1
+                            },
+                            {
+                                "name": "iron_ingot",
+                                "type": "iron_ingot",
+                                "count": 5
+                            }
+                        ],
+                        "instructions": "{\n  \"intent\": \"collaborativeBuild\",\n  \"params\": {\n    \"workers\": 2,\n    \"buildType\": \"village_house\",\n    \"size\": \"small\",\n    \"location\": {\n      \"x\": 382.5,\n      \"y\": -60.0,\n      \"z\": -528.5\n    }\n  },\n  \"response\": \"I will coordinate 2 workers to construct a small village house at the current location.\"\n}",
+                        "nearbyPlayers": [
+                            "Mauri67"
+                        ]
+                    },
+                    "query": {
+                    },
+                    "params": {
+                    },
+                    "headers": {
+                        "host": "svdev-avatar.kodelab.io",
+                        "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+                        "x-real-ip": "3.10.173.248",
+                        "connection": "close",
+                        "user-agent": "axios/1.12.0",
+                        "content-type": "application/json",
+                        "content-length": "1489",
+                        "accept-encoding": "gzip, compress, deflate, br",
+                        "x-forwarded-for": "3.10.173.248",
+                        "x-forwarded-proto": "https"
+                    },
+                    "webhookUrl": "https://svdev-avatar.kodelab.io/webhook/kodecraft/smart-builder",
+                    "executionMode": "production"
+                }
+            }
+        ]
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "7309ad37-4741-496e-89cd-3daf58fdf3fb",
+    "staticData": null,
+    "connections": {
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Message Plan Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to build Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Filter": {
+            "main": [
+                [
+                    {
+                        "node": "Set Prompts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Failed?": {
+            "main": [
+                [
+                    {
+                        "node": "Message Validation Results1",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Building Plan Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Message Plan Design",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validated": {
+            "main": [
+                [
+                    {
+                        "node": "Message Validation Results",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Plan": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Plan Fixer": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Final Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Filter",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Prompts": {
+            "main": [
+                [
+                    {
+                        "node": "Smart Building Planner",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Message Plan": {
+            "main": [
+                [
+                    {
+                        "node": "StartCollaborativeBuild",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Validate Plan": {
+            "main": [
+                [
+                    {
+                        "node": "Validated",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse Final Plan": {
+            "main": [
+                [
+                    {
+                        "node": "Building Plan Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Message Plan Design": {
+            "main": [
+                [
+                    {
+                        "node": "Get Prompts",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Building Plan Result": {
+            "main": [
+                [
+                    {
+                        "node": "Route Building Execution",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Message Plan Results": {
+            "main": [
+                [
+                    {
+                        "node": "Validate Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenRouter Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Validate Plan",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenRouter Chat Model1": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Smart Building Planner",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenRouter Chat Model2": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "Plan Fixer",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Smart Building Planner": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Failed to build Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Route Building Execution": {
+            "main": [
+                [
+                    {
+                        "node": "Message Plan",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Execute Building API Call",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Execute Building API Call": {
+            "main": [
+                [
+                    {
+                        "node": "Format Building Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Message Validation Results": {
+            "main": [
+                [
+                    {
+                        "node": "Failed?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Message Validation Results1": {
+            "main": [
+                [
+                    {
+                        "node": "Plan Fixer",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

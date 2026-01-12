@@ -38,6 +38,9 @@ export class ExternalAPI {
     }
 
     setupRoutes() {
+
+        this.app.get('/api/agent/world-info', this.handleWorldInfo.bind(this));
+
         // Movement endpoints
         this.app.post('/api/agent/move', this.handleMove.bind(this));
         this.app.post('/api/agent/goToPlayer', this.handleGoToPlayer.bind(this));
@@ -92,7 +95,7 @@ export class ExternalAPI {
         this.app.get('/api/agent/getCraftingPlan', this.handleGetCraftingPlan.bind(this));
         this.app.get('/api/agent/player-position', this.handleGetPlayerPosition.bind(this));
         
-        this.app.get('/api/identify-entity', this.handleIdentifyEntity.bind(this)); // WE made this one public
+        this.app.get('/api/agent/identify-entity', this.handleIdentifyEntity.bind(this));
         
         
         // Mode management
@@ -176,6 +179,45 @@ export class ExternalAPI {
         
     }
     
+
+    // New helper: wait for bot to finish current action
+    async waitForBotIdle(bot, timeoutMs = 5000) {
+        const startTime = Date.now();
+        
+        while (Date.now() - startTime < timeoutMs) {
+            // Check if bot is idle (not executing an action)
+            if (this.agent.actions && !this.agent.actions.executing) {
+                console.log(`✅ Bot idle after ${Date.now() - startTime}ms`);
+                return true;
+            }
+            
+            // Wait 100ms before checking again
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        console.warn(`⚠️  Bot did not become idle within ${timeoutMs}ms`);
+        return false;
+    }
+
+    // âœ… FIXED handleWorldInfo
+    async handleWorldInfo(req, res) {
+        try {
+            const bot = this.agent.bot;
+            const worldInfo = {
+                dimension: bot.game.dimension || 'unknown',
+                minY: bot.world.minY ?? -64,
+                maxY: bot.world.maxY ?? 320,
+                worldType: bot.game.levelType || 'unknown',
+                difficulty: bot.game.difficulty || 'unknown',
+                spawnPoint: bot.spawnPoint || null
+            };
+            
+            res.json({ success: true, ...worldInfo });
+        } catch (error) {
+            this.handleError(res, error, 'worldInfo');
+        }
+    }
+
 
     // âœ… Helper method for null safety checks
     getBotSafely() {
@@ -617,10 +659,62 @@ export class ExternalAPI {
         }
     }
 
-    // âœ… FIXED handlePlace
+    /**
+     * Place a block at specified coordinates with optional orientation modifiers
+     * 
+     * POST /api/agent/place
+     * 
+     * Request body:
+     * {
+     *   "material": STRING (required) - Block type to place (e.g., "oak_stairs", "torch", "oak_bed")
+     *   "x": NUMBER (required) - X coordinate (integer)
+     *   "y": NUMBER (required) - Y coordinate (integer)
+     *   "z": NUMBER (required) - Z coordinate (integer)
+     *   "placeOn": STRING (optional, default: "top") - Which surface of adjacent block to place on
+     *              Valid: "top", "bottom", "north", "south", "east", "west", "side"
+     *   "facing": STRING (optional) - Direction block faces (for stairs, doors, slabs)
+     *             Valid: "north", "south", "east", "west"
+     *   "rotation": NUMBER (optional) - Block rotation (for beds, logs, chains)
+     *              Valid: 0 (north), 1 (east), 2 (south), 3 (west)
+     * }
+     * 
+     * Response on success (200):
+     * { "success": true, "message": "Placed [material] at x, y, z" }
+     * 
+     * Response on failure (4xx/5xx):
+     * { "error": "error message", "code": "error_code" }
+     * 
+     * Error codes:
+     * - "invalid_coordinates" - x, y, z are not valid integers or out of range
+     * - "placement_failed" - Block could not be placed at location
+     * - "bot_unavailable" - Bot is not connected or initialized
+     * 
+     * Examples:
+     * 
+     * 1. Place regular block:
+     * POST /api/agent/place
+     * { "material": "cobblestone", "x": 0, "y": -60, "z": 0 }
+     * 
+     * 2. Place stairs with facing direction:
+     * POST /api/agent/place
+     * { "material": "oak_stairs", "x": 0, "y": -60, "z": 0, "facing": "east" }
+     * 
+     * 3. Place bed with rotation:
+     * POST /api/agent/place
+     * { "material": "oak_bed", "x": 1, "y": -59, "z": 0, "rotation": 2 }
+     * 
+     * 4. Place torch on wall surface:
+     * POST /api/agent/place
+     * { "material": "torch", "x": 2, "y": -58, "z": 0, "placeOn": "north" }
+     * 
+     * @param {Object} req - Express request object
+     * @param {Object} req.body - Request body with material and coordinates
+     * @param {Object} res - Express response object
+     * @returns {void} Sends JSON response with success status or error
+     */
     async handlePlace(req, res) {
         try {
-            const { material, x, y, z, face = 'top' } = req.body;
+            const { material, x, y, z, placeOn = 'top', facing, rotation } = req.body;
             
             if (!material) {
                 return res.status(400).json({ error: 'material parameter required' });
@@ -633,6 +727,7 @@ export class ExternalAPI {
                 isNaN(x) || isNaN(y) || isNaN(z)) {
                 const command = `!placeHere("${material}")`;
                 result = await executeCommand(this.agent, command);
+
             } else {
                 const coordValidation = this.validateAndRoundCoordinates(x, y, z);
                 if (typeof coordValidation === 'string') {
@@ -654,7 +749,19 @@ export class ExternalAPI {
                         result = await executeCommand(this.agent, command);
                     } else {
                         const skills = await import('./library/skills.js');
-                        const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, face);
+                        
+                        console.log(`[handlePlace] Calling placeBlock with:`, {
+                            material: material,
+                            x: coordValidation.x,
+                            y: coordValidation.y,
+                            z: coordValidation.z,
+                            placeOn: placeOn,
+                            facing: facing,
+                            rotation: rotation
+                        });
+                        // Pass: bot, material, x, y, z, placeOn, dontCheat, facing, rotation
+                        const success = await skills.placeBlock(this.agent.bot, material, coordValidation.x, coordValidation.y, coordValidation.z, placeOn, false, facing, rotation);
+                        console.log(`[handlePlace] placeBlock returned:`, success);
                         if (success) {
                             result = `Placed ${material} at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
                         } else {
@@ -671,7 +778,7 @@ export class ExternalAPI {
                     });
                 }
             }
-            
+
             res.json({ success: true, message: result || `Placed ${material}` });
         } catch (error) {
             this.handleError(res, error, 'place');
@@ -775,6 +882,20 @@ export class ExternalAPI {
             if (!item) {
                 return res.status(400).json({ error: 'item parameter required' });
             }
+
+            // Check if bot is in creative mode: the bot's inventory isn't automatically populated. 
+            // You need to explicitly give items to the bot before equipping them 
+            const bot = this.getBotSafely();
+            if (bot && bot.game.gameMode === 1) { // 1 = Creative
+                // In creative mode, give the item first
+                try {
+                    await bot.creative.setInventorySlot(36, new bot.Item(bot.registry.itemsByName[item], 64));
+                    console.log(`[Equip] Creative mode: gave ${item} to inventory`);
+                } catch (e) {
+                    console.warn(`[Equip] Failed to give creative item: ${e.message}`);
+                }
+            }
+            
 
             const command = `!equip("${item}")`;
             const result = await executeCommand(this.agent, command);
@@ -983,6 +1104,16 @@ export class ExternalAPI {
 
             const command = `!craftRecipe("${item}", ${quantity})`;
             const result = await executeCommand(this.agent, command);
+
+            // Extract the actual message if result is stringified JSON
+            let errorMessage = result;
+            try {
+                const parsed = JSON.parse(result);
+                errorMessage = parsed.error || result;
+            } catch (e) {
+                // Not JSON, use as-is
+            }
+
             
             if (result && (result.includes('do not have') || result.includes('requires:'))) {
                 return res.status(422).json({ error: result, code: 'insufficient_materials' });
@@ -1007,6 +1138,7 @@ export class ExternalAPI {
             }
 
             const command = `!smeltItem("${item}", ${quantity})`;
+            console.log(`[handleSmelt] Executing command: ${command}`); 
             const result = await executeCommand(this.agent, command);
             
             if (result && result.includes('Cannot smelt')) {
@@ -1228,13 +1360,15 @@ export class ExternalAPI {
 
     async handleIdentifyEntity(req, res) {
         try {
-            const { name } = req.query;
+            const { name, count } = req.query;
+            const targetCount = count ? parseInt(count) : 1;
             
             if (!name) {
                 return res.status(400).json({ error: 'name query parameter required' });
             }
 
             const bot = this.agent.bot;
+            const searchName = name.toLowerCase();
 
             // Check if worker spawned by this bot FIRST
             if (this.orchestration && this.orchestration.workers.has(name)) {
@@ -1250,42 +1384,59 @@ export class ExternalAPI {
                 });
             }
 
-            // Check if entity (mob, animal)
-            if (bot.entities[name]) {
-                const entity = bot.entities[name];
-                const entityType = this.classifyMobType(entity);
-                
-                return res.json({
-                    success: true,
-                    name: name,
-                    type: entityType,
-                    foundOn: 'current',
-                    position: entity.position,
-                    health: entity.health
+            console.log(`[API] Searching for ${targetCount > 1 ? targetCount + ' ' : ''}${name}`);
+            console.log(`[API] Found entities:`, Object.entries(bot.entities).map(([id, entity]) => ({ 
+                id: id, 
+                name: entity.username || entity.name || 'unknown',
+                type: entity.type || 'unknown' 
+            })));
+
+            // Search through all entities by name/displayName
+            const matches = [];
+            for (const [id, entity] of Object.entries(bot.entities)) {
+                if (entity.name?.toLowerCase() === searchName || 
+                    entity.displayName?.toLowerCase() === searchName ||
+                    entity.username?.toLowerCase() === searchName) {
+                    matches.push({
+                        id: id,
+                        name: entity.username || entity.name || 'unknown',  // Use entity.name instead of displayName
+                        displayName: entity.displayName || entity.username,  // Store displayName separately
+                        type: entity.type,
+                        position: entity.position,
+                        health: entity.health
+                    });
+                    
+                    // Stop if we've found enough
+                    if (matches.length === targetCount) break;
+                }
+            }
+
+            if (matches.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: `${name} not found on this bot`,
+                    code: 'entity_not_found'
                 });
             }
 
-            // Check if player
-            if (bot.players[name]) {
+            // Return single or multiple results based on count
+            if (targetCount === 1) {
                 return res.json({
                     success: true,
-                    name: name,
-                    type: 'player',
-                    foundOn: 'current',
-                    position: bot.players[name].entity.position,
-                    health: bot.players[name].entity.health
+                    ...matches[0]
+                });
+            } else {
+                return res.json({
+                    success: true,
+                    targetCount: targetCount,
+                    found: matches.length,
+                    entities: matches
                 });
             }
-
-            return res.status(404).json({
-                success: false,
-                error: `${name} not found on this bot`,
-                code: 'entity_not_found'
-            });
         } catch (error) {
             this.handleError(res, error, 'identifyEntity');
         }
-}
+    }
 
     classifyMobType(entity) {
         if (!entity) return 'unknown';
@@ -1738,7 +1889,7 @@ export class ExternalAPI {
                     workerName,
                     requestedPort,
                     sessionId || `session_${Date.now()}`,
-                    settings.n8n_webhook_url
+                    settings.n8n_callback_url
                 );
                 
                 spawnResults.push(result);
@@ -1789,7 +1940,7 @@ export class ExternalAPI {
             }
             
             // Create a build session using OrchestrationAPI
-            const sessionResult = this.orchestration.createBuildSession(
+            const sessionResult = this.orchestration.createTaskSession(
                 sessionId || `build_${Date.now()}`,
                 buildRequest,
                 workerCount
@@ -1997,7 +2148,7 @@ export class ExternalAPI {
                 name,
                 port,
                 sessionId || `session_${Date.now()}`,
-                callbackWebhookUrl || settings.n8n_webhook_url
+                callbackWebhookUrl || settings.n8n_callback_url
             );
 
             if (result.success) {
@@ -2013,7 +2164,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const count = Number(req.body.count);  // ← Convert to number
-            const { basePort = 5002, sessionId, callbackWebhookUrl } = req.body;
+            const { basePort = settings.multibot_base_port, sessionId, callbackWebhookUrl } = req.body;
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2031,7 +2182,7 @@ export class ExternalAPI {
                     workerName,
                     currentPort,
                     sessionId || `session_${Date.now()}`,
-                    callbackWebhookUrl || settings.n8n_webhook_url
+                    callbackWebhookUrl || settings.n8n_callback_url
                 );
                 
                 spawnResults.push(result);
@@ -2083,17 +2234,17 @@ export class ExternalAPI {
      */
     async handleOrchestrationCreateSession(req, res) {
         try {
-            const { sessionId, buildRequest, workerCount } = req.body;
+            const { sessionId, taskRequest, workerCount } = req.body;
 
-            if (!sessionId || !buildRequest) {
+            if (!sessionId || !taskRequest) {
                 return res.status(400).json({
-                    error: 'sessionId and buildRequest parameters required'
+                    error: 'sessionId and taskRequest parameters required'
                 });
             }
 
-            const result = this.orchestration.createBuildSession(
+            const result = this.orchestration.createTaskSession(
                 sessionId,
-                buildRequest,
+                taskRequest,
                 workerCount || 0
             );
 
@@ -2137,13 +2288,15 @@ export class ExternalAPI {
      */
     async handleOrchestrationReserveLocation(req, res) {
         try {
-            const { sessionId, preferredLocation, minDistance = 30 } = req.body;
+            const { sessionId, preferredLocation: pref, minDistance = 30 } = req.body;
 
+            let preferredLocation = typeof pref === 'string' ? JSON.parse(pref) : pref; 
             if (!sessionId || !preferredLocation) {
                 return res.status(400).json({
                     error: 'sessionId and preferredLocation parameters required'
                 });
             }
+
 
             if (typeof preferredLocation.x !== 'number' || 
                 typeof preferredLocation.y !== 'number' || 
@@ -2152,6 +2305,12 @@ export class ExternalAPI {
                     error: 'preferredLocation must have x, y, z as numbers'
                 });
             }
+            // Optional: minY can be included but isn't required
+            if (preferredLocation.minY !== undefined && typeof preferredLocation.minY !== 'number') {
+                return res.status(400).json({
+                    error: 'preferredLocation.minY must be a number if provided'
+                });
+        }
 
             const result = this.orchestration.reserveBuildLocation(
                 sessionId,
@@ -2165,26 +2324,26 @@ export class ExternalAPI {
         }
     }
 
-    // Teleport a single worker to location
+    // Teleport a specific worker to location
     async handleOrchestrationTeleportWorker(req, res) {
         try {
-            const { sessionId, workerName, buildLocation } = req.body;
+            const { sessionId, workerName, taskLocation } = req.body;
 
-            if (!sessionId || !workerName || !buildLocation) {
+            if (!sessionId || !workerName || !taskLocation) {
                 return res.status(400).json({
-                    error: 'sessionId, workerName and buildLocation parameters required'
+                    error: 'sessionId, workerName and taskLocation parameters required'
                 });
             }
 
-            if (typeof buildLocation.x !== 'number' || 
-                typeof buildLocation.y !== 'number' || 
-                typeof buildLocation.z !== 'number') {
+            if (typeof taskLocation.x !== 'number' || 
+                typeof taskLocation.y !== 'number' || 
+                typeof taskLocation.z !== 'number') {
                 return res.status(400).json({
-                    error: 'buildLocation must have x, y, z as numbers'
+                    error: 'taskLocation must have x, y, z as numbers'
                 });
             }
 
-            const result = await this.orchestration.teleportWorker(sessionId, workerName, buildLocation);
+            const result = await this.orchestration.teleportWorker(sessionId, workerName, taskLocation);
 
             if (result.success) {
                 res.json(result);
@@ -2197,29 +2356,29 @@ export class ExternalAPI {
 }
 
     /**
-     * Teleport workers to build location
+     * Teleport all workers in the session to task location
      * POST /api/orchestration/teleport-workers
      * Body: { sessionId, buildLocation: { x, y, z } }
      */
     async handleOrchestrationTeleportWorkers(req, res) {
         try {
-            const { sessionId, buildLocation } = req.body;
+            const { sessionId, taskLocation } = req.body;
 
-            if (!sessionId || !buildLocation) {
+            if (!sessionId || !taskLocation) {
                 return res.status(400).json({
-                    error: 'sessionId and buildLocation parameters required'
+                    error: 'sessionId and taskLocation parameters required'
                 });
             }
 
-            if (typeof buildLocation.x !== 'number' || 
-                typeof buildLocation.y !== 'number' || 
-                typeof buildLocation.z !== 'number') {
+            if (typeof taskLocation.x !== 'number' || 
+                typeof taskLocation.y !== 'number' || 
+                typeof taskLocation.z !== 'number') {
                 return res.status(400).json({
                     error: 'buildLocation must have x, y, z as numbers'
                 });
             }
 
-            const result = await this.orchestration.teleportWorkers(sessionId, buildLocation);
+            const result = await this.orchestration.teleportWorkers(sessionId, taskLocation);
 
             res.json(result);
         } catch (error) {
@@ -2245,7 +2404,7 @@ export class ExternalAPI {
             const result = await this.orchestration.sendTaskToWorker(workerPort, 
                                             taskPrompt, 
                                             conversationId,
-                                            callbackWebhookUrl || settings.n8n_webhook_url_complete,
+                                            callbackWebhookUrl || settings.n8n_callback_url,
                                             taskId || null);
 
             if (result.success) {
@@ -2387,7 +2546,7 @@ export class ExternalAPI {
       port,
       taskPrompt,
       conversationId,
-      callbackWebhookUrl || settings.n8n_webhook_url_stage_complete
+      callbackWebhookUrl || settings.n8n_callback_url
     );
 
     if (result.success) {

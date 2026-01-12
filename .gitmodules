@@ -1,0 +1,3 @@
+[submodule "mindcraft"]
+	path = mindcraft
+	url = git@github.com:mindcraft-bots/mindcraft.git

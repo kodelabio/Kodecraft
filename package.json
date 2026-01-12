@@ -32,7 +32,8 @@
     },
     "scripts": {
         "postinstall": "patch-package",
-        "kodecraft": "node main.js"
+        "kodecraft": "node main.js",
+        "update-inner-repo": "cd mindcraft && git fetch origin && git checkout develop && cd .."
     },
     "devDependencies": {
         "@eslint/js": "^9.13.0",

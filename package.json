@@ -2,11 +2,13 @@
     "type": "module",
     "dependencies": {
         "@anthropic-ai/sdk": "^0.17.1",
+        "@eslint/js": "^9.13.0",
         "@google/generative-ai": "^0.2.1",
         "@huggingface/inference": "^2.8.1",
         "@mistralai/mistralai": "^1.1.0",
         "canvas": "^3.1.0",
         "cheerio": "^1.0.0",
+        "eslint": "^9.39.1",
         "express": "^4.18.2",
         "google-translate-api-x": "^10.7.1",
         "groq-sdk": "^0.15.0",
@@ -35,8 +37,6 @@
         "kodecraft": "node main.js"
     },
     "devDependencies": {
-        "@eslint/js": "^9.13.0",
-        "eslint": "^9.39.1",
         "eslint-plugin-no-floating-promise": "^2.0.0",
         "globals": "^15.11.0"
     }

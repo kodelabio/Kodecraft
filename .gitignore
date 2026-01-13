@@ -31,3 +31,4 @@ src/mindcraft-py/__pycache__/
 minecraft-data/
 *.log
 logs/
+mindcraft_orig/

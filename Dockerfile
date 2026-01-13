@@ -13,13 +13,15 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
+# Set working directory
+WORKDIR /app
+
 # Copy application code
 COPY . .
 
 RUN cd mindcraft && npm install && cd ..
 
-# Set working directory
-WORKDIR /app
+
 
 # Copy package.json and package-lock.json if they exist
 COPY package*.json ./
@@ -31,8 +33,8 @@ RUN npm ci --only=production || npm install
 RUN sed -i "s/'physicTick'/'physicsTick'/g" /app/node_modules/mineflayer-pvp/lib/PVP.js && \
     sed -i 's/throw new Error(`Unknown entity/return; \/\/throw new Error(`Unknown entity/g' /app/node_modules/prismarine-viewer/viewer/lib/entity/Entity.js
 
-RUN chmod +x scripts/apply-patches.sh
-RUN ./scripts/apply-patches.sh
+#RUN chmod +x scripts/apply-patches.sh
+#RUN ./scripts/apply-patches.sh
 
 
 # Create a directory for logs

@@ -1,4 +1,7 @@
 node_modules
+mindcraft_orig
+dotScreen
+test
 npm-debug.log
 logs
 .git

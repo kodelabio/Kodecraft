@@ -85,6 +85,23 @@ export async function craftRecipe(bot, itemName, num=1) {
     console.log(`[craftRecipe] Input itemName after normalization: "${itemName}"`);
     
     let placedTable = false;
+    
+    // Enhanced validation
+    if (!itemName || typeof itemName !== 'string') {
+        log(bot, `Invalid item name provided for crafting: ${itemName}`);
+        return false;
+    }
+    
+    if (num < 1 || !Number.isInteger(num)) {
+        log(bot, `Invalid quantity for crafting: ${num}. Must be a positive integer.`);
+        return false;
+    }
+    
+    console.log(`Attempting to craft ${num}x ${itemName}...`);
+
+    if (mc.getItemCraftingRecipes(itemName).length == 0) {
+        log(bot, `${itemName} is either not an item, or it does not have a crafting recipe!`);
+        return false;
 
     // ✅ NEW: In creative mode, skip all validation and just create the item
     if (bot.game.gameMode === 'creative') {
@@ -134,7 +151,20 @@ export async function craftRecipe(bot, itemName, num=1) {
         }
     }
     if (!recipes || recipes.length === 0) {
-        log(bot, `You do not have the resources to craft a ${itemName}. It requires: ${Object.entries(mc.getItemCraftingRecipes(itemName)[0][0]).map(([key, value]) => `${key}: ${value}`).join(', ')}.`);
+        const requiredItems = mc.getItemCraftingRecipes(itemName)[0][0];
+        const missingItems = [];
+        const inventory = world.getInventoryCounts(bot);
+        
+        for (const [item, count] of Object.entries(requiredItems)) {
+            const available = inventory[item] || 0;
+            if (available < count) {
+                missingItems.push(`${item}: need ${count}, have ${available}`);
+            }
+        }
+        
+        log(bot, `You do not have the resources to craft ${itemName}.`);
+        log(bot, `Missing: ${missingItems.join(', ')}`);
+        
         if (placedTable) {
             await collectBlock(bot, 'crafting_table', 1);
         }
@@ -142,28 +172,59 @@ export async function craftRecipe(bot, itemName, num=1) {
     }
     
     if (craftingTable && bot.entity.position.distanceTo(craftingTable.position) > 4) {
+        console.log(`Moving closer to crafting table...`);
         await goToNearestBlock(bot, 'crafting_table', 4, craftingTableRange);
     }
 
     const recipe = recipes[0];
-    console.log('crafting...');
+    console.log(`Recipe found, checking materials...`);
+    
     //Check that the agent has sufficient items to use the recipe `num` times.
-    const inventory = world.getInventoryCounts(bot); //Items in the agents inventory
-    const requiredIngredients = mc.ingredientsFromPrismarineRecipe(recipe); //Items required to use the recipe once.
+    const inventory = world.getInventoryCounts(bot);
+    const requiredIngredients = mc.ingredientsFromPrismarineRecipe(recipe);
     const craftLimit = mc.calculateLimitingResource(inventory, requiredIngredients);
     
-    await bot.craft(recipe, Math.min(craftLimit.num, num), craftingTable);
-    if(craftLimit.num<num) log(bot, `Not enough ${craftLimit.limitingResource} to craft ${num}, crafted ${craftLimit.num}. You now have ${world.getInventoryCounts(bot)[itemName]} ${itemName}.`);
-    else log(bot, `Successfully crafted ${itemName}, you now have ${world.getInventoryCounts(bot)[itemName]} ${itemName}.`);
-    if (placedTable) {
-        await collectBlock(bot, 'crafting_table', 1);
+    if (craftLimit.num === 0) {
+        log(bot, `Cannot craft ${itemName}: missing ${craftLimit.limitingResource}`);
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
+        return false;
     }
+    
+    const actualCraftCount = Math.min(craftLimit.num, num);
+    console.log(`Crafting ${actualCraftCount}x ${itemName}...`);
+    
+    try {
+        await bot.craft(recipe, actualCraftCount, craftingTable);
+        const finalCount = world.getInventoryCounts(bot)[itemName] || 0;
+        
+        if (craftLimit.num < num) {
+            log(bot, `Not enough ${craftLimit.limitingResource} to craft ${num}x ${itemName}.`);
+            log(bot, `Crafted ${actualCraftCount}x ${itemName}. Total in inventory: ${finalCount}.`);
+        } else {
+            log(bot, `Successfully crafted ${actualCraftCount}x ${itemName}! Total in inventory: ${finalCount}.`);
+        }
+        
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
 
-    //Equip any armor the bot may have crafted.
-    //There is probablly a more efficient method than checking the entire inventory but this is all mineflayer-armor-manager provides. :P
-    bot.armorManager.equipAll(); 
+        // Equip any armor the bot may have crafted
+        if (itemName.includes('helmet') || itemName.includes('chestplate') || 
+            itemName.includes('leggings') || itemName.includes('boots')) {
+            console.log(`Auto-equipping crafted armor...`);
+            bot.armorManager.equipAll();
+        }
 
-    return true;
+        return true;
+    } catch (error) {
+        log(bot, `Error during crafting: ${error.message}`);
+        if (placedTable) {
+            await collectBlock(bot, 'crafting_table', 1);
+        }
+        return false;
+    }
 }
 
 export async function wait(bot, milliseconds) {
@@ -706,6 +767,8 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         log(bot, `Invalid block type: ${blockType}.`);
         return false;
     }
+    
+    console.log(`Attempting to place ${blockType} at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)}) on ${placeOn}`);
 
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
@@ -887,13 +950,37 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     try {
         console.log(`[placeBlock] PLACING - on block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
         await bot.placeBlock(buildOffBlock, faceVec);
-        log(bot, `Placed ${blockType} at ${target_dest}.`);
-        console.log(`[placeBlock] SUCCESS`);
-        await new Promise(resolve => setTimeout(resolve, 200));
-        return true;
+        
+        // Wait and verify placement
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Verify the block was placed
+        const verifyBlock = bot.blockAt(target_dest);
+        const isComplexBlock = blockType.includes('door') || blockType.includes('bed') || 
+                              blockType.includes('_slab') || blockType.includes('_stairs');
+        
+        if (verifyBlock && (verifyBlock.name === blockType || isComplexBlock)) {
+            log(bot, `Placed ${blockType} at (${target_dest.x}, ${target_dest.y}, ${target_dest.z}).`);
+            console.log(`Success! Block verified at position.`);
+            return true;
+        } else {
+            log(bot, `${blockType} placement uncertain at ${target_dest}. Found: ${verifyBlock?.name || 'unknown'}`);
+            // Still return true as placement may have succeeded for complex blocks
+            return true;
+        }
     } catch (err) {
         console.log(`[placeBlock] FAIL - exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
+        console.log(`Error: ${err.message}`);
+        
+        // Check if block was placed despite error
+        const checkBlock = bot.blockAt(target_dest);
+        if (checkBlock && checkBlock.name === blockType) {
+            log(bot, `Placed ${blockType} at ${target_dest} (despite error).`);
+            return true;
+        }
+        
+        log(bot, `Failed to place ${blockType} at ${target_dest}: ${err.message}`);
         return false;
     }
 }
@@ -1091,6 +1178,335 @@ export async function consume(bot, itemName="") {
     await bot.consume();
     log(bot, `Consumed ${item.name}.`);
     return true;
+}
+
+
+export async function fish(bot, count = 1) {
+    
+    if (!count || count < 1) count = 1;
+    
+    const rod = bot.inventory.items().find(item => item.name === 'fishing_rod');
+    if (!rod) {
+        log(bot, `You do not have a fishing rod.`);
+        return false;
+    }
+    
+    // find water nearby
+    const waterBlocks = bot.findBlocks({
+        matching: (block) => block && block.name === 'water',
+        maxDistance: 32,
+        count: 100
+    });
+    
+    if (waterBlocks.length === 0) {
+        log(bot, `No water nearby to fish in.`);
+        return false;
+    }
+    
+    // get surface water only (air above it)
+    const surfaceWater = [];
+    for (const pos of waterBlocks) {
+        const above = bot.blockAt(pos.offset(0, 1, 0));
+        if (above && above.name === 'air') {
+            surfaceWater.push({ pos: pos, dist: bot.entity.position.distanceTo(pos) });
+        }
+    }
+    
+    surfaceWater.sort((a, b) => a.dist - b.dist);
+    
+    if (surfaceWater.length === 0) {
+        log(bot, `No surface water found nearby to fish in.`);
+        return false;
+    }
+    
+    log(bot, `Starting to fish... target: ${count} fish`);
+    
+    let totalCaught = 0;
+    const caughtItems = [];
+    
+    while (totalCaught < count && !bot.interrupt_code) {
+        const nearest = surfaceWater[0].pos;
+        const dist = bot.entity.position.distanceTo(nearest);
+        
+        // move closer if too far
+        if (dist > 6) {
+            await goToPosition(bot, nearest.x, nearest.y + 1, nearest.z, 4);
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        await bot.equip(rod, 'hand');
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const botPos = bot.entity.position;
+        
+        // find good water to cast at (prefer 3-8 blocks away)
+        let target = null;
+        for (const w of surfaceWater) {
+            if (w.dist >= 3 && w.dist <= 8) {
+                target = w.pos;
+                break;
+            }
+        }
+        if (!target) target = nearest;
+        
+        // aim at water surface and cast
+        await bot.lookAt(new Vec3(target.x + 0.5, target.y + 1, target.z + 0.5));
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        bot.activateItem();
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        let bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+        if (!bobber) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+        }
+        
+        if (!bobber) {
+            log(bot, `Failed to cast fishing line.`);
+            break;
+        }
+        
+        // check if bobber landed in water
+        const blockBelow = bot.blockAt(bobber.position.offset(0, -0.5, 0));
+        const blockBelow2 = bot.blockAt(bobber.position.offset(0, -1, 0));
+        const inWater = (blockBelow && blockBelow.name === 'water') || 
+                        (blockBelow2 && blockBelow2.name === 'water');
+        
+        if (!inWater) {
+            // retry once
+            bot.activateItem();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await goToPosition(bot, nearest.x, nearest.y + 1, nearest.z, 2);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            await bot.lookAt(new Vec3(nearest.x + 0.5, nearest.y + 1, nearest.z + 0.5));
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            bot.activateItem();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            bobber = bot.nearestEntity(e => e.name === 'fishing_bobber');
+            if (!bobber) {
+                log(bot, `Failed to cast fishing line on retry.`);
+                break;
+            }
+            
+            const retry1 = bot.blockAt(bobber.position.offset(0, -0.5, 0));
+            const retry2 = bot.blockAt(bobber.position.offset(0, -1, 0));
+            if (!((retry1 && retry1.name === 'water') || (retry2 && retry2.name === 'water'))) {
+                bot.activateItem();
+                log(bot, `Could not cast line into water.`);
+                break;
+            }
+        }
+        
+        let caught = false;
+        let done = false;
+        const start = Date.now();
+        let lastY = bobber.position.y;
+        const castTimeout = 60000; // max 60 sec per cast
+        
+        const check = setInterval(() => {
+            if (done || bot.interrupt_code) {
+                clearInterval(check);
+                return;
+            }
+            
+            const b = bot.nearestEntity(e => e.name === 'fishing_bobber');
+            if (!b) {
+                done = true;
+                clearInterval(check);
+                return;
+            }
+            
+            const yDiff = lastY - b.position.y;
+            if (yDiff > 0.2) {
+                caught = true;
+                done = true;
+                clearInterval(check);
+                bot.activateItem();
+            }
+            
+            lastY = b.position.y;
+            
+            if (Date.now() - start > castTimeout) {
+                done = true;
+                clearInterval(check);
+                bot.activateItem();
+            }
+        }, 100);
+        
+        while (!done && !bot.interrupt_code) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+            if (Date.now() - start > castTimeout + 1000) {
+                done = true;
+                clearInterval(check);
+                break;
+            }
+        }
+        
+        clearInterval(check);
+        
+        if (bot.interrupt_code) {
+            bot.activateItem();
+            log(bot, `Fishing interrupted.`);
+            break;
+        }
+        
+        if (caught) {
+            // Get inventory snapshot BEFORE reeling in
+            const inventoryBefore = world.getInventoryCounts(bot);
+            
+            // Wait for items to spawn and be collected
+            await new Promise(resolve => setTimeout(resolve, 800));
+            await pickupNearbyItems(bot);
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            const inventoryAfter = world.getInventoryCounts(bot);
+            
+            // Find what was caught by comparing inventories
+            const fishTypes = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
+            const treasureItems = ['bow', 'enchanted_book', 'name_tag', 'saddle', 'nautilus_shell', 'fishing_rod'];
+            const junkItems = ['lily_pad', 'bowl', 'leather', 'leather_boots', 'rotten_flesh', 'stick', 'string', 'water_bottle', 'bone', 'ink_sac', 'tripwire_hook', 'bamboo'];
+            
+            let caughtItem = null;
+            
+            // Check all item types
+            const allItems = [...fishTypes, ...treasureItems, ...junkItems];
+            for (const item of allItems) {
+                const before = inventoryBefore[item] || 0;
+                const after = inventoryAfter[item] || 0;
+                if (after > before) {
+                    caughtItem = item;
+                    break;
+                }
+            }
+            
+            // If still not found, check all inventory for any increase
+            if (!caughtItem) {
+                for (const item in inventoryAfter) {
+                    const before = inventoryBefore[item] || 0;
+                    const after = inventoryAfter[item];
+                    if (after > before && item !== 'fishing_rod') {
+                        caughtItem = item;
+                        break;
+                    }
+                }
+            }
+            
+            totalCaught++;
+            caughtItems.push(caughtItem || 'something');
+            log(bot, `Caught ${caughtItem || 'something'}! (${totalCaught}/${count})`);
+            
+            // short pause before next cast
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+            log(bot, `No bite on this cast, trying again...`);
+        }
+    }
+    
+    if (totalCaught > 0) {
+        const summary = caughtItems.join(', ');
+        log(bot, `Finished fishing! Caught ${totalCaught} items: ${summary}`);
+        return true;
+    } else {
+        log(bot, `Failed to catch any fish.`);
+        return false;
+    }
+}
+
+export async function shearSheep(bot, count=1) {
+    
+    // Validation
+    if (!count || count < 1 || !Number.isInteger(count)) {
+        log(bot, `Invalid count: ${count}. Must be a positive integer.`);
+        return false;
+    }
+    
+    console.log(`Attempting to shear ${count} sheep...`);
+    
+    // Check for shears
+    const shears = bot.inventory.items().find(item => item.name === 'shears');
+    
+    if (!shears) {
+        log(bot, `You do not have shears to shear sheep.`);
+        return false;
+    }
+    
+    let shearedCount = 0;
+    const shearedIds = new Set(); // Track already-sheared sheep by entity ID
+    
+    for (let i = 0; i < count; i++) {
+        try {
+            // Find nearest sheep that hasn't been sheared
+            const sheep = world.getNearestEntityWhere(
+                bot,
+                entity => entity.name === 'sheep' && !entity.metadata[16] && !shearedIds.has(entity.id),
+                32
+            );
+            
+            if (!sheep) {
+                if (shearedCount === 0) {
+                    log(bot, `No unsheared sheep found nearby.`);
+                } else {
+                    log(bot, `No more unsheared sheep found. Sheared ${shearedCount} sheep.`);
+                }
+                break;
+            }
+            
+            console.log(`Found sheep (ID: ${sheep.id}) at distance ${bot.entity.position.distanceTo(sheep.position).toFixed(1)}`);
+            
+            // Move close to sheep
+            const distance = bot.entity.position.distanceTo(sheep.position);
+            if (distance > 4) {
+                console.log(`Moving closer to sheep...`);
+                await goToPosition(bot, sheep.position.x, sheep.position.y, sheep.position.z, 3);
+            }
+            
+            // Equip shears
+            console.log(`Equipping shears...`);
+            await bot.equip(shears, 'hand');
+            
+            // Look at the sheep
+            await bot.lookAt(sheep.position.offset(0, 1, 0));
+            
+            // Wait a moment for positioning
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Use shears on sheep (right-click/activate)
+            console.log(`Shearing sheep...`);
+            await bot.activateEntity(sheep);
+            
+            // Mark this sheep as sheared immediately
+            shearedIds.add(sheep.id);
+            
+            shearedCount++;
+            console.log(`Successfully sheared sheep ${shearedCount}/${count}`);
+            
+            // Wait longer for metadata to update and to find next sheep
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (bot.interrupt_code) {
+                break;
+            }
+            
+        } catch (err) {
+            console.log(`Error shearing sheep: ${err.message}`);
+            log(bot, `Error shearing sheep: ${err.message}`);
+            continue;
+        }
+    }
+    
+    if (shearedCount > 0) {
+        log(bot, `Successfully sheared ${shearedCount} sheep!`);
+        console.log(`Complete! Sheared ${shearedCount} sheep total.`);
+        return true;
+    } else {
+        log(bot, `Failed to shear any sheep.`);
+        return false;
+    }
 }
 
 

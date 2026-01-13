@@ -1,6 +1,6 @@
-import { loadConfig } from './config/loader.js';
-import { apiServer } from './src/agent/api_server.js';
-import { leaderBotManager } from './src/agent/leader_bot_manager.js';
+import { loadConfig } from './src/config/loader.js';
+import { apiServer } from './src/gateway/agent/api_server.js';
+import { leaderBotManager } from './src/gateway/agent/leader_bot_manager.js';
 //import { userManager } from './src/api/user_manager.js';
 
 console.log('🚀 Starting Minecraft Multi-User Bot System');

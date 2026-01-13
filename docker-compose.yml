@@ -47,7 +47,7 @@ services:
     networks:
       - kodecraft-network
     entrypoint: node
-    command: mindcraft/src/process/mindserver.js
+    command: mindcraft/src/mindcraft/mindserver.js
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s

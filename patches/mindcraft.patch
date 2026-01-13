@@ -1,0 +1,13 @@
+diff --git a/src/process/agent_process.js b/src/process/agent_process.js
+index aa28cb2..2e038e0 100644
+--- a/src/process/agent_process.js
++++ b/src/process/agent_process.js
+@@ -11,7 +11,7 @@ export class AgentProcess {
+         this.count_id = count_id;
+         this.running = true;
+ 
+-        let args = ['src/process/init_agent.js', this.name];
++        let args = ['mindcraft/src/process/init_agent.js', this.name];
+         args.push('-n', this.name);
+         args.push('-c', count_id);
+         if (load_memory)

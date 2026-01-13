@@ -102,7 +102,7 @@ export async function craftRecipe(bot, itemName, num=1) {
     if (mc.getItemCraftingRecipes(itemName).length == 0) {
         log(bot, `${itemName} is either not an item, or it does not have a crafting recipe!`);
         return false;
-
+    }
     // ✅ NEW: In creative mode, skip all validation and just create the item
     if (bot.game.gameMode === 'creative') {
         // log(bot, `Creative mode: creating ${num} ${itemName} without recipe`);

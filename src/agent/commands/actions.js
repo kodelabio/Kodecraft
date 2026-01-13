@@ -228,6 +228,37 @@ export const actionsList = [
         })
     },
     {
+        name: '!fish',
+        description: 'Fish using a fishing rod to catch fish items. Bot must have a fishing rod and be near water.',
+        params: {
+            'count': { type: 'int', description: 'Number of fish to catch. Defaults to 1.', domain: [1, 50] }
+        },
+        perform: runAsAction(async (agent, count = 1) => {
+            await skills.fish(agent.bot, count);
+        })
+    },
+    {
+        name: '!catchFishWithBucket',
+        description: 'Catch live fish with a water bucket. Bot must have water buckets.',
+        params: {
+            'fish_type': { type: 'string', description: 'Type of fish to catch: cod, salmon, tropical_fish, or pufferfish. Defaults to cod.' },
+            'count': { type: 'int', description: 'Number of fish to catch. Defaults to 1.', domain: [1, 20] }
+        },
+        perform: runAsAction(async (agent, fish_type = 'cod', count = 1) => {
+            await skills.catchFishWithBucket(agent.bot, fish_type, count);
+        })
+    },
+    {
+        name: '!shearSheep',
+        description: 'Shear nearby sheep to collect wool. Bot must have shears.',
+        params: {
+            'count': { type: 'int', description: 'Number of sheep to shear. Defaults to 1.', domain: [1, 20] }
+        },
+        perform: runAsAction(async (agent, count = 1) => {
+            await skills.shearSheep(agent.bot, count);
+        })
+    },
+    {
         name: '!equip',
         description: 'Equip the given item.',
         params: {'item_name': { type: 'ItemName', description: 'The name of the item to equip.' }},

@@ -1185,9 +1185,19 @@ export async function fish(bot, count = 1) {
     
     if (!count || count < 1) count = 1;
     
+    // Check for fishing rod first
     const rod = bot.inventory.items().find(item => item.name === 'fishing_rod');
     if (!rod) {
         log(bot, `You do not have a fishing rod.`);
+        return false;
+    }
+    
+    // Equip rod before starting
+    try {
+        await bot.equip(rod, 'hand');
+        console.log('Equipped fishing rod');
+    } catch (err) {
+        log(bot, `Failed to equip fishing rod: ${err.message}`);
         return false;
     }
     
@@ -1234,6 +1244,7 @@ export async function fish(bot, count = 1) {
             await new Promise(resolve => setTimeout(resolve, 300));
         }
         
+        // Re-equip rod before each cast
         await bot.equip(rod, 'hand');
         await new Promise(resolve => setTimeout(resolve, 300));
         
@@ -1417,6 +1428,114 @@ export async function fish(bot, count = 1) {
     }
 }
 
+export async function catchFishWithBucket(bot, fishType = 'cod', count = 1) {
+    // Validation
+    if (!count || count < 1 || !Number.isInteger(count)) {
+        log(bot, `Invalid count: ${count}. Must be a positive integer.`);
+        return false;
+    }
+    
+    const validFishTypes = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
+    if (!validFishTypes.includes(fishType)) {
+        log(bot, `Invalid fish type: ${fishType}. Must be one of: ${validFishTypes.join(', ')}`);
+        return false;
+    }
+    
+    console.log(`Attempting to catch ${count} ${fishType} with bucket...`);
+    
+    // Check for water buckets
+    const buckets = bot.inventory.items().filter(item => item.name === 'water_bucket');
+    if (buckets.length === 0) {
+        log(bot, `You do not have any water buckets.`);
+        return false;
+    }
+    
+    if (buckets.length < count) {
+        log(bot, `You only have ${buckets.length} water buckets, but need ${count}.`);
+        return false;
+    }
+    
+    let caughtCount = 0;
+    const caughtFishIds = new Set(); // Track caught fish to avoid duplicates
+    
+    for (let i = 0; i < count; i++) {
+        try {
+            // Find nearest fish of the specified type that hasn't been caught
+            const fish = world.getNearestEntityWhere(
+                bot,
+                entity => entity.name === fishType && !caughtFishIds.has(entity.id),
+                32
+            );
+            
+            if (!fish) {
+                if (caughtCount === 0) {
+                    log(bot, `No ${fishType} found nearby to catch.`);
+                } else {
+                    log(bot, `No more ${fishType} found nearby. Caught ${caughtCount} so far.`);
+                }
+                break;
+            }
+            
+            console.log(`Found ${fishType} (ID: ${fish.id}) at distance ${bot.entity.position.distanceTo(fish.position).toFixed(1)}`);
+            
+            // Move close to fish
+            const distance = bot.entity.position.distanceTo(fish.position);
+            if (distance > 4) {
+                console.log(`Moving closer to ${fishType}...`);
+                await goToPosition(bot, fish.position.x, fish.position.y, fish.position.z, 3);
+            }
+            
+            // Equip water bucket
+            const bucket = bot.inventory.items().find(item => item.name === 'water_bucket');
+            if (!bucket) {
+                log(bot, `Ran out of water buckets after catching ${caughtCount} fish.`);
+                break;
+            }
+            
+            console.log(`Equipping water bucket...`);
+            await bot.equip(bucket, 'hand');
+            
+            // Look at the fish
+            await bot.lookAt(fish.position.offset(0, 0.5, 0));
+            
+            // Wait a moment for positioning
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Use bucket on fish (right-click/activate)
+            console.log(`Catching ${fishType}...`);
+            await bot.activateEntity(fish);
+            
+            // Mark this fish as caught
+            caughtFishIds.add(fish.id);
+            
+            caughtCount++;
+            console.log(`Successfully caught ${fishType} ${caughtCount}/${count}`);
+            
+            // Wait before catching next fish
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (bot.interrupt_code) {
+                log(bot, `Catching fish interrupted after ${caughtCount} fish.`);
+                break;
+            }
+            
+        } catch (err) {
+            console.log(`Error catching ${fishType}: ${err.message}`);
+            log(bot, `Error catching ${fishType}: ${err.message}`);
+            continue;
+        }
+    }
+    
+    if (caughtCount > 0) {
+        log(bot, `Successfully caught ${caughtCount} ${fishType} with buckets!`);
+        console.log(`Complete! Caught ${caughtCount} ${fishType} total.`);
+        return true;
+    } else {
+        log(bot, `Failed to catch any ${fishType}.`);
+        return false;
+    }
+}
+
 export async function shearSheep(bot, count=1) {
     
     // Validation
@@ -1432,6 +1551,15 @@ export async function shearSheep(bot, count=1) {
     
     if (!shears) {
         log(bot, `You do not have shears to shear sheep.`);
+        return false;
+    }
+    
+    // Equip shears before starting
+    try {
+        await bot.equip(shears, 'hand');
+        console.log('Equipped shears');
+    } catch (err) {
+        log(bot, `Failed to equip shears: ${err.message}`);
         return false;
     }
     

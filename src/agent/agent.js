@@ -24,9 +24,11 @@ const fetch = globalThis.fetch || (async (...args) => {
 });
 
 export class Agent {
-    async start(load_mem = false, init_message = null, count_id = 0, botName = null) {
+    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null) {
         this.last_sender = null;
         this.count_id = count_id;
+
+        const apiPort = port || settings.leader_bot_base_port || 5000; 
 
         // Load profile from file
         let profile = settings.profile || {};
@@ -140,7 +142,7 @@ export class Agent {
                 this.clearBotLogs();
                 // Setup event handlers based on brain mode
                 if (settings.brain_mode === 'external' && !settings.is_worker_bot) {
-                    await this._setupExternalMode(save_data, init_message);
+                    await this._setupExternalMode(save_data, init_message, apiPort);
                 } else {
                     this._setupEventHandlers(save_data, init_message);
                 }
@@ -618,14 +620,15 @@ export class Agent {
     }
 
     // New method for external brain mode setup
-    async _setupExternalMode(save_data, init_message) {
+    async _setupExternalMode(save_data, init_message, port = 5000) {
         console.log('Setting up external brain mode...');
         
         // Start the REST API server
         this.externalAPI = new ExternalAPI(this);
         // For workers, use the assigned port; for leader, calculate from count_id
-        const agentApiPort = settings.assigned_api_port || 
-                         (settings.leader_bot_base_port + this.count_id);
+        // Use the port parameter passed in, or fall back to assigned/calculated
+        const agentApiPort = port || settings.assigned_api_port || 
+                     (settings.leader_bot_base_port + this.count_id);
         console.log(`Starting ExternalAPI on port ${agentApiPort}`);
         await this.externalAPI.start(agentApiPort);
         

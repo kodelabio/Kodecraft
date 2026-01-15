@@ -116,6 +116,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/endConversation', this.handleEndConversation.bind(this));
         
         // Control
+        this.app.post('/api/agent/kick-bot', this.handleKickBot.bind(this));
         this.app.post('/api/agent/stop', this.handleStop.bind(this));
         this.app.post('/api/agent/restart', this.handleRestart.bind(this));
         this.app.post('/api/agent/clearChat', this.handleClearChat.bind(this));
@@ -1871,7 +1872,16 @@ export class ExternalAPI {
             this.handleError(res, error, 'followPlayer');
         }
     }
-
+    async handleKickBot(req, res) {
+        try {
+            console.log(`[ExternalAPI] Bot kicking itself`);
+            this.agent.cleanKill('User kicked bot from game', 0);
+            res.json({ success: true, message: 'Bot disconnected' });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+ 
     async handleStop(req, res) {
         try {
             const command = '!stop';

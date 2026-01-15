@@ -1,6 +1,5 @@
 #!/bin/bash
 
-docker compose down
-docker compose up -d
-sleep 5
+docker compose restart api-gateway
+sleep 2
 docker logs -f kodecraft-gateway

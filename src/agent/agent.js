@@ -527,7 +527,7 @@ export class Agent {
             console.error('Error event!', err);
         });
         this.bot.on('end', (reason) => {
-            console.warn('Bot disconnected! Killing agent process.', reason)
+            console.warn('[Agent] Bot end event fired! Reason:', reason);
             this.cleanKill('Bot disconnected! Killing agent process.');
         });
         this.bot.on('death', () => {
@@ -535,7 +535,7 @@ export class Agent {
             this.actions.stop();
         });
         this.bot.on('kicked', (reason) => {
-            console.warn('Bot kicked!', reason);
+            console.warn('[Agent] Bot kicked event fired! Reason:', reason);
             this.cleanKill('Bot kicked! Killing agent process.');
         });
         this.bot.on('messagestr', async (message, _, jsonMsg) => {
@@ -600,7 +600,7 @@ export class Agent {
         this.history.add('system', msg);
         this.bot.chat(code > 1 ? 'Restarting.' : 'Exiting.');
         this.history.save();
-        process.exit(code);
+        process.kill(process.pid, 'SIGINT'); 
     }
     async checkTaskDone() {
         if (this.task.data) {

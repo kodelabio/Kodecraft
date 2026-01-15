@@ -35,7 +35,12 @@ const argv = yargs(args)
     .option('port', {
         alias: 'p',
         type: 'number',
-        description: 'port of mindserver'
+        description: 'port for agent ExternalAPI server'
+    })
+    .option('mindserverPort', {
+    type: 'number',
+    default: settings.mindserver_port || 8080,
+    description: 'port of mindserver'
     })
     .argv;
 
@@ -58,7 +63,7 @@ const argv = yargs(args)
         const agent = new Agent();
         agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
-        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
+        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port);
     } catch (error) {
         console.error('Failed to start agent process:');
         console.error(error.message);

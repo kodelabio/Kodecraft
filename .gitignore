@@ -33,3 +33,5 @@ minecraft-data/
 logs/
 mindcraft/
 mindcraft_orig/
+.env
+.env

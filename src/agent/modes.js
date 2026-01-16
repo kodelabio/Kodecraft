@@ -214,6 +214,7 @@ const modes_list = [
             }
         }
     },
+    /*
     {
         name: 'elbow_room',
         description: 'Move away from nearby players when idle.',
@@ -235,6 +236,7 @@ const modes_list = [
             }
         }
     },
+    */
     {
         name: 'idle_staring',
         description: 'Animation to look around at entities when idle.',

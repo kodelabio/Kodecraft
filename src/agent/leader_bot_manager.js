@@ -103,15 +103,7 @@ export class LeaderBotManager {
             // Handle process exit
             agentProcess.on('exit', async (name) => {
                 console.log(`[LeaderBotManager] ⚠️  Leader bot ${name} exited`);
-                // terminate all workers before removing bot
-                console.log(`[LeaderBotManager] Stopping all workers for bot ${name}`);
-                const result = await fetch(`http://localhost:${settings.api_gateway_port}/api/orchestration/${userId}/stop-all`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                }).catch(error => {
-                        console.error(`[LeaderBotManager] ❌ Error stopping workers:`, error);
-                    });
-                console.log(`[LeaderBotManager] All workers stopped for bot ${name}:`, result ? 'Success' : 'Failed');
+                
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
             });

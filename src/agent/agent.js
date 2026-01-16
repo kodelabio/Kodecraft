@@ -140,7 +140,7 @@ export class Agent {
 
                 console.log(`Worker ${this.name} spawned.`);
                 this.clearBotLogs();
-                //onsole.log(`${this.name} bot logs cleared.`);
+                
                 // Setup event handlers based on brain mode
                 if (settings.brain_mode === 'external' && !settings.is_worker_bot) {
                     await this._setupExternalMode(save_data, init_message, apiPort);
@@ -556,10 +556,17 @@ export class Agent {
         this.bot.on('kicked', (reason) => {
             console.warn('[Agent] Bot kicked event fired! Reason:', reason);
             // Stop all workers in background (don't await)
+            console.log(`[Agent] Checking orchestration:`, !!this.orchestration);
+    
             if (this.orchestration) {
-                this.orchestration.stopAllWorkers().catch(error => {
+                console.log(`[Agent] Orchestration found, stopping ${this.orchestration.workers.size} workers...`);
+                this.orchestration.stopAllWorkers().then(result => {
+                    console.log(`[Agent] stopAllWorkers result:`, result);
+                }).catch(error => {
                     console.error(`❌ Error stopping workers:`, error);
                 });
+            } else {
+                console.warn(`[Agent] No orchestration available!`);
             }
             this.cleanKill('Bot kicked! Killing agent process.');
         });
@@ -639,6 +646,18 @@ export class Agent {
             }
         }
     }
+
+    cleanKill(msg = 'Killing agent process...', code = 1) {
+        if (this.externalAPI) {
+            this.externalAPI.stop();
+        }
+        
+        this.history.add('system', msg);
+        this.bot.chat(code > 1 ? 'Restarting.' : 'Exiting.');
+        this.history.save();
+        process.kill(process.pid, 'SIGINT');
+    }
+
 
     killAll() {
         this.serverProxy.shutdown();

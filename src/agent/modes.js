@@ -218,7 +218,7 @@ const modes_list = [
         name: 'elbow_room',
         description: 'Move away from nearby players when idle.',
         interrupts: ['action:followPlayer'],
-        on: true,
+        on: false,
         active: false,
         distance: 0.5,
         update: async function (agent) {

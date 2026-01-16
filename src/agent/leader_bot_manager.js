@@ -7,7 +7,7 @@ export class LeaderBotManager {
         this.leaderBots = new Map();  // userId → { agentProcess, port, status }
         this.portToUserId = new Map();
         
-        this.baseLeaderPort = settings.leader_bot_base_port || 5000;
+        this.baseLeaderPort = settings.leader_base_port || 5000;
         this.nextLeaderPort = this.baseLeaderPort;
         this.botIdleTimeout = settings.leader_bot_idle_timeout || 3600000;
         
@@ -103,6 +103,14 @@ export class LeaderBotManager {
             // Handle process exit
             agentProcess.on('exit', (name) => {
                 console.log(`[LeaderBotManager] ⚠️  Leader bot ${name} exited`);
+                // terminate all workers before removing bot
+                console.log(`[LeaderBotManager] Stopping all workers for bot ${name}`);
+                fetch(`http://localhost:${settings.api_gateway_port}/api/agent/${userId}/stop-all`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                }).catch(error => {
+                        console.error(`[LeaderBotManager] ❌ Error stopping workers:`, error);
+                    });
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
             });

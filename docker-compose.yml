@@ -22,7 +22,7 @@ services:
     volumes:
       - minecraft_data:/data
     healthcheck:
-      test: ["CMD", "mc-monitor", "status", "--host", "localhost"]
+      test: ["CMD", "mc-monitor", "status"]
       interval: 15s
       timeout: 10s
       retries: 10
@@ -61,16 +61,20 @@ services:
     container_name: kodecraft-gateway
     ports:
       - "4001:4001"
-      - "5000-5050:5000-5050" # map ports from leaders, workers, etc.
+      - "5000-5050:5000-5050" # map ports from leaders, etc.
+      - "6000-6050:6000-6050" # map ports from workers, etc.
 
     environment:
       - DISPLAY=:99  # Keep this only for api-gateway
       - NODE_ENV=production
-      - MINECRAFT_HOST=minecraft-server
-      - MINECRAFT_PORT=55916
-      - MINDSERVER_PORT=8080
-      - MINDSERVER_HOST=mindserver
+      - MINECRAFT_HOST=${MINECRAFT_HOST}
+      - MINECRAFT_PORT=${MINECRAFT_PORT}
+      - MINDSERVER_PORT=${MINDSERVER_PORT}
+      - MINDSERVER_HOST=${MINDSERVER_HOST}
       - N8N_WEBHOOK_URL=http://172.31.14.250:5678/webhook
+      - LEADER_BASE_PORT=${LEADER_BASE_PORT}
+      - WORKER_BASE_PORT=${WORKER_BASE_PORT}
+      - API_GATEWAY_PORT=${API_GATEWAY_PORT}
     volumes:
       - ./src:/app/src 
       - ./logs:/app/logs

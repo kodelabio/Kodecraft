@@ -266,15 +266,23 @@ async function setupLogging(workerName) {
         }
         console.log(`📚 === END VERIFICATION ===\n`);
 
-        
         // Start API server for the worker
         console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
         const api = new ExternalAPI(agent);
-        await api.start(argv.port);
+        const apiStartPromise = api.start(argv.port);
 
-        
-        
-        console.log(`Worker ${argv.name} ready on port ${argv.port}`);
+        // If API doesn't start within 5 seconds, log it
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('API start timeout')), 5000)
+        );
+
+        try {
+            await Promise.race([apiStartPromise, timeoutPromise]);
+            console.log(`Worker ${argv.name} ready on port ${argv.port}`);
+        } catch (error) {
+            console.error(`API start failed or timed out: ${error.message}`);
+            throw error;
+        }
         
     } catch (error) {
         console.error(`Failed to start worker ${argv.name}:`, error);

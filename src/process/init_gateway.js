@@ -1,7 +1,8 @@
 import { telegramRouter } from '../api/telegram_router.js';
 import { leaderBotManager } from '../agent/leader_bot_manager.js';
+import settings from '../../settings.js';
 
-const API_GATEWAY_PORT = process.env.API_GATEWAY_PORT || 4001;
+const API_GATEWAY_PORT = settings.api_gateway_port;
 
 console.log('🚀 Starting Telegram Router Gateway...');
 

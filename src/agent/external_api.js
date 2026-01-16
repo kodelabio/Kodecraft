@@ -20,7 +20,8 @@ export class ExternalAPI {
         //this.multiBotManager = new MultiBotManager(agent);
 
         this.orchestration = new OrchestrationAPI(agent);  // â† NEW LINE (replaced old line)
-        
+        // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
+        this.agent.orchestration = this.orchestration; 
         
         // CORS for n8n
         this.app.use((req, res, next) => {

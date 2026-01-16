@@ -53,6 +53,12 @@ export class MindServerProxy {
 
         this.socket.on('restart-agent', (agentName) => {
             console.log(`Restarting agent: ${agentName}`);
+            // Stop all workers before killing agent
+            if (this.agent.orchestration) {
+                this.agent.orchestration.stopAllWorkers().catch(error => {
+                    console.error(`❌ Error stopping workers:`, error);
+                });
+            }
             this.agent.cleanKill();
         });
 		
@@ -98,6 +104,12 @@ export class MindServerProxy {
     }
 
     shutdown() {
+        // Stop all workers before shutting down
+        if (this.agent?.externalApi?.orchestration) {
+        this.agent.externalApi.orchestration.stopAllWorkers().catch(error => {
+            console.error(`❌ Error stopping workers:`, error);
+        });
+    }
         this.socket.emit('shutdown');
     }
 

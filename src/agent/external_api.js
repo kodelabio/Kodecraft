@@ -1170,6 +1170,7 @@ export class ExternalAPI {
             const pos = bot.entity.position;
             
             const status = {
+                name: bot.username,
                 position: { x: pos.x, y: pos.y, z: pos.z },
                 health: bot.health,
                 hunger: bot.food,
@@ -1872,9 +1873,19 @@ export class ExternalAPI {
             this.handleError(res, error, 'followPlayer');
         }
     }
+    
     async handleKickBot(req, res) {
         try {
             console.log(`[ExternalAPI] Bot kicking itself`);
+            
+            // Stop all workers before disconnecting
+            try {
+                await this.orchestration.stopAllWorkers();
+                console.log(`✅ All workers stopped before leader disconnect`);
+            } catch (error) {
+                console.error(`❌ Error stopping workers:`, error);
+            }
+            
             this.agent.cleanKill('User kicked bot from game', 0);
             res.json({ success: true, message: 'Bot disconnected' });
         } catch (error) {
@@ -1976,7 +1987,7 @@ export class ExternalAPI {
     // this one can still be used it user requests to deploy workers without specifying a task
     async handleSpawnWorkers(req, res) {
         try {
-            const { count, basePort = settings.multibot_base_port, sessionId } = req.body;
+            const { count, basePort = settings.worker_base_port, sessionId } = req.body;
             
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2279,7 +2290,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const count = Number(req.body.count);  // ← Convert to number
-            const { basePort = settings.multibot_base_port, sessionId, callbackWebhookUrl } = req.body;
+            const { basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2613,101 +2624,101 @@ export class ExternalAPI {
  * Body: { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl }
  */
     async handleOrchestrationSendTaskStage(req, res) {
-  try {
-    const { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl, conversationId } = req.body;
+        try {
+            const { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl, conversationId } = req.body;
 
-    // Validate required parameters
-    if (!sessionId || !stageNumber || !worker || !port || !taskPrompt) {
-      return res.status(400).json({
-        error: 'Missing required parameters: sessionId, stageNumber, worker, port, taskPrompt',
-        code: 'missing_parameters'
-      });
+            // Validate required parameters
+            if (!sessionId || !stageNumber || !worker || !port || !taskPrompt) {
+            return res.status(400).json({
+                error: 'Missing required parameters: sessionId, stageNumber, worker, port, taskPrompt',
+                code: 'missing_parameters'
+            });
+            }
+
+            // Validate types
+            if (typeof stageNumber !== 'number' || stageNumber < 1) {
+            return res.status(400).json({
+                error: 'stageNumber must be a positive integer',
+                code: 'invalid_stage'
+            });
+            }
+
+            if (typeof port !== 'number' || port < 1024 || port > 65535) {
+            return res.status(400).json({
+                error: 'port must be a valid port number (1024-65535)',
+                code: 'invalid_port'
+            });
+            }
+
+            if (typeof taskPrompt !== 'string' || taskPrompt.length === 0) {
+            return res.status(400).json({
+                error: 'taskPrompt must be a non-empty string',
+                code: 'invalid_prompt'
+            });
+            }
+
+            console.log(`[API] Received send-task-stage request:`);
+            console.log(`   Session: ${sessionId}`);
+            console.log(`   Stage: ${stageNumber}`);
+            console.log(`   Worker: ${worker}`);
+            console.log(`   Port: ${port}`);
+            console.log(`   Prompt length: ${taskPrompt.length}`);
+
+            // Send task via orchestration API
+            const result = await this.orchestration.sendTaskStage(
+                sessionId,
+                stageNumber,
+                worker,
+                port,
+                taskPrompt,
+                conversationId,
+                callbackWebhookUrl || settings.n8n_callback_url
+            );
+
+            if (result.success) {
+            res.status(202).json(result); // 202 Accepted
+            } else {
+            res.status(500).json(result);
+            }
+        } catch (error) {
+            console.error(`[API] Error in send-task-stage:`, error);
+            this.handleError(res, error, 'orchestrationSendTaskStage');
+        }
     }
-
-    // Validate types
-    if (typeof stageNumber !== 'number' || stageNumber < 1) {
-      return res.status(400).json({
-        error: 'stageNumber must be a positive integer',
-        code: 'invalid_stage'
-      });
-    }
-
-    if (typeof port !== 'number' || port < 1024 || port > 65535) {
-      return res.status(400).json({
-        error: 'port must be a valid port number (1024-65535)',
-        code: 'invalid_port'
-      });
-    }
-
-    if (typeof taskPrompt !== 'string' || taskPrompt.length === 0) {
-      return res.status(400).json({
-        error: 'taskPrompt must be a non-empty string',
-        code: 'invalid_prompt'
-      });
-    }
-
-    console.log(`[API] Received send-task-stage request:`);
-    console.log(`   Session: ${sessionId}`);
-    console.log(`   Stage: ${stageNumber}`);
-    console.log(`   Worker: ${worker}`);
-    console.log(`   Port: ${port}`);
-    console.log(`   Prompt length: ${taskPrompt.length}`);
-
-    // Send task via orchestration API
-    const result = await this.orchestration.sendTaskStage(
-      sessionId,
-      stageNumber,
-      worker,
-      port,
-      taskPrompt,
-      conversationId,
-      callbackWebhookUrl || settings.n8n_callback_url
-    );
-
-    if (result.success) {
-      res.status(202).json(result); // 202 Accepted
-    } else {
-      res.status(500).json(result);
-    }
-  } catch (error) {
-    console.error(`[API] Error in send-task-stage:`, error);
-    this.handleError(res, error, 'orchestrationSendTaskStage');
-  }
-}
 
 /**
  * Get stage task metadata and status
  * GET /api/orchestration/task-status/:taskId
  */
-async handleOrchestrationTaskStatus(req, res) {
-  try {
-    const { taskId } = req.params;
+    async handleOrchestrationTaskStatus(req, res) {
+        try {
+            const { taskId } = req.params;
 
-    if (!taskId) {
-      return res.status(400).json({
-        error: 'taskId parameter required',
-        code: 'missing_parameter'
-      });
+            if (!taskId) {
+            return res.status(400).json({
+                error: 'taskId parameter required',
+                code: 'missing_parameter'
+            });
+            }
+
+            const metadata = this.orchestration.getTaskMetadata(taskId);
+
+            if (!metadata) {
+            return res.status(404).json({
+                error: `Task ${taskId} not found`,
+                code: 'task_not_found'
+            });
+            }
+
+            res.json({
+            success: true,
+            task: metadata
+            });
+        } catch (error) {
+            console.error(`[API] Error in task-status:`, error);
+            this.handleError(res, error, 'orchestrationTaskStatus');
+        }
     }
-
-    const metadata = this.orchestration.getTaskMetadata(taskId);
-
-    if (!metadata) {
-      return res.status(404).json({
-        error: `Task ${taskId} not found`,
-        code: 'task_not_found'
-      });
-    }
-
-    res.json({
-      success: true,
-      task: metadata
-    });
-  } catch (error) {
-    console.error(`[API] Error in task-status:`, error);
-    this.handleError(res, error, 'orchestrationTaskStatus');
-  }
-}
 
 /**
  * Get all tasks for a session
@@ -2979,9 +2990,9 @@ async handleOrchestrationSessionTasks(req, res) {
         } catch (error) {
             this.handleError(res, error, 'verifyPermissions');
         }
-}
+    }
 
-    start(port = 4001) {
+    start(port = settings.api_gateway_port) {
         return new Promise((resolve) => {
             this.server = this.app.listen(port, () => {
                 console.log(`API server running on port ${port}`);

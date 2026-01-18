@@ -1520,9 +1520,9 @@ export class ExternalAPI {
             }
 
             if (matches.length === 0) {
-                return res.status(404).json({
+                return res.status(200).json({
                     success: false,
-                    error: `${name} not found on this bot`,
+                    error: `${name} not found.`,
                     code: 'entity_not_found'
                 });
             }
@@ -1843,7 +1843,7 @@ export class ExternalAPI {
             const result = await executeCommand(this.agent, command);
             
             if (result && result.includes('Could not find')) {
-                return res.status(404).json({ error: result, code: 'target_not_found' });
+                return res.status(200).json({ success: false, error: result, code: 'target_not_found' });
             }
             
             res.json({ success: true, message: result || `Attacking ${target}` });

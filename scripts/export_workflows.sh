@@ -7,7 +7,7 @@ POSTGRES_DB=${POSTGRES_DB:-n8n}
 # Default container names
 PG_CONTAINER="a-team-postgres-1"
 N8N_CONTAINER="n8n"
-OUTPUT_DIR="./n8n/backup"
+OUTPUT_DIR="./n8n/workflows"
 
 # Function to display help
 show_help() {
@@ -79,6 +79,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+
+# Generate timestamp directory
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+OUTPUT_DIR="${OUTPUT_DIR}/${TIMESTAMP}"
+
 
 # Check if tag was provided
 if [ -z "$TAG" ]; then

@@ -1,13 +1,13 @@
 // src/agent/leader_bot_manager.js
 import { AgentProcess } from '#mc/process/agent_process.js';
-import settings from '../../../settings.js';
+import settings from '../../settings.js';
 
 export class LeaderBotManager {
     constructor() {
         this.leaderBots = new Map();  // userId → { agentProcess, port, status }
         this.portToUserId = new Map();
         
-        this.baseLeaderPort = settings.leader_bot_base_port || 5000;
+        this.baseLeaderPort = settings.leader_base_port || 5000;
         this.nextLeaderPort = this.baseLeaderPort;
         this.botIdleTimeout = settings.leader_bot_idle_timeout || 3600000;
         
@@ -35,6 +35,17 @@ export class LeaderBotManager {
         });
     }
 
+    async checkBotHealth(port) {
+        try {
+            const response = await fetch(`http://localhost:${port}/api/health`, {
+                method: 'GET',
+                timeout: 2000
+            });
+            return response.ok;
+        } catch {
+            return false;
+        }
+    }
 
     async getOrSpawnLeaderBot(userId, botName) {
             const startTime = Date.now();
@@ -45,14 +56,20 @@ export class LeaderBotManager {
                 const existing = this.leaderBots.get(userId);
                 console.log(`[LeaderBotManager] 📋 Found existing - port: ${existing.port}, running: ${existing.agentProcess?.running}`);
                 
+                // Verify the bot is actually responding
                 if (existing.agentProcess?.running) {
-                    console.log(`[LeaderBotManager] ✅ Reusing on port ${existing.port}`);
-                    existing.lastActivity = Date.now();
-                    return { success: true, userId, port: existing.port, status: 'existing' };
-                } else {
-                    console.warn(`[LeaderBotManager] ⚠️  Bot dead, cleaning up`);
-                    this.leaderBots.delete(userId);
-                    this.portToUserId.delete(existing.port);
+                    const isHealthy = await this.checkBotHealth(existing.port);
+                    
+                    if (isHealthy) {
+                        console.log(`[LeaderBotManager] ✅ Reusing on port ${existing.port}`);
+                        existing.lastActivity = Date.now();
+                        return { success: true, userId, port: existing.port, status: 'existing' };
+                    } else {
+                        console.warn(`[LeaderBotManager] ⚠️  Bot marked running but not responding, cleaning up`);
+                        existing.agentProcess?.stop();
+                        this.leaderBots.delete(userId);
+                        this.portToUserId.delete(existing.port);
+                    }
                 }
             }
 
@@ -82,18 +99,18 @@ export class LeaderBotManager {
         try {
             // Create AgentProcess with name = botName
             const agentProcess = new AgentProcess(botName, port);
-
-            // Start the agent (load_memory=true, init_message=null, count_id=userId)
-            agentProcess.start(true, null, countId);
-
+            
             // Handle process exit
-            agentProcess.process.on('exit', (name) => {
+            agentProcess.on('exit', async (name) => {
                 console.log(`[LeaderBotManager] ⚠️  Leader bot ${name} exited`);
+                
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
             });
 
-        
+            // Start the agent (load_memory=true, init_message=null, count_id=userId)
+            agentProcess.start(true, null, countId);
+
             // Store leader bot info
             const leaderInfo = {
                 userId: userId,
@@ -105,7 +122,7 @@ export class LeaderBotManager {
                 lastActivity: Date.now()
             };
             
-            agentProcess.running = true;  // ← ADD THIS
+            
             this.leaderBots.set(userId, leaderInfo);
             this.portToUserId.set(port, userId);
             console.log(`[LeaderBotManager] Stored port ${port} for user ${userId}`);
@@ -116,7 +133,7 @@ export class LeaderBotManager {
             const ready = await this.isWorkerReady(port, 30000);
             
             if (!ready) {
-                console.error(`[LeaderBotManager] ❌ Leader bot ${userId} not ready after 30s`);
+                console.error(`[LeaderBotManager] ❌ Leader bot ${userId} not ready after 60s`);
                 agentProcess.stop();
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
@@ -128,7 +145,7 @@ export class LeaderBotManager {
                     code: 'initialization_timeout'
                 };
             }
-
+            agentProcess.running = true;  // ← THIS ONE GOES HERE
             leaderInfo.status = 'ready';
 
             return {
@@ -154,8 +171,10 @@ export class LeaderBotManager {
     async isWorkerReady(port, timeout = 5000) {
         const startTime = Date.now();
         const checkInterval = 500;
+        let attempts = 0;
 
         while (Date.now() - startTime < timeout) {
+            attempts++;
             try {
                 const response = await fetch(`http://localhost:${port}/api/health`, {
                     method: 'GET',
@@ -163,16 +182,19 @@ export class LeaderBotManager {
                 });
 
                 if (response.ok) {
-                    console.log(`[LeaderBotManager] ✓ Bot on port ${port} is ready`);
+                    console.log(`[LeaderBotManager] ✓ Bot on port ${port} is ready (attempt ${attempts})`);
                     return true;
+                } else {
+                    console.warn(`[LeaderBotManager] Health check returned status ${response.status}`);
                 }
             } catch (error) {
-                // Not ready yet
+                console.warn(`[LeaderBotManager] Health check failed (attempt ${attempts}): ${error.message}`);
             }
 
             await new Promise(resolve => setTimeout(resolve, checkInterval));
         }
 
+        console.error(`[LeaderBotManager] ❌ Port ${port} not responding after ${attempts} attempts in ${timeout}ms`);
         return false;
     }
 

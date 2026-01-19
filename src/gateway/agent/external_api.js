@@ -2,10 +2,10 @@
 // REST API server for n8n integration when BRAIN_MODE=external
 
 import express from 'express';
-import { getCommand, executeCommand } from './commands/index.js';
-import settings from '../../settings.js';
-import { History } from './history.js';
-import { Coder } from './coder.js';
+import { getCommand, executeCommand } from '#mc/agent/commands/index.js';
+import settings from '../../../settings.js';
+import { History } from '#mc/agent/history.js';
+import { Coder } from '#mc/agent/coder.js';
 //import { MultiBotManager } from './multibot_manager.js';
 import { OrchestrationAPI } from './orchestration_api.js';
     

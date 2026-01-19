@@ -1,21 +1,21 @@
 import { readFileSync } from 'fs';
-import { History } from './history.js';
-import { Coder } from './coder.js';
-import { VisionInterpreter } from './vision/vision_interpreter.js';
-import { Prompter } from '../models/prompter.js';
-import { initModes } from './modes.js';
-import { initBot } from '../utils/mcdata.js';
-import { containsCommand, commandExists, executeCommand, truncCommandMessage, isAction, blacklistCommands } from './commands/index.js';
-import { ActionManager } from './action_manager.js';
-import { NPCContoller } from './npc/controller.js';
-import { MemoryBank } from './memory_bank.js';
-import { SelfPrompter } from './self_prompter.js';
-import convoManager from './conversation.js';
-import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
-import { addBrowserViewer } from './vision/browser_viewer.js';
-import settings from './settings.js';
-import { Task } from './tasks/tasks.js';
-import { say } from './speak.js';
+import { History } from '#mc/agent/history.js';
+import { Coder } from '#mc/agent/coder.js';
+import { VisionInterpreter } from '#mc/agent/vision/vision_interpreter.js';
+import { Prompter } from '#mc/models/prompter.js';
+import { initModes } from '#mc/agent/modes.js';
+import { initBot } from '#mc/utils/mcdata.js';
+import { containsCommand, commandExists, executeCommand, truncCommandMessage, isAction, blacklistCommands } from '#mc/agent/commands/index.js';
+import { ActionManager } from '#mc/agent/action_manager.js';
+import { NPCContoller } from '#mc/agent/npc/controller.js';
+import { MemoryBank } from '#mc/agent/memory_bank.js';
+import { SelfPrompter } from '#mc/agent/self_prompter.js';
+import convoManager from '#mc/agent/conversation.js';
+import { handleTranslation, handleEnglishTranslation } from '#mc/utils/translator.js';
+import { addBrowserViewer } from '#mc/agent/vision/browser_viewer.js';
+import settings from '#mc/agent/settings.js';
+import { Task } from '#mc/agent/tasks/tasks.js';
+import { speak } from '#mc/agent/speak.js';
 import { ExternalAPI } from './external_api.js';
 // Use global fetch (Node.js 18+) or import if needed
 const fetch = globalThis.fetch || (async (...args) => {
@@ -505,7 +505,7 @@ export class Agent {
         }
         else {
             if (settings.speak) {
-                say(to_translate);
+                speak(to_translate);
             }
             this.bot.chat(message);
         }

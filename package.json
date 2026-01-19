@@ -42,6 +42,7 @@
         "globals": "^15.11.0"
     },
     "imports": {
-        "#mc/*": "./mindcraft/src/*"
+        "#mc/*": "./mindcraft/src/*",
+        "#src/*": "./src/*"
     }
 }

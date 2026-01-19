@@ -51,7 +51,7 @@ RUN chmod +x /entrypoint.sh
 
 # Expose ports (adjust based on your needs)
 # Port 4001 for leader bot, 4002+ for worker bots
-EXPOSE 4001 4002 4003 4004 4005
+EXPOSE 4001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

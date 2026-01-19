@@ -3,7 +3,7 @@
 // Exposes worker spawning and coordination as simple REST endpoints
 
 import { spawn } from 'child_process';
-import settings from '../../settings.js';
+import settings from '../../../settings.js';
 import net from 'net';
 
 export class OrchestrationAPI {

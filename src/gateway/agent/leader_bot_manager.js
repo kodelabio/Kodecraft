@@ -1,6 +1,6 @@
 // src/agent/leader_bot_manager.js
-import { AgentProcess } from '#mc/process/agent_process.js';
-import settings from '../../settings.js';
+import { AgentProcess } from '#src/gateway/process/agent_process.js';
+import settings from '../../../settings.js';
 
 export class LeaderBotManager {
     constructor() {

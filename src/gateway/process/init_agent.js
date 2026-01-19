@@ -63,13 +63,6 @@ const argv = yargs(args)
         const agent = new Agent();
         agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
-        console.log('[init_agent] Settings before agent start:', {
-            base_profile: agentSettings.base_profile,
-            brain_mode: agentSettings.brain_mode,
-            model: agentSettings.model,
-            allSettings: agentSettings
-        });
-
         await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port);
         console.log(`[DEBUG] Agent started successfully.`);
     } catch (error) {

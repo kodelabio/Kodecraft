@@ -50,14 +50,14 @@ const settings = {
         // External brain mode configuration
     // External brain mode configuration
     "brain_mode": process.env.BRAIN_MODE || "external",
-    "external_api_port": parseInt(process.env.EXTERNAL_API_PORT || "4001"),
+    //"external_api_port": parseInt(process.env.EXTERNAL_API_PORT || "4001"),
     "external_mode_allow_chat": process.env.EXTERNAL_MODE_ALLOW_CHAT === "true" || false,
-    "multibot_base_port": parseInt(process.env.MULTIBOT_BASE_PORT || "4000"),
+    
     
     // Multi-user configuration
     "api_gateway_port": parseInt(process.env.API_GATEWAY_PORT) || 4001,
-    "leader_bot_base_port": parseInt(process.env.LEADER_BOT_BASE_PORT) || 5000,          // First leader bot on 5000, next on 5001, etc.
-    "worker_base_port": parseInt(process.env.WORKER_BASE_PORT) || 7000,
+    "worker_base_port": parseInt(process.env.WORKER_BASE_PORT) || 6000,
+    "leader_base_port": parseInt(process.env.LEADER_BASE_PORT) || 5000,          // First leader bot on 5000, next on 5001, etc.
     "leader_bot_idle_timeout": parseInt(process.env.LEADER_BOT_IDLE_TIMEOUT) || 3600000,    // 1 hour (ms) before cleaning up idle bots
     "max_leader_bots": parseInt(process.env.MAX_LEADER_BOTS) || 50,                 // Maximum concurrent leader bots
 

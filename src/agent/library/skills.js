@@ -1637,6 +1637,157 @@ export async function shearSheep(bot, count=1) {
     }
 }
 
+export async function enchantItem(bot, itemName, level = 1) {
+    
+    // Validation
+    if (!itemName || typeof itemName !== 'string') {
+        log(bot, `Invalid item name: ${itemName}`);
+        return false;
+    }
+    
+    if (!level || level < 1 || level > 3 || !Number.isInteger(level)) {
+        log(bot, `Invalid enchantment level: ${level}. Must be 1, 2, or 3.`);
+        return false;
+    }
+    
+    console.log(`Attempting to enchant ${itemName} at level ${level}...`);
+    
+    // Check if bot has the item
+    const item = bot.inventory.items().find(i => i.name === itemName);
+    if (!item) {
+        log(bot, `You do not have ${itemName} to enchant.`);
+        return false;
+    }
+    
+    // Check for lapis lazuli
+    const lapis = bot.inventory.items().find(i => i.name === 'lapis_lazuli');
+    const lapisNeeded = level;
+    if (!lapis || lapis.count < lapisNeeded) {
+        log(bot, `You need ${lapisNeeded} lapis lazuli to enchant at level ${level}. You have ${lapis ? lapis.count : 0}.`);
+        return false;
+    }
+    
+    // Check XP level
+    if (bot.experience.level < level) {
+        log(bot, `You need at least ${level} experience levels to enchant. You have ${bot.experience.level} levels.`);
+        return false;
+    }
+    
+    // Find enchantment table
+    const enchantTable = world.getNearestBlock(bot, 'enchanting_table', 32);
+    if (!enchantTable) {
+        log(bot, `No enchantment table found nearby within 32 blocks.`);
+        return false;
+    }
+    
+    console.log(`Found enchantment table at ${enchantTable.position}`);
+    
+    // Move to enchantment table
+    const distance = bot.entity.position.distanceTo(enchantTable.position);
+    if (distance > 4) {
+        console.log(`Moving to enchantment table (distance: ${distance.toFixed(1)})...`);
+        await goToPosition(bot, enchantTable.position.x, enchantTable.position.y, enchantTable.position.z, 3);
+    }
+    
+    try {
+        // Open enchantment table
+        console.log('Opening enchantment table...');
+        const enchantWindow = await bot.openEnchantingTable(enchantTable);
+        
+        // Wait for window to fully load
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Place item in enchantment slot
+        console.log(`Placing ${itemName} in enchantment table...`);
+        await enchantWindow.putItem(item);
+        
+        // Wait for enchantments to be calculated
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Get available enchantments
+        const enchantments = enchantWindow.enchantments;
+        
+        if (!enchantments || enchantments.length === 0) {
+            log(bot, `No enchantments available. Try adding more bookshelves around the enchantment table.`);
+            await bot.closeWindow(enchantWindow);
+            return false;
+        }
+        
+        // Find the requested level enchantment
+        const targetEnchantment = enchantments[level - 1];
+        
+        if (!targetEnchantment) {
+            log(bot, `Level ${level} enchantment not available.`);
+            await bot.closeWindow(enchantWindow);
+            return false;
+        }
+        
+        // Check if we have enough XP for this specific enchantment
+        const xpCost = targetEnchantment.level;
+        if (bot.experience.level < xpCost) {
+            log(bot, `This enchantment requires ${xpCost} levels but you have ${bot.experience.level}.`);
+            await bot.closeWindow(enchantWindow);
+            return false;
+        }
+        
+        console.log(`Enchanting ${itemName} with level ${level} enchantment (costs ${xpCost} levels)...`);
+        
+        // Perform the enchantment
+        await enchantWindow.enchant(level - 1);
+        
+        // Wait for enchantment to complete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Take the enchanted item
+        const enchantedItem = await enchantWindow.takeEnchantedItem();
+        
+        // Close window
+        await bot.closeWindow(enchantWindow);
+        
+        // Check what enchantments were applied
+        let enchantmentNames = [];
+        if (enchantedItem && enchantedItem.nbt) {
+            try {
+                const nbt = enchantedItem.nbt;
+                if (nbt.value && nbt.value.Enchantments) {
+                    const enchants = nbt.value.Enchantments.value.value;
+                    enchantmentNames = enchants.map(e => {
+                        const id = e.id.value;
+                        const lvl = e.lvl.value;
+                        return `${id.replace('minecraft:', '')} ${lvl}`;
+                    });
+                }
+            } catch (e) {
+                console.log('Could not parse enchantments:', e);
+            }
+        }
+        
+        if (enchantmentNames.length > 0) {
+            log(bot, `Successfully enchanted ${itemName} with: ${enchantmentNames.join(', ')}!`);
+        } else {
+            log(bot, `Successfully enchanted ${itemName}!`);
+        }
+        
+        console.log(`Enchantment complete! Item now has ${enchantmentNames.length} enchantments.`);
+        return true;
+        
+    } catch (err) {
+        console.log(`Error enchanting item: ${err.message}`);
+        log(bot, `Failed to enchant ${itemName}: ${err.message}`);
+        
+        // Try to close window if it's still open
+        try {
+            if (bot.currentWindow) {
+                await bot.closeWindow(bot.currentWindow);
+            }
+        } catch (closeErr) {
+            console.log('Error closing window:', closeErr);
+        }
+        
+        return false;
+    }
+}
+
 
 export async function giveToPlayer(bot, itemType, username, num=1) {
     /**

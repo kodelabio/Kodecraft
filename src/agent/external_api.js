@@ -1058,6 +1058,46 @@ export class ExternalAPI {
         }
     }
 
+    async handleEnchant(req, res) {
+        try {
+            const { item, level = 1 } = req.body;
+            
+            if (!item) {
+                return res.status(400).json({ error: 'item parameter required' });
+            }
+
+            if (typeof level !== 'number' || level < 1 || level > 3) {
+                return res.status(400).json({ 
+                    error: 'level must be a number between 1 and 3',
+                    code: 'invalid_level'
+                });
+            }
+
+            const command = `!enchant("${item}", ${level})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(400).json({ error: result, code: 'missing_item' });
+            }
+            
+            if (result && result.includes('need')) {
+                return res.status(400).json({ error: result, code: 'insufficient_resources' });
+            }
+            
+            if (result && result.includes('not found')) {
+                return res.status(404).json({ error: result, code: 'enchanting_table_not_found' });
+            }
+            
+            if (result && result.includes('Failed')) {
+                return res.status(500).json({ error: result, code: 'enchant_failed' });
+            }
+            
+            res.json({ success: true, message: result || `Successfully enchanted ${item}` });
+        } catch (error) {
+            this.handleError(res, error, 'enchant');
+        }
+    }
+
     async handleGivePlayer(req, res) {
         try {
             const { player, item, quantity = 1 } = req.body;

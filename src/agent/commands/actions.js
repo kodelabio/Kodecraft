@@ -259,6 +259,17 @@ export const actionsList = [
         })
     },
     {
+        name: '!enchant',
+        description: 'Enchant an item using an enchantment table. Bot must have the item, lapis lazuli, and enough XP levels.',
+        params: {
+            'item_name': { type: 'ItemName', description: 'The name of the item to enchant (e.g., diamond_sword, diamond_pickaxe).' },
+            'level': { type: 'int', description: 'Enchantment level (1, 2, or 3). Higher levels give better enchantments. Defaults to 1.', domain: [1, 3] }
+        },
+        perform: runAsAction(async (agent, item_name, level = 1) => {
+            await skills.enchantItem(agent.bot, item_name, level);
+        })
+    },
+    {
         name: '!equip',
         description: 'Equip the given item.',
         params: {'item_name': { type: 'ItemName', description: 'The name of the item to equip.' }},

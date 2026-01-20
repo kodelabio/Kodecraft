@@ -64,6 +64,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/fish', this.handleFish.bind(this));
         this.app.post('/api/agent/catchFish', this.handleCatchFish.bind(this));
         this.app.post('/api/agent/shear', this.handleShear.bind(this));
+        this.app.post('/api/agent/enchant', this.handleEnchant.bind(this));
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
         
         // Chest operations

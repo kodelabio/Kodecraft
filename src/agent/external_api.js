@@ -400,7 +400,7 @@ export class ExternalAPI {
     // âœ… FIXED handleGoToPlayer
     async handleGoToPlayer(req, res) {
         try {
-            const { player, distance = 3 } = req.body;
+            const { player, distance = 1 } = req.body;
             
             if (!player || typeof player !== 'string') {
                 return res.status(400).json({ 
@@ -2804,7 +2804,7 @@ async handleOrchestrationSessionTasks(req, res) {
 
 
     async handleMoveWorkerToPlayer(req, res) {
-        const { workerName, playerName, distance } = req.body;
+        const { workerName, playerName, distance = 1 } = req.body;
         if (workerName === 'all') {
             const results = [];
             for (const [name, worker] of this.orchestration.workers) {

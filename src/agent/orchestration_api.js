@@ -1149,7 +1149,7 @@ registerWorkersForSession(sessionId, workers) {
         }
 
 
-    async moveWorkerToPlayer(workerName, playerName, distance = 3) {
+    async moveWorkerToPlayer(workerName, playerName, distance = 1) {
         const worker = this.workers.get(workerName);
         if (!worker) {
             return { success: false, error: `Worker ${workerName} not found` };
@@ -1158,7 +1158,7 @@ registerWorkersForSession(sessionId, workers) {
         const response = await fetch(`http://localhost:${worker.port}/api/agent/goToPlayer`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ player: playerName, distance: distance })
+            body: JSON.stringify({ player: playerName, distance: parseFloat(distance) || 1})
         });
 
         return response.ok ? { success: true, message: `${workerName} moving to ${playerName}` } : 

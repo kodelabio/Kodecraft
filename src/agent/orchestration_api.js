@@ -1568,17 +1568,17 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     /**
-     * Stop all workers and clean up sessions
+     * Kick all workers and clean up sessions
      */
-    async stopAllWorkers() {
-        console.log(`🛑 Stopping all ${this.workers.size} workers`);
+    async kickAllWorkers() {
+        console.log(`🛑 Kicking all ${this.workers.size} workers`);
 
         for (const [name, worker] of this.workers) {
             try {
                 worker.process.kill('SIGINT');
-                console.log(`✓ Stopped worker ${name}`);
+                console.log(`✓ Kicked worker ${name}`);
             } catch (error) {
-                console.error(`Error stopping worker ${name}:`, error);
+                console.error(`Error kicking worker ${name}:`, error);
             }
         }
 
@@ -1589,7 +1589,43 @@ registerWorkersForSession(sessionId, workers) {
 
         return {
             success: true,
-            message: 'All workers stopped'
+            message: 'All workers kicked'
+        };
+    }
+
+
+    async stopAllWorkers() {
+        console.log(`🛑 Stopping all ${this.workers.size} workers`);
+
+        const results = [];
+        
+        for (const [name, worker] of this.workers) {
+            try {
+                // Send stop command to worker's API instead of killing process
+                const response = await fetch(`http://localhost:${worker.port}/api/agent/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Stopped worker ${name}`);
+                    results.push({ name, status: 'stopped' });
+                } else {
+                    console.error(`Failed to stop worker ${name}: HTTP ${response.status}`);
+                    results.push({ name, status: 'failed', error: `HTTP ${response.status}` });
+                }
+            } catch (error) {
+                console.error(`Error stopping worker ${name}:`, error.message);
+                results.push({ name, status: 'error', error: error.message });
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Stop command sent to all workers',
+            results: results
         };
     }
 

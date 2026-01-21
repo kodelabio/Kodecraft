@@ -1881,7 +1881,7 @@ export class ExternalAPI {
             
             // Stop all workers before disconnecting
             try {
-                await this.orchestration.stopAllWorkers();
+                await this.orchestration.kickAllWorkers();
                 console.log(`✅ All workers stopped before leader disconnect`);
             } catch (error) {
                 console.error(`❌ Error stopping workers:`, error);

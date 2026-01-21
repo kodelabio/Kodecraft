@@ -943,18 +943,18 @@ registerWorkersForSession(sessionId, workers) {
             console.error(`❌ [Stage Task] Error sending task ${taskId}:`, error.message);
             
             if (this.stageTasks.has(taskId)) {
-            const metadata = this.stageTasks.get(taskId);
-            metadata.status = 'failed';
-            metadata.error = error.message;
+                const metadata = this.stageTasks.get(taskId);
+                metadata.status = 'failed';
+                metadata.error = error.message;
             }
             
             return {
-            success: false,
-            taskId: taskId,
-            sessionId: sessionId,
-            stageNumber: stageNumber,
-            worker: workerName,
-            error: error.message
+                success: false,
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                worker: workerName,
+                error: error.message
             };
         }
         }
@@ -1081,6 +1081,7 @@ registerWorkersForSession(sessionId, workers) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
+        console.log(`   Worker callback: ${callbackWebhookUrl}...`);
         if (taskId) {
             console.log(`   Task ID: ${taskId}`);
         }
@@ -1140,10 +1141,10 @@ registerWorkersForSession(sessionId, workers) {
             console.error(`   Error code: ${error.code}`);
             console.error(`   Error details: ${error.toString()}`);
             return {
-            success: false,
-            port: workerPort,
-            taskId: taskId,
-            error: error.message
+                success: false,
+                port: workerPort,
+                taskId: taskId,
+                error: error.message
             };
         }
         }

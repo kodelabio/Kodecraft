@@ -63,23 +63,26 @@ global.workerConfig = {
 };
 
 // Function to report task completion
-async function reportTaskCompletion(result) {
-    const { callbackWebhookUrl, name, sessionId } = global.workerConfig;
+async function reportTaskCompletion(result, callbackWebhookUrl) {
+    const { name, sessionId } = global.workerConfig;
+
+    // Use passed URL or fall back to global config
+    const webhookUrl = callbackWebhookUrl || global.workerConfig?.callbackWebhookUrl;
     
-    if (!callbackWebhookUrl) {
+    if (!webhookUrl) {
         console.warn('⚠️  No callback webhook URL configured');
         return;
     }
     
     try {
         console.log(`📞 Reporting task completion for ${name}`);
-        console.log(`   Webhook URL: ${callbackWebhookUrl}`);
+        console.log(`   Webhook URL: ${webhookUrl}`);
         console.log(`   Session ID: ${sessionId}`);
         console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
         
         const startTime = Date.now();
         
-        const response = await fetch(callbackWebhookUrl, {
+        const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -118,7 +121,7 @@ async function reportTaskCompletion(result) {
         
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             console.error(`   ⚠️  Network error - webhook URL may be unreachable`);
-            console.error(`   URL: ${global.workerConfig.callbackWebhookUrl}`);
+            console.error(`   URL: ${webhookUrl}`);
         }
     }
 }

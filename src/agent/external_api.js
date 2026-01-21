@@ -168,6 +168,7 @@ export class ExternalAPI {
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
         this.app.post('/api/orchestration/stop-all', this.handleOrchestrationStopAll.bind(this));
+        this.app.post('/api/orchestration/kick-all-workers', this.handleOrchestrationKickAll.bind(this));
         this.app.post('/api/orchestration/move-worker-to-player', this.handleMoveWorkerToPlayer.bind(this));
         this.app.post('/api/orchestration/move-worker-to', this.handleMoveWorkerTo.bind(this));
         // (â† NEW SECTION ENDS HERE)
@@ -2950,6 +2951,14 @@ async handleOrchestrationSessionTasks(req, res) {
         }
     }
 
+    async handleOrchestrationKickAll(req, res) {
+        try {
+            const result = await this.orchestration.kickAllWorkers();
+            res.json(result);
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationKickAll');
+        }
+    }
 
     // Mark a worker as ready (available for new tasks)
 

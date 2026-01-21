@@ -793,52 +793,52 @@ registerWorkersForSession(sessionId, workers) {
         console.log(`[DEBUG] Workers:`, JSON.stringify(workers, null, 2));
         const results = [];
 
+        // Create all fetch promises in parallel
         // Teleport all workers in parallel
         const teleportPromises = workers.map(async (worker, i) => {
             const angle = (i / workers.length) * 2 * Math.PI;
-            const radius = Math.min(3, workers.length);
+            const radius = Math.max(3, workers.length); // Scale with worker count to avoid overlap
 
-            const targetPos = {
+                const targetPos = {
                 x: Math.floor(taskLocation.x + Math.cos(angle) * radius),
                 y: taskLocation.y,
                 z: Math.floor(taskLocation.z + Math.sin(angle) * radius)
-            };
+                };
 
-            try {
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(targetPos),
-                    timeout: 5000
-                });
-
-                if (response.ok) {
-                    console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                    try {
+                    const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(targetPos),
+                        timeout: 5000
+                    });
+                    if (response.ok) {
+                        console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                        return {
+                            workerName: worker.name,
+                            status: 'teleported',
+                            position: targetPos,
+                            success: true
+                        };
+                    } else {
+                        console.error(`❌ ${worker.name} teleport failed: HTTP ${response.status}`);
+                        return {
+                            workerName: worker.name,
+                            status: 'failed',
+                            error: `HTTP ${response.status}`,
+                            success: false
+                        };
+                    }
+                } catch (error) {
+                    console.error(`❌ ${worker.name} teleport error: ${error.message}`);
                     return {
                         workerName: worker.name,
-                        status: 'teleported',
-                        position: targetPos,
-                        success: true
-                    };
-                } else {
-                    console.error(`❌ ${worker.name} teleport failed: HTTP ${response.status}`);
-                    return {
-                        workerName: worker.name,
-                        status: 'failed',
-                        error: `HTTP ${response.status}`,
+                        status: 'error',
+                        error: error.message,
                         success: false
                     };
                 }
-            } catch (error) {
-                console.error(`❌ ${worker.name} teleport error: ${error.message}`);
-                return {
-                    workerName: worker.name,
-                    status: 'error',
-                    error: error.message,
-                    success: false
-                };
-            }
-        });
+            });
 
         const teleportResults = await Promise.all(teleportPromises);
         const successCount = teleportResults.filter(r => r.success).length;

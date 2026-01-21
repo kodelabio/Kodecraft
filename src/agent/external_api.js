@@ -1862,14 +1862,18 @@ export class ExternalAPI {
                 return res.status(400).json({ error: 'player parameter required' });
             }
 
+            // Don't await - just queue the command
             const command = `!followPlayer("${player}", ${distance})`;
-            const result = await executeCommand(this.agent, command);
+            executeCommand(this.agent, command).catch(error => {
+                console.error(`Background follow error:`, error);
+            });
             
-            if (result && result.includes('not found')) {
-                return res.status(404).json({ error: result, code: 'player_not_found' });
-            }
-            
-            res.json({ success: true, message: result || `Following ${player}` });
+            // Return immediately
+            res.json({ 
+                success: true, 
+                message: `Following ${player}`,
+                status: 'queued'
+            });
         } catch (error) {
             this.handleError(res, error, 'followPlayer');
         }

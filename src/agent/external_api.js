@@ -1620,7 +1620,7 @@ export class ExternalAPI {
 
     async handleNewAction(req, res) {
         try {
-            const { prompt } = req.body;
+            const { prompt, callbackWebhookUrl, conversationId, taskId } = req.body;
             
             if (!prompt) {
                 return res.status(400).json({ error: 'prompt parameter required' });
@@ -1639,8 +1639,6 @@ export class ExternalAPI {
 
             // Execute task in background (fire and forget)
             setImmediate(async () => {
-                const conversationId = req.body.conversationId; 
-                const taskId = req.body.taskId || null;
                 try {
                     const taskStartTime = Date.now();
                     
@@ -1670,6 +1668,7 @@ export class ExternalAPI {
                         
                         
                         const taskDuration = Date.now() - taskStartTime;
+                        const webhookUrl = callbackWebhookUrl || global.workerConfig?.callbackWebhookUrl;
                         //console.log(`[API] Task executed successfully (${taskDuration}ms)`);
                         
                         // Call completion callback
@@ -1682,7 +1681,9 @@ export class ExternalAPI {
                                 blocksPlaced: 100,
                                 timeSpent: taskDuration,
                                 status: 'success'
-                            });
+                            },
+                            webhookUrl
+                            );
                         }
                     } finally {
                         settings.brain_mode = originalBrainMode;

@@ -15,7 +15,7 @@ show_help() {
 Export n8n workflows by tag
 
 USAGE:
-    ./export-by-tag.sh [OPTIONS] <tag-name>
+    ./export_workflowssh [OPTIONS] <tag-name>
 
 OPTIONS:
     -h, --help              Show this help message
@@ -27,19 +27,19 @@ OPTIONS:
 
 EXAMPLES:
     # Export to default location
-    ./export-by-tag.sh "#agent"
+    ./export_workflows.sh "#agent"
 
     # Custom output directory
-    ./export-by-tag.sh -o "./my-backups" "#agent"
+    ./export_workflows.sh -o "./my-backups" "#agent"
 
     # Custom containers
-    ./export-by-tag.sh -p "prod-postgres-1" -n "prod-n8n" "#agent"
+    ./export_workflows.sh -p "prod-postgres-1" -n "prod-n8n" "#agent"
 
     # All options
-    ./export-by-tag.sh -o "./backups" -p "a-team-postgres-1" -n "n8n" "#agent"
+    ./export_workflows.sh -o "./backups" -p "a-team-postgres-1" -n "n8n" "#agent"
 
     # List available tags
-    ./export-by-tag.sh --list
+    ./export_workflows.sh --list
 
 EOF
 }

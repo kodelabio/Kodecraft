@@ -1620,7 +1620,7 @@ export class ExternalAPI {
 
     async handleNewAction(req, res) {
         try {
-            const { prompt, callbackWebhookUrl, conversationId, taskId } = req.body;
+            const { prompt, callbackWebhookUrl, conversationId, sessionId, taskId } = req.body;
             
             if (!prompt) {
                 return res.status(400).json({ error: 'prompt parameter required' });
@@ -1676,6 +1676,7 @@ export class ExternalAPI {
                             console.log(`[API] 📞 Reporting completion...`);
                             await global.reportTaskCompletion({
                                 conversationId: conversationId,  // ← Return it!,
+                                sessionId: sessionId,
                                 taskId: taskId,
                                 taskCompleted: prompt.substring(0, 100),
                                 blocksPlaced: 100,

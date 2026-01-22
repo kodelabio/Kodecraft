@@ -64,7 +64,10 @@ global.workerConfig = {
 
 // Function to report task completion
 async function reportTaskCompletion(result, callbackWebhookUrl) {
-    const { name, sessionId } = global.workerConfig;
+    // Use sessionId from result if provided, otherwise fall back to global config
+    const sessionId = result?.sessionId || global.workerConfig?.sessionId;
+    const { name } = global.workerConfig;
+    
 
     // Use passed URL or fall back to global config
     const webhookUrl = callbackWebhookUrl || global.workerConfig?.callbackWebhookUrl;

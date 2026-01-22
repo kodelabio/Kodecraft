@@ -224,27 +224,59 @@ export class LeaderBotManager {
         return info ? info.port : null;
     }
 
-    cleanupIdleBots() {
+    async cleanupIdleBots() {
         const currentTime = Date.now();
         const toDelete = [];
 
         this.leaderBots.forEach((info, userId) => {
             if (currentTime - info.lastActivity > this.botIdleTimeout) {
-                console.log(`[LeaderBotManager] 🧹 Cleaning up idle bot for ${userId}`);
+                console.log(`Cleaning up idle bot for ${userId}`);
                 toDelete.push(userId);
             }
         });
 
-        toDelete.forEach(userId => {
-            const info = this.leaderBots.get(userId);
-            info.agentProcess.stop();
-            this.leaderBots.delete(userId);
-            this.portToUserId.delete(info.port);
-        });
+        // Clean up each idle bot WITH its workers
+        for (const userId of toDelete) {
+            await this.cleanupBotAndWorkers(userId);
+        }
 
         if (toDelete.length > 0) {
             console.log(`[LeaderBotManager] ✓ Cleaned up ${toDelete.length} idle bots`);
         }
+    }
+
+    async cleanupBotAndWorkers(userId) {
+        const info = this.leaderBots.get(userId);
+        if (!info) return;
+
+        console.log(`Stopping workers for ${userId} on port ${info.port}...`);
+        
+        // Stop all workers via API call to leader bot
+        try {
+            const response = await fetch(`http://localhost:${info.port}/api/orchestration/kick-all-workers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: AbortSignal.timeout(5000)
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log(`Stopped ${result.workersKicked || 0} workers for ${userId}`);
+            } else {
+                console.warn(`Failed to stop workers: HTTP ${response.status}`);
+            }
+        } catch (error) {
+            console.error(`Error stopping workers for ${userId}:`, error.message);
+        }
+
+        // Wait a moment for workers to fully stop
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Now stop the leader bot
+        console.log(`Stopping leader bot for ${userId}`);
+        info.agentProcess.stop();
+        this.leaderBots.delete(userId);
+        this.portToUserId.delete(info.port);
     }
 
     async stopAllLeaderBots() {
@@ -252,10 +284,11 @@ export class LeaderBotManager {
 
         for (const [userId, info] of this.leaderBots) {
             try {
-                info.agentProcess.stop();
-                console.log(`[LeaderBotManager] ✓ Stopped leader bot for ${userId}`);
+                // Stop workers first
+                await this.cleanupBotAndWorkers(userId);
+                console.log(`Stopped leader bot and workers for ${userId}`);
             } catch (error) {
-                console.error(`[LeaderBotManager] Error stopping bot ${userId}:`, error.message);
+                console.error(`Error stopping bot ${userId}:`, error.message);
             }
         }
 

@@ -1573,6 +1573,8 @@ registerWorkersForSession(sessionId, workers) {
      */
     async kickAllWorkers() {
         console.log(`🛑 Kicking all ${this.workers.size} workers`);
+        
+        const workerCount = this.workers.size;
 
         for (const [name, worker] of this.workers) {
             try {
@@ -1590,7 +1592,8 @@ registerWorkersForSession(sessionId, workers) {
 
         return {
             success: true,
-            message: 'All workers kicked'
+            message: 'All workers kicked',
+            workersKicked: workerCount
         };
     }
 

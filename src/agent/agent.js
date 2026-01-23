@@ -560,7 +560,7 @@ export class Agent {
     
             if (this.orchestration) {
                 console.log(`[Agent] Orchestration found, stopping ${this.orchestration.workers.size} workers...`);
-                this.orchestration.stopAllWorkers().then(result => {
+                this.orchestration.kickAllWorkers().then(result => {
                     console.log(`[Agent] stopAllWorkers result:`, result);
                 }).catch(error => {
                     console.error(`❌ Error stopping workers:`, error);

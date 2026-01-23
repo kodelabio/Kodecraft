@@ -1886,16 +1886,20 @@ export class ExternalAPI {
         try {
             console.log(`[ExternalAPI] Bot kicking itself`);
             
-            // Stop all workers before disconnecting
-            try {
-                await this.orchestration.kickAllWorkers();
-                console.log(`✅ All workers stopped before leader disconnect`);
-            } catch (error) {
-                console.error(`❌ Error stopping workers:`, error);
-            }
-            
-            this.agent.cleanKill('User kicked bot from game', 0);
+            // Send response immediately
             res.json({ success: true, message: 'Bot disconnected' });
+            
+            // Then stop workers and kill process (fire and forget)
+            setImmediate(async () => {
+                try {
+                    await this.orchestration.kickAllWorkers();
+                    console.log(`✅ All workers stopped before leader disconnect`);
+                } catch (error) {
+                    console.error(`❌ Error stopping workers:`, error);
+                }
+                
+                this.agent.cleanKill('User kicked bot from game', 0);
+            });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

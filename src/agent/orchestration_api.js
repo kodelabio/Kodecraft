@@ -742,7 +742,7 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     // 
-    async teleportWorker(sessionId, workerName, taskLocation) {
+    async teleportWorker(sessionId, workerName, taskLocation, instant=false) {
         const session = this.taskSessions.get(sessionId);
         if (!session) {
             return { success: false, error: `Task session ${sessionId} not found` };
@@ -757,7 +757,10 @@ registerWorkersForSession(sessionId, workers) {
             const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(taskLocation),
+                body: JSON.stringify({
+                        ...taskLocation,
+                        instant: instant
+                }),
                 timeout: 5000
             });
 

@@ -590,7 +590,7 @@ export class ExternalAPI {
     // âœ… FIXED handleSearchForEntity
     async handleSearchForEntity(req, res) {
         try {
-            const { entityType, range = 64 } = req.body;
+            let { entityType, range = 64 } = req.body;
             
             if (!entityType || typeof entityType !== 'string') {
                 return res.status(400).json({ 
@@ -599,7 +599,12 @@ export class ExternalAPI {
                 });
             }
 
-            if (typeof range !== 'number' || range <= 0) {
+            // Convert range to number if it's a string
+            if (typeof range === 'string') {
+                range = parseInt(range, 10);
+            }
+
+            if (typeof range !== 'number' || isNaN(range) || range <= 0) {
                 return res.status(400).json({ 
                     error: 'range must be a positive number',
                     code: 'invalid_parameter'
@@ -1060,7 +1065,7 @@ export class ExternalAPI {
         }
     }
 
-    async handleGivePlayer(req, res) {
+    async handleGivePlayer(req, res) {x
         try {
             const { player, item, quantity = 1 } = req.body;
             
@@ -2172,7 +2177,7 @@ export class ExternalAPI {
 
     async handleTeleport(req, res) {
         try {
-            const { x, y, z } = req.body;
+            const { x, y, z, instant = false } = req.body;
             
             const coordValidation = this.validateAndRoundCoordinates(x, y, z);
             if (typeof coordValidation === 'string') {
@@ -2190,14 +2195,23 @@ export class ExternalAPI {
                 });
             }
 
-            // Use goToCoordinates command to actually move the bot
-            const command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, 1)`;
-            const result = await executeCommand(this.agent, command);
+            let command, result;
+            
+            if (instant && bot.game.gameMode === 'creative') {
+                // Instant teleport via command (creative mode only)
+                await bot.chat(`/tp @s ${coordValidation.x} ${coordValidation.y} ${coordValidation.z}`);
+                result = `Instantly teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
+            } else {
+                // Pathfinding navigation (default)
+                command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, 1)`;
+                result = await executeCommand(this.agent, command);
+            }
 
             res.json({ 
                 success: true, 
                 message: result || `Teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`,
-                position: coordValidation
+                position: coordValidation,
+                method: instant ? 'instant' : 'pathfinding'
             });
         } catch (error) {
             this.handleError(res, error, 'teleport');
@@ -2465,7 +2479,7 @@ export class ExternalAPI {
     // Teleport a specific worker to location
     async handleOrchestrationTeleportWorker(req, res) {
         try {
-            const { sessionId, workerName, taskLocation } = req.body;
+            const { sessionId, workerName, taskLocation, instant=false } = req.body;
 
             if (!sessionId || !workerName || !taskLocation) {
                 return res.status(400).json({
@@ -2481,7 +2495,7 @@ export class ExternalAPI {
                 });
             }
 
-            const result = await this.orchestration.teleportWorker(sessionId, workerName, taskLocation);
+            const result = await this.orchestration.teleportWorker(sessionId, workerName, taskLocation, instant);
 
             if (result.success) {
                 res.json(result);

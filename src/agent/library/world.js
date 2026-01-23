@@ -1,5 +1,6 @@
 import pf from 'mineflayer-pathfinder';
 import * as mc from '../../utils/mcdata.js';
+import settings from '../../../settings.js';
 
 
 export function getNearestFreeSpace(bot, size=1, distance=8) {
@@ -295,7 +296,7 @@ export function getNearbyEntityTypes(bot) {
      * @example
      * let mobs = world.getNearbyEntityTypes(bot);
      **/
-    let mobs = getNearbyEntities(bot, 16);
+    let mobs = getNearbyEntities(bot, settings.nearby_entity_search_distance);
     let found = [];
     for (let i = 0; i < mobs.length; i++) {
         if (!found.includes(mobs[i].name)) {
@@ -314,7 +315,7 @@ export function getNearbyPlayerNames(bot) {
      * @example
      * let players = world.getNearbyPlayerNames(bot);
      **/
-    let players = getNearbyPlayers(bot, 64);
+    let players = getNearbyPlayers(bot, settings.nearby_player_search_distance);
     let found = [];
     for (let i = 0; i < players.length; i++) {
         if (!found.includes(players[i].username) && players[i].username != bot.username) {

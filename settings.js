@@ -67,7 +67,11 @@ const settings = {
     
     // n8n configuration
     "n8n_webhook_url": process.env.N8N_WEBHOOK_URL || 'http://localhost:5678/webhook/kodecraft',
-    "n8n_callback_url": process.env.N8N_CALLBACK_URL || 'http://localhost:5678/webhook/kodecraft/worker-complete'
+    "n8n_callback_url": process.env.N8N_CALLBACK_URL || 'http://localhost:5678/webhook/kodecraft/worker-complete',
+
+    // bot would search for players within this distance
+    "nearby_player_search_distance": 64,
+    "nearby_entity_search_distance": 16
 
 };
 

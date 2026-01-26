@@ -82,8 +82,8 @@ done
 
 
 # Generate timestamp directory
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-OUTPUT_DIR="${OUTPUT_DIR}/${TIMESTAMP}"
+#TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+#OUTPUT_DIR="${OUTPUT_DIR}/${TIMESTAMP}"
 
 
 # Check if tag was provided

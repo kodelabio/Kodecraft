@@ -2,7 +2,7 @@
 
 # Default values
 WEBHOOK_BASE_URL="http://localhost/webhook/Kodecraft"
-OUTPUT_DIR="./n8n/datatables"
+EXPORT_DIR="./n8n/datatables"
 TABLE_NAME="KodecraftPrompts"
 
 # Help function

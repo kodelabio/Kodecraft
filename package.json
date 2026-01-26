@@ -1,4 +1,6 @@
 {
+    "version": "1.0.0",
+    "name": "kodecraft",
     "type": "module",
     "dependencies": {
         "@anthropic-ai/sdk": "^0.17.1",

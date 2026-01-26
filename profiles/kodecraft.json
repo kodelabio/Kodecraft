@@ -1,5 +1,8 @@
 {
     "name": "Manager",
+    "modes": {
+        "cheat": true
+    },
     "model": {
         "api": "openai",
         "model": "gpt-5-mini",

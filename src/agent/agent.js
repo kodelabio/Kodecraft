@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import path from 'path';
 import { History } from './history.js';
 import { Coder } from './coder.js';
 import { VisionInterpreter } from './vision/vision_interpreter.js';
@@ -29,16 +30,23 @@ export class Agent {
         this.count_id = count_id;
 
         const apiPort = port || settings.leader_bot_base_port || 5000; 
-
+        console.log(`[DEBUG] Current working directory:`, process.cwd());
+        console.log(`[DEBUG] settings.profiles[0]:`, settings.profiles[0]);
+        console.log(`[DEBUG] Attempting to read from:`, path.resolve(settings.profiles[0]));
         // Load profile from file
         let profile = settings.profile || {};
-        if (settings.profiles && settings.profiles.length > 0) {
+        if (!settings.profile && settings.profiles && settings.profiles.length > 0) {
             try {
                 const profilePath = settings.profiles[0];
-                profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+                const fileContent = readFileSync(profilePath, 'utf8');
+                console.log(`Raw file (first 500 chars):`, fileContent.substring(0, 500));
+                
+                profile = JSON.parse(fileContent);
+                console.log(`Parsed profile keys:`, Object.keys(profile));
+                console.log(`Profile.modes:`, profile.modes);
                 console.log(`Loaded profile from ${profilePath}`);
             } catch (error) {
-                console.warn(`Failed to load profile from ${settings.profiles[0]}, using defaults:`, error.message);
+                console.warn(`Failed to load profile: ${error.message}`);
             }
         }
 

@@ -154,11 +154,15 @@ export class APIServer {
             }
 
             console.log(`[APIServer] Forwarding orchestration request: ${action} to port ${port}`);
+            const body = req.method !== 'GET' ? {
+                ...req.body,
+                userId: userId  // Pass userId in body
+            } : undefined;
 
             const response = await fetch(`http://localhost:${port}/api/orchestration${action}`, {
                 method: req.method,
                 headers: { 'Content-Type': 'application/json' },
-                body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+                body: body ? JSON.stringify(body) : undefined,
                 timeout: 60000
             });
 

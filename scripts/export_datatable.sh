@@ -64,9 +64,9 @@ if [[ -z "$TABLE_NAME" ]]; then
 fi
 
 # Create timestamped subdirectory
-TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-EXPORT_DIR="$OUTPUT_DIR/$TIMESTAMP"
-mkdir -p "$EXPORT_DIR"
+#TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+#EXPORT_DIR="$OUTPUT_DIR/$TIMESTAMP"
+#mkdir -p "$EXPORT_DIR"
 
 # Clean table name for filename
 clean_name=$(echo "$TABLE_NAME" | tr ' ' '_' | tr -cd '[:alnum:]_-')

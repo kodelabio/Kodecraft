@@ -19,7 +19,7 @@ export class ExternalAPI {
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
 
-        this.orchestration = new OrchestrationAPI(agent);  // â† NEW LINE (replaced old line)
+        this.orchestration = new OrchestrationAPI(agent);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
         this.agent.orchestration = this.orchestration; 
         
@@ -38,6 +38,10 @@ export class ExternalAPI {
         this.setupRoutes();
     }
 
+    setLeaderUserId(userId) {
+        this.orchestration.leaderUserId = userId;
+    }
+
     setupRoutes() {
 
         this.app.get('/api/agent/world-info', this.handleWorldInfo.bind(this));
@@ -50,6 +54,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/searchForBlock', this.handleSearchForBlock.bind(this));
         this.app.post('/api/agent/searchForEntity', this.handleSearchForEntity.bind(this));
         this.app.post('/api/agent/teleport', this.handleTeleport.bind(this));
+        this.app.post('/api/agent/teleport-worker', this.handleTeleportWorker.bind(this));
+
         
         // Block operations
         this.app.post('/api/agent/collect', this.handleCollect.bind(this));
@@ -2218,6 +2224,24 @@ export class ExternalAPI {
         }
     }
 
+    // used by the leader to teleport a specific worker to given coordinates 
+    async handleTeleportWorker(req, res) {
+            const { workerName, x, y, z } = req.body;
+            
+            try {
+                const command = `!teleportWorker("${workerName}", ${x}, ${y}, ${z})`;
+                const result = await executeCommand(this.agent, command);
+                
+                res.json({ 
+                    success: true, 
+                    message: result,
+                    position: { x, y, z }
+                });
+            } catch (error) {
+                this.handleError(res, error, 'teleportWorker');
+            }
+        }
+
 
     /**
      * Teleport workers to a player's location
@@ -2289,6 +2313,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorker(req, res) {
         try {
             const { name, port, sessionId, callbackWebhookUrl } = req.body;
+            
 
             if (!name || !port) {
                 return res.status(400).json({
@@ -2316,44 +2341,48 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const count = Number(req.body.count);  // ← Convert to number
-            const { basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
+            const { userId, basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
+
+            
+            console.log(`[API SPWN] Leader userId for teleportWorker: ${userId}`);
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
                     error: 'count parameter must be a positive number' 
                 });
             }
-
+            
+            
             const spawnResults = [];
             let currentPort = basePort;
             
             for (let i = 0; i < count; i++) {
                 const workerName = `${this.agent.name}_W${i + 1}`;
-                
                 const result = await this.orchestration.spawnWorker(
                     workerName,
                     currentPort,
                     sessionId || `session_${Date.now()}`,
-                    callbackWebhookUrl || settings.n8n_callback_url
+                    callbackWebhookUrl || settings.n8n_callback_url,
+                    userId
                 );
                 
                 spawnResults.push(result);
                 if (result.success) {
                     currentPort = result.port + 1; // Next port
                 }
-        }
+            }
 
-        const successCount = spawnResults.filter(r => r.success).length;
-        res.status(202).json({
-            success: true,
-            spawned: successCount,
-            totalRequested: count,
-            results: spawnResults
-        });
-        
-    } catch (error) {
-        this.handleError(res, error, 'orchestrationSpawnWorkers');
-    }
+            const successCount = spawnResults.filter(r => r.success).length;
+            res.status(202).json({
+                success: true,
+                spawned: successCount,
+                totalRequested: count,
+                results: spawnResults
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationSpawnWorkers');
+        }
     }
 
     /**

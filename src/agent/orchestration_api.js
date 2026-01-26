@@ -9,6 +9,7 @@ import net from 'net';
 export class OrchestrationAPI {
     constructor(agent) {
         this.agent = agent;
+        this.leaderUserId = null;
         this.workers = new Map();           // workerName -> { process, port, status, spawnTime }
         this.taskSessions = new Map();     // sessionId -> { taskRequest, workers, status, startTime }
         this.taskLocations = [];           // Track reserved task locations
@@ -104,7 +105,7 @@ export class OrchestrationAPI {
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
      */
-    async spawnWorker(name, port, sessionId, callbackWebhookUrl) {
+    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId) {
 
         // Check if worker already exists
         if (this.workers.has(name)) {
@@ -197,6 +198,41 @@ export class OrchestrationAPI {
             //    throw new Error(`Worker ${name} API not responding after 60 seconds`);
             //}
             console.log(`✓ Worker on port ${port} spawned successfully`);
+
+            // Teleport worker to safe location near leader
+            try {
+                const leaderPos = this.agent.bot.entity.position;
+                const offset = this.workers.size * 3;
+                const safePos = {
+                    x: Math.floor(leaderPos.x) + offset,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + offset
+                };
+
+                console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+                console.log(`Calling: http://localhost:4001/api/agent/${userId}/teleport-worker`);
+                const response = await fetch(`http://localhost:4001/api/agent/${userId}/teleport-worker`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerName: name,
+                        x: safePos.x,
+                        y: safePos.y,
+                        z: safePos.z
+                    }),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Worker ${name} teleported to safe location`);
+                } else {
+                    console.warn(`⚠️ Teleport failed: ${response.status}`);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                console.warn(`⚠️ Failed to teleport worker: ${error.message}`);
+            }
 
             
             return {
@@ -753,30 +789,41 @@ registerWorkersForSession(sessionId, workers) {
             return { success: false, error: `Worker ${workerName} not found in session` };
         }
 
+        // Teleport worker to safe location near leader
         try {
-            const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                        ...taskLocation,
-                        instant: instant
-                }),
-                timeout: 5000
-            });
-
-            if (response.ok) {
-                console.log(`✅ ${workerName} teleported to ${taskLocation.x}, ${taskLocation.y}, ${taskLocation.z}`);
-                return {
-                    success: true,
-                    workerName: workerName,
-                    position: taskLocation
+                const leaderPos = this.agent.bot.entity.position;
+                const offset = this.workers.size * 3;
+                const safePos = {
+                    x: Math.floor(leaderPos.x) + offset,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + offset
                 };
-            }
-            return { success: false, error: `HTTP ${response.status}` };
-        } catch (error) {
-            return { success: false, error: error.message };
+
+                console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+                
+                const response = await fetch(`http://localhost:4001/api/agent/teleport-worker`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerName: name,
+                        x: safePos.x,
+                        y: safePos.y,
+                        z: safePos.z
+                    }),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Worker ${name} teleported to safe location`);
+                } else {
+                    console.warn(`⚠️ Teleport failed: ${response.status}`);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                console.warn(`⚠️ Failed to teleport worker: ${error.message}`);
         }
-}
+    }
 
     // Simplified teleportWorkers method without retries
 

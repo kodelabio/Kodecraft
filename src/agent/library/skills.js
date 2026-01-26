@@ -1838,6 +1838,35 @@ export async function goToPlayer(bot, username, distance=3) {
     log(bot, `You have reached ${username}.`);
 }
 
+// Allow leader to teleport workers
+export async function teleportWorker(bot, workerName, x, y, z) {
+    console.log(`[teleportWorker] START - worker: ${workerName}, coords: ${x}, ${y}, ${z}`);
+    
+    if (!bot.modes.isOn('cheat')) {
+        console.log(`[teleportWorker] Cheat mode is OFF`);
+        log(bot, `Cannot teleport worker - cheat mode is off`);
+        return false;
+    }
+    
+    console.log(`[teleportWorker] Cheat mode is ON`);
+    
+    const x_int = Math.floor(x);
+    const y_int = Math.floor(y);
+    const z_int = Math.floor(z);
+    
+    const command = `/tp ${workerName} ${x_int} ${y_int} ${z_int}`;
+    console.log(`[teleportWorker] Sending command: ${command}`);
+    
+    await bot.chat(command);
+    
+    console.log(`[teleportWorker] Command sent, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log(`[teleportWorker] DONE`);
+    log(bot, `Teleported ${workerName} to ${x_int}, ${y_int}, ${z_int}`);
+    
+    return true;
+}
 
 export async function followPlayer(bot, username, distance=4) {
     /**

@@ -25,7 +25,7 @@ const fetch = globalThis.fetch || (async (...args) => {
 });
 
 export class Agent {
-    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null) {
+    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null, spawnLocation = null) {
         this.last_sender = null;
         this.count_id = count_id;
 
@@ -133,6 +133,16 @@ export class Agent {
         this.bot.once('spawn', async () => {
             try {
                 clearTimeout(spawnTimeout);
+                // NEW: Teleport to spawn location if provided
+                if (spawnLocation) {
+                    const x = Math.floor(spawnLocation.x);
+                    const y = Math.floor(spawnLocation.y);
+                    const z = Math.floor(spawnLocation.z);
+                    console.log(`[Agent] Teleporting ${this.name} to (${x}, ${y}, ${z})`);
+                    this.bot.chat(`/tp @s ${x} ${y} ${z}`);
+                    // Wait for teleport to complete
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
                 addBrowserViewer(this.bot, count_id);
                 console.log('Initializing vision intepreter...');
                 try {

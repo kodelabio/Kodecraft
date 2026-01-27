@@ -47,7 +47,7 @@ export class LeaderBotManager {
         }
     }
 
-    async getOrSpawnLeaderBot(userId, botName) {
+    async getOrSpawnLeaderBot(userId, botName, playerPosition) {
             const startTime = Date.now();
             console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
             console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
@@ -80,12 +80,14 @@ export class LeaderBotManager {
             }
 
             console.log(`[LeaderBotManager] 🚀 Spawning new bot...`);
-            const result = await this.spawnLeaderBot(userId, botName);
+            // Use playerPosition as spawn location if provided
+            const spawnLocation = playerPosition || null;
+            const result = await this.spawnLeaderBot(userId, botName, spawnLocation);
             console.log(`[LeaderBotManager] ⏱️  Done in ${Date.now() - startTime}ms - success: ${result.success}`);
             return result;
         }
 
-    async spawnLeaderBot(userId, botName) {
+    async spawnLeaderBot(userId, botName, spawnLocation = null) {
         const port = this.nextLeaderPort++; 
         const countId = this.leaderBots.size;
     
@@ -95,6 +97,9 @@ export class LeaderBotManager {
         userId = String(userId);  // ← Normalize to string
         
         console.log(`[LeaderBotManager] 🚀 Spawning leader bot for user ${userId} on port ${port}`);
+        if (spawnLocation) {
+            console.log(`   Spawn location: (${spawnLocation.x}, ${spawnLocation.y}, ${spawnLocation.z})`);
+        }
 
         try {
             // Create AgentProcess with name = botName
@@ -109,7 +114,7 @@ export class LeaderBotManager {
             });
 
             // Start the agent (load_memory=true, init_message=null, count_id=userId)
-            agentProcess.start(true, null, countId);
+            agentProcess.start(true, null, countId, spawnLocation);
 
             // Store leader bot info
             const leaderInfo = {

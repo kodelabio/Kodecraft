@@ -13,6 +13,10 @@ The workers now spawn and are instantly teleported to safe positions near the le
 [1.1.2]
 ### Fixed bugs on pathfinding and teleporting
 
+[1.1.3]
+### Fixed
+- leader to join game close to related player
+
 
 
 

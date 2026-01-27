@@ -10,5 +10,9 @@
 
 The workers now spawn and are instantly teleported to safe positions near the leader, solving the pathfinding distance problem we had earlier.
 
+[1.1.2]
+### Fixed bugs on pathfinding and teleporting
+
+
 
 

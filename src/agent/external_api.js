@@ -22,6 +22,13 @@ export class ExternalAPI {
         this.orchestration = new OrchestrationAPI(agent);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
         this.agent.orchestration = this.orchestration; 
+        // Kick workers on bot disconnect
+        if (this.agent?.bot) {
+            this.agent.bot.on('end', async () => {
+                console.log(`[ExternalAPI] Bot disconnected - kicking all workers`);
+                await this.orchestration.kickAllWorkers();
+            });
+        }
         
         // CORS for n8n
         this.app.use((req, res, next) => {
@@ -363,13 +370,13 @@ export class ExternalAPI {
                 });
             }
 
-            console.log(`[handleMove DEBUG] Executing command:`, command);
-            console.log(`[handleMove DEBUG] Bot busy?`, this.agent.actions?.executing);
-            console.log(`[handleMove DEBUG] Current action:`, this.agent.actions?.currentActionLabel);
+            //console.log(`[handleMove DEBUG] Executing command:`, command);
+            //console.log(`[handleMove DEBUG] Bot busy?`, this.agent.actions?.executing);
+            //console.log(`[handleMove DEBUG] Current action:`, this.agent.actions?.currentActionLabel);
             const result = await executeCommand(this.agent, command);
-            console.log(`[handleMove DEBUG] Command result:`, result);
-            console.log(`[handleMove DEBUG] Result type:`, typeof result);
-            console.log(`[API handleMove] Move result:`, result);  // ✅ ADD THIS
+            //console.log(`[handleMove DEBUG] Command result:`, result);
+            //console.log(`[handleMove DEBUG] Result type:`, typeof result);
+            //console.log(`[API handleMove] Move result:`, result);  // ✅ ADD THIS
             console.log(`[API handleMove] Bot position after move:`, this.agent.bot.entity.position);  // ✅ ADD THIS
         
             
@@ -2877,21 +2884,30 @@ async handleOrchestrationSessionTasks(req, res) {
 
     async handleMoveWorkerTo(req, res) {
         const { workerName, x, y, z } = req.body;
+        
         if (workerName === 'all') {
             const results = [];
             for (const [name, worker] of this.orchestration.workers) {
                 const result = await this.orchestration.moveWorkerToCoordinates(name, x, y, z);
                 results.push({ workerName: name, ...result });
             }
+            
+            const successCount = results.filter(r => r.success).length;
             return res.json({ 
-                success: true, 
-                movedWorkers: results.length,
+                success: successCount === results.length,
+                movedWorkers: successCount,
+                totalWorkers: results.length,
                 results: results 
             });
         }
 
         const result = await this.orchestration.moveWorkerToCoordinates(workerName, x, y, z);
-        res.json(result);
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(422).json(result);
+        }
     }
 
 

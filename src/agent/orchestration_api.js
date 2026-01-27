@@ -777,7 +777,7 @@ registerWorkersForSession(sessionId, workers) {
         };
     }
 
-    // 
+    // DO NOT USE - BROKEN - needs user ID to teleport worker
     async teleportWorker(sessionId, workerName, taskLocation, instant=false) {
         const session = this.taskSessions.get(sessionId);
         if (!session) {
@@ -800,7 +800,7 @@ registerWorkersForSession(sessionId, workers) {
                 };
 
                 console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);
-                
+                // THIS API CALL NEEDS TO BE FIXED TO PASS USER ID
                 const response = await fetch(`http://localhost:4001/api/agent/teleport-worker`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1222,14 +1222,43 @@ registerWorkersForSession(sessionId, workers) {
             return { success: false, error: `Worker ${workerName} not found` };
         }
 
-        const response = await fetch(`http://localhost:${worker.port}/api/agent/goToCoordinates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ x: x, y: y, z: z })
-        });
+        try {
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x: x, y: y, z: z }),
+                timeout: 60000
+            });
 
-        return response.ok ? { success: true, message: `${workerName} moving to ${x}, ${y}, ${z}` } : 
-                            { success: false, error: await response.text() };
+            const data = await response.json();
+
+            // Check for unsafe position (422) or unreachable (422)
+            if (response.status === 422) {
+                return { 
+                    success: false, 
+                    error: data.error || 'Unreachable or unsafe position',
+                    code: data.code
+                };
+            }
+
+            if (!response.ok) {
+                return { 
+                    success: false, 
+                    error: data.error || `HTTP ${response.status}`
+                };
+            }
+
+            return { 
+                success: true, 
+                message: `${workerName} moved to ${x}, ${y}, ${z}`,
+                response: data
+            };
+        } catch (error) {
+            return { 
+                success: false, 
+                error: error.message 
+            };
+        }
     }
 
     /**
@@ -1472,13 +1501,31 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         try {
-            worker.process.kill('SIGINT');
-            console.log(`✓ Stopped worker ${workerName}`);
-            return {
-                success: true,
-                workerName: workerName,
-                message: `Worker ${workerName} stopped`
-            };
+            // Send stop command to worker's API instead of killing process
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    timeout: 5000
+            });
+
+            if (response.ok) {
+                    console.log(`✓ Stopped worker ${workerName}`);
+                    return {
+                        success: true,
+                        workerName: workerName,
+                        message: `Worker ${workerName} stopped`
+                    }
+                    //results.push({ workerName, status: 'stopped' });
+            } else {
+                    console.error(`Failed to stop worker ${workerName}: HTTP ${response.status}`);
+                    return {
+                        success: false,
+                        workerName: workerName,
+                        message: `Failed to stop Worker ${workerName}`
+                    }
+                    //results.push({ workerName, status: 'failed', error: `HTTP ${response.status}` });
+            }
         } catch (error) {
             console.error(`Error stopping worker ${workerName}:`, error);
             return {

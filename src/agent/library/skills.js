@@ -1724,12 +1724,13 @@ export async function goToPosition(bot, x, y, z, min_distance=2) {
         log(bot, `Missing coordinates, given x:${x} y:${y} z:${z}`);
         return false;
     }
+    /* This was more of a workaround for testing
     if (bot.modes.isOn('cheat')) {
         bot.chat('/tp @s ' + x + ' ' + y + ' ' + z);
         log(bot, `Teleported to ${x}, ${y}, ${z}.`);
         return true;
     }
-    
+    */
     const movements = new pf.Movements(bot);
     bot.pathfinder.setMovements(movements);
     
@@ -1749,6 +1750,19 @@ export async function goToPosition(bot, x, y, z, min_distance=2) {
     
     try {
         await bot.pathfinder.goto(new pf.goals.GoalNear(x, y, z, min_distance));
+        // NEW: Verify bot is on solid ground after movement
+        const currentPos = bot.entity.position;
+        console.log(`[goToPosition] Movement complete:`);
+        console.log(`  Target: (${x}, ${y}, ${z})`);
+        console.log(`  Current position: (${currentPos.x.toFixed(2)}, ${currentPos.y.toFixed(2)}, ${currentPos.z.toFixed(2)})`);
+        
+        // Check if bot reached approximately the target Y coordinate
+        const yDifference = Math.abs(currentPos.y - y);
+        if (yDifference > 2) {
+            log(bot, `Pathfinding failed: Bot Y position ${currentPos.y} differs from target ${y}`);
+            return false;
+        }
+
         log(bot, `You have reached at ${x}, ${y}, ${z}.`);
         return true;
     } catch (err) {
@@ -1817,12 +1831,13 @@ export async function goToPlayer(bot, username, distance=3) {
      * await skills.goToPlayer(bot, "player");
      **/
 
+    /* This was more of a workaround for testing
     if (bot.modes.isOn('cheat')) {
         bot.chat('/tp @s ' + username);
         log(bot, `Teleported to ${username}.`);
         return true;
     }
-
+    */
     bot.modes.pause('self_defense');
     bot.modes.pause('cowardice');
     let player = bot.players[username].entity

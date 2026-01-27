@@ -37,10 +37,25 @@ const argv = yargs(args)
         type: 'number',
         description: 'port for agent ExternalAPI server'
     })
+    .option('spawn_x', {
+        alias: 'x',
+        type: 'number',
+        description: 'spawn location X coordinate'
+    })
+    .option('spawn_y', {
+        alias: 'y',
+        type: 'number',
+        description: 'spawn location Y coordinate'
+    })
+    .option('spawn_z', {
+        alias: 'z',
+        type: 'number',
+        description: 'spawn location Z coordinate'
+    })
     .option('mindserverPort', {
-    type: 'number',
-    default: settings.mindserver_port || 8080,
-    description: 'port of mindserver'
+        type: 'number',
+        default: settings.mindserver_port || 8080,
+        description: 'port of mindserver'
     })
     .argv;
 
@@ -55,6 +70,9 @@ const argv = yargs(args)
         // In Docker, use container name instead of localhost
         const mindserverHost = settings.mindserver_host || 'mindserver';
         const mindserverPort = settings.mindserver_port || 8080;
+        const spawnLocation = argv.spawn_x && argv.spawn_y && argv.spawn_z ? 
+            { x: argv.spawn_x, y: argv.spawn_y, z: argv.spawn_z } : 
+            null;
         // Create fresh instance for this agent process
         const serverProxy = new MindServerProxy(argv.name);
         console.log(`Connecting to MindServer at ${mindserverHost}:${mindserverPort}`);
@@ -63,7 +81,7 @@ const argv = yargs(args)
         const agent = new Agent();
         agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
-        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port);
+        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port, spawnLocation);
         console.log(`[DEBUG] Agent started successfully.`);
     } catch (error) {
         console.error('Failed to start agent process:');

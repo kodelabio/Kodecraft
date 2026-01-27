@@ -51,20 +51,33 @@ export class APIServer {
     async handleInitBot(req, res) {
         const startTime = Date.now();
         try {
-            const { userId, botName } = req.body;
+            const { userId, botName, playerPosition } = req.body;
             console.log(`[APIServer] 📝 Init bot request`);
             console.log(`   userId: ${userId} (${typeof userId}), botName: ${botName}`);
+            console.log(`   playerPosition: ${playerPosition ? `(${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z})` : 'not provided'}`);
 
             if (!userId || !botName) {
                 console.warn(`[APIServer] ⚠️  Missing params`);
                 return res.status(400).json({ error: 'userId and botName required' });
             }
 
+            // Validate playerPosition if provided
+            if (playerPosition) {
+                if (typeof playerPosition.x !== 'number' || 
+                    typeof playerPosition.y !== 'number' || 
+                    typeof playerPosition.z !== 'number') {
+                    return res.status(400).json({ 
+                        error: 'playerPosition must have x, y, z as numbers',
+                        code: 'invalid_player_position'
+                    });
+                }
+            }
+
             const normalizedUserId = String(userId);
             console.log(`[APIServer] ✓ Normalized: ${normalizedUserId}, map size: ${leaderBotManager.leaderBots.size}/${settings.max_leader_bots}`);
             console.log(`[APIServer] Current users: ${Array.from(leaderBotManager.leaderBots.keys()).join(', ')}`);
 
-            const result = await leaderBotManager.getOrSpawnLeaderBot(normalizedUserId, botName);
+            const result = await leaderBotManager.getOrSpawnLeaderBot(normalizedUserId, botName, playerPosition);
             const duration = Date.now() - startTime;
             
             console.log(`[APIServer] ✓ Completed in ${duration}ms - success: ${result.success}, port: ${result.port}`);

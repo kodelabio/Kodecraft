@@ -1,4 +1,4 @@
-import OpenAIApi from 'openai';
+import OpenAI from 'openai';
 import { getKey, hasKey } from '../utils/keys.js';
 import { strictFormat } from '../utils/text.js';
 
@@ -6,6 +6,7 @@ export class GPT {
     constructor(model_name, url, params) {
         this.model_name = model_name;
         this.params = params;
+        console.log('GPT initialized with params:', this.params); 
 
         let config = {};
         if (url)
@@ -16,7 +17,7 @@ export class GPT {
 
         config.apiKey = getKey('OPENAI_API_KEY');
 
-        this.openai = new OpenAIApi(config);
+        this.openai = new OpenAI(config);
     }
 
     async sendRequest(turns, systemMessage, stop_seq='***') {
@@ -28,8 +29,12 @@ export class GPT {
             stop: stop_seq,
             ...(this.params || {})
         };
-        if (this.model_name.includes('o1')) {
+
+        // Remove stop sequence for models that don't support it
+        if (this.model_name.includes('o1') || this.model_name.includes('gpt-5')) {
             delete pack.stop;
+        } else {
+            pack.stop = stop_seq;
         }
 
         let res = null;

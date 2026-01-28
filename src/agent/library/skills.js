@@ -556,22 +556,12 @@ export async function defendSelf(bot, range=9) {
     return attacked;
 }
 
-
-
 export async function collectBlock(bot, blockType, num=1, exclude=null) {
-    /**
-     * Collect one of the given block type.
-     * @param {MinecraftBot} bot, reference to the minecraft bot.
-     * @param {string} blockType, the type of block to collect.
-     * @param {number} num, the number of blocks to collect. Defaults to 1.
-     * @returns {Promise<boolean>} true if the block was collected, false if the block type was not found.
-     * @example
-     * await skills.collectBlock(bot, "oak_log");
-     **/
     if (num < 1) {
         log(bot, `Invalid number of blocks to collect: ${num}.`);
         return false;
     }
+    
     let blocktypes = [blockType];
     if (blockType === 'coal' || blockType === 'diamond' || blockType === 'emerald' || blockType === 'iron' || blockType === 'gold' || blockType === 'lapis_lazuli' || blockType === 'redstone')
         blocktypes.push(blockType+'_ore');
@@ -593,9 +583,7 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
         }
         const movements = new pf.Movements(bot);
         movements.dontMineUnderFallingBlock = false;
-        blocks = blocks.filter(
-            block => movements.safeToBreak(block)
-        );
+        blocks = blocks.filter(block => movements.safeToBreak(block));
 
         if (blocks.length === 0) {
             if (collected === 0)
@@ -604,26 +592,45 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
                 log(bot, `No more ${blockType} nearby to collect.`);
             break;
         }
+
         const block = blocks[0];
         await bot.tool.equipForBlock(block);
-        const itemId = bot.heldItem ? bot.heldItem.type : null
+        const itemId = bot.heldItem ? bot.heldItem.type : null;
+        
         if (!block.canHarvest(itemId)) {
             log(bot, `Don't have right tools to harvest ${blockType}.`);
             return false;
         }
+
         try {
             if (mc.mustCollectManually(blockType)) {
-                await goToPosition(bot, block.position.x, block.position.y, block.position.z, 2);
+                // ADD TIMEOUT HERE
+                console.log(`[collectBlocks] Moving to block at ${block.position.x}, ${block.position.y}, ${block.position.z}`);
+                await Promise.race([
+                    goToPosition(bot, block.position.x, block.position.y, block.position.z, 2),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Pathfinding timeout')), 5000)
+                    )
+                ]);
+                console.log(`[collectBlocks] Reached block, digging...`);
                 await bot.dig(block);
+                console.log(`[collectBlocks] Dig complete, picking up items...`);
                 await pickupNearbyItems(bot);
+                console.log(`[collectBlocks] Items picked up`);
             }
             else {
+                console.log(`[collectBlocks] Using collectBlock API`);
                 await bot.collectBlock.collect(block);
+                console.log(`[collectBlocks] collectBlock API complete`);
             }
+            console.log(`[collectBlocks] Running autoLight...`);
             collected++;
             await autoLight(bot);
+            console.log(`[collectBlocks] autoLight complete`);
+            
         }
         catch (err) {
+            console.error(`[collectBlocks] Catch block error:`, err.message);
             if (err.name === 'NoChests') {
                 log(bot, `Failed to collect ${blockType}: Inventory full, no place to deposit.`);
                 break;

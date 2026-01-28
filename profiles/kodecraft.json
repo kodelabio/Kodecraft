@@ -1,14 +1,15 @@
 {
     "name": "Manager",
     "modes": {
-        "cheat": true
+        "cheat": true,
+        "hunting": false
     },
     "model": {
         "api": "openai",
         "model": "gpt-5-mini",
         "url": "https://api.openai.com/v1/",
         "params": {
-            "max_tokens": 1000,
+            "max_completion_tokens": 4096,
             "temperature": 1
         }
     },

@@ -10,7 +10,9 @@ export class APIServer {
     constructor() {
         this.app = express();
         this.app.use(express.json());
-        this.globalRealmManager = new RealmManager();
+        this.globalRealmManager = null;  // Will be initialized after world info is fetched
+        this.worldInfo = null;
+        this.leaderBotManager = leaderBotManager; // this is instantiated in /agent/leader_bot_manager.js
         
         // CORS
         this.app.use((req, res, next) => {
@@ -56,6 +58,37 @@ export class APIServer {
         
     }
 
+    // In APIServer
+    async initializeWorldInfo(userId) {
+        try {
+            const botInfo = this.leaderBotManager.getLeaderBotForUser(userId);
+            if (!botInfo) {
+                console.warn(`⚠️  Bot not found for user ${userId}`);
+                return false;
+            }
+            
+            const port = botInfo.port;
+            const response = await fetch(`http://localhost:${port}/api/agent/${userId}/world-info`);
+            const worldData = await response.json();
+            
+            if (worldData.success) {
+                this.worldInfo = worldData;
+            
+                // Initialize RealmManager with world info
+                if (!this.globalRealmManager) {
+                    this.globalRealmManager = new RealmManager(this.worldInfo);
+                    console.log(`✅ RealmManager initialized with world info`);
+                }
+            
+                return true;
+            }
+        } catch (error) {
+            console.error(`❌ Error fetching world info:`, error.message);
+            return false;
+        }
+    }
+
+
     async handleInitBot(req, res) {
         const startTime = Date.now();
         try {
@@ -90,9 +123,15 @@ export class APIServer {
                 botName, 
                 playerPosition, 
                 realmId || null);
-            const duration = Date.now() - startTime;
-            
-            console.log(`[APIServer] ✓ Completed in ${duration}ms - success: ${result.success}, port: ${result.port}`);
+            //const duration = Date.now() - startTime;
+            //console.log(`[APIServer] ✓ Completed in ${duration}ms - success: ${result.success}, port: ${result.port}`);
+            if (result.success) {
+                // Once bot is spawned and ready, fetch world info
+                if (!this.globalRealmManager.worldInfo) {
+                    await this.initializeWorldInfo(normalizedUserId);
+                }
+            }
+
             res.status(result.success ? 200 : 500).json(result);
         } catch (error) {
             const duration = Date.now() - startTime;
@@ -242,6 +281,12 @@ export class APIServer {
                 return res.status(400).json({
                     error: 'userId and leader_pr_value required'
                 });
+            }
+            if (!this.globalRealmManager) {
+                    return res.status(503).json({
+                        error: 'RealmManager not initialized - no bot connected yet',
+                        code: 'realm_manager_not_ready'
+                    });
             }
             
             // Get any bot to query orchestration

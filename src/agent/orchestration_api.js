@@ -8,7 +8,7 @@ import net from 'net';
 
 
 export class OrchestrationAPI {
-    constructor(agent) {
+    constructor(agent, worldInfo = null) {
         this.agent = agent;
         this.leaderUserId = null;
         this.workers = new Map();           // workerName -> { process, port, status, spawnTime }
@@ -18,7 +18,7 @@ export class OrchestrationAPI {
         this.reservedPorts = new Set(); 
         this.workerCounter = 0;
         // Realm manager for movement validation
-        this.realmManager = new RealmManager();
+        this.realmManager = new RealmManager(worldInfo);
     }
     /**
     * Helper: wait for specified milliseconds

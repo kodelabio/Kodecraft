@@ -11,7 +11,7 @@ import { OrchestrationAPI } from './orchestration_api.js';
     
 
 export class ExternalAPI {
-    constructor(agent) {
+    constructor(agent, globalRealmManager) {
         this.agent = agent;
         this.app = express();
         this.app.use(express.json());
@@ -19,7 +19,7 @@ export class ExternalAPI {
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
 
-        this.orchestration = new OrchestrationAPI(agent);
+        this.orchestration = new OrchestrationAPI(agent, globalRealmManager);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
         this.agent.orchestration = this.orchestration; 
         // Kick workers on bot disconnect
@@ -54,14 +54,14 @@ export class ExternalAPI {
         this.app.get('/api/agent/world-info', this.handleWorldInfo.bind(this));
 
         // Movement endpoints
-        this.app.post('/api/agent/move', this.handleMove.bind(this));
-        this.app.post('/api/agent/goToPlayer', this.handleGoToPlayer.bind(this));
-        this.app.post('/api/agent/goToCoordinates', this.handleGoToCoordinates.bind(this));
-        this.app.post('/api/agent/moveAway', this.handleMoveAway.bind(this));
-        this.app.post('/api/agent/searchForBlock', this.handleSearchForBlock.bind(this));
-        this.app.post('/api/agent/searchForEntity', this.handleSearchForEntity.bind(this));
-        this.app.post('/api/agent/teleport', this.handleTeleport.bind(this));
-        this.app.post('/api/agent/teleport-worker', this.handleTeleportWorker.bind(this));
+        this.app.post('/api/agent/move', this.validateLeaderRealm.bind(this), this.handleMove.bind(this));
+        this.app.post('/api/agent/goToPlayer', this.validateLeaderRealm.bind(this), this.handleGoToPlayer.bind(this));
+        this.app.post('/api/agent/goToCoordinates', this.validateLeaderRealm.bind(this), this.handleGoToCoordinates.bind(this));
+        this.app.post('/api/agent/moveAway', this.validateLeaderRealm.bind(this), this.handleMoveAway.bind(this));
+        this.app.post('/api/agent/searchForBlock', this.validateLeaderRealm.bind(this), this.handleSearchForBlock.bind(this));
+        this.app.post('/api/agent/searchForEntity', this.validateLeaderRealm.bind(this), this.handleSearchForEntity.bind(this));
+        this.app.post('/api/agent/teleport', this.validateLeaderRealm.bind(this), this.handleTeleport.bind(this));
+        this.app.post('/api/agent/teleport-worker', this.validateWorkerRealm.bind(this), this.handleTeleportWorker.bind(this));
 
         
         // Block operations
@@ -174,16 +174,16 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
         this.app.post('/api/orchestration/register-workers', this.handleOrchestrationRegisterWorkers.bind(this));
         this.app.post('/api/orchestration/reserve-location', this.handleOrchestrationReserveLocation.bind(this));
-        this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
-        this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
-        this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
+        this.app.post('/api/orchestration/teleport-worker', this.validateWorkerRealm.bind(this), this.handleOrchestrationTeleportWorker.bind(this));
+        this.app.post('/api/orchestration/teleport-workers', this.validateWorkerRealm.bind(this), this.handleOrchestrationTeleportWorkers.bind(this));
+        this.app.post('/api/orchestration/teleport-to-player', this.validateWorkerRealm.bind(this), this.handleOrchestrationTeleportToPlayer.bind(this));
         this.app.post('/api/orchestration/send-task', this.handleOrchestrationSendTask.bind(this));
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
         this.app.post('/api/orchestration/stop-all', this.handleOrchestrationStopAll.bind(this));
         this.app.post('/api/orchestration/kick-all-workers', this.handleOrchestrationKickAll.bind(this));
-        this.app.post('/api/orchestration/move-worker-to-player', this.handleMoveWorkerToPlayer.bind(this));
-        this.app.post('/api/orchestration/move-worker-to', this.handleMoveWorkerTo.bind(this));
+        this.app.post('/api/orchestration/move-worker-to-player', this.validateWorkerRealm.bind(this), this.handleMoveWorkerToPlayer.bind(this));
+        this.app.post('/api/orchestration/move-worker-to', this.validateWorkerRealm.bind(this), this.handleMoveWorkerTo.bind(this));
         // (â† NEW SECTION ENDS HERE)
 
          // Add these lines in setupRoutes() method, in the orchestration section:
@@ -195,6 +195,8 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/check-workers', this.handleOrchestrationCheckWorkers.bind(this));
 
         this.app.post('/api/orchestration/verify-permissions', this.handleOrchestrationVerifyPermissions.bind(this));
+        // Assign a leader to an existing realm
+        this.app.post('/api/orchestration/init-realm', this.handleInitRealm.bind(this));
         
     }
     
@@ -279,6 +281,102 @@ export class ExternalAPI {
         }
         return true;
     }
+
+
+    // Add to ExternalAPI class
+    validateRealmBounds(realmId) {
+        return async (req, res, next) => {
+            const { x, y, z } = req.body;
+            if (!x || !y || !z) return next();
+            
+            const validation = this.orchestration.realmManager.validateMovement(
+                { x, y, z },
+                realmId
+            );
+            
+            if (!validation.valid) {
+                console.warn(`⚠️ ${validation.error}`);
+                return res.status(403).json({
+                    error: validation.error,
+                    code: 'realm_trespass',
+                    bounds: validation.realm
+                });
+            }
+            next();
+        };
+    }
+
+    validateLeaderRealm(req, res, next) {
+        if (!this.leaderRealmId) {
+            return next(); // No realm defined, allow all movements
+        }
+        
+        const { x, y, z } = req.body;
+        if (x === undefined || y === undefined || z === undefined) {
+            return next(); // Not a coordinate request
+        }
+        
+        const validation = this.orchestration.realmManager.validateMovement(
+            { x, y, z },
+            this.leaderRealmId
+        );
+        
+        if (!validation.valid) {
+            console.warn(`⚠️ Leader trespass attempt: ${validation.error}`);
+            return res.status(403).json({
+                error: validation.error,
+                code: 'realm_trespass',
+                realmBounds: validation.realm,
+                attemptedPosition: { x, y, z }
+            });
+        }
+        next();
+    }
+
+
+    validateWorkerRealm(req, res, next) {
+        const { workerPort, port, sessionId, buildLocation, position } = req.body;
+        
+        // Extract target coordinates from different endpoint formats
+        let targetPos = null;
+        if (buildLocation) {
+            targetPos = buildLocation;
+        } else if (position) {
+            targetPos = position;
+        } else if (req.body.x && req.body.y && req.body.z) {
+            targetPos = { x: req.body.x, y: req.body.y, z: req.body.z };
+        }
+        
+        // If no target position or no realm system, allow
+        if (!targetPos || !sessionId) {
+            return next();
+        }
+        
+        // Get the session to find its realm
+        const session = this.orchestration.buildSessions.get(sessionId);
+        if (!session || !session.realmId) {
+            return next(); // No realm assigned to session
+        }
+        
+        const validation = this.orchestration.realmManager.validateMovement(
+            targetPos,
+            session.realmId
+        );
+        
+        if (!validation.valid) {
+            console.warn(`⚠️ Worker trespass attempt: ${validation.error}`);
+            return res.status(403).json({
+                error: validation.error,
+                code: 'realm_trespass_worker',
+                realmBounds: validation.realm,
+                attemptedPosition: targetPos,
+                sessionId: sessionId
+            });
+        }
+        next();
+    }
+
+
 
     // âœ… FIXED handleMove
     async handleMove(req, res) {
@@ -2312,6 +2410,30 @@ export class ExternalAPI {
     // ORCHESTRATION API HANDLERS (n8n Integration)
     // ===================================================================
 
+    async handleInitRealm(req, res) {
+        try {
+            const { realmId } = req.body;
+            
+            if (!realmId) {
+                return res.status(400).json({ error: 'realmId required' });
+            }
+            
+            if (!this.orchestration.realmManager.realms.has(realmId)) {
+                return res.status(400).json({ error: `Realm ${realmId} not defined` });
+            }
+            
+            this.leaderRealmId = realmId;
+            this.orchestration.realmManager.registerLeaderToRealm(
+                this.agent.username || 'leader',
+                realmId
+            );
+            
+            console.log(`🏰 Leader initialized in realm ${realmId}`);
+            res.json({ success: true, realmId: realmId });
+        } catch (error) {
+            this.handleError(res, error, 'initRealm');
+        }
+    }
     /**
      * Spawn a single worker bot
      * POST /api/orchestration/spawn-worker
@@ -2319,7 +2441,7 @@ export class ExternalAPI {
      */
     async handleOrchestrationSpawnWorker(req, res) {
         try {
-            const { name, port, sessionId, callbackWebhookUrl } = req.body;
+            const { name, port, sessionId, realmId, userId, callbackWebhookUrl  } = req.body;
             
 
             if (!name || !port) {
@@ -2327,12 +2449,20 @@ export class ExternalAPI {
                     error: 'name and port parameters required'
                 });
             }
+            if (realmId && !this.orchestration.realmManager.realms.has(realmId)) {
+                return res.status(400).json({
+                    error: `Realm ${realmId} not defined`,
+                    code: 'invalid_realm'
+                });
+            }
 
             const result = await this.orchestration.spawnWorker(
                 name,
                 port,
                 sessionId || `session_${Date.now()}`,
-                callbackWebhookUrl || settings.n8n_callback_url
+                callbackWebhookUrl || settings.n8n_callback_url,
+                userId,
+                realmId
             );
 
             if (result.success) {
@@ -2348,7 +2478,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const count = Number(req.body.count);  // ← Convert to number
-            const { userId, basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
+            const { userId, basePort = settings.worker_base_port, sessionId, realmId, callbackWebhookUrl } = req.body;
 
             
             console.log(`[API SPWN] Leader userId for teleportWorker: ${userId}`);
@@ -2359,7 +2489,12 @@ export class ExternalAPI {
                 });
             }
             
-            
+            if (realmId && !this.orchestration.realmManager.realms.has(realmId)) {
+                return res.status(400).json({
+                    error: `Realm ${realmId} not defined`,
+                    code: 'invalid_realm'
+                });
+            }
             const spawnResults = [];
             let currentPort = basePort;
             
@@ -2370,7 +2505,8 @@ export class ExternalAPI {
                     currentPort,
                     sessionId || `session_${Date.now()}`,
                     callbackWebhookUrl || settings.n8n_callback_url,
-                    userId
+                    userId,
+                    realmId
                 );
                 
                 spawnResults.push(result);

@@ -1,10 +1,11 @@
 // src/agent/orchestration_api.js
 // n8n-friendly orchestration API for collaborative tasks
 // Exposes worker spawning and coordination as simple REST endpoints
-
+import { RealmManager } from './agent/realm_manager.js';
 import { spawn } from 'child_process';
 import settings from './settings.js';
 import net from 'net';
+
 
 export class OrchestrationAPI {
     constructor(agent) {
@@ -16,6 +17,8 @@ export class OrchestrationAPI {
         this.nextWorkerPort = settings.worker_base_port;
         this.reservedPorts = new Set(); 
         this.workerCounter = 0;
+        // Realm manager for movement validation
+        this.realmManager = new RealmManager();
     }
     /**
     * Helper: wait for specified milliseconds
@@ -101,11 +104,13 @@ export class OrchestrationAPI {
         console.log(`❌ No available ports found starting from ${startPort}`);
         return null;
     }
+
+
     /**
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
      */
-    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId) {
+    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId, realmId) {
 
         // Check if worker already exists
         if (this.workers.has(name)) {
@@ -198,6 +203,14 @@ export class OrchestrationAPI {
             //    throw new Error(`Worker ${name} API not responding after 60 seconds`);
             //}
             console.log(`✓ Worker on port ${port} spawned successfully`);
+
+            if (realmId) {
+                this.realmManager.registerWorkerToRealm(name, realmId);
+                // Spawn worker within realm bounds
+                const realm = this.realmManager.realms.get(realmId);
+                const safePos = this.getRandomPosInRealm(realm.bounds);
+                // Move to position instead of just +5
+            }
 
             // Teleport worker to safe location near leader
             try {

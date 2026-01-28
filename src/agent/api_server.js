@@ -1,14 +1,16 @@
 // src/agent/api_server.js
 // Simple gateway router - forwards requests to appropriate leader bot's external_api
-
+import { RealmManager } from './agent/realm_manager.js';
 import express from 'express';
 import { leaderBotManager } from '../agent/leader_bot_manager.js';
 import settings from './settings.js';
+
 
 export class APIServer {
     constructor() {
         this.app = express();
         this.app.use(express.json());
+        this.globalRealmManager = new RealmManager();
         
         // CORS
         this.app.use((req, res, next) => {
@@ -45,13 +47,19 @@ export class APIServer {
         this.app.post('/api/admin/stop-bot/:userId', this.handleStopBot.bind(this));
         this.app.post('/api/admin/stop-all', this.handleStopAll.bind(this));
         this.app.get('/api/bots/list', this.handleBotsList.bind(this));
+
+        // Realm management endpoints
+        this.app.post('/api/admin/realm/allocate', this.handleAllocateRealm.bind(this));
+        this.app.post('/api/admin/realm/define', this.handleDefineRealm.bind(this));
+        this.app.get('/api/admin/realm/:realmId', this.handleGetRealm.bind(this));
+        this.app.get('/api/admin/realms', this.handleListRealms.bind(this));
         
     }
 
     async handleInitBot(req, res) {
         const startTime = Date.now();
         try {
-            const { userId, botName, playerPosition } = req.body;
+            const { userId, botName, playerPosition, realmId } = req.body;
             console.log(`[APIServer] 📝 Init bot request`);
             console.log(`   userId: ${userId} (${typeof userId}), botName: ${botName}`);
             console.log(`   playerPosition: ${playerPosition ? `(${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z})` : 'not provided'}`);
@@ -77,7 +85,11 @@ export class APIServer {
             console.log(`[APIServer] ✓ Normalized: ${normalizedUserId}, map size: ${leaderBotManager.leaderBots.size}/${settings.max_leader_bots}`);
             console.log(`[APIServer] Current users: ${Array.from(leaderBotManager.leaderBots.keys()).join(', ')}`);
 
-            const result = await leaderBotManager.getOrSpawnLeaderBot(normalizedUserId, botName, playerPosition);
+            const result = await leaderBotManager.getOrSpawnLeaderBot(
+                normalizedUserId, 
+                botName, 
+                playerPosition, 
+                realmId || null);
             const duration = Date.now() - startTime;
             
             console.log(`[APIServer] ✓ Completed in ${duration}ms - success: ${result.success}, port: ${result.port}`);
@@ -220,6 +232,93 @@ export class APIServer {
             res.status(500).json({ error: error.message });
         }
     }
+
+    // Realm management endpoints
+    async handleAllocateRealm(req, res) {
+        try {
+            const { userId, leader_pr_value } = req.body;
+            
+            if (!userId || leader_pr_value === undefined) {
+                return res.status(400).json({
+                    error: 'userId and leader_pr_value required'
+                });
+            }
+            
+            // Get any bot to query orchestration
+            const firstBot = this.leaderBotManager.leaderBots.values().next().value;
+            if (!firstBot) {
+                return res.status(503).json({ error: 'No bots available' });
+            }
+            
+            // Call orchestration to find available space and allocate realm
+            const response = await fetch(`http://localhost:${firstBot.port}/api/realm/allocate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, leader_pr_value })
+            });
+            
+            const data = await response.json();
+            res.status(response.status).json(data);
+        } catch (error) {
+            console.error('Error allocating realm:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+
+    async handleDefineRealm(req, res) {
+        const { userId } = req.body;
+        const port = this.leaderBotManager.getLeaderBotPort(userId);
+        
+        if (!port) {
+            return res.status(404).json({ error: 'Bot not found for user' });
+        }
+        
+        // Proxy to ExternalAPI on the leader bot
+        const response = await fetch(`http://localhost:${port}/api/realm/define`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        
+        const data = await response.json();
+        res.status(response.status).json(data);
+    }
+
+    async handleGetRealm(req, res) {
+        const { realmId } = req.params;
+        
+        // Get realm from any leader bot (realms are shared)
+        const firstBot = this.leaderBotManager.leaderBots.values().next().value;
+        if (!firstBot) {
+            return res.status(503).json({ error: 'No bots available' });
+        }
+        
+        const response = await fetch(`http://localhost:${firstBot.port}/api/realm/${realmId}`, {
+            method: 'GET'
+        });
+        
+        const data = await response.json();
+        res.status(response.status).json(data);
+    }
+
+    async handleListRealms(req, res) {
+        // Get realms from any leader bot (realms are shared)
+        const firstBot = this.leaderBotManager.leaderBots.values().next().value;
+        if (!firstBot) {
+            return res.status(503).json({ error: 'No bots available' });
+        }
+        
+        const response = await fetch(`http://localhost:${firstBot.port}/api/realm/list`, {
+            method: 'GET'
+        });
+        
+        const data = await response.json();
+        res.status(response.status).json(data);
+    }
+
+
+
 
     start(port) {
         const apiPort = port || settings.api_gateway_port;

@@ -1,14 +1,51 @@
 // src/agent/realm_manager.js
 export class RealmManager {
-    constructor(worldBounds = null) {
-        this.realms = new Map();
-        this.leaderRealms = new Map();
-        this.worldBounds = worldBounds || {
-            minX: -10000,
-            maxX: 10000,
-            minZ: -10000,
-            maxZ: 10000
-        };
+    constructor(worldInfo = null) {
+      this.realms = new Map();
+      this.leaderRealms = new Map();
+      this.worldInfo = worldInfo || {
+          dimension: 'overworld',
+          minY: -64,
+          maxY: 320,
+          worldType: 'flat',
+          spawnPoint: { x: 0, y: -60, z: 0 }
+      };
+      
+      // Initialize world bounds based on world type
+      this.initializeWorldBounds();
+    }
+
+    initializeWorldBounds() {
+        if (this.worldInfo.worldType === 'flat') {
+            this.worldBounds = {
+                minX: -10000,
+                maxX: 10000,
+                minZ: -10000,
+                maxZ: 10000
+            };
+        } else if (this.worldInfo.worldType === 'default' || this.worldInfo.worldType === 'normal') {
+            this.worldBounds = {
+                minX: -29999984,
+                maxX: 29999984,
+                minZ: -29999984,
+                maxZ: 29999984
+            };
+        } else {
+            // Custom world - use spawn as center with buffer
+            const buffer = 10000;
+            this.worldBounds = {
+                minX: this.worldInfo.spawnPoint.x - buffer,
+                maxX: this.worldInfo.spawnPoint.x + buffer,
+                minZ: this.worldInfo.spawnPoint.z - buffer,
+                maxZ: this.worldInfo.spawnPoint.z + buffer
+            };
+        }
+        
+        console.log(`🌍 World bounds initialized:`);
+        console.log(`   Type: ${this.worldInfo.worldType}`);
+        console.log(`   X: [${this.worldBounds.minX}, ${this.worldBounds.maxX}]`);
+        console.log(`   Z: [${this.worldBounds.minZ}, ${this.worldBounds.maxZ}]`);
+        console.log(`   Y: [${this.worldInfo.minY}, ${this.worldInfo.maxY}]`);
     }
 
     calculateRealmSize(leader_pr_value) {
@@ -25,31 +62,40 @@ export class RealmManager {
     }
 
     findAvailableRealmSpace(realmSize, padding = 50) {
-        const existingRealms = Array.from(this.realms.values());
-        const { minX, maxX, minZ, maxZ } = this.worldBounds;
-        
-        for (let x = minX; x < maxX; x += (realmSize + padding)) {
-            for (let z = minZ; z < maxZ; z += (realmSize + padding)) {
-                const candidateBounds = {
-                    minX: x,
-                    maxX: x + realmSize,
-                    minZ: z,
-                    maxZ: z + realmSize,
-                    minY: 0,
-                    maxY: 320
-                };
-                
-                const hasConflict = existingRealms.some(realm => 
-                    this.boundsOverlap(candidateBounds, realm.bounds)
-                );
-                
-                if (!hasConflict) {
-                    return candidateBounds;
-                }
-            }
-        }
-        
-        return null;
+      const { minX, maxX, minZ, maxZ } = this.worldBounds;
+      const existingRealms = Array.from(this.realms.values());
+      
+      const worldWidth = maxX - minX;
+      const worldDepth = maxZ - minZ;
+      
+      // Allocate based on world dimensions
+      console.log(`📏 Allocating realm of size ${realmSize} in world [${worldWidth} x ${worldDepth}]`);
+      
+      // Try allocating sequentially in Z-axis
+      let currentZ = minZ;
+      
+      while (currentZ < maxZ) {
+          const candidateBounds = {
+              minX: minX,
+              maxX: maxX,
+              minZ: currentZ,
+              maxZ: currentZ + realmSize,
+              minY: this.worldInfo.minY,
+              maxY: this.worldInfo.maxY
+          };
+          
+          const hasConflict = existingRealms.some(realm => 
+              this.boundsOverlap(candidateBounds, realm.bounds, padding)
+          );
+          
+          if (!hasConflict) {
+              return candidateBounds;
+          }
+          
+          currentZ += (realmSize + padding);
+      }
+      
+      return null;
     }
 
     defineRealm(realmId, leaderId, bounds) {

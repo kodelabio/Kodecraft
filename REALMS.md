@@ -10,9 +10,11 @@ The Realms system divides the Minecraft world into isolated regions, where each 
 
 ```
 APIServer (Single Instance)
+    ├── worldInfo (fetched from first bot)
     └── globalRealmManager (RealmManager)
-            └── Stores all realm definitions
-                └── Used for allocation and admin operations
+            ├── Initialized with worldInfo
+            ├── Stores all realm definitions
+            └── Used for allocation and admin operations
 
 Leader Bot Instance (Per Leader)
     └── ExternalAPI
@@ -29,9 +31,45 @@ Worker Bot Instance (Per Worker)
                     └── Validates movements against realm bounds
 ```
 
+### Initialization Flow
+
+```
+APIServer starts
+    ↓
+RealmManager = null (waiting for world info)
+    ↓
+First bot spawns via init-bot
+    ↓
+APIServer.initializeWorldInfo(userId)
+    ├─ Fetch world info from bot's /api/agent/{userId}/world-info
+    ├─ Create RealmManager(worldInfo)
+    ├─ Initialize world bounds based on world type
+    └─ Ready for realm allocations
+    ↓
+Subsequent realm operations use globalRealmManager
+```
+
 ### RealmManager Class
 
 Located in `src/agent/realm_manager.js`
+
+**Constructor:**
+```javascript
+constructor(worldInfo = null) {
+    this.realms = new Map();
+    this.leaderRealms = new Map();
+    this.worldInfo = worldInfo;
+    
+    if (worldInfo) {
+        this.initializeWorldBounds();
+    }
+}
+```
+
+**Initialization:**
+- Created **only** when world info is available
+- Automatically determines world bounds based on world type
+- Supports Flat, Default/Normal, Amplified, Large Biomes, and custom worlds
 
 **Core Responsibilities:**
 - Define new realms with boundaries
@@ -40,10 +78,14 @@ Located in `src/agent/realm_manager.js`
 - Find available space for new realms
 - Calculate realm size based on leader priority
 - Detect overlapping realm boundaries
+- Initialize world bounds based on Minecraft world type
 
 **Key Methods:**
 
 ```javascript
+// Initialize world bounds (called in constructor if worldInfo provided)
+initializeWorldBounds()
+
 // Define a new realm
 defineRealm(realmId, leaderId, bounds)
 
@@ -65,6 +107,39 @@ boundsOverlap(bounds1, bounds2, padding = 50)
 ```
 
 ## Realm Lifecycle
+
+### 0. World Initialization (First Bot Connection)
+
+**Trigger**: First leader bot is spawned and ready
+
+**Flow:**
+```
+APIServer.handleInitBot()
+    ├─ Spawn first bot via LeaderBotManager
+    ├─ Wait for bot to be ready
+    ├─ Call APIServer.initializeWorldInfo(userId)
+    │   ├─ Fetch world info from bot's /api/agent/{userId}/world-info
+    │   ├─ Create RealmManager(worldInfo)
+    │   └─ Initialize world bounds based on world type
+    └─ Return bot ready + world initialized
+```
+
+**World Info Retrieved:**
+```json
+{
+    "dimension": "overworld",
+    "minY": -64,
+    "maxY": 320,
+    "worldType": "flat",
+    "difficulty": "peaceful",
+    "spawnPoint": { "x": 0, "y": -60, "z": 0 }
+}
+```
+
+**RealmManager Initialization:**
+- **flat world**: Uses default bounds (±10,000)
+- **default/normal world**: Uses world border bounds (±29,999,984)
+- **custom world**: Uses spawn point as center with ±10,000 buffer
 
 ### 1. Realm Allocation (First-Time Login)
 
@@ -378,30 +453,58 @@ NOT (realm1.maxX + padding < realm2.minX OR
 
 ## Configuration
 
+### World Type Handling
+
+**RealmManager automatically configures world bounds based on world type:**
+
+```javascript
+// In RealmManager.initializeWorldBounds()
+
+if (worldInfo.worldType === 'flat') {
+    // Flat worlds: limited size
+    worldBounds = {
+        minX: -10000, maxX: 10000,
+        minZ: -10000, maxZ: 10000
+    };
+}
+else if (worldInfo.worldType === 'default' || worldInfo.worldType === 'normal') {
+    // Default/Normal: full world border
+    worldBounds = {
+        minX: -29999984, maxX: 29999984,
+        minZ: -29999984, maxZ: 29999984
+    };
+}
+else {
+    // Custom: use spawn point as center
+    const buffer = 10000;
+    worldBounds = {
+        minX: spawnPoint.x - buffer, maxX: spawnPoint.x + buffer,
+        minZ: spawnPoint.z - buffer, maxZ: spawnPoint.z + buffer
+    };
+}
+```
+
 ### Settings (settings.js)
 
 ```javascript
-"max_leader_bots": parseInt(process.env.MAX_LEADER_BOTS) || 50,
-"realm_base_size": 300,           // Default realm size before multiplier
-"realm_padding": 50,              // Space between realms
-"realm_height": {
-    "min": 0,
-    "max": 320
-}
+"max_leader_bots": parseInt(process.env.MAX_LEADER_BOTS) || 5,
+"realm_base_size": 4000,          // Base realm size (modified by leader_pr_value)
+"realm_padding": 50,              // Gap between realms to prevent overlap
 ```
 
-### World Boundaries (realm_manager.js)
+### World Boundaries (Automatic)
 
-```javascript
-this.worldBounds = {
-    minX: -10000,
-    maxX: 10000,
-    minZ: -10000,
-    maxZ: 10000
-}
-```
+World bounds are determined at runtime based on the Minecraft world type, not hardcoded.
 
 ## API Reference
+
+### Server Endpoints
+
+**Get World Info** (Called by APIServer on first bot connection)
+```
+GET /api/agent/{userId}/world-info
+Response: { dimension, minY, maxY, worldType, difficulty, spawnPoint }
+```
 
 ### Admin Endpoints
 

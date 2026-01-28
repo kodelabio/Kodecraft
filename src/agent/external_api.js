@@ -13,7 +13,7 @@ import { switchAgentProfile } from '../utils/profile.js';
     
 
 export class ExternalAPI {
-    constructor(agent, globalRealmManager) {
+    constructor(agent,  worldInfo = null) {
         this.agent = agent;
         this.app = express();
         this.app.use(express.json());
@@ -21,7 +21,7 @@ export class ExternalAPI {
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
 
-        this.orchestration = new OrchestrationAPI(agent, globalRealmManager);
+        this.orchestration = new OrchestrationAPI(agent, worldInfo);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
         this.agent.orchestration = this.orchestration; 
         // Kick workers on bot disconnect

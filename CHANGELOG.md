@@ -17,6 +17,18 @@ The workers now spawn and are instantly teleported to safe positions near the le
 ### Fixed
 - leader to join game close to related player
 
+[1.1.4]
+### Fixed
+- disabled hunting mode as default
+- fixed Oracle prompt to avoid confusion between Leader and Player
+- Added "collect" action to the Collaborative Tasks workflow.
+- Removed duplicated teleport when spawning workers (causing timeout exception)
+- Fixed max-tokens error whem using GPT-5-mini, using max_completion_tokens instead
+- Increased max_completion_tokens to 4096
+- changed GPT class to use new OpenAI class
+- workers hanging while collecting blocks
+
+
 
 
 

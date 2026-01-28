@@ -332,7 +332,20 @@ export const actionsList = [
             'num': { type: 'int', description: 'The number of blocks to collect.', domain: [1, Number.MAX_SAFE_INTEGER] }
         },
         perform: runAsAction(async (agent, type, num) => {
-            await skills.collectBlock(agent.bot, type, num);
+            try {
+                console.log(`[collectBlocks] Starting collection of ${num} ${type}`);
+                const result = await Promise.race([
+                    skills.collectBlock(agent.bot, type, num),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('collectBlock timeout after 5 minutes')), 300000)
+                    )
+                ]);
+                console.log(`[collectBlocks] Collection completed`);
+                return result;
+            } catch (error) {
+                console.error(`[collectBlocks] Error:`, error.message);
+                throw error;
+            }
         }, false, 10) // 10 minute timeout
     },
     {

@@ -47,7 +47,7 @@ export class LeaderBotManager {
         }
     }
 
-    async getOrSpawnLeaderBot(userId, botName, playerPosition) {
+    async getOrSpawnLeaderBot(userId, botName, playerPosition, realmId = null) {
             const startTime = Date.now();
             console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
             console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
@@ -82,12 +82,12 @@ export class LeaderBotManager {
             console.log(`[LeaderBotManager] 🚀 Spawning new bot...`);
             // Use playerPosition as spawn location if provided
             const spawnLocation = playerPosition || null;
-            const result = await this.spawnLeaderBot(userId, botName, spawnLocation);
+            const result = await this.spawnLeaderBot(userId, botName, spawnLocation, realmId);
             console.log(`[LeaderBotManager] ⏱️  Done in ${Date.now() - startTime}ms - success: ${result.success}`);
             return result;
         }
 
-    async spawnLeaderBot(userId, botName, spawnLocation = null) {
+    async spawnLeaderBot(userId, botName, spawnLocation = null, realmId = null) {
         const port = this.nextLeaderPort++; 
         const countId = this.leaderBots.size;
     
@@ -169,6 +169,27 @@ export class LeaderBotManager {
             }
             agentProcess.running = true;  // ← THIS ONE GOES HERE
             leaderInfo.status = 'ready';
+
+            // Assign realm to leader if provided
+            if (realmId) {
+                try {
+                    const initRealmResult = await fetch(`http://localhost:${port}/api/orchestration/${userId}/init-realm`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ realmId: realmId }),
+                        timeout: 5000
+                    });
+                    
+                    if (initRealmResult.ok) {
+                        console.log(`[LeaderBotManager] ✓ Leader ${userId} initialized in realm ${realmId}`);
+                        leaderInfo.realmId = realmId;
+                    } else {
+                        console.warn(`[LeaderBotManager] ⚠️  Failed to initialize realm for leader ${userId}`);
+                    }
+                } catch (error) {
+                    console.error(`[LeaderBotManager] Error initializing realm:`, error.message);
+                }
+            }
 
             return {
                 success: true,

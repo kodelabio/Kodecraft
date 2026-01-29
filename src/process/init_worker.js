@@ -177,7 +177,7 @@ async function setupLogging(workerName) {
         workerSettings.external_mode_allow_chat = false; // No chat commands
         workerSettings.only_chat_with = []; // Don't listen to anyone in chat
         workerSettings.is_worker_bot = true; // Flag to identify this as a worker bot
-        workerSettings.cheat_mode_enabled = true; // ✅ NEW: Enable cheat mode for workers
+        workerSettings.cheat_mode_enabled = false; 
         
         // Load and set the first profile (workers use the same profile as the leader)
         let profilePath = workerSettings.profiles[0];
@@ -191,6 +191,16 @@ async function setupLogging(workerName) {
         // Override profile name for worker
         const workerProfile = { ...profile };
         workerProfile.name = argv.name;
+
+        workerProfile.modes = {
+            ...workerProfile.modes,
+            cheat: false,
+            torch_placing: false,
+            self_defense: false,
+            item_collecting: false,
+            elbow_room: false,
+            idle_staring: false
+        };
         
         workerSettings.profile = workerProfile;
         workerSettings.assigned_api_port = argv.port;

@@ -143,7 +143,7 @@ export class APIServer {
                 method: req.method,
                 headers: { 'Content-Type': 'application/json' },
                 body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
-                timeout: 60000
+                timeout: 600000
             });
 
             const data = await response.json();
@@ -176,7 +176,7 @@ export class APIServer {
                 method: req.method,
                 headers: { 'Content-Type': 'application/json' },
                 body: body ? JSON.stringify(body) : undefined,
-                timeout: 60000
+                timeout: 600000
             });
 
             const data = await response.json();

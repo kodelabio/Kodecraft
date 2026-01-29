@@ -117,7 +117,7 @@ export class OrchestrationAPI {
                 port: existing.port,
                 status: 'existing',
                 pid: existing.process.pid,
-                message: `Worker ${name} already running`
+                message: `Worker ${name} already exists`
                 };
         }
 
@@ -956,7 +956,7 @@ registerWorkersForSession(sessionId, workers) {
             console.log(`   Stage: ${stageNumber}, Worker: ${workerName}, Port: ${port}`);
             
             // Send task to worker
-            const result = await this.sendTaskToWorker(port, taskPrompt, conversationId, callbackWebhookUrl, taskId);
+            const result = await this.sendTaskToWorker(port, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId);
             
             // Update metadata - task was sent
             taskMetadata.status = 'executing';
@@ -1127,7 +1127,7 @@ registerWorkersForSession(sessionId, workers) {
      * @param {string} taskPrompt - The task prompt/description
      * @param {string} taskId - Optional: Task ID for tracking (stage tasks)
      */
-    async sendTaskToWorker(workerPort, taskPrompt, conversationId, callbackWebhookUrl, taskId = null) {
+    async sendTaskToWorker(workerPort, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId = null) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
@@ -1153,6 +1153,9 @@ registerWorkersForSession(sessionId, workers) {
             }
             if (conversationId) {
                 requestBody.conversationId = conversationId;
+            }
+            if (sessionId) {
+                requestBody.sessionId = sessionId;
             }
 
             

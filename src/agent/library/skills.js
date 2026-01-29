@@ -1860,6 +1860,63 @@ export async function goToPlayer(bot, username, distance=3) {
     log(bot, `You have reached ${username}.`);
 }
 
+// Bot Teleportation functions
+export async function teleport(bot, x, y, z) {
+    console.log(`[teleport] START - coords: ${x}, ${y}, ${z}`);
+    
+    if (!bot.modes.isOn('cheat')) {
+        console.log(`[teleport] Cheat mode is OFF`);
+        log(bot, `Cannot teleport - cheat mode is off`);
+        return false;
+    }
+    
+    console.log(`[teleport] Cheat mode is ON`);
+    
+    const x_int = Math.floor(x);
+    const y_int = Math.floor(y);
+    const z_int = Math.floor(z);
+    
+    const command = `/tp @s ${x_int} ${y_int} ${z_int}`;
+    console.log(`[teleport] Sending command: ${command}`);
+    
+    await bot.chat(command);
+    
+    console.log(`[teleport] Command sent, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log(`[teleport] DONE`);
+    log(bot, `Teleported to ${x_int}, ${y_int}, ${z_int}`);
+    
+    return true;
+}
+
+export async function teleportToPlayer(bot, playerName) {
+    //console.log(`[teleportToPlayer] START - player: ${playerName}`);
+    
+    if (!bot.modes.isOn('cheat')) {
+        console.log(`[teleportToPlayer] Cheat mode is OFF`);
+        log(bot, `Cannot teleport - cheat mode is off`);
+        return false;
+    }
+    
+    //console.log(`[teleportToPlayer] Cheat mode is ON`);
+    
+    const command = `/tp ${playerName}`;
+    //console.log(`[teleportToPlayer] Sending command: ${command}`);
+    
+    await bot.chat(command);
+    
+    //console.log(`[teleportToPlayer] Command sent, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Move away from player
+    await moveAway(bot, 5);
+    
+    console.log(`[teleportToPlayer] ${playerName} DONE`);
+    log(bot, `Teleported to ${playerName}`);
+    
+    return true;
+}
+
 // Allow leader to teleport workers
 export async function teleportWorker(bot, workerName, x, y, z) {
     console.log(`[teleportWorker] START - worker: ${workerName}, coords: ${x}, ${y}, ${z}`);

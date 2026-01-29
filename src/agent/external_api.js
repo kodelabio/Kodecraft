@@ -62,6 +62,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/searchForEntity', this.handleSearchForEntity.bind(this));
         this.app.post('/api/agent/teleport', this.handleTeleport.bind(this));
         this.app.post('/api/agent/teleport-worker', this.handleTeleportWorker.bind(this));
+        this.app.post('/api/agent/teleport-to-player', this.handleTeleportToPlayer.bind(this));
+    
 
         
         // Block operations
@@ -174,9 +176,10 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
         this.app.post('/api/orchestration/register-workers', this.handleOrchestrationRegisterWorkers.bind(this));
         this.app.post('/api/orchestration/reserve-location', this.handleOrchestrationReserveLocation.bind(this));
-        this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
-        this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
-        this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
+        // Workers do not have permission to teleport, only the leader bot can do it
+        //this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
+        //this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
+        //this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
         this.app.post('/api/orchestration/send-task', this.handleOrchestrationSendTask.bind(this));
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
@@ -1448,16 +1451,19 @@ export class ExternalAPI {
             if (!playerName) {
                 return res.status(400).json({ error: 'playerName query parameter required' });
             }
-
             const player = this.agent.bot.players[playerName];
             
-            if (!player || !player.entity) {
+            if (!player || !player.entity) {     
                 return res.status(404).json({ 
-                    error: `Player ${playerName} not found or not loaded`,
-                    code: 'player_not_found'
-                });
+                            error: `Player ${playerName} not found or not loaded`,
+                            code: 'player_not_found'
+                        });
             }
-
+            position = {
+                x: player.entity.position.x,
+                y: player.entity.position.y,
+                z: player.entity.position.z
+            };
             // Get bot's current status for context
             const bot = this.agent.bot;
             const statsCommand = getCommand('!stats');
@@ -1691,18 +1697,23 @@ export class ExternalAPI {
                         
                         // Call completion callback
                         if (global.reportTaskCompletion) {
-                            console.log(`[API] 📞 Reporting completion...`);
-                            await global.reportTaskCompletion({
-                                conversationId: conversationId,  // ← Return it!,
-                                sessionId: sessionId,
-                                taskId: taskId,
-                                taskCompleted: prompt.substring(0, 100),
-                                blocksPlaced: 100,
-                                timeSpent: taskDuration,
-                                status: 'success'
-                            },
-                            webhookUrl
-                            );
+                            console.log(`[API] 📞 Reporting completion on session `, sessionId);
+                            try {
+                                await global.reportTaskCompletion({
+                                    conversationId: conversationId,  // ← Return it!,
+                                    sessionId: sessionId,
+                                    taskId: taskId,
+                                    taskCompleted: prompt.substring(0, 100),
+                                    blocksPlaced: 100,
+                                    timeSpent: taskDuration,
+                                    status: 'success'
+                                },
+                                webhookUrl
+                                );
+                            } catch (error) {
+                                console.error(`[API] ⚠️  Webhook callback failed (non-critical):`, error.message);
+                                // Don't rethrow - let the worker survive
+                            }
                         }
                     } finally {
                         settings.brain_mode = originalBrainMode;
@@ -2187,10 +2198,10 @@ export class ExternalAPI {
             this.handleError(res, error, 'assignTasks');
         }
     }
-
+    // teleport to x, y, z coordinates
     async handleTeleport(req, res) {
         try {
-            const { x, y, z, instant = false } = req.body;
+            const { x, y, z } = req.body;
             
             const coordValidation = this.validateAndRoundCoordinates(x, y, z);
             if (typeof coordValidation === 'string') {
@@ -2200,34 +2211,40 @@ export class ExternalAPI {
                 });
             }
 
-            const bot = this.getBotSafely();
-            if (!bot) {
-                return res.status(503).json({ 
-                    error: 'Bot not available',
-                    code: 'bot_unavailable'
-                });
-            }
-
-            let command, result;
-            
-            if (instant && bot.game.gameMode === 'creative') {
-                // Instant teleport via command (creative mode only)
-                await bot.chat(`/tp @s ${coordValidation.x} ${coordValidation.y} ${coordValidation.z}`);
-                result = `Instantly teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`;
-            } else {
-                // Pathfinding navigation (default)
-                command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, 1)`;
-                result = await executeCommand(this.agent, command);
-            }
+            const command = `!teleport(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z})`;
+            const result = await executeCommand(this.agent, command);
 
             res.json({ 
                 success: true, 
                 message: result || `Teleported to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}`,
-                position: coordValidation,
-                method: instant ? 'instant' : 'pathfinding'
+                position: coordValidation
             });
         } catch (error) {
             this.handleError(res, error, 'teleport');
+        }
+    }
+    // teleport to a player's location by name
+    async handleTeleportToPlayer(req, res) {
+        try {
+            const { playerName } = req.body;
+            
+            if (!playerName || typeof playerName !== 'string') {
+                return res.status(400).json({ 
+                    error: 'playerName parameter required',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            const command = `!teleportToPlayer("${playerName}")`;
+            const result = await executeCommand(this.agent, command);
+
+            res.json({ 
+                success: true, 
+                message: result || `Teleported to ${playerName}`,
+                playerName: playerName
+            });
+        } catch (error) {
+            this.handleError(res, error, 'teleportToPlayerName');
         }
     }
 
@@ -2512,7 +2529,7 @@ export class ExternalAPI {
         }
     }
 
-    // Teleport a specific worker to location
+    // Teleport a specific worker to location, this must be called by the leader bot that has OP rights
     async handleOrchestrationTeleportWorker(req, res) {
         try {
             const { sessionId, workerName, taskLocation, instant=false } = req.body;

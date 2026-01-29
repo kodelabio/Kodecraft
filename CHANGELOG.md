@@ -28,6 +28,16 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - changed GPT class to use new OpenAI class
 - workers hanging while collecting blocks
 
+[1.1.5]
+### Fixed
+- Bot does not move to player if too far from spawning location, changed to use teleport
+- Fixed timeout on all movement API, set to 120 secs
+- Workers callbacks
+
+### Added
+- teleport skill
+- teleport to player skill
+
 
 
 

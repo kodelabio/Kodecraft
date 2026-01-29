@@ -131,6 +131,30 @@ export const actionsList = [
         })
     },
     {
+        name: '!teleport',
+        description: 'Teleport to specific coordinates.',
+        params: {
+            'x': { type: 'int', description: 'X coordinate' },
+            'y': { type: 'int', description: 'Y coordinate' },
+            'z': { type: 'int', description: 'Z coordinate' }
+        },
+        perform: runAsAction(async (agent, x, y, z) => {
+            const success = await skills.teleport(agent.bot, x, y, z);
+            return success ? `Teleported to ${x}, ${y}, ${z}` : `Failed to teleport to ${x}, ${y}, ${z}`;
+        })
+    },
+    {
+        name: '!teleportToPlayer',
+        description: 'Teleport to a player by name.',
+        params: {
+            'player_name': { type: 'string', description: 'The player name to teleport to.' }
+        },
+        perform: runAsAction(async (agent, player_name) => {
+            const success = await skills.teleportToPlayer(agent.bot, player_name);
+            return success ? `Teleported to ${player_name}` : `Failed to teleport to ${player_name}`;
+        })
+    },
+    {
         name: '!teleportWorker',
         description: 'Teleport a worker to specific coordinates.',
         params: {

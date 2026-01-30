@@ -2598,7 +2598,7 @@ export class ExternalAPI {
      */
     async handleOrchestrationSendTask(req, res) {
         try {
-            const { workerPort, taskPrompt, conversationId, callbackWebhookUrl, taskId} = req.body;
+            const { workerPort, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId} = req.body;
 
             if (!workerPort || !taskPrompt) {
                 return res.status(400).json({
@@ -2610,6 +2610,7 @@ export class ExternalAPI {
                                             taskPrompt, 
                                             conversationId,
                                             callbackWebhookUrl || settings.n8n_callback_url,
+                                            sessionId,
                                             taskId || null);
 
             if (result.success) {

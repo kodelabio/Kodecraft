@@ -85,7 +85,11 @@ const settings = {
 
     // bot would search for players within this distance
     "nearby_player_search_distance": 64,
-    "nearby_entity_search_distance": 16
+    "nearby_entity_search_distance": 16,
+
+    // realms management
+    "realms_enabled": process.env.REALMS_ENABLED === "true" || false,
+    "realm_base_size": parseInt(process.env.REALM_BASE_SIZE) || 512, // size of each realm in blocks
 
 };
 

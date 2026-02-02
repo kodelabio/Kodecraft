@@ -47,21 +47,21 @@ export class LeaderBotManager {
         }
     }
 
-    async getOrSpawnLeaderBot(userId, botName, playerPosition, realmId = null) {
+    async getOrSpawnLeaderBot(userId, botName, spawnPosition, realmId = null) {
             const startTime = Date.now();
-            console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
-            console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
+            //console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
+            //console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
 
             if (this.leaderBots.has(userId)) {
                 const existing = this.leaderBots.get(userId);
-                console.log(`[LeaderBotManager] 📋 Found existing - port: ${existing.port}, running: ${existing.agentProcess?.running}`);
+                //console.log(`[LeaderBotManager] 📋 Found existing - port: ${existing.port}, running: ${existing.agentProcess?.running}`);
                 
                 // Verify the bot is actually responding
                 if (existing.agentProcess?.running) {
                     const isHealthy = await this.checkBotHealth(existing.port);
                     
                     if (isHealthy) {
-                        console.log(`[LeaderBotManager] ✅ Reusing on port ${existing.port}`);
+                        //console.log(`[LeaderBotManager] ✅ Reusing on port ${existing.port}`);
                         existing.lastActivity = Date.now();
                         return { success: true, userId, port: existing.port, status: 'existing' };
                     } else {
@@ -80,8 +80,8 @@ export class LeaderBotManager {
             }
 
             console.log(`[LeaderBotManager] 🚀 Spawning new bot...`);
-            // Use playerPosition as spawn location if provided
-            const spawnLocation = playerPosition || null;
+            // Use spawnPosition as spawn location if provided
+            const spawnLocation = spawnPosition || null;
             const result = await this.spawnLeaderBot(userId, botName, spawnLocation, realmId);
             console.log(`[LeaderBotManager] ⏱️  Done in ${Date.now() - startTime}ms - success: ${result.success}`);
             return result;
@@ -147,9 +147,9 @@ export class LeaderBotManager {
             
             this.leaderBots.set(userId, leaderInfo);
             this.portToUserId.set(port, userId);
-            console.log(`[LeaderBotManager] Stored port ${port} for user ${userId}`);
+            //console.log(`[LeaderBotManager] Stored port ${port} for user ${userId}`);
 
-            console.log(`[LeaderBotManager] ✓ Leader bot spawned for ${userId} (PID: ${agentProcess.process.pid})`);
+            //console.log(`[LeaderBotManager] ✓ Leader bot spawned for ${userId} (PID: ${agentProcess.process.pid})`);
 
             // Wait for bot to be ready
             const ready = await this.isWorkerReady(port, 30000);
@@ -163,6 +163,7 @@ export class LeaderBotManager {
                 return {
                     success: false,
                     userId: userId,
+                    spawnLocation: spawnLocation,
                     error: 'Leader bot failed to initialize',
                     code: 'initialization_timeout'
                 };
@@ -170,34 +171,14 @@ export class LeaderBotManager {
             agentProcess.running = true;  // ← THIS ONE GOES HERE
             leaderInfo.status = 'ready';
 
-            // Assign realm to leader if provided
-            if (realmId) {
-                try {
-                    const initRealmResult = await fetch(`http://localhost:${port}/api/orchestration/${userId}/init-realm`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ realmId: realmId }),
-                        timeout: 5000
-                    });
-                    
-                    if (initRealmResult.ok) {
-                        console.log(`[LeaderBotManager] ✓ Leader ${userId} initialized in realm ${realmId}`);
-                        leaderInfo.realmId = realmId;
-                    } else {
-                        console.warn(`[LeaderBotManager] ⚠️  Failed to initialize realm for leader ${userId}`);
-                    }
-                } catch (error) {
-                    console.error(`[LeaderBotManager] Error initializing realm:`, error.message);
-                }
-            }
-
             return {
                 success: true,
                 userId: userId,
                 port: port,
                 status: 'ready',
                 botName: botName,
-                message: `Leader bot spawned successfully on port ${port}`
+                spawnLocation: spawnLocation,
+                message: `Leader bot spawned successfully on port ${port} at location ${spawnLocation ? `(${spawnLocation.x}, ${spawnLocation.y}, ${spawnLocation.z})` : 'default spawn point' }`
             };
 
         } catch (error) {
@@ -225,13 +206,13 @@ export class LeaderBotManager {
                 });
 
                 if (response.ok) {
-                    console.log(`[LeaderBotManager] ✓ Bot on port ${port} is ready (attempt ${attempts})`);
+                    //console.log(`[LeaderBotManager] ✓ Bot on port ${port} is ready (attempt ${attempts})`);
                     return true;
                 } else {
                     console.warn(`[LeaderBotManager] Health check returned status ${response.status}`);
                 }
             } catch (error) {
-                console.warn(`[LeaderBotManager] Health check failed (attempt ${attempts}): ${error.message}`);
+                //console.warn(`[LeaderBotManager] Health check failed (attempt ${attempts}): ${error.message}`);
             }
 
             await new Promise(resolve => setTimeout(resolve, checkInterval));

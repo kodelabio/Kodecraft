@@ -54,19 +54,21 @@ export const WOOL_COLORS = [
 
 export function initBot(username) {
     //console.log('[DEBUG mcdata] Full settings object:', settings);  // ← ADD THIS
-    console.log('[DEBUG mcdata] mc_version:', settings.minecraft_version); 
-    const options = {
+    //console.log('[DEBUG mcdata] mc_version:', settings.minecraft_version); 
+    mc_version = settings.minecraft_version;
+    mcdata = minecraftData(mc_version);
+    Item = prismarine_items(mc_version);
+    let bot = createBot({
         username: username,
         host: settings.host,
         port: settings.port,
         auth: settings.auth,
         version: mc_version,
-    }
+    });
     if (!mc_version || mc_version === "auto") {
         delete options.version;
     }
 
-    const bot = createBot(options);
     bot.loadPlugin(pathfinder);
     bot.loadPlugin(pvp);
     bot.loadPlugin(collectblock);
@@ -76,11 +78,11 @@ export function initBot(username) {
         bot.acceptResourcePack();
     });
 
-    bot.once('login', () => {
-        mc_version = bot.version;
-        mcdata = minecraftData(mc_version);
-        Item = prismarine_items(mc_version);
-    });
+    //bot.once('login', () => {
+    //    mc_version = bot.version;
+    //    mcdata = minecraftData(mc_version);
+    //    Item = prismarine_items(mc_version);
+    //});
 
     return bot;
 }

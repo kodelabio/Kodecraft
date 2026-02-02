@@ -80,7 +80,7 @@ const argv = yargs(args)
         agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
         await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port, spawnLocation);
-        console.log(`[DEBUG] Agent started successfully.`);
+        //console.log(`[DEBUG] Agent started successfully.`);
     } catch (error) {
         console.error('Failed to start agent process:');
         console.error(error.message);

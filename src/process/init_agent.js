@@ -62,9 +62,9 @@ const argv = yargs(args)
 (async () => {
     try {
         // Populate the agent settings object
-        console.log('[DEBUG] Root settings.minecraft_version:', settings.minecraft_version);
+        //console.log('[DEBUG] Root settings.minecraft_version:', settings.minecraft_version);
         setSettings(settings);
-        console.log('[DEBUG] Agent settings.minecraft_version:', agentSettings.minecraft_version);  // ← Check it here
+        //console.log('[DEBUG] Agent settings.minecraft_version:', agentSettings.minecraft_version);  // ← Check it here
         
 
         // In Docker, use container name instead of localhost
@@ -82,7 +82,7 @@ const argv = yargs(args)
         agent.serverProxy = serverProxy;  // ← Add this line
         serverProxy.setAgent(agent);
         await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port, spawnLocation);
-        console.log(`[DEBUG] Agent started successfully.`);
+        //console.log(`[DEBUG] Agent started successfully.`);
     } catch (error) {
         console.error('Failed to start agent process:');
         console.error(error.message);

@@ -1,14 +1,14 @@
 // src/agent/orchestration_api.js
 // n8n-friendly orchestration API for collaborative tasks
 // Exposes worker spawning and coordination as simple REST endpoints
-import { RealmManager } from './agent/realm_manager.js';
+import { globalRealmManager } from './realm_manager.js';
 import { spawn } from 'child_process';
 import settings from '../../settings.js';
 import net from 'net';
 
 
 export class OrchestrationAPI {
-    constructor(agent, worldInfo = null) {
+    constructor(agent) {
         this.agent = agent;
         this.leaderUserId = null;
         this.workers = new Map();           // workerName -> { process, port, status, spawnTime }
@@ -17,8 +17,6 @@ export class OrchestrationAPI {
         this.nextWorkerPort = settings.worker_base_port;
         this.reservedPorts = new Set(); 
         this.workerCounter = 0;
-        // Realm manager for movement validation
-        this.realmManager = new RealmManager(worldInfo);
     }
     /**
     * Helper: wait for specified milliseconds
@@ -110,7 +108,7 @@ export class OrchestrationAPI {
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
      */
-    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId, realmId) {
+    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId, realmId = null, realmBounds = null) {
 
         // Check if worker already exists
         if (this.workers.has(name)) {
@@ -126,7 +124,10 @@ export class OrchestrationAPI {
                 };
         }
 
-        console.log(`🔧 Spawning worker: ${name} on port ${port}`);
+        console.log(`🔧 Spawning worker: ${name} on port ${port} and realm ${realmId}`);
+        if (realmId) {
+                console.log(`   Spawning worker in realm: ${realmId}`)
+            }
 
         // Find next available port (auto-increment from requested)
         const availablePort = await this.findNextAvailablePort(port);
@@ -202,15 +203,31 @@ export class OrchestrationAPI {
             //if (!ready) {
             //    throw new Error(`Worker ${name} API not responding after 60 seconds`);
             //}
-            console.log(`✓ Worker on port ${port} spawned successfully`);
+            //console.log(`✓ Worker on port ${port} spawned successfully`);     
+            // After worker is ready
+            // If realmId provided, get realm bounds and set on worker
+            // If realmId provided, get realm bounds and set on worker
+            if (realmId && realmBounds) {
+                try {
+                    console.log(`📍 Setting realm bounds on worker ${name} from realmId: ${realmId}`);
+                    await fetch(`http://localhost:${port}/api/agent/init-realm`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                bounds: realmBounds,
+                                realmId: realmId,
+                                userId: userId
 
-            if (realmId) {
-                this.realmManager.registerWorkerToRealm(name, realmId);
-                // Spawn worker within realm bounds
-                const realm = this.realmManager.realms.get(realmId);
-                const safePos = this.getRandomPosInRealm(realm.bounds);
-                // Move to position instead of just +5
+                            }),
+                            timeout: 5000
+                    });
+                    console.log(`✓ Worker ${name} realm bounds set from realmId: ${realmId}`);
+                    
+                } catch (error) {
+                    console.warn(`⚠️ Failed to set realm on worker ${name}: ${error.message}`);
+                }
             }
+
 
             // Teleport worker to safe location near leader
             try {

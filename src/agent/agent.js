@@ -30,9 +30,9 @@ export class Agent {
         this.count_id = count_id;
 
         const apiPort = port || settings.leader_bot_base_port || 5000; 
-        console.log(`[DEBUG] Current working directory:`, process.cwd());
-        console.log(`[DEBUG] settings.profiles[0]:`, settings.profiles[0]);
-        console.log(`[DEBUG] Attempting to read from:`, path.resolve(settings.profiles[0]));
+        //console.log(`[DEBUG] Current working directory:`, process.cwd());
+        //console.log(`[DEBUG] settings.profiles[0]:`, settings.profiles[0]);
+        //console.log(`[DEBUG] Attempting to read from:`, path.resolve(settings.profiles[0]));
         // Load profile from file
         let profile = settings.profile || {};
         if (!settings.profile && settings.profiles && settings.profiles.length > 0) {

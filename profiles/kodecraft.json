@@ -1,7 +1,8 @@
 {
     "name": "Manager",
     "modes": {
-        "cheat": true
+        "cheat": true,
+        "hunting": false
     },
     "model": {
         "api": "openai",

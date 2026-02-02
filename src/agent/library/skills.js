@@ -1853,6 +1853,62 @@ export async function goToPlayer(bot, username, distance=3) {
     log(bot, `You have reached ${username}.`);
 }
 
+// Bot Teleportation functions
+export async function teleport(bot, x, y, z) {
+    console.log(`[teleport] START - coords: ${x}, ${y}, ${z}`);
+    
+    if (!bot.modes.isOn('cheat')) {
+        console.log(`[teleport] Cheat mode is OFF`);
+        log(bot, `Cannot teleport - cheat mode is off`);
+        return false;
+    }
+    
+    console.log(`[teleport] Cheat mode is ON`);
+    
+    const x_int = Math.floor(x);
+    const y_int = Math.floor(y);
+    const z_int = Math.floor(z);
+    
+    const command = `/tp @s ${x_int} ${y_int} ${z_int}`;
+    console.log(`[teleport] Sending command: ${command}`);
+    
+    await bot.chat(command);
+    
+    console.log(`[teleport] Command sent, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log(`[teleport] DONE`);
+    log(bot, `Teleported to ${x_int}, ${y_int}, ${z_int}`);
+    
+    return true;
+}
+
+export async function teleportToPlayer(bot, playerName) {
+    //console.log(`[teleportToPlayer] START - player: ${playerName}`);
+    
+    if (!bot.modes.isOn('cheat')) {
+        console.log(`[teleportToPlayer] Cheat mode is OFF`);
+        log(bot, `Cannot teleport - cheat mode is off`);
+        return false;
+    }
+    
+    //console.log(`[teleportToPlayer] Cheat mode is ON`);
+    
+    const command = `/tp ${playerName}`;
+    //console.log(`[teleportToPlayer] Sending command: ${command}`);
+    
+    await bot.chat(command);
+    
+    //console.log(`[teleportToPlayer] Command sent, waiting...`);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Move away from player
+    await moveAway(bot, 5);
+    
+    //console.log(`[teleportToPlayer] ${playerName} DONE`);
+    log(bot, `Teleported to ${playerName}`);
+    
+    return true;
+}
 // Allow leader to teleport workers
 export async function teleportWorker(bot, workerName, x, y, z) {
     console.log(`[teleportWorker] START - worker: ${workerName}, coords: ${x}, ${y}, ${z}`);
@@ -1863,21 +1919,21 @@ export async function teleportWorker(bot, workerName, x, y, z) {
         return false;
     }
     
-    console.log(`[teleportWorker] Cheat mode is ON`);
+    //console.log(`[teleportWorker] Cheat mode is ON`);
     
     const x_int = Math.floor(x);
     const y_int = Math.floor(y);
     const z_int = Math.floor(z);
     
     const command = `/tp ${workerName} ${x_int} ${y_int} ${z_int}`;
-    console.log(`[teleportWorker] Sending command: ${command}`);
+    //console.log(`[teleportWorker] Sending command: ${command}`);
     
     await bot.chat(command);
     
-    console.log(`[teleportWorker] Command sent, waiting...`);
+    //console.log(`[teleportWorker] Command sent, waiting...`);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    console.log(`[teleportWorker] DONE`);
+    //console.log(`[teleportWorker] DONE`);
     log(bot, `Teleported ${workerName} to ${x_int}, ${y_int}, ${z_int}`);
     
     return true;
@@ -1937,7 +1993,7 @@ export async function moveAway(bot, distance) {
         const move = new pf.Movements(bot);
         const path = await bot.pathfinder.getPathTo(move, inverted_goal, 10000);
         let last_move = path.path[path.path.length-1];
-        console.log(last_move);
+        //console.log(last_move);
         if (last_move) {
             let x = Math.floor(last_move.x);
             let y = Math.floor(last_move.y);

@@ -191,7 +191,18 @@ async function setupLogging(workerName) {
         // Override profile name for worker
         const workerProfile = { ...profile };
         workerProfile.name = argv.name;
-        
+
+        // 👇 ADD THIS: Override modes after loading profile
+        workerProfile.modes = {
+            ...workerProfile.modes,
+            cheat: false,
+            torch_placing: false,
+            self_defense: false,
+            item_collecting: false,
+            elbow_room: false,
+            idle_staring: false
+        };
+                
         workerSettings.profile = workerProfile;
         workerSettings.assigned_api_port = argv.port;
         setSettings(workerSettings);
@@ -216,32 +227,32 @@ async function setupLogging(workerName) {
         await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
 
         // ✅ DETAILED VERIFICATION OF SKILL LIBRARY
-        console.log(`\n📚 === SKILL LIBRARY VERIFICATION FOR ${argv.name} ===`);
-        console.log(`Current working directory: ${process.cwd()}`);
-        console.log(`Node process PID: ${process.pid}`);
+        //console.log(`\n📚 === SKILL LIBRARY VERIFICATION FOR ${argv.name} ===`);
+        //console.log(`Current working directory: ${process.cwd()}`);
+        //console.log(`Node process PID: ${process.pid}`);
         try {
             // Check 1: Prompter exists
             if (!agent.prompter) {
                 throw new Error('agent.prompter is null/undefined');
             }
-            console.log(`✅ agent.prompter exists`);
+            //console.log(`✅ agent.prompter exists`);
             
             // Check 2: Skill library exists
             if (!agent.prompter.skill_libary) {
                 throw new Error('agent.prompter.skill_libary is null/undefined');
             }
-            console.log(`✅ agent.prompter.skill_libary exists`);
+            //console.log(`✅ agent.prompter.skill_libary exists`);
             
             // Check 3: getAllSkillDocs method exists
             if (typeof agent.prompter.skill_libary.getAllSkillDocs !== 'function') {
                 throw new Error(`getAllSkillDocs is not a function, got: ${typeof agent.prompter.skill_libary.getAllSkillDocs}`);
             }
-            console.log(`✅ getAllSkillDocs is a function`);
+            //console.log(`✅ getAllSkillDocs is a function`);
             
             // Check 4: Call getAllSkillDocs
-            console.log(`Calling getAllSkillDocs()...`);
+            //console.log(`Calling getAllSkillDocs()...`);
             const allDocs = await agent.prompter.skill_libary.getAllSkillDocs();
-            console.log(`✅ getAllSkillDocs() succeeded`);
+            //console.log(`✅ getAllSkillDocs() succeeded`);
             
             // Check 5: Validate result
             if (!allDocs) {
@@ -254,8 +265,8 @@ async function setupLogging(workerName) {
             if (skillCount === 0) {
                 console.warn(`⚠️  getAllSkillDocs returned empty object (0 skills)`);
             } else {
-                console.log(`✅ Skill library loaded: ${skillCount} skills available`);
-                console.log(`   Skills: ${Object.keys(allDocs).slice(0, 5).join(', ')}${skillCount > 5 ? '...' : ''}`);
+                //console.log(`✅ Skill library loaded: ${skillCount} skills available`);
+                //console.log(`   Skills: ${Object.keys(allDocs).slice(0, 5).join(', ')}${skillCount > 5 ? '...' : ''}`);
             }
             
         } catch (error) {
@@ -270,10 +281,10 @@ async function setupLogging(workerName) {
                 working_dir: process.cwd()
             });
         }
-        console.log(`📚 === END VERIFICATION ===\n`);
+        //console.log(`📚 === END VERIFICATION ===\n`);
 
         // Start API server for the worker
-        console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
+        //console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
         const api = new ExternalAPI(agent);
         const apiStartPromise = api.start(argv.port);
 

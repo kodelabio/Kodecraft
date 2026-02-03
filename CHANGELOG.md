@@ -43,6 +43,12 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - attack API changed to have a duration parameter to prevent hanging caused by unstuck mode
 - Combat Execute Workflow changed to use move instead of Teleport
 
+[1.1.7]
+### Fixed
+- added an offset to workers return position (leader position) after a task so they do not overlap each other.
+- mode set to item-collecting:false
+
+
 
 
 

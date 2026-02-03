@@ -2,7 +2,8 @@
     "name": "Manager",
     "modes": {
         "cheat": true,
-        "hunting": false
+        "hunting": false,
+        "item_collecting": false
     },
     "model": {
         "api": "openai",

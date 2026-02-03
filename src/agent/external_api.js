@@ -1302,20 +1302,37 @@ export class ExternalAPI {
 
     async handleAttackPlayer(req, res) {
         try {
-            const { player } = req.body;
+            const { player, duration = 30000 } = req.body;
             
             if (!player) {
                 return res.status(400).json({ error: 'player parameter required' });
             }
 
-            const command = `!attackPlayer("${player}")`;
-            const result = await executeCommand(this.agent, command);
-            
-            if (result && result.includes('Could not find')) {
-                return res.status(404).json({ error: result, code: 'player_not_found' });
+            try {
+                const command = `!attackPlayer("${player}")`;
+                const startTime = Date.now();
+                
+                while (Date.now() - startTime < duration) {
+                    await executeCommand(this.agent, command);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                console.log(`[AttackPlayer] Completed for ${player} after ${duration}ms`);
+                
+                res.json({ 
+                    success: true, 
+                    message: `Attacked ${player} for ${duration}ms`,
+                    duration: duration
+                });
+                
+            } catch (error) {
+                console.error(`[AttackPlayer] Error for ${player}:`, error);
+                res.status(500).json({ 
+                    success: false,
+                    error: error.message
+                });
             }
-            
-            res.json({ success: true, message: result || `Attacking ${player}` });
+
         } catch (error) {
             this.handleError(res, error, 'attackPlayer');
         }
@@ -1861,24 +1878,40 @@ export class ExternalAPI {
 
     async handleAttack(req, res) {
         try {
-            const { target } = req.body;
+            const { target, duration = 30000 } = req.body;
             
             if (!target) {
                 return res.status(400).json({ error: 'target parameter required' });
             }
 
-            // Check if target is a player or entity type
-            const command = this.agent.bot.players[target] ? 
-                `!attackPlayer("${target}")` : 
-                `!attack("${target}")`;
+            try {
+                const command = this.agent.bot.players[target] ? 
+                    `!attackPlayer("${target}")` : 
+                    `!attack("${target}")`;
                 
-            const result = await executeCommand(this.agent, command);
-            
-            if (result && result.includes('Could not find')) {
-                return res.status(200).json({ success: false, error: result, code: 'target_not_found' });
+                const startTime = Date.now();
+                
+                while (Date.now() - startTime < duration) {
+                    await executeCommand(this.agent, command);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                console.log(`[Attack] Completed for ${target} after ${duration}ms`);
+                
+                res.json({ 
+                    success: true, 
+                    message: `Attacked ${target} for ${duration}ms`,
+                    duration: duration
+                });
+                
+            } catch (error) {
+                console.error(`[Attack] Error for ${target}:`, error);
+                res.status(500).json({ 
+                    success: false,
+                    error: error.message
+                });
             }
-            
-            res.json({ success: true, message: result || `Attacking ${target}` });
+
         } catch (error) {
             this.handleError(res, error, 'attack');
         }

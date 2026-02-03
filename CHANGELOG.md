@@ -38,6 +38,11 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - teleport skill
 - teleport to player skill
 
+[1.1.6]
+### Fixed
+- attack API changed to have a duration parameter to prevent hanging caused by unstuck mode
+- Combat Execute Workflow changed to use move instead of Teleport
+
 
 
 

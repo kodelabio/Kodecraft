@@ -214,7 +214,6 @@ const modes_list = [
             }
         }
     },
-    /*
     {
         name: 'elbow_room',
         description: 'Move away from nearby players when idle.',
@@ -236,7 +235,6 @@ const modes_list = [
             }
         }
     },
-    */
     {
         name: 'idle_staring',
         description: 'Animation to look around at entities when idle.',
@@ -293,7 +291,7 @@ async function execute(mode, agent, func, timeout=-1) {
         await func();
     }, { timeout });
     mode.active = false;
-    console.log(`Mode ${mode.name} finished executing, code_return: ${code_return.message}`);
+    
 
     let should_reprompt = 
         interrupted_action && // it interrupted a previous action

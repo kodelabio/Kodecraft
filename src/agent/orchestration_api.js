@@ -203,10 +203,13 @@ export class OrchestrationAPI {
             try {
                 const leaderPos = this.agent.bot.entity.position;
                 const offset = this.workers.size * 3;
+                const randomAngle = Math.random() * 2 * Math.PI;
+                const randomRadius = 5 + Math.random() * 10; // 5-15 blocks away
+
                 const safePos = {
-                    x: Math.floor(leaderPos.x) + offset,
+                    x: Math.floor(leaderPos.x + Math.cos(randomAngle) * randomRadius) + offset,
                     y: Math.floor(leaderPos.y),
-                    z: Math.floor(leaderPos.z) + offset
+                    z: Math.floor(leaderPos.z + Math.sin(randomAngle) * randomRadius) + offset  
                 };
 
                 console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);

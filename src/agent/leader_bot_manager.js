@@ -108,6 +108,23 @@ export class LeaderBotManager {
             // Handle process exit
             agentProcess.on('exit', async (name) => {
                 console.log(`[LeaderBotManager] ⚠️  Leader bot ${name} exited`);
+                // ✅ Get the leader info from the map using userId
+                // ✅ Call the leader bot's orchestration cleanup endpoint
+                try {
+                    const response = await fetch(`http://localhost/api/orchestration/${userId}/kick-all-workers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 5000
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`[LeaderBotManager] ✓ Workers cleaned up for ${name}`);
+                    }
+                } catch (error) {
+                    console.error(`[LeaderBotManager] Failed to cleanup workers:`, error.message);
+                }
+
+
                 
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
@@ -204,7 +221,7 @@ export class LeaderBotManager {
     }
 
     getLeaderBotForUser(userId) {
-        console.log(`[LeaderBotManager] Looking for bot for userId: ${userId}`);
+        //console.log(`[LeaderBotManager] Looking for bot for userId: ${userId}`);
         userId = String(userId);  // ✅ Always convert to string
         const info = this.leaderBots.get(userId);
         
@@ -212,7 +229,7 @@ export class LeaderBotManager {
             console.warn(`[LeaderBotManager] No info found for userId ${userId}`);
             return null;
         }
-        console.log(`[LeaderBotManager] Found bot! Port: ${info.port}, Running: ${info.agentProcess.running}`);
+        //console.log(`[LeaderBotManager] Found bot! Port: ${info.port}, Running: ${info.agentProcess.running}`);
         // Check if bot is actually running
         if (info.agentProcess && !info.agentProcess.running) {
             console.warn(`[LeaderBotManager] Bot for ${userId} is not running`);

@@ -3,7 +3,9 @@
     "modes": {
         "cheat": true,
         "hunting": false,
-        "item_collecting": false
+        "item_collecting": false,
+        "torch_placing": false,
+         "cowardice": false
     },
     "model": {
         "api": "openai",

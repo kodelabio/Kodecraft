@@ -1310,18 +1310,16 @@ export class ExternalAPI {
 
             try {
                 const command = `!attackPlayer("${player}")`;
-                const startTime = Date.now();
                 
-                while (Date.now() - startTime < duration) {
-                    await executeCommand(this.agent, command);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
+                // ✅ Execute once, let command handle duration
+                const result = await executeCommand(this.agent, command);
                 
-                console.log(`[AttackPlayer] Completed for ${player} after ${duration}ms`);
+                console.log(`[AttackPlayer] Completed for ${player}`);
                 
                 res.json({ 
                     success: true, 
-                    message: `Attacked ${player} for ${duration}ms`,
+                    message: `Attacked ${player}`,
+                    result: result,
                     duration: duration
                 });
                 
@@ -1889,18 +1887,15 @@ export class ExternalAPI {
                     `!attackPlayer("${target}")` : 
                     `!attack("${target}")`;
                 
-                const startTime = Date.now();
+                // ✅ Execute attack once, let it run for duration internally
+                const result = await executeCommand(this.agent, command);
                 
-                while (Date.now() - startTime < duration) {
-                    await executeCommand(this.agent, command);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                console.log(`[Attack] Completed for ${target} after ${duration}ms`);
+                console.log(`[Attack] Completed for ${target}`);
                 
                 res.json({ 
                     success: true, 
-                    message: `Attacked ${target} for ${duration}ms`,
+                    message: `Attacked ${target}`,
+                    result: result,
                     duration: duration
                 });
                 
@@ -2394,14 +2389,12 @@ export class ExternalAPI {
             this.handleError(res, error, 'orchestrationSpawnWorker');
         }
     }
+    
     // For multiple workers
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
-            const count = Number(req.body.count);  // ← Convert to number
+            const count = Number(req.body.count);
             const { userId, basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
-
-            
-            console.log(`[API SPWN] Leader userId for teleportWorker: ${userId}`);
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2409,12 +2402,35 @@ export class ExternalAPI {
                 });
             }
             
+            const existingCount = this.orchestration.workers.size;
+            const workersToSpawn = Math.max(0, count - existingCount);
+            
+            if (workersToSpawn === 0) {
+                return res.status(200).json({
+                    success: true,
+                    spawned: 0,
+                    totalRequested: count,
+                    existing: existingCount,
+                    message: `Already have ${existingCount} workers`
+                });
+            }
             
             const spawnResults = [];
             let currentPort = basePort;
             
-            for (let i = 0; i < count; i++) {
-                const workerName = `${this.agent.name}_W${i + 1}`;
+            const adjectives = ['Speedy', 'Mighty', 'Lazy', 'Crafty', 'Bold', 'Swift', 'Clever', 'Brave'];
+            const nouns = ['Builder', 'Digger', 'Placer', 'Breaker', 'Collector', 'Master', 'Worker', 'Architect'];
+            for (let i = 0; i < workersToSpawn; i++) {
+                const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+                const noun = nouns[Math.floor(Math.random() * nouns.length)];
+                let workerName = `${this.agent.name}_${adj}${noun}`;
+                // ✅ Ensure name doesn't exceed 16 characters
+                if (workerName.length > 16) {
+                    console.warn(`Worker name too long: ${workerName} (${workerName.length} chars), truncating`);
+                    workerName = workerName.substring(0, 16);
+                    
+                }
+                
                 const result = await this.orchestration.spawnWorker(
                     workerName,
                     currentPort,
@@ -2424,8 +2440,8 @@ export class ExternalAPI {
                 );
                 
                 spawnResults.push(result);
-                if (result.success) {
-                    currentPort = result.port + 1; // Next port
+                if (result.port) {
+                    currentPort = result.port + 1;
                 }
             }
 
@@ -2433,7 +2449,9 @@ export class ExternalAPI {
             res.status(202).json({
                 success: true,
                 spawned: successCount,
+                existing: existingCount,
                 totalRequested: count,
+                totalNow: existingCount + successCount,
                 results: spawnResults
             });
             

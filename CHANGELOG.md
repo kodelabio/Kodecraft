@@ -1,4 +1,4 @@
-[1.1.1] 
+## [1.1.1] 
 ### Fixed
 - Added teleportWorker skill to allow the leader to teleport workers
 - Added !teleportWorker action to execute the skill
@@ -10,14 +10,15 @@
 
 The workers now spawn and are instantly teleported to safe positions near the leader, solving the pathfinding distance problem we had earlier.
 
-[1.1.2]
-### Fixed bugs on pathfinding and teleporting
+## [1.1.2]
+### Fixed 
+- bugs on pathfinding and teleporting
 
-[1.1.3]
+## [1.1.3]
 ### Fixed
 - leader to join game close to related player
 
-[1.1.4]
+## [1.1.4]
 ### Fixed
 - disabled hunting mode as default
 - fixed Oracle prompt to avoid confusion between Leader and Player
@@ -28,7 +29,7 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - changed GPT class to use new OpenAI class
 - workers hanging while collecting blocks
 
-[1.1.5]
+## [1.1.5]
 ### Fixed
 - Bot does not move to player if too far from spawning location, changed to use teleport
 - Fixed timeout on all movement API, set to 120 secs
@@ -38,16 +39,29 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - teleport skill
 - teleport to player skill
 
-[1.1.6]
+## [1.1.6]
 ### Fixed
 - attack API changed to have a duration parameter to prevent hanging caused by unstuck mode
 - Combat Execute Workflow changed to use move instead of Teleport
 
-[1.1.7]
+## [1.1.7]
 ### Fixed
 - added an offset to workers return position (leader position) after a task so they do not overlap each other.
 - mode set to item-collecting:false
+```
+  modified:   n8n/workflows/Execute-Collaborative-Task-mx65EmvqY85dm21O.json
+  modified:   n8n/workflows/ExecuteCombatMulti-NoCode-AiQrHDm9C5iI218o.json
+  modified:   n8n/workflows/Kodecraft-MultiBot-qlnYUVCrpRcQPuEH.json
+  modified:   profiles/kodecraft.json
+```
 
+## [1.1.8]
+### Fixed
+- remove console.log from modes.js causing exception
+- mode elbowroom set false by default
+```
+  modified:   src/agent/modes.js
+```
 
 
 

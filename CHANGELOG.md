@@ -64,6 +64,25 @@ The workers now spawn and are instantly teleported to safe positions near the le
 ```
 
 
+## [1.1.9]
+### Fixed
+- workers are terminated in case leader receives a SIGINT
+- changed the spawn workers logic to manage workers as a set instead with sequential numbers
+- safe spawn location for workers nearby leader with random component
+- disabled cowardice mode
 
-
+```
+        modified:   n8n/datatables/KodecraftPrompts.json
+        modified:   n8n/workflows/Execute-Collaborative-Task-mx65EmvqY85dm21O.json
+        modified:   n8n/workflows/ExecuteCombatMulti-NoCode-AiQrHDm9C5iI218o.json
+        modified:   n8n/workflows/Kodecraft-MultiBot-qlnYUVCrpRcQPuEH.json
+        modified:   n8n/workflows/Smart-Builder-Ae1zRtp4qBDhnxJW.json
+        modified:   n8n/workflows/SpawnWorkers--Orchestrated--Multibot-kyIh8pdVMa2aWFYo.json
+        modified:   n8n/workflows/startCollaborativeCombat-nzxC7sP3BpaXzKwQ.json
+        modified:   profiles/kodecraft.json
+        modified:   src/agent/api_server.js
+        modified:   src/agent/external_api.js
+        modified:   src/agent/leader_bot_manager.js
+        modified:   src/agent/orchestration_api.js
+  ```
 

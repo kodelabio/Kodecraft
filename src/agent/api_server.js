@@ -121,23 +121,23 @@ export class APIServer {
         try {
             let userId = String(req.params.userId); 
 
-            console.log(`[APIServer] Agent request from user ${userId}`);
-            console.log(`[APIServer] Full URL: ${req.originalUrl}`);
+            //console.log(`[APIServer] Agent request from user ${userId}`);
+            //console.log(`[APIServer] Full URL: ${req.originalUrl}`);
             const action = req.originalUrl.replace(`/api/agent/${userId}`, '');
 
-            console.log(`[APIServer] Action: ${action}`);
+            //console.log(`[APIServer] Action: ${action}`);
 
             const port = leaderBotManager.getLeaderBotPort(userId);
-            console.log(`[APIServer] Found port for user ${userId}: ${port}`);
+            //console.log(`[APIServer] Found port for user ${userId}: ${port}`);
             
             if (!port) {
                 console.warn(`[APIServer] No bot found for user ${userId}`);
-                console.log(`[APIServer] Available bots:`, Array.from(leaderBotManager.leaderBots.keys()));
+                //console.log(`[APIServer] Available bots:`, Array.from(leaderBotManager.leaderBots.keys()));
                 return res.status(404).json({ error: 'User bot not found' });
             }
 
             const fullUrl = `http://localhost:${port}/api/agent${action}`;
-            console.log(`[APIServer] Forwarding to: ${fullUrl}`);
+            //console.log(`[APIServer] Forwarding to: ${fullUrl}`);
 
             const response = await fetch(fullUrl, {
                 method: req.method,
@@ -147,7 +147,7 @@ export class APIServer {
             });
 
             const data = await response.json();
-            console.log(`[APIServer] Response status: ${response.status}`);
+            //console.log(`[APIServer] Response status: ${response.status}`);
             res.status(response.status).json(data);
         } catch (error) {
             console.error(`[APIServer] Error in handleAgentRequest:`, error);

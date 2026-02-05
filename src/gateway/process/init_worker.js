@@ -5,7 +5,7 @@ import { readFileSync, createWriteStream } from 'fs';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import { mkdir } from 'fs/promises';
 import yargs from 'yargs';
-import rootSettings from '../../settings.js';
+import settings from '../../../settings.js';
 
 
 const args = process.argv.slice(2);
@@ -161,7 +161,7 @@ async function setupLogging(workerName) {
         console.log(`📞 Callback webhook: ${argv.webhook || 'not set'}`);
         
         // Initialize the agent settings from root settings
-        const workerSettings = { ...rootSettings };
+        const workerSettings = { ...settings };
         workerSettings.brain_mode = 'internal'; // Force internal mode for workers
         workerSettings.render_bot_view = false; // Disable browser viewer for workers to avoid conflicts
         

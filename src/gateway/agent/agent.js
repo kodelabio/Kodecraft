@@ -13,7 +13,7 @@ import { SelfPrompter } from '#mc/agent/self_prompter.js';
 import convoManager from '#mc/agent/conversation.js';
 import { handleTranslation, handleEnglishTranslation } from '#mc/utils/translator.js';
 import { addBrowserViewer } from '#mc/agent/vision/browser_viewer.js';
-import settings from '#mc/agent/settings.js';
+import settings from './settings.js';
 import { Task } from '#mc/agent/tasks/tasks.js';
 import { speak } from '#mc/agent/speak.js';
 import { ExternalAPI } from './external_api.js';
@@ -31,6 +31,7 @@ export class Agent {
         const apiPort = port || settings.leader_bot_base_port || 5000; 
 
         // Load profile from file
+        console.log(`reading profile:`, settings.profiles[0]);
         let profile = settings.profile || {};
         if (settings.profiles && settings.profiles.length > 0) {
             try {
@@ -41,12 +42,13 @@ export class Agent {
                 console.warn(`Failed to load profile from ${settings.profiles[0]}, using defaults:`, error.message);
             }
         }
-
+        console.log(`Initializing agent ${this.name}...`);
+        
         // Initialize components with more detailed error handling
         this.actions = new ActionManager(this);
         this.prompter = new Prompter(this, profile);
         this.name = botName || this.prompter.getName();
-        console.log(`Initializing agent ${this.name}...`);
+        
         this.history = new History(this);
         this.coder = new Coder(this);
         

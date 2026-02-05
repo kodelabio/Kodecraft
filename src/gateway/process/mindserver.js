@@ -1,6 +1,6 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import settings from '../../../settings.js';
+import settings from '../../../settings';
 
 const port = settings.mindserver_port || 8080;
 const httpServer = createServer();

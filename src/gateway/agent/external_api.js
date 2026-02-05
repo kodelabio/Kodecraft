@@ -2,7 +2,7 @@
 // REST API server for n8n integration when BRAIN_MODE=external
 
 import express from 'express';
-import { getCommand, executeCommand } from '#mc/agent/commands/index.js';
+import { getCommand, executeCommand } from '#mc/commands/index.js';
 import settings from '../../../settings.js';
 import { History } from '#mc/agent/history.js';
 import { Coder } from '#mc/agent/coder.js';
@@ -19,8 +19,16 @@ export class ExternalAPI {
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
 
-        this.orchestration = new OrchestrationAPI(agent);  // â† NEW LINE (replaced old line)
-        
+        this.orchestration = new OrchestrationAPI(agent);
+        // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
+        this.agent.orchestration = this.orchestration; 
+        // Kick workers on bot disconnect
+        if (this.agent?.bot) {
+            this.agent.bot.on('end', async () => {
+                console.log(`[ExternalAPI] Bot disconnected - kicking all workers`);
+                await this.orchestration.kickAllWorkers();
+            });
+        }
         
         // CORS for n8n
         this.app.use((req, res, next) => {
@@ -37,6 +45,10 @@ export class ExternalAPI {
         this.setupRoutes();
     }
 
+    setLeaderUserId(userId) {
+        this.orchestration.leaderUserId = userId;
+    }
+
     setupRoutes() {
 
         this.app.get('/api/agent/world-info', this.handleWorldInfo.bind(this));
@@ -49,6 +61,10 @@ export class ExternalAPI {
         this.app.post('/api/agent/searchForBlock', this.handleSearchForBlock.bind(this));
         this.app.post('/api/agent/searchForEntity', this.handleSearchForEntity.bind(this));
         this.app.post('/api/agent/teleport', this.handleTeleport.bind(this));
+        this.app.post('/api/agent/teleport-worker', this.handleTeleportWorker.bind(this));
+        this.app.post('/api/agent/teleport-to-player', this.handleTeleportToPlayer.bind(this));
+    
+
         
         // Block operations
         this.app.post('/api/agent/collect', this.handleCollect.bind(this));
@@ -61,6 +77,9 @@ export class ExternalAPI {
         this.app.post('/api/agent/equip', this.handleEquip.bind(this));
         this.app.post('/api/agent/discard', this.handleDiscard.bind(this));
         this.app.post('/api/agent/consume', this.handleConsume.bind(this));
+        this.app.post('/api/agent/fish', this.handleFish.bind(this));
+        this.app.post('/api/agent/catchFish', this.handleCatchFish.bind(this));
+        this.app.post('/api/agent/shear', this.handleShear.bind(this));
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
         
         // Chest operations
@@ -113,6 +132,7 @@ export class ExternalAPI {
         this.app.post('/api/agent/endConversation', this.handleEndConversation.bind(this));
         
         // Control
+        this.app.post('/api/agent/kick-bot', this.handleKickBot.bind(this));
         this.app.post('/api/agent/stop', this.handleStop.bind(this));
         this.app.post('/api/agent/restart', this.handleRestart.bind(this));
         this.app.post('/api/agent/clearChat', this.handleClearChat.bind(this));
@@ -156,13 +176,15 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/create-session', this.handleOrchestrationCreateSession.bind(this));
         this.app.post('/api/orchestration/register-workers', this.handleOrchestrationRegisterWorkers.bind(this));
         this.app.post('/api/orchestration/reserve-location', this.handleOrchestrationReserveLocation.bind(this));
-        this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
-        this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
-        this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
+        // Workers do not have permission to teleport, only the leader bot can do it
+        //this.app.post('/api/orchestration/teleport-worker', this.handleOrchestrationTeleportWorker.bind(this));
+        //this.app.post('/api/orchestration/teleport-workers', this.handleOrchestrationTeleportWorkers.bind(this));
+        //this.app.post('/api/orchestration/teleport-to-player', this.handleOrchestrationTeleportToPlayer.bind(this));
         this.app.post('/api/orchestration/send-task', this.handleOrchestrationSendTask.bind(this));
         this.app.get('/api/orchestration/status', this.handleOrchestrationStatus.bind(this));
         this.app.post('/api/orchestration/stop-worker', this.handleOrchestrationStopWorker.bind(this));
         this.app.post('/api/orchestration/stop-all', this.handleOrchestrationStopAll.bind(this));
+        this.app.post('/api/orchestration/kick-all-workers', this.handleOrchestrationKickAll.bind(this));
         this.app.post('/api/orchestration/move-worker-to-player', this.handleMoveWorkerToPlayer.bind(this));
         this.app.post('/api/orchestration/move-worker-to', this.handleMoveWorkerTo.bind(this));
         // (â† NEW SECTION ENDS HERE)
@@ -351,13 +373,13 @@ export class ExternalAPI {
                 });
             }
 
-            console.log(`[handleMove DEBUG] Executing command:`, command);
-            console.log(`[handleMove DEBUG] Bot busy?`, this.agent.actions?.executing);
-            console.log(`[handleMove DEBUG] Current action:`, this.agent.actions?.currentActionLabel);
+            //console.log(`[handleMove DEBUG] Executing command:`, command);
+            //console.log(`[handleMove DEBUG] Bot busy?`, this.agent.actions?.executing);
+            //console.log(`[handleMove DEBUG] Current action:`, this.agent.actions?.currentActionLabel);
             const result = await executeCommand(this.agent, command);
-            console.log(`[handleMove DEBUG] Command result:`, result);
-            console.log(`[handleMove DEBUG] Result type:`, typeof result);
-            console.log(`[API handleMove] Move result:`, result);  // ✅ ADD THIS
+            //console.log(`[handleMove DEBUG] Command result:`, result);
+            //console.log(`[handleMove DEBUG] Result type:`, typeof result);
+            //console.log(`[API handleMove] Move result:`, result);  // ✅ ADD THIS
             console.log(`[API handleMove] Bot position after move:`, this.agent.bot.entity.position);  // ✅ ADD THIS
         
             
@@ -395,7 +417,7 @@ export class ExternalAPI {
     // âœ… FIXED handleGoToPlayer
     async handleGoToPlayer(req, res) {
         try {
-            const { player, distance = 3 } = req.body;
+            const { player, distance = 1 } = req.body;
             
             if (!player || typeof player !== 'string') {
                 return res.status(400).json({ 
@@ -584,7 +606,7 @@ export class ExternalAPI {
     // âœ… FIXED handleSearchForEntity
     async handleSearchForEntity(req, res) {
         try {
-            const { entityType, range = 64 } = req.body;
+            let { entityType, range = 64 } = req.body;
             
             if (!entityType || typeof entityType !== 'string') {
                 return res.status(400).json({ 
@@ -593,7 +615,12 @@ export class ExternalAPI {
                 });
             }
 
-            if (typeof range !== 'number' || range <= 0) {
+            // Convert range to number if it's a string
+            if (typeof range === 'string') {
+                range = parseInt(range, 10);
+            }
+
+            if (typeof range !== 'number' || isNaN(range) || range <= 0) {
                 return res.status(400).json({ 
                     error: 'range must be a positive number',
                     code: 'invalid_parameter'
@@ -952,7 +979,109 @@ export class ExternalAPI {
         }
     }
 
-    async handleGivePlayer(req, res) {
+    async handleFish(req, res) {
+        try {
+            let { count = 1 } = req.body;
+            
+            // Support old 'timeout' or 'duration' parameters for backwards compatibility
+            // If they're provided, just catch 1 fish with that timeout logic (not ideal but maintains compatibility)
+            if (req.body.timeout !== undefined || req.body.duration !== undefined) {
+                count = 1;
+            }
+            
+            if (typeof count !== 'number' || count < 1 || count > 50) {
+                return res.status(400).json({ 
+                    error: 'count must be a number between 1 and 50',
+                    code: 'invalid_count'
+                });
+            }
+
+            const command = `!fish(${count})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_fishing_rod' });
+            }
+            
+            if (result && result.includes('No water nearby')) {
+                return res.status(404).json({ error: result, code: 'no_water_nearby' });
+            }
+            
+            if (result && result.includes('timed out')) {
+                return res.status(408).json({ error: result, code: 'fishing_timeout' });
+            }
+            
+            res.json({ success: true, message: result || 'Fishing completed' });
+        } catch (error) {
+            this.handleError(res, error, 'fish');
+        }
+    }
+
+    async handleCatchFish(req, res) {
+        try {
+            const { fishType = 'cod', count = 1 } = req.body;
+            
+            const validFish = ['cod', 'salmon', 'tropical_fish', 'pufferfish'];
+            if (!validFish.includes(fishType)) {
+                return res.status(400).json({ 
+                    error: `fishType must be one of: ${validFish.join(', ')}`,
+                    code: 'invalid_fish_type'
+                });
+            }
+            
+            if (typeof count !== 'number' || count < 1 || count > 20) {
+                return res.status(400).json({ 
+                    error: 'count must be a number between 1 and 20',
+                    code: 'invalid_count'
+                });
+            }
+
+            const command = `!catchFishWithBucket("${fishType}", ${count})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_water_bucket' });
+            }
+            
+            if (result && result.includes('not found nearby')) {
+                return res.status(404).json({ error: result, code: 'no_fish_nearby' });
+            }
+            
+            res.json({ success: true, message: result || `Caught ${fishType}` });
+        } catch (error) {
+            this.handleError(res, error, 'catchFish');
+        }
+    }
+
+    async handleShear(req, res) {
+        try {
+            const { count = 1 } = req.body;
+            
+            if (typeof count !== 'number' || count < 1 || count > 20) {
+                return res.status(400).json({ 
+                    error: 'count must be a number between 1 and 20',
+                    code: 'invalid_count'
+                });
+            }
+
+            const command = `!shearSheep(${count})`;
+            const result = await executeCommand(this.agent, command);
+            
+            if (result && result.includes('do not have')) {
+                return res.status(404).json({ error: result, code: 'no_shears' });
+            }
+            
+            if (result && result.includes('No unsheared sheep')) {
+                return res.status(404).json({ error: result, code: 'no_sheep_nearby' });
+            }
+            
+            res.json({ success: true, message: result || 'Shearing completed' });
+        } catch (error) {
+            this.handleError(res, error, 'shear');
+        }
+    }
+
+    async handleGivePlayer(req, res) {x
         try {
             const { player, item, quantity = 1 } = req.body;
             
@@ -1064,6 +1193,7 @@ export class ExternalAPI {
             const pos = bot.entity.position;
             
             const status = {
+                name: bot.username,
                 position: { x: pos.x, y: pos.y, z: pos.z },
                 health: bot.health,
                 hunger: bot.food,
@@ -1172,20 +1302,35 @@ export class ExternalAPI {
 
     async handleAttackPlayer(req, res) {
         try {
-            const { player } = req.body;
+            const { player, duration = 30000 } = req.body;
             
             if (!player) {
                 return res.status(400).json({ error: 'player parameter required' });
             }
 
-            const command = `!attackPlayer("${player}")`;
-            const result = await executeCommand(this.agent, command);
-            
-            if (result && result.includes('Could not find')) {
-                return res.status(404).json({ error: result, code: 'player_not_found' });
+            try {
+                const command = `!attackPlayer("${player}")`;
+                
+                // ✅ Execute once, let command handle duration
+                const result = await executeCommand(this.agent, command);
+                
+                console.log(`[AttackPlayer] Completed for ${player}`);
+                
+                res.json({ 
+                    success: true, 
+                    message: `Attacked ${player}`,
+                    result: result,
+                    duration: duration
+                });
+                
+            } catch (error) {
+                console.error(`[AttackPlayer] Error for ${player}:`, error);
+                res.status(500).json({ 
+                    success: false,
+                    error: error.message
+                });
             }
-            
-            res.json({ success: true, message: result || `Attacking ${player}` });
+
         } catch (error) {
             this.handleError(res, error, 'attackPlayer');
         }
@@ -1321,16 +1466,19 @@ export class ExternalAPI {
             if (!playerName) {
                 return res.status(400).json({ error: 'playerName query parameter required' });
             }
-
             const player = this.agent.bot.players[playerName];
             
-            if (!player || !player.entity) {
+            if (!player || !player.entity) {     
                 return res.status(404).json({ 
-                    error: `Player ${playerName} not found or not loaded`,
-                    code: 'player_not_found'
-                });
+                            error: `Player ${playerName} not found or not loaded`,
+                            code: 'player_not_found'
+                        });
             }
-
+            position = {
+                x: player.entity.position.x,
+                y: player.entity.position.y,
+                z: player.entity.position.z
+            };
             // Get bot's current status for context
             const bot = this.agent.bot;
             const statsCommand = getCommand('!stats');
@@ -1412,9 +1560,9 @@ export class ExternalAPI {
             }
 
             if (matches.length === 0) {
-                return res.status(404).json({
+                return res.status(200).json({
                     success: false,
-                    error: `${name} not found on this bot`,
+                    error: `${name} not found.`,
                     code: 'entity_not_found'
                 });
             }
@@ -1511,7 +1659,7 @@ export class ExternalAPI {
 
     async handleNewAction(req, res) {
         try {
-            const { prompt } = req.body;
+            const { prompt, callbackWebhookUrl, conversationId, sessionId, taskId } = req.body;
             
             if (!prompt) {
                 return res.status(400).json({ error: 'prompt parameter required' });
@@ -1530,8 +1678,6 @@ export class ExternalAPI {
 
             // Execute task in background (fire and forget)
             setImmediate(async () => {
-                const conversationId = req.body.conversationId; 
-                const taskId = req.body.taskId || null;
                 try {
                     const taskStartTime = Date.now();
                     
@@ -1561,19 +1707,28 @@ export class ExternalAPI {
                         
                         
                         const taskDuration = Date.now() - taskStartTime;
+                        const webhookUrl = callbackWebhookUrl || global.workerConfig?.callbackWebhookUrl;
                         //console.log(`[API] Task executed successfully (${taskDuration}ms)`);
                         
                         // Call completion callback
                         if (global.reportTaskCompletion) {
-                            console.log(`[API] 📞 Reporting completion...`);
-                            await global.reportTaskCompletion({
-                                conversationId: conversationId,  // ← Return it!,
-                                taskId: taskId,
-                                taskCompleted: prompt.substring(0, 100),
-                                blocksPlaced: 100,
-                                timeSpent: taskDuration,
-                                status: 'success'
-                            });
+                            console.log(`[API] 📞 Reporting completion on session `, sessionId);
+                            try {
+                                await global.reportTaskCompletion({
+                                    conversationId: conversationId,  // ← Return it!,
+                                    sessionId: sessionId,
+                                    taskId: taskId,
+                                    taskCompleted: prompt.substring(0, 100),
+                                    blocksPlaced: 100,
+                                    timeSpent: taskDuration,
+                                    status: 'success'
+                                },
+                                webhookUrl
+                                );
+                            } catch (error) {
+                                console.error(`[API] ⚠️  Webhook callback failed (non-critical):`, error.message);
+                                // Don't rethrow - let the worker survive
+                            }
                         }
                     } finally {
                         settings.brain_mode = originalBrainMode;
@@ -1721,24 +1876,37 @@ export class ExternalAPI {
 
     async handleAttack(req, res) {
         try {
-            const { target } = req.body;
+            const { target, duration = 30000 } = req.body;
             
             if (!target) {
                 return res.status(400).json({ error: 'target parameter required' });
             }
 
-            // Check if target is a player or entity type
-            const command = this.agent.bot.players[target] ? 
-                `!attackPlayer("${target}")` : 
-                `!attack("${target}")`;
+            try {
+                const command = this.agent.bot.players[target] ? 
+                    `!attackPlayer("${target}")` : 
+                    `!attack("${target}")`;
                 
-            const result = await executeCommand(this.agent, command);
-            
-            if (result && result.includes('Could not find')) {
-                return res.status(404).json({ error: result, code: 'target_not_found' });
+                // ✅ Execute attack once, let it run for duration internally
+                const result = await executeCommand(this.agent, command);
+                
+                console.log(`[Attack] Completed for ${target}`);
+                
+                res.json({ 
+                    success: true, 
+                    message: `Attacked ${target}`,
+                    result: result,
+                    duration: duration
+                });
+                
+            } catch (error) {
+                console.error(`[Attack] Error for ${target}:`, error);
+                res.status(500).json({ 
+                    success: false,
+                    error: error.message
+                });
             }
-            
-            res.json({ success: true, message: result || `Attacking ${target}` });
+
         } catch (error) {
             this.handleError(res, error, 'attack');
         }
@@ -1754,19 +1922,46 @@ export class ExternalAPI {
                 return res.status(400).json({ error: 'player parameter required' });
             }
 
+            // Don't await - just queue the command
             const command = `!followPlayer("${player}", ${distance})`;
-            const result = await executeCommand(this.agent, command);
+            executeCommand(this.agent, command).catch(error => {
+                console.error(`Background follow error:`, error);
+            });
             
-            if (result && result.includes('not found')) {
-                return res.status(404).json({ error: result, code: 'player_not_found' });
-            }
-            
-            res.json({ success: true, message: result || `Following ${player}` });
+            // Return immediately
+            res.json({ 
+                success: true, 
+                message: `Following ${player}`,
+                status: 'queued'
+            });
         } catch (error) {
             this.handleError(res, error, 'followPlayer');
         }
     }
-
+    
+    async handleKickBot(req, res) {
+        try {
+            console.log(`[ExternalAPI] Bot kicking itself`);
+            
+            // Send response immediately
+            res.json({ success: true, message: 'Bot disconnected' });
+            
+            // Then stop workers and kill process (fire and forget)
+            setImmediate(async () => {
+                try {
+                    await this.orchestration.kickAllWorkers();
+                    console.log(`✅ All workers stopped before leader disconnect`);
+                } catch (error) {
+                    console.error(`❌ Error stopping workers:`, error);
+                }
+                
+                this.agent.cleanKill('User kicked bot from game', 0);
+            });
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    }
+ 
     async handleStop(req, res) {
         try {
             const command = '!stop';
@@ -1861,7 +2056,7 @@ export class ExternalAPI {
     // this one can still be used it user requests to deploy workers without specifying a task
     async handleSpawnWorkers(req, res) {
         try {
-            const { count, basePort = settings.multibot_base_port, sessionId } = req.body;
+            const { count, basePort = settings.worker_base_port, sessionId } = req.body;
             
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
@@ -2031,7 +2226,7 @@ export class ExternalAPI {
             this.handleError(res, error, 'assignTasks');
         }
     }
-
+    // teleport to x, y, z coordinates
     async handleTeleport(req, res) {
         try {
             const { x, y, z } = req.body;
@@ -2044,16 +2239,7 @@ export class ExternalAPI {
                 });
             }
 
-            const bot = this.getBotSafely();
-            if (!bot) {
-                return res.status(503).json({ 
-                    error: 'Bot not available',
-                    code: 'bot_unavailable'
-                });
-            }
-
-            // Use goToCoordinates command to actually move the bot
-            const command = `!goToCoordinates(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, 1)`;
+            const command = `!teleport(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z})`;
             const result = await executeCommand(this.agent, command);
 
             res.json({ 
@@ -2065,6 +2251,48 @@ export class ExternalAPI {
             this.handleError(res, error, 'teleport');
         }
     }
+    // teleport to a player's location by name
+    async handleTeleportToPlayer(req, res) {
+        try {
+            const { playerName } = req.body;
+            
+            if (!playerName || typeof playerName !== 'string') {
+                return res.status(400).json({ 
+                    error: 'playerName parameter required',
+                    code: 'invalid_parameter'
+                });
+            }
+
+            const command = `!teleportToPlayer("${playerName}")`;
+            const result = await executeCommand(this.agent, command);
+
+            res.json({ 
+                success: true, 
+                message: result || `Teleported to ${playerName}`,
+                playerName: playerName
+            });
+        } catch (error) {
+            this.handleError(res, error, 'teleportToPlayerName');
+        }
+    }
+
+    // used by the leader to teleport a specific worker to given coordinates 
+    async handleTeleportWorker(req, res) {
+            const { workerName, x, y, z } = req.body;
+            
+            try {
+                const command = `!teleportWorker("${workerName}", ${x}, ${y}, ${z})`;
+                const result = await executeCommand(this.agent, command);
+                
+                res.json({ 
+                    success: true, 
+                    message: result,
+                    position: { x, y, z }
+                });
+            } catch (error) {
+                this.handleError(res, error, 'teleportWorker');
+            }
+        }
 
 
     /**
@@ -2137,6 +2365,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorker(req, res) {
         try {
             const { name, port, sessionId, callbackWebhookUrl } = req.body;
+            
 
             if (!name || !port) {
                 return res.status(400).json({
@@ -2160,48 +2389,75 @@ export class ExternalAPI {
             this.handleError(res, error, 'orchestrationSpawnWorker');
         }
     }
+    
     // For multiple workers
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
-            const count = Number(req.body.count);  // ← Convert to number
-            const { basePort = settings.multibot_base_port, sessionId, callbackWebhookUrl } = req.body;
+            const count = Number(req.body.count);
+            const { userId, basePort = settings.worker_base_port, sessionId, callbackWebhookUrl } = req.body;
 
             if (!count || typeof count !== 'number' || count <= 0) {
                 return res.status(400).json({ 
                     error: 'count parameter must be a positive number' 
                 });
             }
-
+            
+            const existingCount = this.orchestration.workers.size;
+            const workersToSpawn = Math.max(0, count - existingCount);
+            
+            if (workersToSpawn === 0) {
+                return res.status(200).json({
+                    success: true,
+                    spawned: 0,
+                    totalRequested: count,
+                    existing: existingCount,
+                    message: `Already have ${existingCount} workers`
+                });
+            }
+            
             const spawnResults = [];
             let currentPort = basePort;
             
-            for (let i = 0; i < count; i++) {
-                const workerName = `${this.agent.name}_W${i + 1}`;
+            const adjectives = ['Speedy', 'Mighty', 'Lazy', 'Crafty', 'Bold', 'Swift', 'Clever', 'Brave'];
+            const nouns = ['Builder', 'Digger', 'Placer', 'Breaker', 'Collector', 'Master', 'Worker', 'Architect'];
+            for (let i = 0; i < workersToSpawn; i++) {
+                const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+                const noun = nouns[Math.floor(Math.random() * nouns.length)];
+                let workerName = `${this.agent.name}_${adj}${noun}`;
+                // ✅ Ensure name doesn't exceed 16 characters
+                if (workerName.length > 16) {
+                    console.warn(`Worker name too long: ${workerName} (${workerName.length} chars), truncating`);
+                    workerName = workerName.substring(0, 16);
+                    
+                }
                 
                 const result = await this.orchestration.spawnWorker(
                     workerName,
                     currentPort,
                     sessionId || `session_${Date.now()}`,
-                    callbackWebhookUrl || settings.n8n_callback_url
+                    callbackWebhookUrl || settings.n8n_callback_url,
+                    userId
                 );
                 
                 spawnResults.push(result);
-                if (result.success) {
-                    currentPort = result.port + 1; // Next port
+                if (result.port) {
+                    currentPort = result.port + 1;
                 }
-        }
+            }
 
-        const successCount = spawnResults.filter(r => r.success).length;
-        res.status(202).json({
-            success: true,
-            spawned: successCount,
-            totalRequested: count,
-            results: spawnResults
-        });
-        
-    } catch (error) {
-        this.handleError(res, error, 'orchestrationSpawnWorkers');
-    }
+            const successCount = spawnResults.filter(r => r.success).length;
+            res.status(202).json({
+                success: true,
+                spawned: successCount,
+                existing: existingCount,
+                totalRequested: count,
+                totalNow: existingCount + successCount,
+                results: spawnResults
+            });
+            
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationSpawnWorkers');
+        }
     }
 
     /**
@@ -2324,10 +2580,10 @@ export class ExternalAPI {
         }
     }
 
-    // Teleport a specific worker to location
+    // Teleport a specific worker to location, this must be called by the leader bot that has OP rights
     async handleOrchestrationTeleportWorker(req, res) {
         try {
-            const { sessionId, workerName, taskLocation } = req.body;
+            const { sessionId, workerName, taskLocation, instant=false } = req.body;
 
             if (!sessionId || !workerName || !taskLocation) {
                 return res.status(400).json({
@@ -2343,7 +2599,7 @@ export class ExternalAPI {
                 });
             }
 
-            const result = await this.orchestration.teleportWorker(sessionId, workerName, taskLocation);
+            const result = await this.orchestration.teleportWorker(sessionId, workerName, taskLocation, instant);
 
             if (result.success) {
                 res.json(result);
@@ -2393,7 +2649,7 @@ export class ExternalAPI {
      */
     async handleOrchestrationSendTask(req, res) {
         try {
-            const { workerPort, taskPrompt, conversationId, callbackWebhookUrl, taskId} = req.body;
+            const { workerPort, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId} = req.body;
 
             if (!workerPort || !taskPrompt) {
                 return res.status(400).json({
@@ -2405,6 +2661,7 @@ export class ExternalAPI {
                                             taskPrompt, 
                                             conversationId,
                                             callbackWebhookUrl || settings.n8n_callback_url,
+                                            sessionId,
                                             taskId || null);
 
             if (result.success) {
@@ -2498,101 +2755,101 @@ export class ExternalAPI {
  * Body: { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl }
  */
     async handleOrchestrationSendTaskStage(req, res) {
-  try {
-    const { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl, conversationId } = req.body;
+        try {
+            const { sessionId, stageNumber, worker, port, taskPrompt, callbackWebhookUrl, conversationId } = req.body;
 
-    // Validate required parameters
-    if (!sessionId || !stageNumber || !worker || !port || !taskPrompt) {
-      return res.status(400).json({
-        error: 'Missing required parameters: sessionId, stageNumber, worker, port, taskPrompt',
-        code: 'missing_parameters'
-      });
+            // Validate required parameters
+            if (!sessionId || !stageNumber || !worker || !port || !taskPrompt) {
+            return res.status(400).json({
+                error: 'Missing required parameters: sessionId, stageNumber, worker, port, taskPrompt',
+                code: 'missing_parameters'
+            });
+            }
+
+            // Validate types
+            if (typeof stageNumber !== 'number' || stageNumber < 1) {
+            return res.status(400).json({
+                error: 'stageNumber must be a positive integer',
+                code: 'invalid_stage'
+            });
+            }
+
+            if (typeof port !== 'number' || port < 1024 || port > 65535) {
+            return res.status(400).json({
+                error: 'port must be a valid port number (1024-65535)',
+                code: 'invalid_port'
+            });
+            }
+
+            if (typeof taskPrompt !== 'string' || taskPrompt.length === 0) {
+            return res.status(400).json({
+                error: 'taskPrompt must be a non-empty string',
+                code: 'invalid_prompt'
+            });
+            }
+
+            console.log(`[API] Received send-task-stage request:`);
+            console.log(`   Session: ${sessionId}`);
+            console.log(`   Stage: ${stageNumber}`);
+            console.log(`   Worker: ${worker}`);
+            console.log(`   Port: ${port}`);
+            console.log(`   Prompt length: ${taskPrompt.length}`);
+
+            // Send task via orchestration API
+            const result = await this.orchestration.sendTaskStage(
+                sessionId,
+                stageNumber,
+                worker,
+                port,
+                taskPrompt,
+                conversationId,
+                callbackWebhookUrl || settings.n8n_callback_url
+            );
+
+            if (result.success) {
+            res.status(202).json(result); // 202 Accepted
+            } else {
+            res.status(500).json(result);
+            }
+        } catch (error) {
+            console.error(`[API] Error in send-task-stage:`, error);
+            this.handleError(res, error, 'orchestrationSendTaskStage');
+        }
     }
-
-    // Validate types
-    if (typeof stageNumber !== 'number' || stageNumber < 1) {
-      return res.status(400).json({
-        error: 'stageNumber must be a positive integer',
-        code: 'invalid_stage'
-      });
-    }
-
-    if (typeof port !== 'number' || port < 1024 || port > 65535) {
-      return res.status(400).json({
-        error: 'port must be a valid port number (1024-65535)',
-        code: 'invalid_port'
-      });
-    }
-
-    if (typeof taskPrompt !== 'string' || taskPrompt.length === 0) {
-      return res.status(400).json({
-        error: 'taskPrompt must be a non-empty string',
-        code: 'invalid_prompt'
-      });
-    }
-
-    console.log(`[API] Received send-task-stage request:`);
-    console.log(`   Session: ${sessionId}`);
-    console.log(`   Stage: ${stageNumber}`);
-    console.log(`   Worker: ${worker}`);
-    console.log(`   Port: ${port}`);
-    console.log(`   Prompt length: ${taskPrompt.length}`);
-
-    // Send task via orchestration API
-    const result = await this.orchestration.sendTaskStage(
-      sessionId,
-      stageNumber,
-      worker,
-      port,
-      taskPrompt,
-      conversationId,
-      callbackWebhookUrl || settings.n8n_callback_url
-    );
-
-    if (result.success) {
-      res.status(202).json(result); // 202 Accepted
-    } else {
-      res.status(500).json(result);
-    }
-  } catch (error) {
-    console.error(`[API] Error in send-task-stage:`, error);
-    this.handleError(res, error, 'orchestrationSendTaskStage');
-  }
-}
 
 /**
  * Get stage task metadata and status
  * GET /api/orchestration/task-status/:taskId
  */
-async handleOrchestrationTaskStatus(req, res) {
-  try {
-    const { taskId } = req.params;
+    async handleOrchestrationTaskStatus(req, res) {
+        try {
+            const { taskId } = req.params;
 
-    if (!taskId) {
-      return res.status(400).json({
-        error: 'taskId parameter required',
-        code: 'missing_parameter'
-      });
+            if (!taskId) {
+            return res.status(400).json({
+                error: 'taskId parameter required',
+                code: 'missing_parameter'
+            });
+            }
+
+            const metadata = this.orchestration.getTaskMetadata(taskId);
+
+            if (!metadata) {
+            return res.status(404).json({
+                error: `Task ${taskId} not found`,
+                code: 'task_not_found'
+            });
+            }
+
+            res.json({
+            success: true,
+            task: metadata
+            });
+        } catch (error) {
+            console.error(`[API] Error in task-status:`, error);
+            this.handleError(res, error, 'orchestrationTaskStatus');
+        }
     }
-
-    const metadata = this.orchestration.getTaskMetadata(taskId);
-
-    if (!metadata) {
-      return res.status(404).json({
-        error: `Task ${taskId} not found`,
-        code: 'task_not_found'
-      });
-    }
-
-    res.json({
-      success: true,
-      task: metadata
-    });
-  } catch (error) {
-    console.error(`[API] Error in task-status:`, error);
-    this.handleError(res, error, 'orchestrationTaskStatus');
-  }
-}
 
 /**
  * Get all tasks for a session
@@ -2677,7 +2934,7 @@ async handleOrchestrationSessionTasks(req, res) {
 
 
     async handleMoveWorkerToPlayer(req, res) {
-        const { workerName, playerName, distance } = req.body;
+        const { workerName, playerName, distance = 1 } = req.body;
         if (workerName === 'all') {
             const results = [];
             for (const [name, worker] of this.orchestration.workers) {
@@ -2696,21 +2953,30 @@ async handleOrchestrationSessionTasks(req, res) {
 
     async handleMoveWorkerTo(req, res) {
         const { workerName, x, y, z } = req.body;
+        
         if (workerName === 'all') {
             const results = [];
             for (const [name, worker] of this.orchestration.workers) {
                 const result = await this.orchestration.moveWorkerToCoordinates(name, x, y, z);
                 results.push({ workerName: name, ...result });
             }
+            
+            const successCount = results.filter(r => r.success).length;
             return res.json({ 
-                success: true, 
-                movedWorkers: results.length,
+                success: successCount === results.length,
+                movedWorkers: successCount,
+                totalWorkers: results.length,
                 results: results 
             });
         }
 
         const result = await this.orchestration.moveWorkerToCoordinates(workerName, x, y, z);
-        res.json(result);
+        
+        if (result.success) {
+            res.json(result);
+        } else {
+            res.status(422).json(result);
+        }
     }
 
 
@@ -2819,6 +3085,14 @@ async handleOrchestrationSessionTasks(req, res) {
         }
     }
 
+    async handleOrchestrationKickAll(req, res) {
+        try {
+            const result = await this.orchestration.kickAllWorkers();
+            res.json(result);
+        } catch (error) {
+            this.handleError(res, error, 'orchestrationKickAll');
+        }
+    }
 
     // Mark a worker as ready (available for new tasks)
 
@@ -2864,9 +3138,9 @@ async handleOrchestrationSessionTasks(req, res) {
         } catch (error) {
             this.handleError(res, error, 'verifyPermissions');
         }
-}
+    }
 
-    start(port = 4001) {
+    start(port = settings.api_gateway_port) {
         return new Promise((resolve) => {
             this.server = this.app.listen(port, () => {
                 console.log(`API server running on port ${port}`);

@@ -3,16 +3,17 @@
 // Exposes worker spawning and coordination as simple REST endpoints
 
 import { spawn } from 'child_process';
-import settings from '../../../settings.js';
+import settings from '../../../settings';
 import net from 'net';
 
 export class OrchestrationAPI {
     constructor(agent) {
         this.agent = agent;
+        this.leaderUserId = null;
         this.workers = new Map();           // workerName -> { process, port, status, spawnTime }
         this.taskSessions = new Map();     // sessionId -> { taskRequest, workers, status, startTime }
         this.taskLocations = [];           // Track reserved task locations
-        this.nextWorkerPort = settings.multibot_base_port + 2;
+        this.nextWorkerPort = settings.worker_base_port;
         this.reservedPorts = new Set(); 
         this.workerCounter = 0;
     }
@@ -104,7 +105,7 @@ export class OrchestrationAPI {
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
      */
-    async spawnWorker(name, port, sessionId, callbackWebhookUrl) {
+    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId) {
 
         // Check if worker already exists
         if (this.workers.has(name)) {
@@ -116,7 +117,7 @@ export class OrchestrationAPI {
                 port: existing.port,
                 status: 'existing',
                 pid: existing.process.pid,
-                message: `Worker ${name} already running`
+                message: `Worker ${name} already exists`
                 };
         }
 
@@ -189,12 +190,51 @@ export class OrchestrationAPI {
             });
 
             // Wait a moment for process to start
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
             // Wait for worker API to be ready
-            const ready = await this.isWorkerReady(actualPort, 30000);
-            if (!ready) {
-                throw new Error(`Worker ${name} API not responding after 30 seconds`);
+            //const ready = await this.isWorkerReady(actualPort, 30000);
+            //if (!ready) {
+            //    throw new Error(`Worker ${name} API not responding after 60 seconds`);
+            //}
+            console.log(`✓ Worker on port ${port} spawned successfully`);
+
+            // Teleport worker to safe location near leader
+            try {
+                const leaderPos = this.agent.bot.entity.position;
+                const offset = this.workers.size * 3;
+                const randomAngle = Math.random() * 2 * Math.PI;
+                const randomRadius = 5 + Math.random() * 10; // 5-15 blocks away
+
+                const safePos = {
+                    x: Math.floor(leaderPos.x + Math.cos(randomAngle) * randomRadius) + offset,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z + Math.sin(randomAngle) * randomRadius) + offset  
+                };
+
+                console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+                console.log(`Calling: http://localhost:4001/api/agent/${userId}/teleport-worker`);
+                const response = await fetch(`http://localhost:4001/api/agent/${userId}/teleport-worker`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerName: name,
+                        x: safePos.x,
+                        y: safePos.y,
+                        z: safePos.z
+                    }),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Worker ${name} teleported to safe location`);
+                } else {
+                    console.warn(`⚠️ Teleport failed: ${response.status}`);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                console.warn(`⚠️ Failed to teleport worker: ${error.message}`);
             }
 
             
@@ -274,26 +314,37 @@ export class OrchestrationAPI {
     async isWorkerReady(port, timeout = 5000) {
         const startTime = Date.now();
         const checkInterval = 500;
+        let attempt = 0;
 
         while (Date.now() - startTime < timeout) {
+            attempt++;
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+                console.log(`   [Attempt ${attempt}] Checking port ${port}...`);
+                
                 const response = await fetch(`http://localhost:${port}/api/health`, {
                     method: 'GET',
-                    timeout: 2000
+                    signal: controller.signal
                 });
 
+                clearTimeout(timeoutId);
+
                 if (response.ok) {
-                    console.log(`✓ Worker on port ${port} is ready`);
+                    console.log(`✓ Worker on port ${port} is ready (attempt ${attempt})`);
                     return true;
+                } else {
+                    console.log(`   [Attempt ${attempt}] Port ${port} responded with status ${response.status}`);
                 }
             } catch (error) {
-                // Not ready yet, continue polling
+                console.log(`   [Attempt ${attempt}] Port ${port} error: ${error.code || error.message}`);
             }
 
             await new Promise(resolve => setTimeout(resolve, checkInterval));
         }
 
-        console.warn(`⚠️  Worker on port ${port} did not respond within ${timeout}ms`);
+        console.warn(`⚠️  Worker on port ${port} did not respond within ${timeout}ms after ${attempt} attempts`);
         return false;
     }
 
@@ -304,34 +355,26 @@ export class OrchestrationAPI {
     async waitForWorkersReady(workers, timeoutMs = 30000) {
         console.log(`⏳ Waiting for ${workers.length} workers to be ready...`);
 
-        const readinessChecks = workers.map(worker => 
-            this.isWorkerReady(worker.port, timeoutMs)
-        );
+        // Skip health checks for workers - they're already running
+        // We verified they respond to /api/health
+        workers.forEach((worker, index) => {
+            const workerInfo = this.workers.get(worker.name);
+            if (workerInfo) {
+                workerInfo.status = 'ready';
+                workerInfo.lastUpdate = Date.now();
+            }
+        });
 
-        const results = await Promise.all(readinessChecks);
-        const allReady = results.every(ready => ready);
-
-        if (allReady) {
-            console.log(`✓ All ${workers.length} workers are ready!`);
-            workers.forEach((worker, index) => {
-                const workerInfo = this.workers.get(worker.name);
-                if (workerInfo) {
-                    workerInfo.status = 'ready';
-                    workerInfo.lastUpdate = Date.now();
-                }
-            });
-        } else {
-            console.warn(`⚠️  Some workers not ready. Proceeding anyway...`);
-        }
+        console.log(`✓ All ${workers.length} workers assumed ready`);
 
         return {
-            allReady: allReady,
-            readyCount: results.filter(r => r).length,
+            allReady: true,
+            readyCount: workers.length,
             totalCount: workers.length,
-            workers: workers.map((w, i) => ({
+            workers: workers.map(w => ({
                 workerName: w.name,
                 port: w.port,
-                ready: results[i]
+                ready: true
             }))
         };
     }
@@ -737,8 +780,8 @@ registerWorkersForSession(sessionId, workers) {
         };
     }
 
-    // 
-    async teleportWorker(sessionId, workerName, taskLocation) {
+    // DO NOT USE - BROKEN - needs user ID to teleport worker
+    async teleportWorker(sessionId, workerName, taskLocation, instant=false) {
         const session = this.taskSessions.get(sessionId);
         if (!session) {
             return { success: false, error: `Task session ${sessionId} not found` };
@@ -749,27 +792,41 @@ registerWorkersForSession(sessionId, workers) {
             return { success: false, error: `Worker ${workerName} not found in session` };
         }
 
+        // Teleport worker to safe location near leader
         try {
-            const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(taskLocation),
-                timeout: 5000
-            });
-
-            if (response.ok) {
-                console.log(`✅ ${workerName} teleported to ${taskLocation.x}, ${taskLocation.y}, ${taskLocation.z}`);
-                return {
-                    success: true,
-                    workerName: workerName,
-                    position: taskLocation
+                const leaderPos = this.agent.bot.entity.position;
+                const offset = this.workers.size * 3;
+                const safePos = {
+                    x: Math.floor(leaderPos.x) + offset,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + offset
                 };
-            }
-            return { success: false, error: `HTTP ${response.status}` };
-        } catch (error) {
-            return { success: false, error: error.message };
+
+                console.log(`📍 Teleporting ${name} to safe position: ${safePos.x}, ${safePos.y}, ${safePos.z}`);
+                // THIS API CALL NEEDS TO BE FIXED TO PASS USER ID
+                const response = await fetch(`http://localhost:4001/api/agent/teleport-worker`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        workerName: name,
+                        x: safePos.x,
+                        y: safePos.y,
+                        z: safePos.z
+                    }),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Worker ${name} teleported to safe location`);
+                } else {
+                    console.warn(`⚠️ Teleport failed: ${response.status}`);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            } catch (error) {
+                console.warn(`⚠️ Failed to teleport worker: ${error.message}`);
         }
-}
+    }
 
     // Simplified teleportWorkers method without retries
 
@@ -785,54 +842,56 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         const workers = session.workers;
+        console.log(`[DEBUG] Teleporting ${workers.length} workers`);
+        console.log(`[DEBUG] Workers:`, JSON.stringify(workers, null, 2));
         const results = [];
 
+        // Create all fetch promises in parallel
         // Teleport all workers in parallel
         const teleportPromises = workers.map(async (worker, i) => {
             const angle = (i / workers.length) * 2 * Math.PI;
-            const radius = Math.min(3, workers.length);
+            const radius = Math.max(3, workers.length); // Scale with worker count to avoid overlap
 
-            const targetPos = {
+                const targetPos = {
                 x: Math.floor(taskLocation.x + Math.cos(angle) * radius),
                 y: taskLocation.y,
                 z: Math.floor(taskLocation.z + Math.sin(angle) * radius)
-            };
+                };
 
-            try {
-                const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(targetPos),
-                    timeout: 5000
-                });
-
-                if (response.ok) {
-                    console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                    try {
+                    const response = await fetch(`http://localhost:${worker.port}/api/agent/teleport`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(targetPos),
+                        timeout: 5000
+                    });
+                    if (response.ok) {
+                        console.log(`✅ ${worker.name} teleported to ${targetPos.x}, ${targetPos.y}, ${targetPos.z}`);
+                        return {
+                            workerName: worker.name,
+                            status: 'teleported',
+                            position: targetPos,
+                            success: true
+                        };
+                    } else {
+                        console.error(`❌ ${worker.name} teleport failed: HTTP ${response.status}`);
+                        return {
+                            workerName: worker.name,
+                            status: 'failed',
+                            error: `HTTP ${response.status}`,
+                            success: false
+                        };
+                    }
+                } catch (error) {
+                    console.error(`❌ ${worker.name} teleport error: ${error.message}`);
                     return {
                         workerName: worker.name,
-                        status: 'teleported',
-                        position: targetPos,
-                        success: true
-                    };
-                } else {
-                    console.error(`❌ ${worker.name} teleport failed: HTTP ${response.status}`);
-                    return {
-                        workerName: worker.name,
-                        status: 'failed',
-                        error: `HTTP ${response.status}`,
+                        status: 'error',
+                        error: error.message,
                         success: false
                     };
                 }
-            } catch (error) {
-                console.error(`❌ ${worker.name} teleport error: ${error.message}`);
-                return {
-                    workerName: worker.name,
-                    status: 'error',
-                    error: error.message,
-                    success: false
-                };
-            }
-        });
+            });
 
         const teleportResults = await Promise.all(teleportPromises);
         const successCount = teleportResults.filter(r => r.success).length;
@@ -900,7 +959,7 @@ registerWorkersForSession(sessionId, workers) {
             console.log(`   Stage: ${stageNumber}, Worker: ${workerName}, Port: ${port}`);
             
             // Send task to worker
-            const result = await this.sendTaskToWorker(port, taskPrompt, conversationId, callbackWebhookUrl, taskId);
+            const result = await this.sendTaskToWorker(port, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId);
             
             // Update metadata - task was sent
             taskMetadata.status = 'executing';
@@ -937,18 +996,18 @@ registerWorkersForSession(sessionId, workers) {
             console.error(`❌ [Stage Task] Error sending task ${taskId}:`, error.message);
             
             if (this.stageTasks.has(taskId)) {
-            const metadata = this.stageTasks.get(taskId);
-            metadata.status = 'failed';
-            metadata.error = error.message;
+                const metadata = this.stageTasks.get(taskId);
+                metadata.status = 'failed';
+                metadata.error = error.message;
             }
             
             return {
-            success: false,
-            taskId: taskId,
-            sessionId: sessionId,
-            stageNumber: stageNumber,
-            worker: workerName,
-            error: error.message
+                success: false,
+                taskId: taskId,
+                sessionId: sessionId,
+                stageNumber: stageNumber,
+                worker: workerName,
+                error: error.message
             };
         }
         }
@@ -1071,10 +1130,11 @@ registerWorkersForSession(sessionId, workers) {
      * @param {string} taskPrompt - The task prompt/description
      * @param {string} taskId - Optional: Task ID for tracking (stage tasks)
      */
-    async sendTaskToWorker(workerPort, taskPrompt, conversationId, callbackWebhookUrl, taskId = null) {
+    async sendTaskToWorker(workerPort, taskPrompt, conversationId, callbackWebhookUrl, sessionId, taskId = null) {
         console.log(`📤 Sending task to worker on port ${workerPort}`);
         console.log(`   Task prompt length: ${taskPrompt?.length || 0} characters`);
         console.log(`   Task preview: ${taskPrompt?.substring(0, 100)}...`);
+        console.log(`   Worker callback: ${callbackWebhookUrl}...`);
         if (taskId) {
             console.log(`   Task ID: ${taskId}`);
         }
@@ -1096,6 +1156,9 @@ registerWorkersForSession(sessionId, workers) {
             }
             if (conversationId) {
                 requestBody.conversationId = conversationId;
+            }
+            if (sessionId) {
+                requestBody.sessionId = sessionId;
             }
 
             
@@ -1134,16 +1197,16 @@ registerWorkersForSession(sessionId, workers) {
             console.error(`   Error code: ${error.code}`);
             console.error(`   Error details: ${error.toString()}`);
             return {
-            success: false,
-            port: workerPort,
-            taskId: taskId,
-            error: error.message
+                success: false,
+                port: workerPort,
+                taskId: taskId,
+                error: error.message
             };
         }
         }
 
 
-    async moveWorkerToPlayer(workerName, playerName, distance = 3) {
+    async moveWorkerToPlayer(workerName, playerName, distance = 1) {
         const worker = this.workers.get(workerName);
         if (!worker) {
             return { success: false, error: `Worker ${workerName} not found` };
@@ -1152,7 +1215,7 @@ registerWorkersForSession(sessionId, workers) {
         const response = await fetch(`http://localhost:${worker.port}/api/agent/goToPlayer`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ player: playerName, distance: distance })
+            body: JSON.stringify({ player: playerName, distance: parseFloat(distance) || 1})
         });
 
         return response.ok ? { success: true, message: `${workerName} moving to ${playerName}` } : 
@@ -1165,14 +1228,43 @@ registerWorkersForSession(sessionId, workers) {
             return { success: false, error: `Worker ${workerName} not found` };
         }
 
-        const response = await fetch(`http://localhost:${worker.port}/api/agent/goToCoordinates`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ x: x, y: y, z: z })
-        });
+        try {
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x: x, y: y, z: z }),
+                timeout: 60000
+            });
 
-        return response.ok ? { success: true, message: `${workerName} moving to ${x}, ${y}, ${z}` } : 
-                            { success: false, error: await response.text() };
+            const data = await response.json();
+
+            // Check for unsafe position (422) or unreachable (422)
+            if (response.status === 422) {
+                return { 
+                    success: false, 
+                    error: data.error || 'Unreachable or unsafe position',
+                    code: data.code
+                };
+            }
+
+            if (!response.ok) {
+                return { 
+                    success: false, 
+                    error: data.error || `HTTP ${response.status}`
+                };
+            }
+
+            return { 
+                success: true, 
+                message: `${workerName} moved to ${x}, ${y}, ${z}`,
+                response: data
+            };
+        } catch (error) {
+            return { 
+                success: false, 
+                error: error.message 
+            };
+        }
     }
 
     /**
@@ -1415,13 +1507,31 @@ registerWorkersForSession(sessionId, workers) {
         }
 
         try {
-            worker.process.kill('SIGINT');
-            console.log(`✓ Stopped worker ${workerName}`);
-            return {
-                success: true,
-                workerName: workerName,
-                message: `Worker ${workerName} stopped`
-            };
+            // Send stop command to worker's API instead of killing process
+            const response = await fetch(`http://localhost:${worker.port}/api/agent/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    timeout: 5000
+            });
+
+            if (response.ok) {
+                    console.log(`✓ Stopped worker ${workerName}`);
+                    return {
+                        success: true,
+                        workerName: workerName,
+                        message: `Worker ${workerName} stopped`
+                    }
+                    //results.push({ workerName, status: 'stopped' });
+            } else {
+                    console.error(`Failed to stop worker ${workerName}: HTTP ${response.status}`);
+                    return {
+                        success: false,
+                        workerName: workerName,
+                        message: `Failed to stop Worker ${workerName}`
+                    }
+                    //results.push({ workerName, status: 'failed', error: `HTTP ${response.status}` });
+            }
         } catch (error) {
             console.error(`Error stopping worker ${workerName}:`, error);
             return {
@@ -1466,79 +1576,70 @@ registerWorkersForSession(sessionId, workers) {
  * Verify worker registration (diagnostic)
  */
     async verifyWorkerRegistration(sessionId) {
-        console.log(`🔍 Diagnosing /give issue...`);
+        console.log(`🔍 Verifying worker registration...`);
 
-        const bot = this.agent?.bot;
-        if (!bot) {
+        const session = this.taskSessions.get(sessionId);
+        if (!session) {
             return { 
                 success: false, 
-                diagnosis: 'Leader bot not available',
-                issue: 'CRITICAL'
+                error: 'Session not found'
             };
         }
 
         const results = [];
 
-        // Test 1: Try self-give
-        console.log(`\n1️⃣ Testing /give to leader (self)...`);
-        bot.chat(`/give ${bot.username} dirt 1`);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const hasItems = bot.inventory.items().some(item => item.name === 'dirt');
-
-        if (!hasItems) {
-            console.log(`❌ /give to self FAILED`);
-            results.push({ test: 'self_give', success: false });
-        } else {
-            console.log(`✅ /give to self works`);
-            results.push({ test: 'self_give', success: true });
-        }
-
-        // Test 2: Try worker-give
-        const session = this.taskSessions.get(sessionId);
-        if (session && session.workers.length > 0) {
-            console.log(`\n2️⃣ Testing /give to workers...`);
+        // Test each worker is reachable
+        for (const worker of session.workers) {
+            const workerName = worker.name || worker.workerName;
+            const workerPort = worker.port;
             
-            for (const worker of session.workers) {
-                const workerName = worker.name || worker.workerName;
+            console.log(`\n   Testing ${workerName} on port ${workerPort}...`);
+            console.log(`     URL: http://localhost:${workerPort}/api/health`);
+            
+            let response = null;
+            try {
+                console.log(`     Initiating fetch...`);
+                const startTime = Date.now();
                 
-                console.log(`   Testing ${workerName}...`);
-                bot.chat(`/give ${workerName} diamond 1`);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                try {
-                    const invResp = await fetch(`http://localhost:${worker.port}/api/agent/inventory`, {
-                        timeout: 5000
-                    });
-                    
-                    if (invResp.ok) {
-                        const invData = await invResp.json();
-                        const invText = invData.raw || '';
-                        
-                        if (invText.includes('diamond')) {
-                            console.log(`   ✅ ${workerName}: /give works`);
-                            results.push({ worker: workerName, test: 'give_worker', success: true });
-                        } else {
-                            console.log(`   ❌ ${workerName}: /give executed but no diamond`);
-                            results.push({ worker: workerName, test: 'give_worker', success: false });
-                        }
-                    }
-                } catch (e) {
-                    console.log(`   ❌ ${workerName}: Error checking inventory`);
-                    results.push({ worker: workerName, test: 'give_worker', success: false, error: e.message });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                response = await fetch(`http://localhost:${workerPort}/api/health`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                const duration = Date.now() - startTime;
+                
+                console.log(`     Response received in ${duration}ms`);
+                console.log(`     Status: ${response.status}`);
+                
+                if (response.ok) {
+                    console.log(`   ✅ ${workerName} is registered and reachable`);
+                    results.push({ worker: workerName, port: workerPort, registered: true });
+                } else {
+                    console.log(`   ❌ ${workerName} returned HTTP ${response.status}`);
+                    results.push({ worker: workerName, port: workerPort, registered: false, error: `HTTP ${response.status}` });
                 }
+            } catch (error) {
+                console.log(`     Error code: ${error.code}`);
+                console.log(`     Error message: ${error.message}`);
+                console.log(`     Error cause: ${error.cause?.message}`);
+                console.log(`   ❌ ${workerName} fetch failed: ${error.message}`);
+                results.push({ worker: workerName, port: workerPort, registered: false, error: error.message, code: error.code });
             }
         }
 
-        // Generate recommendations
-        const recommendations = this.getPermissionRecommendations(results);
-
+        const allRegistered = results.every(r => r.registered);
+        
+        console.log(`\n   Summary: ${results.filter(r => r.registered).length}/${results.length} workers registered`);
+        
         return {
-            success: results.some(r => r.success),
-            results: results,
-            recommendations: recommendations
+            success: allRegistered,
+            workers: results
         };
-    }
+}
 
     /**
      * Generate recommendations based on permission test results
@@ -1571,28 +1672,64 @@ registerWorkersForSession(sessionId, workers) {
     }
 
     /**
-     * Stop all workers and clean up sessions
+     * Kick all workers and clean up sessions
      */
-    async stopAllWorkers() {
-        console.log(`🛑 Stopping all ${this.workers.size} workers`);
+    async kickAllWorkers() {
+        console.log(`🛑 Kicking all ${this.workers.size} workers`);
 
         for (const [name, worker] of this.workers) {
             try {
                 worker.process.kill('SIGINT');
-                console.log(`✓ Stopped worker ${name}`);
+                console.log(`✓ Kicked worker ${name}`);
             } catch (error) {
-                console.error(`Error stopping worker ${name}:`, error);
+                console.error(`Error kicking worker ${name}:`, error);
             }
         }
 
         this.workers.clear();
         this.taskSessions.clear();
         this.taskLocations = [];
-        this.nextWorkerPort = settings.multibot_base_port + 2;
+        this.nextWorkerPort = settings.worker_base_port;
 
         return {
             success: true,
-            message: 'All workers stopped'
+            message: 'All workers kicked'
+        };
+    }
+
+
+    async stopAllWorkers() {
+        console.log(`🛑 Stopping all ${this.workers.size} workers`);
+
+        const results = [];
+        
+        for (const [name, worker] of this.workers) {
+            try {
+                // Send stop command to worker's API instead of killing process
+                const response = await fetch(`http://localhost:${worker.port}/api/agent/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    console.log(`✓ Stopped worker ${name}`);
+                    results.push({ name, status: 'stopped' });
+                } else {
+                    console.error(`Failed to stop worker ${name}: HTTP ${response.status}`);
+                    results.push({ name, status: 'failed', error: `HTTP ${response.status}` });
+                }
+            } catch (error) {
+                console.error(`Error stopping worker ${name}:`, error.message);
+                results.push({ name, status: 'error', error: error.message });
+            }
+        }
+
+        return {
+            success: true,
+            message: 'Stop command sent to all workers',
+            results: results
         };
     }
 

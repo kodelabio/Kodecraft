@@ -5,7 +5,7 @@ import { readFileSync, createWriteStream } from 'fs';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import { mkdir } from 'fs/promises';
 import yargs from 'yargs';
-import settings from '../../../settings.js';
+import rootSettings from '../../../settings.js';
 
 
 const args = process.argv.slice(2);
@@ -63,23 +63,29 @@ global.workerConfig = {
 };
 
 // Function to report task completion
-async function reportTaskCompletion(result) {
-    const { callbackWebhookUrl, name, sessionId } = global.workerConfig;
+async function reportTaskCompletion(result, callbackWebhookUrl) {
+    // Use sessionId from result if provided, otherwise fall back to global config
+    const sessionId = result?.sessionId || global.workerConfig?.sessionId;
+    const { name } = global.workerConfig;
     
-    if (!callbackWebhookUrl) {
+
+    // Use passed URL or fall back to global config
+    const webhookUrl = callbackWebhookUrl || global.workerConfig?.callbackWebhookUrl;
+    
+    if (!webhookUrl) {
         console.warn('⚠️  No callback webhook URL configured');
         return;
     }
     
     try {
         console.log(`📞 Reporting task completion for ${name}`);
-        console.log(`   Webhook URL: ${callbackWebhookUrl}`);
+        console.log(`   Webhook URL: ${webhookUrl}`);
         console.log(`   Session ID: ${sessionId}`);
         console.log(`   Result: ${JSON.stringify(result).substring(0, 200)}`);
         
         const startTime = Date.now();
         
-        const response = await fetch(callbackWebhookUrl, {
+        const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -118,7 +124,7 @@ async function reportTaskCompletion(result) {
         
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
             console.error(`   ⚠️  Network error - webhook URL may be unreachable`);
-            console.error(`   URL: ${global.workerConfig.callbackWebhookUrl}`);
+            console.error(`   URL: ${webhookUrl}`);
         }
     }
 }
@@ -161,7 +167,7 @@ async function setupLogging(workerName) {
         console.log(`📞 Callback webhook: ${argv.webhook || 'not set'}`);
         
         // Initialize the agent settings from root settings
-        const workerSettings = { ...settings };
+        const workerSettings = { ...rootSettings };
         workerSettings.brain_mode = 'internal'; // Force internal mode for workers
         workerSettings.render_bot_view = false; // Disable browser viewer for workers to avoid conflicts
         
@@ -171,7 +177,7 @@ async function setupLogging(workerName) {
         workerSettings.external_mode_allow_chat = false; // No chat commands
         workerSettings.only_chat_with = []; // Don't listen to anyone in chat
         workerSettings.is_worker_bot = true; // Flag to identify this as a worker bot
-        workerSettings.cheat_mode_enabled = true; // ✅ NEW: Enable cheat mode for workers
+        workerSettings.cheat_mode_enabled = false; 
         
         // Load and set the first profile (workers use the same profile as the leader)
         let profilePath = workerSettings.profiles[0];
@@ -185,6 +191,16 @@ async function setupLogging(workerName) {
         // Override profile name for worker
         const workerProfile = { ...profile };
         workerProfile.name = argv.name;
+
+        workerProfile.modes = {
+            ...workerProfile.modes,
+            cheat: false,
+            torch_placing: false,
+            self_defense: false,
+            item_collecting: false,
+            elbow_room: false,
+            idle_staring: false
+        };
         
         workerSettings.profile = workerProfile;
         workerSettings.assigned_api_port = argv.port;
@@ -266,15 +282,23 @@ async function setupLogging(workerName) {
         }
         console.log(`📚 === END VERIFICATION ===\n`);
 
-        
         // Start API server for the worker
         console.log(`Starting API server for worker ${argv.name} on port ${argv.port}`);
         const api = new ExternalAPI(agent);
-        await api.start(argv.port);
+        const apiStartPromise = api.start(argv.port);
 
-        
-        
-        console.log(`Worker ${argv.name} ready on port ${argv.port}`);
+        // If API doesn't start within 5 seconds, log it
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('API start timeout')), 5000)
+        );
+
+        try {
+            await Promise.race([apiStartPromise, timeoutPromise]);
+            console.log(`Worker ${argv.name} ready on port ${argv.port}`);
+        } catch (error) {
+            console.error(`API start failed or timed out: ${error.message}`);
+            throw error;
+        }
         
     } catch (error) {
         console.error(`Failed to start worker ${argv.name}:`, error);

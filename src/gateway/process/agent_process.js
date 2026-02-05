@@ -9,11 +9,12 @@ export class AgentProcess extends EventEmitter {
         this.onExit = onExit;
     }
 
-    start(load_memory=false, init_message=null, count_id=0) {
+    start(load_memory=false, init_message=null, count_id=0, spawnLocation=null) {
         this.count_id = count_id;
         this.running = true;
+        this.spawnLocation = spawnLocation;
 
-        let args = ['src/gateway/process/init_agent.js', this.name];
+        let args = ['src/process/init_agent.js', this.name];
         args.push('-n', this.name);
         args.push('-c', count_id);
         if (load_memory)
@@ -21,6 +22,12 @@ export class AgentProcess extends EventEmitter {
         if (init_message)
             args.push('-m', init_message);
         args.push('-p', this.port);
+        // NEW: Add spawn location if provided
+        if (spawnLocation) {
+            args.push('-x', spawnLocation.x);
+            args.push('-y', spawnLocation.y);
+            args.push('-z', spawnLocation.z);
+        }
 
         const agentProcess = spawn('node', args, {
             stdio: 'inherit',
@@ -45,7 +52,7 @@ export class AgentProcess extends EventEmitter {
                     return;
                 }
                 console.log('Restarting agent...');
-                this.start(true, 'Agent process restarted.', count_id, this.port);
+                this.start(true, 'Agent process restarted.', count_id, this.port, this.spawnLocation);
                 last_restart = Date.now();
             }
         });

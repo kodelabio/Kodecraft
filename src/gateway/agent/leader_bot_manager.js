@@ -1,5 +1,5 @@
 // src/agent/leader_bot_manager.js
-import { AgentProcess } from '#src/gateway/process/agent_process.js';
+import { AgentProcess } from '../process/agent_process.js';
 import settings from '../../../settings.js';
 
 export class LeaderBotManager {
@@ -47,7 +47,7 @@ export class LeaderBotManager {
         }
     }
 
-    async getOrSpawnLeaderBot(userId, botName) {
+    async getOrSpawnLeaderBot(userId, botName, playerPosition) {
             const startTime = Date.now();
             console.log(`[LeaderBotManager] 🔍 getOrSpawnLeaderBot - userId: ${userId}, botName: ${botName}`);
             console.log(`   Map size: ${this.leaderBots.size}/${settings.max_leader_bots}`);
@@ -80,12 +80,14 @@ export class LeaderBotManager {
             }
 
             console.log(`[LeaderBotManager] 🚀 Spawning new bot...`);
-            const result = await this.spawnLeaderBot(userId, botName);
+            // Use playerPosition as spawn location if provided
+            const spawnLocation = playerPosition || null;
+            const result = await this.spawnLeaderBot(userId, botName, spawnLocation);
             console.log(`[LeaderBotManager] ⏱️  Done in ${Date.now() - startTime}ms - success: ${result.success}`);
             return result;
         }
 
-    async spawnLeaderBot(userId, botName) {
+    async spawnLeaderBot(userId, botName, spawnLocation = null) {
         const port = this.nextLeaderPort++; 
         const countId = this.leaderBots.size;
     
@@ -95,6 +97,9 @@ export class LeaderBotManager {
         userId = String(userId);  // ← Normalize to string
         
         console.log(`[LeaderBotManager] 🚀 Spawning leader bot for user ${userId} on port ${port}`);
+        if (spawnLocation) {
+            console.log(`   Spawn location: (${spawnLocation.x}, ${spawnLocation.y}, ${spawnLocation.z})`);
+        }
 
         try {
             // Create AgentProcess with name = botName
@@ -103,13 +108,30 @@ export class LeaderBotManager {
             // Handle process exit
             agentProcess.on('exit', async (name) => {
                 console.log(`[LeaderBotManager] ⚠️  Leader bot ${name} exited`);
+                // ✅ Get the leader info from the map using userId
+                // ✅ Call the leader bot's orchestration cleanup endpoint
+                try {
+                    const response = await fetch(`http://localhost/api/orchestration/${userId}/kick-all-workers`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 5000
+                    });
+                    
+                    if (response.ok) {
+                        console.log(`[LeaderBotManager] ✓ Workers cleaned up for ${name}`);
+                    }
+                } catch (error) {
+                    console.error(`[LeaderBotManager] Failed to cleanup workers:`, error.message);
+                }
+
+
                 
                 this.leaderBots.delete(userId);
                 this.portToUserId.delete(port);
             });
 
             // Start the agent (load_memory=true, init_message=null, count_id=userId)
-            agentProcess.start(true, null, countId);
+            agentProcess.start(true, null, countId, spawnLocation);
 
             // Store leader bot info
             const leaderInfo = {
@@ -199,7 +221,7 @@ export class LeaderBotManager {
     }
 
     getLeaderBotForUser(userId) {
-        console.log(`[LeaderBotManager] Looking for bot for userId: ${userId}`);
+        //console.log(`[LeaderBotManager] Looking for bot for userId: ${userId}`);
         userId = String(userId);  // ✅ Always convert to string
         const info = this.leaderBots.get(userId);
         
@@ -207,7 +229,7 @@ export class LeaderBotManager {
             console.warn(`[LeaderBotManager] No info found for userId ${userId}`);
             return null;
         }
-        console.log(`[LeaderBotManager] Found bot! Port: ${info.port}, Running: ${info.agentProcess.running}`);
+        //console.log(`[LeaderBotManager] Found bot! Port: ${info.port}, Running: ${info.agentProcess.running}`);
         // Check if bot is actually running
         if (info.agentProcess && !info.agentProcess.running) {
             console.warn(`[LeaderBotManager] Bot for ${userId} is not running`);

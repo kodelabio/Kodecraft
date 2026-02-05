@@ -1,21 +1,22 @@
 import { readFileSync } from 'fs';
+import path from 'path';
 import { History } from '#mc/agent/history.js';
 import { Coder } from '#mc/agent/coder.js';
 import { VisionInterpreter } from '#mc/agent/vision/vision_interpreter.js';
 import { Prompter } from '#mc/models/prompter.js';
 import { initModes } from '#mc/agent/modes.js';
 import { initBot } from '#mc/utils/mcdata.js';
-import { containsCommand, commandExists, executeCommand, truncCommandMessage, isAction, blacklistCommands } from '#mc/agent/commands/index.js';
+import { containsCommand, commandExists, executeCommand, truncCommandMessage, isAction, blacklistCommands } from './commands/index.js';
 import { ActionManager } from '#mc/agent/action_manager.js';
 import { NPCContoller } from '#mc/agent/npc/controller.js';
 import { MemoryBank } from '#mc/agent/memory_bank.js';
 import { SelfPrompter } from '#mc/agent/self_prompter.js';
 import convoManager from '#mc/agent/conversation.js';
-import { handleTranslation, handleEnglishTranslation } from '#mc/utils/translator.js';
+import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
 import { addBrowserViewer } from '#mc/agent/vision/browser_viewer.js';
 import settings from './settings.js';
 import { Task } from '#mc/agent/tasks/tasks.js';
-import { speak } from '#mc/agent/speak.js';
+import { say } from '#mc/agent/speak.js';
 import { ExternalAPI } from './external_api.js';
 // Use global fetch (Node.js 18+) or import if needed
 const fetch = globalThis.fetch || (async (...args) => {
@@ -24,31 +25,36 @@ const fetch = globalThis.fetch || (async (...args) => {
 });
 
 export class Agent {
-    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null) {
+    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null, spawnLocation = null) {
         this.last_sender = null;
         this.count_id = count_id;
 
         const apiPort = port || settings.leader_bot_base_port || 5000; 
-
+        console.log(`[DEBUG] Current working directory:`, process.cwd());
+        console.log(`[DEBUG] settings.profiles[0]:`, settings.profiles[0]);
+        console.log(`[DEBUG] Attempting to read from:`, path.resolve(settings.profiles[0]));
         // Load profile from file
-        console.log(`reading profile:`, settings.profiles[0]);
         let profile = settings.profile || {};
-        if (settings.profiles && settings.profiles.length > 0) {
+        if (!settings.profile && settings.profiles && settings.profiles.length > 0) {
             try {
                 const profilePath = settings.profiles[0];
-                profile = JSON.parse(readFileSync(profilePath, 'utf8'));
+                const fileContent = readFileSync(profilePath, 'utf8');
+                console.log(`Raw file (first 500 chars):`, fileContent.substring(0, 500));
+                
+                profile = JSON.parse(fileContent);
+                console.log(`Parsed profile keys:`, Object.keys(profile));
+                console.log(`Profile.modes:`, profile.modes);
                 console.log(`Loaded profile from ${profilePath}`);
             } catch (error) {
-                console.warn(`Failed to load profile from ${settings.profiles[0]}, using defaults:`, error.message);
+                console.warn(`Failed to load profile: ${error.message}`);
             }
         }
-        console.log(`Initializing agent ${this.name}...`);
-        
+
         // Initialize components with more detailed error handling
         this.actions = new ActionManager(this);
         this.prompter = new Prompter(this, profile);
         this.name = botName || this.prompter.getName();
-        
+        console.log(`Initializing agent ${this.name}...`);
         this.history = new History(this);
         this.coder = new Coder(this);
         
@@ -127,6 +133,16 @@ export class Agent {
         this.bot.once('spawn', async () => {
             try {
                 clearTimeout(spawnTimeout);
+                // NEW: Teleport to spawn location if provided
+                if (spawnLocation) {
+                    const x = Math.floor(spawnLocation.x);
+                    const y = Math.floor(spawnLocation.y);
+                    const z = Math.floor(spawnLocation.z);
+                    console.log(`[Agent] Teleporting ${this.name} to (${x}, ${y}, ${z})`);
+                    this.bot.chat(`/tp @s ${x} ${y} ${z}`);
+                    // Wait for teleport to complete
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
                 addBrowserViewer(this.bot, count_id);
                 console.log('Initializing vision intepreter...');
                 try {
@@ -507,7 +523,7 @@ export class Agent {
         }
         else {
             if (settings.speak) {
-                speak(to_translate);
+                say(to_translate);
             }
             this.bot.chat(message);
         }
@@ -562,7 +578,7 @@ export class Agent {
     
             if (this.orchestration) {
                 console.log(`[Agent] Orchestration found, stopping ${this.orchestration.workers.size} workers...`);
-                this.orchestration.stopAllWorkers().then(result => {
+                this.orchestration.kickAllWorkers().then(result => {
                     console.log(`[Agent] stopAllWorkers result:`, result);
                 }).catch(error => {
                     console.error(`❌ Error stopping workers:`, error);

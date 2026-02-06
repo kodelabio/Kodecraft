@@ -1,8 +1,8 @@
+import { loadConfig } from '../../config/loader.js';
 import { Agent } from '../agent/agent.js';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import yargs from 'yargs';
-import agentSettings, { setSettings } from '../agent/settings.js';  // ← Fix this import
-import settings from '../../settings.js';
+import settings, { setSettings } from '../agent/settings.js';  // ← Fix this import
 
 const args = process.argv.slice(2);
 if (args.length < 1) {
@@ -54,7 +54,7 @@ const argv = yargs(args)
     })
     .option('mindserverPort', {
         type: 'number',
-        default: settings.mindserver_port || 8080,
+        default: 8080,
         description: 'port of mindserver'
     })
     .argv;
@@ -62,11 +62,9 @@ const argv = yargs(args)
 (async () => {
     try {
         // Populate the agent settings object
-        console.log('[DEBUG] Root settings.minecraft_version:', settings.minecraft_version);
-        setSettings(settings);
-        console.log('[DEBUG] Agent settings.minecraft_version:', agentSettings.minecraft_version);  // ← Check it here
-        
-
+        const config = await loadConfig();
+        setSettings(config);
+    
         // In Docker, use container name instead of localhost
         const mindserverHost = settings.mindserver_host || 'mindserver';
         const mindserverPort = settings.mindserver_port || 8080;

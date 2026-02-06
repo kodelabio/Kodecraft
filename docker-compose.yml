@@ -77,6 +77,7 @@ services:
       - ./logs:/app/logs
       - ./.env:/app/.env:ro
       - ./data:/app/data
+      - ./tasks:/app/tasks
     restart: unless-stopped
     networks:
       - kodecraft-network

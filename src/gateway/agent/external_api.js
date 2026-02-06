@@ -147,6 +147,10 @@ export class ExternalAPI {
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
 
+        // Tasks Management
+        this.app.post('/api/agent/task/assign', this.handleAssignTask.bind(this));
+        this.app.get('/api/agent/task/status', this.handleTaskStatus.bind(this));
+
         // ========== NEW STAGE-AWARE ENDPOINTS ==========
         // Send a task for a specific stage to a worker
         this.app.post('/api/orchestration/send-task-stage', this.handleOrchestrationSendTaskStage.bind(this));
@@ -2049,6 +2053,98 @@ export class ExternalAPI {
             action: action,
             details: error.message 
         });
+    }
+
+
+    // TASKS Management
+
+    async handleAssignTask(req, res) {
+        try {
+            const { taskPath, taskId } = req.body;
+
+            if (!taskPath || !taskId) {
+                return res.status(400).json({
+                    error: 'taskPath and taskId required'
+                });
+            }
+
+            // Load task data
+            const fs = await import('fs');
+            const taskFile = fs.readFileSync(taskPath, 'utf-8');
+            const taskConfig = JSON.parse(taskFile);
+            const taskData = taskConfig.tasks.find(t => t.task_id === taskId);
+
+            if (!taskData) {
+                return res.status(404).json({
+                    error: `Task ${taskId} not found in ${taskPath}`
+                });
+            }
+
+            // Create orchestrated task if multi-agent
+            let Task;
+            if (taskData.agent_count && taskData.agent_count > 1) {
+                const { OrchestratedTask } = await import('./orchestrated_task.js');
+                Task = OrchestratedTask;
+            } else {
+                const { Task: BasicTask } = await import('./task.js');
+                Task = BasicTask;
+            }
+
+            // Assign task to agent
+            this.agent.task = new Task(
+                this.agent,
+                taskData,
+                this.orchestration,  // Pass orchestration for OrchestratedTask
+                Date.now()
+            );
+
+            await this.agent.task.initBotTask();
+
+            res.status(202).json({
+                success: true,
+                taskId: taskId,
+                agentCount: taskData.agent_count,
+                message: `Task ${taskId} assigned to ${this.agent.name}`
+            });
+
+        } catch (error) {
+            console.error('Error assigning task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+
+    async handleTaskStatus(req, res) {
+        try {
+            if (!this.agent.task) {
+                return res.json({
+                    success: false,
+                    message: 'No task assigned'
+                });
+            }
+
+            const status = this.agent.task.isDone();
+
+            if (status) {
+                res.json({
+                    success: true,
+                    ...status
+                });
+            } else {
+                const elapsed = Date.now() - this.agent.task.taskStartTime;
+                res.json({
+                    success: false,
+                    taskId: this.agent.task.data.task_id,
+                    elapsedMs: elapsed,
+                    message: 'Task in progress'
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                error: error.message
+            });
+        }
     }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)

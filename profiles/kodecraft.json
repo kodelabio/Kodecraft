@@ -5,14 +5,14 @@
         "hunting": false,
         "item_collecting": false,
         "torch_placing": false,
-         "cowardice": false
+        "cowardice": false
     },
     "model": {
         "api": "openai",
         "model": "gpt-5-mini",
         "url": "https://api.openai.com/v1/",
         "params": {
-            "max_completion_tokens": 4096,
+            "max_output_tokens": 4096,
             "temperature": 1
         }
     },

@@ -233,6 +233,7 @@ export const queryList = [
             'levelNum': { type: 'int', description: 'The level number to check.', domain: [0, Number.MAX_SAFE_INTEGER] }
         },
         perform: function (agent, levelNum) {
+            console.log('[checkBlueprintLevel] Called with args:', levelNum);
             let res = checkLevelBlueprint(agent, levelNum);
             console.log(res);
             return pad(res);
@@ -242,6 +243,7 @@ export const queryList = [
         name: '!checkBlueprint',
         description: 'Check what blocks still need to be placed for the blueprint',
         perform: function (agent) {
+            console.log('[checkBlueprint] Called');
             let res = checkBlueprint(agent);
             return pad(res);
         }
@@ -250,6 +252,7 @@ export const queryList = [
         name: '!getBlueprint',
         description: 'Get the blueprint for the building',
         perform: function (agent) {
+            console.log('[getBlueprint] Called');
             let res = agent.task.blueprint.explain();
             return pad(res);
         }

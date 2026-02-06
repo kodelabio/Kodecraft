@@ -8,6 +8,7 @@ import { History } from './history.js';
 import { Coder } from './coder.js';
 //import { MultiBotManager } from './multibot_manager.js';
 import { OrchestrationAPI } from './orchestration_api.js';
+import { Task } from './tasks/tasks.js';
     
 
 export class ExternalAPI {
@@ -146,6 +147,11 @@ export class ExternalAPI {
         // Goal management
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
+
+        // Tasks Management
+        this.app.post('/api/agent/task/assign', this.handleAssignTask.bind(this));
+        this.app.get('/api/agent/task/status', this.handleTaskStatus.bind(this));
+
 
         // ========== NEW STAGE-AWARE ENDPOINTS ==========
         // Send a task for a specific stage to a worker
@@ -2049,6 +2055,112 @@ export class ExternalAPI {
             action: action,
             details: error.message 
         });
+    }
+
+    // TASKS Management
+    async handleAssignTask(req, res) {
+        try {
+            const { taskPath, taskId } = req.body;
+
+            if (!taskPath || !taskId) {
+                return res.status(400).json({
+                    error: 'taskPath and taskId required'
+                });
+            }
+
+            // Load task data
+            const fs = await import('fs');
+            const taskFile = fs.readFileSync(taskPath, 'utf-8');
+            const taskConfig = JSON.parse(taskFile);
+            
+            const taskData = taskConfig[taskId];
+            taskData.task_id = taskId;
+
+            if (!taskData) {
+                return res.status(404).json({
+                    error: `Task ${taskId} not found in ${taskPath}`
+                });
+            }
+
+            // Return immediately
+            res.status(202).json({
+                success: true,
+                taskId: taskId,
+                agentCount: taskData.agent_count,
+                message: `Task ${taskId} queued for execution`
+            });
+
+            // Execute task in background
+            setImmediate(async () => {
+                const originalBrainMode = settings.brain_mode;
+                const originalHistory = this.agent.history;
+                const originalCoder = this.agent.coder;
+                
+                try {
+                    settings.brain_mode = 'internal';
+                    this.agent.history = new History(this.agent);
+                    this.agent.coder = new Coder(this.agent);
+                    
+                    // Assign and initialize task
+                    this.agent.task = new Task(this.agent, taskData, Date.now());
+                    this.agent.task.updateAvailableAgents([this.agent.name]);
+                    await this.agent.task.initBotTask();
+
+                    // Wait for task to complete
+                    while (!this.agent.task.isDone()) {
+                        await new Promise(r => setTimeout(r, 1000));
+                    }
+                    
+                    console.log('[Task] Task completed successfully');
+                } catch (error) {
+                    console.error('[Task] Background execution error:', error);
+                } finally {
+                    // Always restore
+                    settings.brain_mode = originalBrainMode;
+                    this.agent.history = originalHistory;
+                    this.agent.coder = originalCoder;
+                    console.log('[Task] Restored external mode');
+                }
+            });
+
+        } catch (error) {
+            console.error('Error assigning task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+
+    async handleTaskStatus(req, res) {
+        try {
+            if (!this.agent.task) {
+                return res.json({
+                    success: false,
+                    message: 'No task assigned'
+                });
+            }
+
+            const status = this.agent.task.isDone();
+
+            if (status) {
+                res.json({
+                    success: true,
+                    ...status
+                });
+            } else {
+                const elapsed = Date.now() - this.agent.task.taskStartTime;
+                res.json({
+                    success: false,
+                    taskId: this.agent.task.data.task_id,
+                    elapsedMs: elapsed,
+                    message: 'Task in progress'
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                error: error.message
+            });
+        }
     }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)

@@ -66,3 +66,5 @@ Configure global settings in `settings.js`. Configure agent behavior (LLM, promp
 "vision_model": { "api": "openai", "model": "gpt-4o" },
 "embedding": { "api": "openai", "model": "text-embedding-ada-002" }
 ```
+
+

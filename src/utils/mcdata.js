@@ -55,18 +55,18 @@ export const WOOL_COLORS = [
 export function initBot(username) {
     //console.log('[DEBUG mcdata] Full settings object:', settings);  // ← ADD THIS
     console.log('[DEBUG mcdata] mc_version:', settings.minecraft_version); 
-    mc_version = settings.minecraft_version;
-    mcdata = minecraftData(mc_version);
-    Item = prismarine_items(mc_version);
-    let bot = createBot({
+    const options = {
         username: username,
-
         host: settings.host,
         port: settings.port,
         auth: settings.auth,
-
         version: mc_version,
-    });
+    }
+    if (!mc_version || mc_version === "auto") {
+        delete options.version;
+    }
+
+    const bot = createBot(options);
     bot.loadPlugin(pathfinder);
     bot.loadPlugin(pvp);
     bot.loadPlugin(collectblock);
@@ -74,6 +74,12 @@ export function initBot(username) {
     bot.loadPlugin(armorManager); // auto equip armor
     bot.once('resourcePack', () => {
         bot.acceptResourcePack();
+    });
+
+    bot.once('login', () => {
+        mc_version = bot.version;
+        mcdata = minecraftData(mc_version);
+        Item = prismarine_items(mc_version);
     });
 
     return bot;
@@ -128,6 +134,14 @@ export function getBlockName(blockId) {
     let block = mcdata.blocks[blockId]
     if (block) {
         return block.name;
+    }
+    return null;
+}
+
+export function getEntityId(entityName) {
+    let entity = mcdata.entitiesByName[entityName];
+    if (entity) {
+        return entity.id;
     }
     return null;
 }

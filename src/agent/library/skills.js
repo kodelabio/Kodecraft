@@ -579,7 +579,6 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
         log(bot, `Invalid number of blocks to collect: ${num}.`);
         return false;
     }
-    
     let blocktypes = [blockType];
     if (blockType === 'coal' || blockType === 'diamond' || blockType === 'emerald' || blockType === 'iron' || blockType === 'gold' || blockType === 'lapis_lazuli' || blockType === 'redstone')
         blocktypes.push(blockType+'_ore');
@@ -619,17 +618,6 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
             
             return movements.safeToBreak(block) || unsafeBlocks.includes(block.name);
         }, 64, 1);
-        let blocks = world.getNearestBlocks(bot, blocktypes, 64);
-        if (exclude) {
-            for (let position of exclude) {
-                blocks = blocks.filter(
-                    block => block.position.x !== position.x || block.position.y !== position.y || block.position.z !== position.z
-                );
-            }
-        }
-        const movements = new pf.Movements(bot);
-        movements.dontMineUnderFallingBlock = false;
-        blocks = blocks.filter(block => movements.safeToBreak(block));
 
         if (blocks.length === 0) {
             if (collected === 0)
@@ -638,7 +626,6 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
                 log(bot, `No more ${blockType} nearby to collect.`);
             break;
         }
-
         const block = blocks[0];
         await bot.tool.equipForBlock(block);
         if (isLiquid) {
@@ -650,13 +637,10 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
             await bot.equip(bucket, 'hand');
         }
         const itemId = bot.heldItem ? bot.heldItem.type : null
-        const itemId = bot.heldItem ? bot.heldItem.type : null;
-        
         if (!block.canHarvest(itemId)) {
             log(bot, `Don't have right tools to harvest ${blockType}.`);
             return false;
         }
-
         try {
             let success = false;
             if (isLiquid) {
@@ -664,38 +648,19 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
             }
             else if (mc.mustCollectManually(blockType)) {
                 await goToPosition(bot, block.position.x, block.position.y, block.position.z, 2);
-            if (mc.mustCollectManually(blockType)) {
-                // ADD TIMEOUT HERE
-                console.log(`[collectBlocks] Moving to block at ${block.position.x}, ${block.position.y}, ${block.position.z}`);
-                await Promise.race([
-                    goToPosition(bot, block.position.x, block.position.y, block.position.z, 2),
-                    new Promise((_, reject) => 
-                        setTimeout(() => reject(new Error('Pathfinding timeout')), 5000)
-                    )
-                ]);
-                console.log(`[collectBlocks] Reached block, digging...`);
                 await bot.dig(block);
-                console.log(`[collectBlocks] Dig complete, picking up items...`);
                 await pickupNearbyItems(bot);
                 success = true;
-                console.log(`[collectBlocks] Items picked up`);
             }
             else {
-                console.log(`[collectBlocks] Using collectBlock API`);
                 await bot.collectBlock.collect(block);
                 success = true;
-                console.log(`[collectBlocks] collectBlock API complete`);
             }
             if (success)
                 collected++;
-            console.log(`[collectBlocks] Running autoLight...`);
-            collected++;
             await autoLight(bot);
-            console.log(`[collectBlocks] autoLight complete`);
-            
         }
         catch (err) {
-            console.error(`[collectBlocks] Catch block error:`, err.message);
             if (err.name === 'NoChests') {
                 log(bot, `Failed to collect ${blockType}: Inventory full, no place to deposit.`);
                 break;
@@ -793,62 +758,25 @@ export async function breakBlockAt(bot, x, y, z) {
 }
 
 
-/**
- * Place a block at the given position with optional orientation modifiers
- * 
- * Supports both cheat mode (using /setblock commands) and survival mode (physical placement)
- * Handles orientation for special blocks like stairs, doors, slabs, beds, torches, etc.
- * 
- * @param {MinecraftBot} bot - Reference to the minecraft bot
- * @param {string} blockType - The type of block to place (e.g., "oak_stairs", "torch", "oak_bed")
- * @param {number} x - The x coordinate of the block to place (will be floored to integer)
- * @param {number} y - The y coordinate of the block to place (will be floored to integer)
- * @param {number} z - The z coordinate of the block to place (will be floored to integer)
- * @param {string} placeOn - The preferred side of adjacent block to place on
- *                          Valid: "top", "bottom", "north", "south", "east", "west", "side"
- *                          Default: "bottom"
- *                          Will place on first available side if specified side not possible
- * @param {boolean} dontCheat - If true, forces survival mode placement even if cheat mode is on
- *                             Default: false
- * @param {string} facing - Minecraft block state property for direction (stairs, doors, slabs)
- *                         Valid: "north", "south", "east", "west"
- *                         Only used for: stairs, slabs, doors, glass_pane, ladder, repeater, comparator, buttons, levers
- * @param {number} rotation - Minecraft block state property for rotation (beds, logs, chains)
- *                           Valid: 0 (north), 1 (east), 2 (south), 3 (west)
- *                           Only used for: beds, logs, chains
- * 
- * @returns {Promise<boolean>} true if the block was placed successfully, false otherwise
- * 
- * @example
- * // Place cobblestone on top surface
- * await placeBlock(bot, "cobblestone", 10, 64, 20);
- * 
- * @example
- * // Place stairs facing east
- * await placeBlock(bot, "oak_stairs", 10, 64, 20, "top", false, "east", null);
- * 
- * @example
- * // Place bed with head pointing south (rotation=2)
- * await placeBlock(bot, "oak_bed", 10, 64, 20, "top", false, null, 2);
- * 
- * @example
- * // Place torch on north wall surface
- * await placeBlock(bot, "torch", 10, 64, 20, "north", false, null, null);
- */
-export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false, facing=null, rotation=null) {
-    console.log(`[placeBlock] START - blockType: ${blockType}, pos: (${x}, ${y}, ${z}), placeOn: ${placeOn}, facing: ${facing}, rotation: ${rotation}`);
-    if (!mc.getBlockId(blockType) && blockType !== 'air') {
-        console.log(`[placeBlock] FAIL - invalid block type`);
-        log(bot, `Invalid block type: ${blockType}.`);
-        return false;
-    }
-    
-    console.log(`Attempting to place ${blockType} at (${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)}) on ${placeOn}`);
-
+export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false) {
+    /**
+     * Place the given block type at the given position. It will build off from any adjacent blocks. Will fail if there is a block in the way or nothing to build off of.
+     * @param {MinecraftBot} bot, reference to the minecraft bot.
+     * @param {string} blockType, the type of block to place, which can be a block or item name.
+     * @param {number} x, the x coordinate of the block to place.
+     * @param {number} y, the y coordinate of the block to place.
+     * @param {number} z, the z coordinate of the block to place.
+     * @param {string} placeOn, the preferred side of the block to place on. Can be 'top', 'bottom', 'north', 'south', 'east', 'west', or 'side'. Defaults to bottom. Will place on first available side if not possible.
+     * @param {boolean} dontCheat, overrides cheat mode to place the block normally. Defaults to false.
+     * @returns {Promise<boolean>} true if the block was placed, false otherwise.
+     * @example
+     * let p = world.getPosition(bot);
+     * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
+     * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
+     **/
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
     if (blockType === 'air') {
-        console.log(`[placeBlock] REMOVE - breaking block`);
         log(bot, `Placing air (removing block) at ${target_dest}.`);
         return await breakBlockAt(bot, x, y, z);
     }
@@ -862,95 +790,72 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             }
         }
 
-        // invert the facing direction for placement calculation
+        // invert the facing direction
         let face = placeOn === 'north' ? 'south' : placeOn === 'south' ? 'north' : placeOn === 'east' ? 'west' : 'east';
-        
-        // Build block state string with orientation modifiers
-        let blockState = blockType;
-        
         if (blockType.includes('torch') && placeOn !== 'bottom') {
             // insert wall_ before torch
             blockType = blockType.replace('torch', 'wall_torch');
             if (placeOn !== 'side' && placeOn !== 'top') {
-                blockState = blockType + `[facing=${face}]`;
+                blockType += `[facing=${face}]`;
             }
         }
         if (blockType.includes('button') || blockType === 'lever') {
             if (placeOn === 'top') {
-                blockState = blockType + `[face=ceiling]`;
+                blockType += `[face=ceiling]`;
             }
             else if (placeOn === 'bottom') {
-                blockState = blockType + `[face=floor]`;
+                blockType += `[face=floor]`;
             }
             else {
-                blockState = blockType + `[facing=${face}]`;
+                blockType += `[facing=${face}]`;
             }
         }
         if (blockType === 'ladder' || blockType === 'repeater' || blockType === 'comparator') {
-            blockState = blockType + `[facing=${face}]`;
+            blockType += `[facing=${face}]`;
         }
         if (blockType.includes('stairs')) {
-            // Use facing from parameter if provided, otherwise use inverted placeOn direction
-            blockState = blockType + `[facing=${facing || face}]`;
+            blockType += `[facing=${face}]`;
         }
-        if (blockType.includes('slab')) {
-            // Use facing from parameter if provided for slab orientation
-            if (facing) {
-                blockState = blockType + `[facing=${facing}]`;
-            }
-        }
-        if (blockType.includes('door')) {
-            // Use facing from parameter if provided
-            blockState = blockType + (facing ? `[facing=${facing}]` : '');
-        }
-        if (blockType.includes('bed')) {
-            // Use rotation from parameter if provided (0=north, 1=east, 2=south, 3=west)
-            if (rotation !== null && rotation !== undefined) {
-                blockState = blockType + `[rotation=${rotation}]`;
-            }
-        }
-        if (blockType.includes('glass_pane')) {
-            // Use facing from parameter if provided for glass_pane orientation
-            if (facing) {
-                blockState = blockType + `[facing=${facing}]`;
-            }
-        }
-        
-        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockState;
+        if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
+        let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockType;
         bot.chat(msg);
-        if (blockState.includes('door'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockState + '[half=upper]');
-        if (blockState.includes('bed'))
-            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockState + '[part=head]');
-        log(bot, `Used /setblock to place ${blockState} at ${target_dest}.`);
+        if (blockType.includes('door'))
+            if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockType + '[half=upper]');
+        if (blockType.includes('bed'))
+            if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
+            bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
+        log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
         return true;
     }
 
     let item_name = blockType;
     if (item_name == "redstone_wire")
         item_name = "redstone";
-    let block = bot.inventory.items().find(item => item.name === item_name);
-    if (!block && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
-        console.log(`[placeBlock] CREATIVE - adding item to inventory`);
+    else if (item_name === 'water') {
+        item_name = 'water_bucket';
+    }
+    else if (item_name === 'lava') {
+        item_name = 'lava_bucket';
+    }
+    let block_item = bot.inventory.items().find(item => item.name === item_name);
+    if (!block_item && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
         block_item = bot.inventory.items().find(item => item.name === item_name);
     }
-    if (!block) {
-        console.log(`[placeBlock] FAIL - no block in inventory`);
-        log(bot, `Don't have any ${blockType} to place.`);
+    if (!block_item) {
+        log(bot, `Don't have any ${item_name} to place.`);
         return false;
     }
 
     const targetBlock = bot.blockAt(target_dest);
-    if (targetBlock.name === blockType) {
-        console.log(`[placeBlock] SKIP - block already there`);
+    if (targetBlock.name === blockType || (targetBlock.name === 'grass_block' && blockType === 'dirt')) {
         log(bot, `${blockType} already at ${targetBlock.position}.`);
         return false;
     }
     const empty_blocks = ['air', 'water', 'lava', 'grass', 'short_grass', 'tall_grass', 'snow', 'dead_bush', 'fern'];
     if (!empty_blocks.includes(targetBlock.name)) {
-        console.log(`[placeBlock] BREAKING - block in the way: ${targetBlock.name}`);
-        log(bot, `${blockType} in the way at ${targetBlock.position}.`);
+        log(bot, `${targetBlock.name} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
             log(bot, `Cannot place ${blockType} at ${targetBlock.position}: block in the way.`);
@@ -991,19 +896,16 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     }
     if (!buildOffBlock) {
-        console.log(`[placeBlock] FAIL - nothing to place on`);
         log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
 
-    console.log(`[placeBlock] MOVING & EQUIPPING - buildOffBlock: ${buildOffBlock.name}`);
     const pos = bot.entity.position;
     const pos_above = pos.plus(Vec3(0,1,0));
     const dont_move_for = ['torch', 'redstone_torch', 'redstone', 'lever', 'button', 'rail', 'detector_rail', 
         'powered_rail', 'activator_rail', 'tripwire_hook', 'tripwire', 'water_bucket', 'string'];
     if (!dont_move_for.includes(item_name) && (pos.distanceTo(targetBlock.position) < 1.1 || pos_above.distanceTo(targetBlock.position) < 1.1)) {
         // too close
-        console.log(`[placeBlock] Moving away - too close`);
         let goal = new pf.goals.GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 2);
         let inverted_goal = new pf.goals.GoalInvert(goal);
         bot.pathfinder.setMovements(new pf.Movements(bot));
@@ -1011,51 +913,27 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     if (bot.entity.position.distanceTo(targetBlock.position) > 4.5) {
         // too far
-        console.log(`[placeBlock] Moving closer - too far`);
         let pos = targetBlock.position;
         let movements = new pf.Movements(bot);
         bot.pathfinder.setMovements(movements);
         await goToGoal(bot, new pf.goals.GoalNear(pos.x, pos.y, pos.z, 4));
     }
-    
-    await bot.equip(block, 'hand');
-    await bot.lookAt(buildOffBlock.position);
-    await new Promise(resolve => setTimeout(resolve, 500));
 
+    // will throw error if an entity is in the way, and sometimes even if the block was placed
     try {
-        console.log(`[placeBlock] PLACING - on block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
-        await bot.placeBlock(buildOffBlock, faceVec);
-        
-        // Wait and verify placement
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Verify the block was placed
-        const verifyBlock = bot.blockAt(target_dest);
-        const isComplexBlock = blockType.includes('door') || blockType.includes('bed') || 
-                              blockType.includes('_slab') || blockType.includes('_stairs');
-        
-        if (verifyBlock && (verifyBlock.name === blockType || isComplexBlock)) {
-            log(bot, `Placed ${blockType} at (${target_dest.x}, ${target_dest.y}, ${target_dest.z}).`);
-            console.log(`Success! Block verified at position.`);
-            return true;
-        } else {
-            log(bot, `${blockType} placement uncertain at ${target_dest}. Found: ${verifyBlock?.name || 'unknown'}`);
-            // Still return true as placement may have succeeded for complex blocks
+        if (item_name.includes('bucket')) {
+            await useToolOnBlock(bot, item_name, buildOffBlock);
+        }
+        else {
+            await bot.equip(block_item, 'hand');
+            await bot.lookAt(buildOffBlock.position.offset(0.5, 0.5, 0.5));
+            await bot.placeBlock(buildOffBlock, faceVec);
+            log(bot, `Placed ${blockType} at ${target_dest}.`);
+            await new Promise(resolve => setTimeout(resolve, 200));
             return true;
         }
     } catch (err) {
-        console.log(`[placeBlock] FAIL - exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
-        console.log(`Error: ${err.message}`);
-        
-        // Check if block was placed despite error
-        const checkBlock = bot.blockAt(target_dest);
-        if (checkBlock && checkBlock.name === blockType) {
-            log(bot, `Placed ${blockType} at ${target_dest} (despite error).`);
-            return true;
-        }
-        
-        log(bot, `Failed to place ${blockType} at ${target_dest}: ${err.message}`);
         return false;
     }
 }

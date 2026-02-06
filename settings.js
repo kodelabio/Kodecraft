@@ -10,7 +10,8 @@ const settings = {
 
     "base_profile": "creative", // survival, creative, or god_mode
     "profiles": [
-        "./profiles/kodecraft.json",
+        "./profiles/claude_builder.json",
+        //"./profiles/kodecraft.json",
         // "./profiles/kodelab_beta.json",
         // "./andy.json",
         // "./profiles/gpt.json",
@@ -44,7 +45,7 @@ const settings = {
 
     "allow_insecure_coding": true, // allows newAction command and model can write/run code on your computer. enable at own risk
     "allow_vision": true, // allows vision model to interpret screenshots as inputs
-    "blocked_actions" : ["!checkBlueprint", "!checkBlueprintLevel", "!getBlueprint", "!getBlueprintLevel"] , // commands to disable and remove from docs. Ex: ["!setMode"]
+    "blocked_actions" : [],//["!checkBlueprint", "!checkBlueprintLevel", "!getBlueprint", "!getBlueprintLevel"] , // commands to disable and remove from docs. Ex: ["!setMode"]
     "code_timeout_mins": -1, // minutes code is allowed to run. -1 for no timeout
     "relevant_docs_count": 10, // number of relevant code function docs to select for prompting. -1 for all
 

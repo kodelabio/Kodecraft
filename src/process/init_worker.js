@@ -1,11 +1,11 @@
+import { loadConfig } from '../../config/loader.js';
+import settings, { setSettings } from '../agent/settings.js';
 import { Agent } from '../agent/agent.js';
 import { ExternalAPI } from '../agent/external_api.js';
-import { setSettings } from '../agent/settings.js';
 import { readFileSync, createWriteStream } from 'fs';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import { mkdir } from 'fs/promises';
 import yargs from 'yargs';
-import rootSettings from '../../settings.js';
 
 
 const args = process.argv.slice(2);
@@ -162,12 +162,16 @@ async function setupLogging(workerName) {
 (async () => {
     try {
         // Setup logging first
+        // Load config and populate settings
+        const config = await loadConfig();
+        setSettings(config);
+
         await setupLogging(argv.name || 'unknown-worker');
         console.log(`Starting worker ${argv.name} in internal brain mode`);
         console.log(`📞 Callback webhook: ${argv.webhook || 'not set'}`);
         
         // Initialize the agent settings from root settings
-        const workerSettings = { ...rootSettings };
+        const workerSettings = { ...settings };
         workerSettings.brain_mode = 'internal'; // Force internal mode for workers
         workerSettings.render_bot_view = false; // Disable browser viewer for workers to avoid conflicts
         

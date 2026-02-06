@@ -1,12 +1,13 @@
 import { loadConfig } from './config/loader.js';
-import { apiServer } from './src/agent/api_server.js';
+import { APIServer } from './src/agent/api_server.js';
+import { setSettings } from './src/agent/settings.js';
 import { leaderBotManager } from './src/agent/leader_bot_manager.js';
-//import { userManager } from './src/api/user_manager.js';
 
 console.log('🚀 Starting Minecraft Multi-User Bot System');
 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-const config = await loadConfig();
+setSettings(await loadConfig());
+const apiServer = new APIServer();
 
 try {
 

@@ -3,7 +3,7 @@
 
 import express from 'express';
 import { leaderBotManager } from '../agent/leader_bot_manager.js';
-import settings from '../../settings.js';
+import settings from './settings.js';
 
 export class APIServer {
     constructor() {
@@ -238,4 +238,4 @@ export class APIServer {
     }
 }
 
-export const apiServer = new APIServer();
+//export const apiServer = new APIServer();

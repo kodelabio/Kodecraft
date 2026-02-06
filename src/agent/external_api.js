@@ -3,7 +3,7 @@
 
 import express from 'express';
 import { getCommand, executeCommand } from './commands/index.js';
-import settings from '../../settings.js';
+import settings from './settings.js';
 import { History } from './history.js';
 import { Coder } from './coder.js';
 //import { MultiBotManager } from './multibot_manager.js';

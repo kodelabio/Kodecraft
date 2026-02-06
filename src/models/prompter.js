@@ -5,6 +5,7 @@ import { getCommandDocs } from '../agent/commands/index.js';
 import { SkillLibrary } from "../agent/library/skill_library.js";
 import { stringifyTurns } from '../utils/text.js';
 import { getCommand } from '../agent/commands/index.js';
+import settings from '../agent/settings.js';
 import settings from '../../settings.js';
 
 import { Gemini } from './gemini.js';
@@ -26,6 +27,7 @@ import { VLLM } from './vllm.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { selectAPI, createModel } from './_model_map.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +42,8 @@ export class Prompter {
         let base_fp = '';
         if (settings.base_profile.includes('survival')) {
             base_fp = './profiles/defaults/survival.json';
+        } else if (settings.base_profile.includes('assistant')) {
+            base_fp = './profiles/defaults/assistant.json';
         } else if (settings.base_profile.includes('creative')) {
             base_fp = './profiles/defaults/creative.json';
         } else if (settings.base_profile.includes('god_mode')) {
@@ -67,28 +71,44 @@ export class Prompter {
         this.last_prompt_time = 0;
         this.awaiting_coding = false;
 
-        // try to get "max_tokens" parameter, else null
+        // for backwards compatibility, move max_tokens to params
         let max_tokens = null;
         if (this.profile.max_tokens)
             max_tokens = this.profile.max_tokens;
 
-        let chat_model_profile = this._selectAPI(this.profile.model);
-        this.chat_model = this._createModel(chat_model_profile);
+        let chat_model_profile = selectAPI(this.profile.model);
+        this.chat_model = createModel(chat_model_profile);
 
         if (this.profile.code_model) {
-            let code_model_profile = this._selectAPI(this.profile.code_model);
-            this.code_model = this._createModel(code_model_profile);
+            let code_model_profile = selectAPI(this.profile.code_model);
+            this.code_model = createModel(code_model_profile);
         }
         else {
             this.code_model = this.chat_model;
         }
 
         if (this.profile.vision_model) {
-            let vision_model_profile = this._selectAPI(this.profile.vision_model);
-            this.vision_model = this._createModel(vision_model_profile);
+            let vision_model_profile = selectAPI(this.profile.vision_model);
+            this.vision_model = createModel(vision_model_profile);
         }
         else {
             this.vision_model = this.chat_model;
+        }
+
+        
+        let embedding_model_profile = null;
+        if (this.profile.embedding) {
+            try {
+                embedding_model_profile = selectAPI(this.profile.embedding);
+            } catch (e) {
+                embedding_model_profile = null;
+            }
+        }
+        if (embedding_model_profile) {
+            this.embedding_model = createModel(embedding_model_profile);
+        }
+        else {
+            this.embedding_model = createModel({api: chat_model_profile.api});
         }
 
         let embedding = this.profile.embedding;
@@ -143,7 +163,7 @@ export class Prompter {
 
     _selectAPI(profile) {
         if (typeof profile === 'string' || profile instanceof String) {
-            profile = { model: profile };
+            profile = {model: profile};
         }
         if (!profile.api) {
             if (profile.model.includes('openrouter/'))
@@ -154,7 +174,7 @@ export class Prompter {
                 profile.api = 'google';
             else if (profile.model.includes('vllm/'))
                 profile.api = 'vllm';
-            else if (profile.model.includes('gpt') || profile.model.includes('o1') || profile.model.includes('o3'))
+            else if (profile.model.includes('gpt') || profile.model.includes('o1')|| profile.model.includes('o3'))
                 profile.api = 'openai';
             else if (profile.model.includes('claude'))
                 profile.api = 'anthropic';
@@ -178,9 +198,9 @@ export class Prompter {
                 profile.api = 'xai';
             else if (profile.model.includes('deepseek'))
                 profile.api = 'deepseek';
-            else if (profile.model.includes('mistral'))
+	        else if (profile.model.includes('mistral'))
                 profile.api = 'mistral';
-            else
+            else 
                 throw new Error('Unknown model:', profile.model);
         }
         return profile;
@@ -343,7 +363,9 @@ export class Prompter {
         prompt = prompt.replaceAll('$NAME', this.agent.name);
 
         if (prompt.includes('$STATS')) {
-            let stats = await getCommand('!stats').perform(this.agent);
+            let stats = await getCommand('!stats').perform(this.agent) + '\n';
+            stats += await getCommand('!entities').perform(this.agent) + '\n';
+            stats += await getCommand('!nearbyBlocks').perform(this.agent);
             prompt = prompt.replaceAll('$STATS', stats);
         }
         if (prompt.includes('$INVENTORY')) {
@@ -454,6 +476,7 @@ export class Prompter {
                 console.warn(`${this.agent.name} received new message while generating, discarding old response.`);
                 return '';
             }
+            }
 
             if (generation?.includes('</think>')) {
                 const [_, afterThink] = generation.split('</think>')
@@ -490,7 +513,7 @@ export class Prompter {
         await this._saveLog(prompt, to_summarize, resp, 'memSaving');
         if (resp?.includes('</think>')) {
             const [_, afterThink] = resp.split('</think>')
-            resp = afterThink
+            resp = afterThink;
         }
         return resp;
     }
@@ -568,6 +591,4 @@ export class Prompter {
         logFile = path.join(logDir, logFile);
         await fs.appendFile(logFile, String(logEntry), 'utf-8');
     }
-
-
 }

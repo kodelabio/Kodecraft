@@ -35,7 +35,7 @@ const modes_list = [
             let blockAbove = bot.blockAt(bot.entity.position.offset(0, 1, 0));
             if (!block) block = {name: 'air'}; // hacky fix when blocks are not loaded
             if (!blockAbove) blockAbove = {name: 'air'};
-            if (blockAbove.name === 'water' || blockAbove.name === 'flowing_water') {
+            if (blockAbove.name === 'water') {
                 // does not call execute so does not interrupt other actions
                 if (!bot.pathfinder.goal) {
                     bot.setControlState('jump', true);
@@ -46,20 +46,35 @@ const modes_list = [
                     await skills.moveAway(bot, 2);
                 });
             }
-            else if (block.name === 'lava' || block.name === 'flowing_lava' || block.name === 'fire' ||
-                blockAbove.name === 'lava' || blockAbove.name === 'flowing_lava' || blockAbove.name === 'fire') {
-                say(agent, 'I\'m on fire!'); // TODO: gets stuck in lava
-                execute(this, agent, async () => {
-                    let nearestWater = world.getNearestBlock(bot, 'water', 20);
-                    if (nearestWater) {
-                        const pos = nearestWater.position;
-                        await skills.goToPosition(bot, pos.x, pos.y, pos.z, 0.2);
-                        say(agent, 'Ahhhh that\'s better!');
-                    }
-                    else {
+            else if (block.name === 'lava' || block.name === 'fire' ||
+                blockAbove.name === 'lava' || blockAbove.name === 'fire') {
+                say(agent, 'I\'m on fire!');
+                // if you have a water bucket, use it
+                let waterBucket = bot.inventory.items().find(item => item.name === 'water_bucket');
+                if (waterBucket) {
+                    execute(this, agent, async () => {
+                        let success = await skills.placeBlock(bot, 'water_bucket', block.position.x, block.position.y, block.position.z);
+                        if (success) say(agent, 'Placed some water, ahhhh that\'s better!');
+                    });
+                }
+                else {
+                    execute(this, agent, async () => {
+                        let waterBucket = bot.inventory.items().find(item => item.name === 'water_bucket');
+                        if (waterBucket) {
+                            let success = await skills.placeBlock(bot, 'water_bucket', block.position.x, block.position.y, block.position.z);
+                            if (success) say(agent, 'Placed some water, ahhhh that\'s better!');
+                            return;
+                        }
+                        let nearestWater = world.getNearestBlock(bot, 'water', 20);
+                        if (nearestWater) {
+                            const pos = nearestWater.position;
+                            let success = await skills.goToPosition(bot, pos.x, pos.y, pos.z, 0.2);
+                            if (success) say(agent, 'Found some water, ahhhh that\'s better!');
+                            return;
+                        }
                         await skills.moveAway(bot, 5);
-                    }
-                });
+                    });
+                }
             }
             else if (Date.now() - bot.lastDamageTime < 3000 && (bot.health < 5 || bot.lastDamageTaken >= bot.health)) {
                 say(agent, 'I\'m dying!');
@@ -103,7 +118,8 @@ const modes_list = [
                 this.stuck_time = 0;
                 this.prev_dig_block = null;
             }
-            if (this.stuck_time > this.max_stuck_time) {
+            const max_stuck_time = cur_dig_block?.name === 'obsidian' ? this.max_stuck_time * 2 : this.max_stuck_time;
+            if (this.stuck_time > max_stuck_time) {
                 say(agent, 'I\'m stuck!');
                 this.stuck_time = 0;
                 execute(this, agent, async () => {
@@ -114,6 +130,11 @@ const modes_list = [
                 });
             }
             this.last_time = Date.now();
+        },
+        unpause: function () {
+            this.prev_location = null;
+            this.stuck_time = 0;
+            this.prev_dig_block = null;
         }
     },
     {
@@ -151,7 +172,7 @@ const modes_list = [
     {
         name: 'hunting',
         description: 'Hunt nearby animals when idle.',
-        interrupts: [],
+        interrupts: ['action:followPlayer'],
         on: true,
         active: false,
         update: async function (agent) {
@@ -229,7 +250,7 @@ const modes_list = [
                     const wait_time = Math.random() * 1000;
                     await new Promise(resolve => setTimeout(resolve, wait_time));
                     if (player.position.distanceTo(agent.bot.entity.position) < this.distance) {
-                        await skills.moveAway(agent.bot, this.distance);
+                        await skills.moveAwayFromEntity(agent.bot, player, this.distance);
                     }
                 });
             }
@@ -342,13 +363,18 @@ class ModeController {
     }
 
     unpause(mode_name) {
-        modes_map[mode_name].paused = false;
+        const mode = modes_map[mode_name];
+        //if  unpause func is defined and mode is currently paused
+        if (mode.unpause && mode.paused) {
+            mode.unpause();
+        }
+        mode.paused = false;
     }
 
     unPauseAll() {
         for (let mode of modes_list) {
             if (mode.paused) console.log(`Unpausing mode ${mode.name}`);
-            mode.paused = false;
+            this.unpause(mode.name);
         }
     }
 

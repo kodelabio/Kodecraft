@@ -14,15 +14,10 @@ import { SelfPrompter } from './self_prompter.js';
 import convoManager from './conversation.js';
 import { handleTranslation, handleEnglishTranslation } from '../utils/translator.js';
 import { addBrowserViewer } from './vision/browser_viewer.js';
+import { serverProxy, sendOutputToServer } from './mindserver_proxy.js';
 import settings from './settings.js';
 import { Task } from './tasks/tasks.js';
-import { say } from './speak.js';
-import { ExternalAPI } from './external_api.js';
-// Use global fetch (Node.js 18+) or import if needed
-const fetch = globalThis.fetch || (async (...args) => {
-    const { default: nodeFetch } = await import('node-fetch');
-    return nodeFetch(...args);
-});
+import { speak } from './speak.js';
 
 export class Agent {
     async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null, spawnLocation = null) {
@@ -128,6 +123,7 @@ export class Agent {
         });
 
         const spawnTimeout = setTimeout(() => {
+            console.error('Bot has not spawned after 30 seconds. Exiting.');
             process.exit(0);
         }, 30000);
         this.bot.once('spawn', async () => {
@@ -211,6 +207,7 @@ export class Agent {
         ];
 
         const respondFunc = async (username, message) => {
+            if (message === "") return;
             if (username === this.name) return;
             if (settings.only_chat_with.length > 0 && !settings.only_chat_with.includes(username)) return;
             try {
@@ -440,19 +437,22 @@ export class Agent {
                 if (checkInterrupt()) break;
                 this.self_prompter.handleUserPromptedCmd(self_prompt, isAction(command_name));
 
-                if (settings.verbose_commands) {
+                if (settings.show_command_syntax === "full") {
                     this.routeResponse(source, res);
                 }
-                else { // only output command name
-                    // let pre_message = res.substring(0, res.indexOf(command_name)).trim();
-                    // let chat_message = `*used ${command_name.substring(1)}*`;
-                    // if (pre_message.length > 0)
-                    //     chat_message = `${pre_message}  ${chat_message}`;
-                    // this.routeResponse(source, chat_message);
-
-                    // No command verbage at all, please 
-                    let message = res.substring(0, res.indexOf(command_name)).trim();
-                    this.routeResponse(source, message);
+                else if (settings.show_command_syntax === "shortened") {
+                    // show only "used !commandname"
+                    let pre_message = res.substring(0, res.indexOf(command_name)).trim();
+                    let chat_message = `*used ${command_name.substring(1)}*`;
+                    if (pre_message.length > 0)
+                        chat_message = `${pre_message}  ${chat_message}`;
+                    this.routeResponse(source, chat_message);
+                }
+                else {
+                    // no command at all
+                    let pre_message = res.substring(0, res.indexOf(command_name)).trim();
+                    if (pre_message.trim().length > 0)
+                        this.routeResponse(source, pre_message);
                 }
 
                 let execute_res = await executeCommand(this, res);
@@ -523,9 +523,10 @@ export class Agent {
         }
         else {
             if (settings.speak) {
-                say(to_translate);
+                speak(to_translate, this.prompter.profile.speak_model);
             }
-            this.bot.chat(message);
+            if (settings.chat_ingame) {this.bot.chat(message);}
+            sendOutputToServer(this.name, message);
         }
     }
 
@@ -605,7 +606,11 @@ export class Agent {
             this.bot.clearControlStates();
             this.bot.pathfinder.stop(); // clear any lingering pathfinder
             this.bot.modes.unPauseAll();
-            this.actions.resumeAction();
+            setTimeout(() => {
+                if (this.isIdle()) {
+                    this.actions.resumeAction();
+                }
+            }, 1000);
         });
 
         // Init NPC controller

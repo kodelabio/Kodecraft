@@ -1,57 +1,49 @@
-import OpenAI from 'openai';
+import OpenAIApi from 'openai';
 import { getKey, hasKey } from '../utils/keys.js';
 import { strictFormat } from '../utils/text.js';
 
-export class GPT {
-    static prefix = 'openai';
+export class Mercury {
+    static prefix = 'mercury';
     constructor(model_name, url, params) {
         this.model_name = model_name;
         this.params = params;
-        console.log('GPT initialized with params:', this.params); 
-
         let config = {};
         if (url)
             config.baseURL = url;
+        else
+            config.baseURL = "https://api.inceptionlabs.ai/v1";
 
-        if (hasKey('OPENAI_ORG_ID'))
-            config.organization = getKey('OPENAI_ORG_ID');
+        config.apiKey = getKey('MERCURY_API_KEY');
 
-        config.apiKey = getKey('OPENAI_API_KEY');
-
-        this.openai = new OpenAI(config);
+        this.openai = new OpenAIApi(config);
     }
 
     async sendRequest(turns, systemMessage, stop_seq='***') {
+        if (typeof stop_seq === 'string') {
+            stop_seq = [stop_seq];
+        } else if (!Array.isArray(stop_seq)) {
+            stop_seq = [];
+        }
         let messages = [{'role': 'system', 'content': systemMessage}].concat(turns);
         messages = strictFormat(messages);
         const pack = {
-            model: this.model_name || "gpt-3.5-turbo",
+            model: this.model_name || "mercury-coder-small",
             messages,
             stop: stop_seq,
             ...(this.params || {})
         };
 
-        // Remove stop sequence for models that don't support it
-        if (this.model_name.includes('o1') || this.model_name.includes('gpt-5')) {
-            delete pack.stop;
-        } else {
-            pack.stop = stop_seq;
-        }
 
         let res = null;
 
         try {
-            console.log('Awaiting openai api response from model', model)
-            const response = await this.openai.responses.create({
-                model: model,
-                instructions: systemMessage,
-                input: messages,
-                ...(this.params || {})
-            });
+            console.log('Awaiting mercury api response from model', this.model_name)
+            // console.log('Messages:', messages);
+            let completion = await this.openai.chat.completions.create(pack);
+            if (completion.choices[0].finish_reason == 'length')
+                throw new Error('Context length exceeded'); 
             console.log('Received.')
-            res = response.output_text;
-            let stop_seq_index = res.indexOf(stop_seq);
-            res = stop_seq_index !== -1 ? res.slice(0, stop_seq_index) : res;
+            res = completion.choices[0].message.content;
         }
         catch (err) {
             if ((err.message == 'Context length exceeded' || err.code == 'context_length_exceeded') && turns.length > 1) {
@@ -73,10 +65,12 @@ export class GPT {
         imageMessages.push({
             role: "user",
             content: [
-                { type: "input_text", text: systemMessage },
+                { type: "text", text: systemMessage },
                 {
-                    type: "input_image",
-                    image_url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}`
+                    type: "image_url",
+                    image_url: {
+                        url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}`
+                    }
                 }
             ]
         });
@@ -97,32 +91,5 @@ export class GPT {
 
 }
 
-const sendAudioRequest = async (text, model, voice, url) => {
-    const payload = {
-        model: model,
-        voice: voice,
-        input: text
-    }
 
-    let config = {};
 
-    if (url)
-        config.baseURL = url;
-
-    if (hasKey('OPENAI_ORG_ID'))
-        config.organization = getKey('OPENAI_ORG_ID');
-
-    config.apiKey = getKey('OPENAI_API_KEY');
-
-    const openai = new OpenAIApi(config);
-
-    const mp3 = await openai.audio.speech.create(payload);
-    const buffer = Buffer.from(await mp3.arrayBuffer());
-    const base64 = buffer.toString("base64");
-    return base64;
-}
-
-export const TTSConfig = {
-    sendAudioRequest: sendAudioRequest,
-    baseUrl: 'https://api.openai.com/v1',
-}

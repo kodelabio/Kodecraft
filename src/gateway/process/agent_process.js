@@ -14,7 +14,7 @@ export class AgentProcess extends EventEmitter {
         this.running = true;
         this.spawnLocation = spawnLocation;
 
-        let args = ['src/process/init_agent.js', this.name];
+        let args = ['src/gateway/process/init_agent.js', this.name];
         args.push('-n', this.name);
         args.push('-c', count_id);
         if (load_memory)

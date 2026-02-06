@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import convoManager from '#mc/agent/conversation.js';
-import { setSettings } from './settings.js';
+//import { setSettings } from './settings.js';
 
 // agents connection to mindserver
 // always connect to localhost

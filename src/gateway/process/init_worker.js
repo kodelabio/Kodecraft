@@ -1,6 +1,6 @@
 import { Agent } from '../agent/agent.js';
 import { ExternalAPI } from '../agent/external_api.js';
-import { setSettings } from '../agent/settings.js';
+import { setSettings } from '#mc/agent/settings.js';
 import { readFileSync, createWriteStream } from 'fs';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import { mkdir } from 'fs/promises';

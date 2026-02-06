@@ -1,7 +1,7 @@
 import { Agent } from '../agent/agent.js';
 import { MindServerProxy } from '../agent/mindserver_proxy.js';
 import yargs from 'yargs';
-import agentSettings, { setSettings } from '../agent/settings.js';  // ← Fix this import
+import agentSettings, { setSettings } from '#mc/agent/settings.js';  // ← Fix this import
 import settings from '../../../settings.js';
 
 const args = process.argv.slice(2);

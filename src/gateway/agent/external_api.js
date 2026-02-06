@@ -2,7 +2,7 @@
 // REST API server for n8n integration when BRAIN_MODE=external
 
 import express from 'express';
-import { getCommand, executeCommand } from '#mc/commands/index.js';
+import { getCommand, executeCommand } from '#mc/agent/commands/index.js';
 import settings from '../../../settings.js';
 import { History } from '#mc/agent/history.js';
 import { Coder } from '#mc/agent/coder.js';

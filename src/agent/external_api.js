@@ -2570,7 +2570,6 @@ export class ExternalAPI {
     async handleTeleport(req, res) {
         try {
             const { x, y, z } = req.body;
-            const { x, y, z } = req.body;
             
             const coordValidation = this.validateAndRoundCoordinates(x, y, z);
             if (typeof coordValidation === 'string') {

@@ -425,6 +425,54 @@ export const actionsList = [
         })
     },
     {
+        name: '!autoBuild',
+        description: 'Automatically build the entire blueprint structure using setblock commands',
+        params: {},
+        perform: runAsAction(async (agent) => {
+            try {
+                if (!agent.task || !agent.task.blueprint) {
+                    return 'No blueprint available for this task';
+                }
+                
+                console.log('[autoBuild] Starting blueprint auto-build...');
+                const result = agent.task.blueprint.autoBuild();
+                const commands = result.commands;
+                
+                console.log(`[autoBuild] Generated ${commands.length} setblock commands`);
+                
+                // Parse setblock commands and place blocks directly
+                let blocksPlaced = 0;
+                for (const command of commands) {
+                    // Parse: /setblock x y z blockType
+                    const match = command.match(/\/setblock\s+([-\d]+)\s+([-\d]+)\s+([-\d]+)\s+(\S+)/);
+                    if (match) {
+                        const [, x, y, z, blockType] = match;
+                        try {
+                            // Use bot's placeBlock skill instead of chat command
+                            const skills = await import('../library/skills.js');
+                            await skills.placeBlock(agent.bot, blockType, parseInt(x), parseInt(y), parseInt(z));
+                            blocksPlaced++;
+                            
+                            if (blocksPlaced % 50 === 0) {
+                                console.log(`[autoBuild] Placed ${blocksPlaced}/${commands.length} blocks`);
+                            }
+                            
+                            await new Promise(r => setTimeout(r, 75));
+                        } catch (err) {
+                            console.error(`[autoBuild] Error placing block at ${x},${y},${z}: ${err.message}`);
+                        }
+                    }
+                }
+                
+                console.log(`[autoBuild] Completed! Placed ${blocksPlaced} blocks`);
+                return `Auto-build complete! Placed ${blocksPlaced} blocks.`;
+            } catch (error) {
+                console.error('[autoBuild] Fatal error:', error);
+                throw error;
+            }
+        })
+    },
+    {
         name: '!attack',
         description: 'Attack and kill the nearest entity of a given type.',
         params: {'type': { type: 'string', description: 'The type of entity to attack.'}},

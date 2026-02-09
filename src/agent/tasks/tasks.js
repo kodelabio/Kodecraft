@@ -506,42 +506,43 @@ export class Task {
       await this.initiator.init();
     }
 
-    await this.teleportBots();
+    //await this.teleportBots(); NOT Required to teleport bots , this is handled in the n8n workflow
     console.log(
       "[TASK]: Agent count:",
       this.data.agent_count,
       "available agents:",
       this.available_agents,
     );
+    // For orchestration tasks, workers are already assigned
+    // Only check if this is a multi-agent task
     if (this.data.agent_count && this.data.agent_count > 1) {
-      // TODO wait for other bots to join
-      await new Promise((resolve) => setTimeout(resolve, 10000));
       if (this.available_agents.length < this.data.agent_count) {
         console.log(
           `Missing ${this.data.agent_count - this.available_agents.length} bot(s).`,
         );
         this.agent.killAll();
+        return;
       }
     }
+
     await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Conversation setup - only for lead agent
     if (this.data.conversation && this.agent.count_id === 0) {
       let other_name = this.available_agents.filter((n) => n !== this.name)[0];
-      if (other_name) { 
-        let waitCount = 0;
-        while (other_name === undefined && waitCount < 20) {
-            other_name = this.available_agents.filter((n) => n !== this.name)[0];
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            waitCount++;
-        }
-        if (other_name === undefined && this.data.agent_count > 1) {
-            console.log("No other agents found. Task unsuccessful.");
-            this.agent.killAll();
-        }
+      
+      if (!other_name && this.data.agent_count > 1) {
+        console.log("No other agents found. Task unsuccessful.");
+        this.agent.killAll();
+        return;
+      }
+      
+      if (other_name) {
         await executeCommand(
-            this.agent,
-            `!startConversation("${other_name}", "${this.data.conversation}")`,
+          this.agent,
+          `!startConversation("${other_name}", "${this.data.conversation}")`
         );
-        }
+      }
     }
     await this.setAgentGoal();
   }

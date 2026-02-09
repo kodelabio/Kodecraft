@@ -9,6 +9,7 @@ import { Coder } from './coder.js';
 //import { MultiBotManager } from './multibot_manager.js';
 import { OrchestrationAPI } from './orchestration_api.js';
 import { Task } from './tasks/tasks.js';
+import { switchAgentProfile } from '../utils/profile.js';
     
 
 export class ExternalAPI {
@@ -162,14 +163,7 @@ export class ExternalAPI {
         this.app.get('/api/orchestration/session-tasks/:sessionId', this.handleOrchestrationSessionTasks.bind(this));
         // Get all tasks for a specific stage
         this.app.get('/api/orchestration/stage-tasks/:sessionId/:stageNumber', this.handleOrchestrationStageTasks.bind(this));
-        
-        // Multi-bot management: REMOVED, REPLACED by ORCHESTRATION API
-        //this.app.post('/api/multibot/spawnWorkers', this.handleSpawnWorkers.bind(this));
-        //this.app.post('/api/multibot/coordinateBuild', this.handleCoordinateBuild.bind(this));
-        //this.app.post('/api/multibot/assignTasks', this.handleAssignTasks.bind(this));
-        //this.app.post('/api/multibot/teleportWorkers', this.handleTeleportWorkers.bind(this));
-        //this.app.get('/api/multibot/status', this.handleMultiBotStatus.bind(this));
-        //this.app.post('/api/multibot/stopWorkers', this.handleStopWorkers.bind(this));
+    
         
         // Health check
         this.app.get('/api/health', (req, res) => {
@@ -204,6 +198,10 @@ export class ExternalAPI {
         this.app.post('/api/orchestration/check-workers', this.handleOrchestrationCheckWorkers.bind(this));
 
         this.app.post('/api/orchestration/verify-permissions', this.handleOrchestrationVerifyPermissions.bind(this));
+
+        // Assign tasks based on blueprints
+        this.app.post('/api/orchestration/assign-task', this.handleOrchestrationAssignTask.bind(this));
+        
         
     }
     
@@ -1480,7 +1478,8 @@ export class ExternalAPI {
                             code: 'player_not_found'
                         });
             }
-            position = {
+            //console.log(`[GetPlayerPosition] Found player ${playerName}: `, player);
+            const position = {
                 x: player.entity.position.x,
                 y: player.entity.position.y,
                 z: player.entity.position.z
@@ -1493,11 +1492,7 @@ export class ExternalAPI {
             res.json({
                 success: true,
                 playerName: playerName,
-                position: {
-                    x: player.entity.position.x,
-                    y: player.entity.position.y,
-                    z: player.entity.position.z
-                },
+                position: position,
                 health: player.entity.health || 0,
                 hunger: bot.food,
                 gamemode: bot.game.gameMode,
@@ -2095,6 +2090,11 @@ export class ExternalAPI {
                 const originalBrainMode = settings.brain_mode;
                 const originalHistory = this.agent.history;
                 const originalCoder = this.agent.coder;
+                const originalProfile = settings.profile;
+                if (req.body.profile) {
+                    await switchAgentProfile(this.agent, req.body.profile);
+                    console.log(`[Task] Using profile: ${req.body.profile}`);
+                }
                 
                 try {
                     settings.brain_mode = 'internal';
@@ -2107,10 +2107,17 @@ export class ExternalAPI {
                     await this.agent.task.initBotTask();
 
                     // Wait for task to complete
+                    // Wait for task to complete with longer timeout for large builds
+                    const maxWaitTime = 5 * 60 * 1000; // 5 minutes
+                    const startTime = Date.now();
                     while (!this.agent.task.isDone()) {
-                        await new Promise(r => setTimeout(r, 1000));
+                        if (Date.now() - startTime > maxWaitTime) {
+                            console.error('[Task] Task execution timeout');
+                            break;
+                        }
+                        await new Promise(r => setTimeout(r, 2000)); // Check every 2 seconds instead of 1
                     }
-                    
+                                
                     console.log('[Task] Task completed successfully');
                 } catch (error) {
                     console.error('[Task] Background execution error:', error);
@@ -2119,7 +2126,11 @@ export class ExternalAPI {
                     settings.brain_mode = originalBrainMode;
                     this.agent.history = originalHistory;
                     this.agent.coder = originalCoder;
+                    if (req.body.profile) {
+                        await switchAgentProfile(this.agent, originalProfile);
+                    }
                     console.log('[Task] Restored external mode');
+
                 }
             });
 
@@ -2162,6 +2173,88 @@ export class ExternalAPI {
             });
         }
     }
+
+    // assign a task (usually a building task with a blueprint) to workers via the OrchestrationAPI
+    async handleOrchestrationAssignTask(req, res) {
+        try {
+            const { sessionId, taskPath, taskId, agents, profile } = req.body;
+
+            if (!sessionId || !taskPath || !taskId) {
+                return res.status(400).json({
+                    error: 'sessionId, taskPath, and taskId required'
+                });
+            }
+
+            // Get session
+            const session = this.orchestration.taskSessions.get(sessionId);
+            if (!session) {
+                return res.status(404).json({
+                    error: `Build session ${sessionId} not found`
+                });
+            }
+
+            // Load task to get agent_count
+            const fs = await import('fs');
+            const taskFile = fs.readFileSync(taskPath, 'utf-8');
+            const taskConfig = JSON.parse(taskFile);
+            const taskData = taskConfig[taskId];
+
+            if (!taskData) {
+                return res.status(404).json({
+                    error: `Task ${taskId} not found in ${taskPath}`
+                });
+            }
+
+            // Select target workers
+            let targetWorkers;
+            if (agents && Array.isArray(agents)) {
+                // Use specified agent names
+                targetWorkers = session.workers.filter(w => agents.includes(w.name));
+                if (targetWorkers.length === 0) {
+                    return res.status(400).json({
+                        error: `No workers found matching names: ${agents.join(', ')}`
+                    });
+                }
+            } else {
+                // Use first agent_count workers
+                const count = taskData.agent_count || 1;
+                targetWorkers = session.workers.slice(0, count);
+                
+                if (targetWorkers.length < count) {
+                    return res.status(400).json({
+                        error: `Task requires ${count} agents but only ${targetWorkers.length} available`
+                    });
+                }
+            }
+
+            res.status(202).json({
+                success: true,
+                sessionId: sessionId,
+                taskId: taskId,
+                workersAssigned: targetWorkers,
+                message: `Task ${taskId} assigned to ${targetWorkers.map(w => w.name).join(', ')}`
+            });
+
+            // Assign in background
+            setImmediate(async () => {
+                const result = await this.orchestration.assignTaskToWorkers(
+                    sessionId,
+                    taskPath,
+                    taskId,
+                    targetWorkers,
+                    profile 
+                );
+                console.log('[Orchestration] Assignment result:', result);
+            });
+
+        } catch (error) {
+            console.error('Error assigning build task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+            
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)
 

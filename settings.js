@@ -10,6 +10,7 @@ const settings = {
 
     "base_profile": "creative", // survival, creative, or god_mode
     "profiles": [
+        "./profiles/kodecraft.json",
         "./profiles/claude_builder.json",
         //"./profiles/kodecraft.json",
         // "./profiles/kodelab_beta.json",

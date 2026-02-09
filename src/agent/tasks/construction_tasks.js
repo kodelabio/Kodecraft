@@ -18,6 +18,15 @@ export class ConstructionTaskValidator {
             }
             let total_blocks = result.mismatches.length + result.matches.length;
             score = (result.matches.length / total_blocks) * 100;
+            // Log score less frequently (every 2 seconds)
+            const now = Date.now();
+            if (!this._lastScoreLog) {
+                this._lastScoreLog = 0;
+            }
+            if (now - this._lastScoreLog >= 2000) {
+                console.log(`Task score: ${score}%`);
+                this._lastScoreLog = now;
+            }
             console.log(`Task score: ${score}%`);
             return {
                 "valid": valid, 

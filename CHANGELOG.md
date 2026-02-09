@@ -86,3 +86,9 @@ The workers now spawn and are instantly teleported to safe positions near the le
         modified:   src/agent/orchestration_api.js
   ```
 
+## [1.2.0]
+### Added
+- build a structure based on a blueprint
+- assign realms to agent
+- workers can use alternate profiles
+- limit movements do coordinates inside the realm

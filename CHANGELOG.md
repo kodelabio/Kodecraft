@@ -93,8 +93,8 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - workers can use alternate profiles
 - limit movements do coordinates inside the realm
 
-## [1.2.1]
 ### Fixed
 - avoid agents names conflict
 - realms created starting close to spawn point
 - workers movement validation
+

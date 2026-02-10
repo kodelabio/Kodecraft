@@ -197,15 +197,13 @@ export class OrchestrationAPI {
 
             // Wait a moment for process to start
             await new Promise(resolve => setTimeout(resolve, 5000));
-
             // Wait for worker API to be ready
-            //const ready = await this.isWorkerReady(actualPort, 30000);
-            //if (!ready) {
-            //    throw new Error(`Worker ${name} API not responding after 60 seconds`);
-            //}
-            //console.log(`✓ Worker on port ${port} spawned successfully`);     
+            const ready = await this.isWorkerReady(port, 30000);
+            if (!ready) {
+                console.warn(`⚠️ Worker ${name} API not responding, skipping realm bounds setup`);
+                // Continue anyway - worker will set bounds later
+            } 
             // After worker is ready
-            // If realmId provided, get realm bounds and set on worker
             // If realmId provided, get realm bounds and set on worker
             if (realmId && realmBounds) {
                 try {

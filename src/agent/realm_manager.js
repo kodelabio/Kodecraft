@@ -64,11 +64,13 @@ export class RealmManager {
         };
     }
 
-// For 10 players in 20000×20000 world:
-// cols = 4, rows = 3
-// realmWidth = 5000, realmDepth = 6667
-// Per player: 33,335,000 blocks ✓
+    // REPLACED BY code node in n8n workflow for more flexible realm allocation
+    // For 10 players in 20000×20000 world:
+    // cols = 4, rows = 3
+    // realmWidth = 5000, realmDepth = 6667
+    // Per player: 33,335,000 blocks ✓
 
+    /*
     findAvailableRealmSpace(realmSize, existingRealms = [], padding = 50) {
         const { minX, maxX, minZ, maxZ } = this.worldBounds;
         
@@ -102,7 +104,7 @@ export class RealmManager {
         
         return null;
     }
-
+    */
     boundsOverlap(bounds1, bounds2, padding = 50) {
         return !(bounds1.maxX + padding < bounds2.minX ||
                  bounds1.minX - padding > bounds2.maxX ||
@@ -131,10 +133,19 @@ export class RealmManager {
         return { valid: true };
     }
 
-    getRandomPosInRealm(bounds) {
+    getRandomPosInRealm(bounds, worldType = 'flat') {
+        let groundY = bounds.minY || -64;
+        
+        // Adjust Y based on world type
+        if (worldType === 'flat') {
+            groundY = -60;  // Ground level in flat world
+        } else if (worldType === 'default' || worldType === 'normal') {
+            groundY = 64;   // Ground level in default world
+        }
+        
         return {
             x: Math.floor(Math.random() * (bounds.maxX - bounds.minX) + bounds.minX),
-            y: bounds.minY || -64,
+            y: groundY,
             z: Math.floor(Math.random() * (bounds.maxZ - bounds.minZ) + bounds.minZ)
         };
     }

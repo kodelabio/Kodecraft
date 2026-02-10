@@ -167,7 +167,7 @@ export class APIServer {
 
             // If no position provided, use a random position within realm
             if (!spawnPosition && realmBounds) {
-                spawnPosition = globalRealmManager.getRandomPosInRealm(realmBounds);
+                spawnPosition = globalRealmManager.getRandomPosInRealm(realmBounds, globalRealmManager.worldInfo?.worldType );
                 console.log(`[APIServer] Generated random position: ${JSON.stringify(spawnPosition)}`);
             }
 

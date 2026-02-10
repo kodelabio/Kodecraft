@@ -379,42 +379,39 @@ export class ExternalAPI {
 
     validateWorkerRealm(req, res, next) {
         const { sessionId, buildLocation, position } = req.body;
+        const x = req.body.x, y = req.body.y, z = req.body.z;
         
-        // Extract target coordinates from different endpoint formats
-        let targetPos = null;
-        if (buildLocation) {
-            targetPos = buildLocation;
-        } else if (position) {
-            targetPos = position;
-        } else if (req.body.x && req.body.y && req.body.z) {
-            targetPos = { x: req.body.x, y: req.body.y, z: req.body.z };
-        }
+        let targetPos = buildLocation || position || 
+                        (x !== undefined && { x, y, z });
         
-        // If no target position or no session, allow
+        console.log(`[Validation] sessionId: ${sessionId}, targetPos:`, targetPos);
+        
         if (!targetPos || !sessionId) {
+            console.log(`[Validation] Skipping - no targetPos or sessionId`);
             return next();
         }
         
+        const session = this.orchestration.taskSessions.get(sessionId);
+        console.log(`[Validation] Session found:`, session ? 'yes' : 'no');
+
         // Use LEADER realm bounds (not session-specific)
         if (!this.leaderRealmBounds) {
             console.log(`[Validation] No realm bounds set, allowing movement`);
             return next(); // No realm bounds assigned to leader
         }
         
-        // Validate against realm bounds (not realmId)
-        const validation = globalRealmManager.validateMovement(
-            targetPos,
-            this.leaderRealmBounds
-        );
+        
+        const validation = globalRealmManager.validateMovement(targetPos, this.leaderRealmBounds);
+        console.log(`[Validation] Movement to (${x}, ${y}, ${z}) - Valid: ${validation.valid}`);
         
         if (!validation.valid) {
-            console.warn(`⚠️ Worker trespass attempt: ${validation.error}`);
+            console.warn(`⚠️ Trespass detected! Position ${JSON.stringify(targetPos)} outside realm bounds`);
             return res.status(403).json({
                 error: validation.error,
                 code: 'realm_trespass_worker',
                 realmBounds: validation.bounds,
                 attemptedPosition: targetPos,
-                sessionId: sessionId
+                sessionId
             });
         }
         next();
@@ -2781,33 +2778,61 @@ export class ExternalAPI {
     // For multiple workers
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
-            const count = Number(req.body.count);  // ← Convert to number
-            const { userId, basePort = settings.worker_base_port, sessionId, realmId, realmBounds, callbackWebhookUrl } = req.body;
+            const totalNeeded = Number(req.body.count);
+            const { userId, basePort = settings.worker_base_port, sessionId, realmId, realmBounds, callbackWebhookUrl, currentWorkers = [] } = req.body;
 
-            
-            console.log(`[API SPWN] Spawning worker for leader: ${userId} and realm: ${realmId}`);
+            console.log(`[API SPWN] Total needed: ${totalNeeded}, existing: ${currentWorkers.length}`);
 
-            if (!count || typeof count !== 'number' || count <= 0) {
+            if (!totalNeeded || typeof totalNeeded !== 'number' || totalNeeded <= 0) {
                 return res.status(400).json({ 
                     error: 'count parameter must be a positive number' 
                 });
             }
             
+            const existingCount = currentWorkers.length;
+            const workersToSpawn = Math.max(0, totalNeeded - existingCount);  // ← Calculate difference
+            
+            if (workersToSpawn === 0) {
+                return res.status(200).json({
+                    success: true,
+                    spawned: 0,
+                    existing: existingCount,
+                    totalRequested: totalNeeded,
+                    totalNow: existingCount,
+                    results: [],
+                    message: `Already have ${existingCount} workers (${totalNeeded} requested)`
+                });
+            }
+            
+            const existingNames = new Set(currentWorkers.map(w => w.name));
             const spawnResults = [];
             let currentPort = basePort;
             
             const adjectives = ['Speedy', 'Mighty', 'Lazy', 'Crafty', 'Bold', 'Swift', 'Clever', 'Brave'];
             const nouns = ['Builder', 'Digger', 'Placer', 'Breaker', 'Collector', 'Master', 'Worker', 'Architect'];
-            for (let i = 0; i < workersToSpawn; i++) {
-                const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-                const noun = nouns[Math.floor(Math.random() * nouns.length)];
-                let workerName = `${this.agent.name}_${adj}${noun}`;
-                // ✅ Ensure name doesn't exceed 16 characters
-                if (workerName.length > 16) {
-                    console.warn(`Worker name too long: ${workerName} (${workerName.length} chars), truncating`);
-                    workerName = workerName.substring(0, 16);
+            
+            for (let i = 0; i < workersToSpawn; i++) {  // ← Use workersToSpawn
+                let workerName;
+                let attempts = 0;
+                
+                do {
+                    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+                    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+                    workerName = `${this.agent.name}_${adj}${noun}`;
                     
-                }
+                    if (workerName.length > 16) {
+                        workerName = workerName.substring(0, 16);
+                    }
+                    
+                    attempts++;
+                    if (attempts > 50) {
+                        return res.status(500).json({ 
+                            error: 'Could not generate unique worker name after 50 attempts' 
+                        });
+                    }
+                } while (existingNames.has(workerName));
+                
+                existingNames.add(workerName);
                 
                 const result = await this.orchestration.spawnWorker(
                     workerName,
@@ -2826,11 +2851,12 @@ export class ExternalAPI {
             }
 
             const successCount = spawnResults.filter(r => r.success).length;
+            
             res.status(202).json({
                 success: true,
                 spawned: successCount,
                 existing: existingCount,
-                totalRequested: count,
+                totalRequested: totalNeeded,
                 totalNow: existingCount + successCount,
                 results: spawnResults
             });

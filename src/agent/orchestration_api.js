@@ -108,7 +108,7 @@ export class OrchestrationAPI {
      * Spawn a single worker bot process
      * Called by n8n for each worker needed
      */
-    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId, realmId = null, realmBounds = null) {
+    async spawnWorker(name, port, sessionId, callbackWebhookUrl, userId, realmId = null, realmBounds = null, workerType = 'worker') {
 
         // Check if worker already exists
         if (this.workers.has(name)) {
@@ -158,6 +158,7 @@ export class OrchestrationAPI {
             args.push('-n', name);
             args.push('-p', actualPort);
             args.push('-s', sessionId);
+            args.push('-t', workerType);
 
             
             // Pass callback URL if provided
@@ -198,7 +199,7 @@ export class OrchestrationAPI {
             // Wait a moment for process to start
             await new Promise(resolve => setTimeout(resolve, 5000));
             // Wait for worker API to be ready
-            const ready = await this.isWorkerReady(port, 30000);
+            const ready = await this.isWorkerReady(actualPort, 30000);
             if (!ready) {
                 console.warn(`⚠️ Worker ${name} API not responding, skipping realm bounds setup`);
                 // Continue anyway - worker will set bounds later
@@ -208,7 +209,7 @@ export class OrchestrationAPI {
             if (realmId && realmBounds) {
                 try {
                     console.log(`📍 Setting realm bounds on worker ${name} from realmId: ${realmId}`);
-                    await fetch(`http://localhost:${port}/api/agent/init-realm`, {
+                    await fetch(`http://localhost:${actualPort}/api/agent/init-realm`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -1783,19 +1784,27 @@ registerWorkersForSession(sessionId, workers) {
     }
 
 
-    async assignTaskToWorkers(sessionId, taskPath, taskId, targetWorkers, profile = null) {
+    async assignTaskToWorkers(sessionId, taskPath, taskId, targetWorkers, profile = null, taskLocation = null) {
         const results = [];
+        const workerNames = targetWorkers.map(w => w.workerName);
 
         for (const worker of targetWorkers) {
             try {
                 console.log(`[Orchestration] Assigning task ${taskId} to ${worker.workerName} on port ${worker.port}`);
                 const body = { 
                     taskPath: taskPath,
-                    taskId: taskId
+                    taskId: taskId,
+                    workerNames: workerNames  // ← Add all worker names
+                    //sessionId: sessionId
                 };
                 // Only include profile if provided
                 if (profile) {
                     body.profile = profile;
+                }
+                // Include taskLocation if provided
+                if (taskLocation) {
+                    body.taskLocation = taskLocation;
+                    console.log(`[Orchestration] Including taskLocation:`, taskLocation);
                 }
                 const response = await fetch(`http://localhost:${worker.port}/api/agent/task/assign`, {
                     method: 'POST',

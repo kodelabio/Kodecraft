@@ -51,11 +51,18 @@ const argv = yargs(args)
         type: 'string',
         description: 'callback webhook URL for task completion'
     })
+    .option('worker_type', {
+        alias: 't',
+        type: 'string',
+        default: 'worker',
+        description: 'type of worker (e.g., "builder", "planner")'
+    })
     .argv;
 
 // Store callback info globally for use when tasks complete
 global.workerConfig = {
     name: argv.name,
+    worker_type: argv.worker_type || 'worker',
     port: argv.port,
     sessionId: argv.session_id,
     callbackWebhookUrl: argv.webhook,
@@ -183,37 +190,17 @@ async function setupLogging(workerName) {
         workerSettings.is_worker_bot = true; // Flag to identify this as a worker bot
         workerSettings.cheat_mode_enabled = false; 
         
-        // Load and set the first profile (workers use the same profile as the leader)
-        let profilePath = workerSettings.profiles[0];
-        if (!profilePath) {
-            throw new Error('No profiles found in settings');
-        }
-        
-        console.log(`Loading profile from: ${profilePath}`);
-        const profile = JSON.parse(readFileSync(profilePath, 'utf8'));
-        
-        // Override profile name for worker
-        const workerProfile = { ...profile };
-        workerProfile.name = argv.name;
-
-        workerProfile.modes = {
-            ...workerProfile.modes,
-            cheat: false,
-            torch_placing: false,
-            self_defense: false,
-            item_collecting: false,
-            elbow_room: false,
-            idle_staring: false
-        };
-        
-        workerSettings.profile = workerProfile;
+        // Store worker type - agent.start() will load the correct profile via profileMap
+        const workerType = argv.worker_type || argv.t || 'worker';
+        workerSettings.worker_type = workerType;
         workerSettings.assigned_api_port = argv.port;
+    
         setSettings(workerSettings);
         
         console.log(`Worker settings initialized:`, { 
             brain_mode: workerSettings.brain_mode,
             base_profile: workerSettings.base_profile,
-            profile_name: workerSettings.profile.name
+            worker_type: workerSettings.worker_type
         });
         
         // Create and start agent in internal mode
@@ -227,7 +214,7 @@ async function setupLogging(workerName) {
         const agent = new Agent();
         agent.serverProxy = serverProxy;
         serverProxy.setAgent(agent);
-        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name);
+        await agent.start(argv.load_memory, argv.init_message, argv.count_id, argv.name, argv.port, null, argv.worker_type);
 
         // ✅ DETAILED VERIFICATION OF SKILL LIBRARY
         //console.log(`\n📚 === SKILL LIBRARY VERIFICATION FOR ${argv.name} ===`);

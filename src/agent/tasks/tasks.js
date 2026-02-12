@@ -232,9 +232,10 @@ class CookingCraftingTaskValidator {
 }
 
 export class Task {
-  constructor(agent, task_data, taskStartTime = null) {
+  constructor(agent, task_data, taskStartTime = null, taskLocation = null) {
     this.agent = agent;
     this.data = null;
+    this.taskLocation = taskLocation; 
     if (taskStartTime !== null) this.taskStartTime = taskStartTime;
     else this.taskStartTime = Date.now();
     this.validator = null;
@@ -253,17 +254,17 @@ export class Task {
       this.task_type = this.data.type;
       if (this.task_type === "construction" && this.data.blueprint) {
         console.log('[Task Constructor] Creating Blueprint...');
-        this.blueprint = new Blueprint(this.data.blueprint);
+        this.blueprint = new Blueprint(this.data.blueprint, this);
         console.log('[Task Constructor] Blueprint created:', !!this.blueprint);
-        console.log('[Task Constructor] Blueprint.explain():', this.blueprint.explain());
+        console.log('[Task Constructor] Blueprint.explain():', this.blueprint.explain(this.taskLocation));
         this.data.goal =
           this.data.goal +
           " \n" +
-          this.blueprint.explain() +
+          this.blueprint.explain(this.taskLocation) +
           " \n" +
           "make sure to place the lower levels of the blueprint first";
         this.conversation =
-          this.data.conversation + " \n" + this.blueprint.explain();
+          this.data.conversation + " \n" + this.blueprint.explain(this.taskLocation);
       } else {
         this.goal = this.data.goal;
         this.conversation = this.data.conversation;
@@ -281,7 +282,7 @@ export class Task {
       // }
 
       if (this.task_type === "construction") {
-        this.validator = new ConstructionTaskValidator(this.data, this.agent);
+        this.validator = new ConstructionTaskValidator(this, this.agent);
       } else if (
         this.task_type === "cooking" ||
         this.task_type === "techtree"
@@ -448,7 +449,7 @@ export class Task {
     }
 
     if (this.data.initial_inventory) {
-      console.log("Setting inventory...");
+      console.log("[TASK] Setting inventory...");
       let initialInventory = {};
 
       initialInventory =
@@ -527,23 +528,18 @@ export class Task {
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Conversation setup - only for lead agent
-    if (this.data.conversation && this.agent.count_id === 0) {
-      let other_name = this.available_agents.filter((n) => n !== this.name)[0];
-      
-      if (!other_name && this.data.agent_count > 1) {
-        console.log("No other agents found. Task unsuccessful.");
-        this.agent.killAll();
-        return;
+    if (this.data.conversation && this.available_agents.length > 1) {
+      if (this.available_agents[0] === this.name) {
+          let other_name = this.available_agents.filter((n) => n !== this.name)[0];
+          
+          if (other_name) {
+              await executeCommand(
+                  this.agent,
+                  `!startConversation("${other_name}", "${this.data.conversation}")`
+              );
+          }
       }
-      
-      if (other_name) {
-        await executeCommand(
-          this.agent,
-          `!startConversation("${other_name}", "${this.data.conversation}")`
-        );
-      }
-    }
+  }
     await this.setAgentGoal();
   }
 

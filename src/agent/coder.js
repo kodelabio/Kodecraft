@@ -151,37 +151,36 @@ export class Coder {
             skills.push(match[1]);
         }
         // ✅ ADD THESE CHECKS BEFORE getAllSkillDocs:
-        console.log(`[Coder] Linting code for ${this.agent.name}`);
-        console.log(`[Coder]   Code length: ${code.length} chars`);
-        console.log(`[Coder]   Skills referenced: ${skills.join(', ') || 'none'}`);
+        //console.log(`[Coder] Linting code for ${this.agent.name}`);
+        //console.log(`[Coder]   Code length: ${code.length} chars`);
+        //console.log(`[Coder]   Skills referenced: ${skills.join(', ') || 'none'}`);
         
         // Safety check 1: Prompter exists
         if (!this.agent.prompter) {
             console.error(`❌ [${this.agent.name}] Prompter not available`);
             return 'Error: Prompter not initialized for code linting';
         }
-        console.log(`[Coder] ✅ Prompter exists`);
+        //console.log(`[Coder] ✅ Prompter exists`);
         
         // Safety check 2: Skill library exists
         if (!this.agent.prompter.skill_libary) {
             console.error(`❌ [${this.agent.name}] Skill library not available`);
             return 'Error: Skill library not initialized';
         }
-        console.log(`[Coder] ✅ Skill library exists`);
+        //console.log(`[Coder] ✅ Skill library exists`);
         
         // Safety check 3: getAllSkillDocs is a function
         if (typeof this.agent.prompter.skill_libary.getAllSkillDocs !== 'function') {
             console.error(`❌ [${this.agent.name}] getAllSkillDocs is not a function`);
             return `Error: getAllSkillDocs is ${typeof this.agent.prompter.skill_libary.getAllSkillDocs}`;
         }
-        console.log(`[Coder] ✅ getAllSkillDocs is a function`);
         
         // Safety check 4: Actually call it and handle errors
         let allDocs;
         try {
-            console.log(`[Coder] Calling getAllSkillDocs()...`);
+            //console.log(`[Coder] Calling getAllSkillDocs()...`);
             allDocs = await this.agent.prompter.skill_libary.getAllSkillDocs();
-            console.log(`[Coder] ✅ getAllSkillDocs() returned`);
+            //console.log(`[Coder] ✅ getAllSkillDocs() returned`);
         } catch (error) {
             console.error(`❌ [${this.agent.name}] Failed to get skill docs`);
             console.error(`   Error: ${error.message}`);
@@ -208,11 +207,11 @@ export class Coder {
         
         console.log(`[Coder] ✅ Skill library has ${skillCount} skills`);
         // check function exists
-        console.log(`[Coder] About to check missingSkills...`);
-        console.log(`[Coder] allDocs type: ${typeof allDocs}`);
-        console.log(`[Coder] allDocs is array: ${Array.isArray(allDocs)}`);
-        console.log(`[Coder] allDocs length: ${allDocs?.length}`);
-        console.log(`[Coder] skills to check: ${JSON.stringify(skills)}`);
+        //console.log(`[Coder] About to check missingSkills...`);
+        //console.log(`[Coder] allDocs type: ${typeof allDocs}`);
+        //console.log(`[Coder] allDocs is array: ${Array.isArray(allDocs)}`);
+        //console.log(`[Coder] allDocs length: ${allDocs?.length}`);
+        //console.log(`[Coder] skills to check: ${JSON.stringify(skills)}`);
         const missingSkills = skills.filter(skill => !!allDocs[skill]);
         if (missingSkills.length > 0) {
             result += 'These functions do not exist.\n';

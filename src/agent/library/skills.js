@@ -727,6 +727,7 @@ export async function breakBlockAt(bot, x, y, z) {
             if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
             let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' air';
             bot.chat(msg);
+            await new Promise(resolve => setTimeout(resolve, 100));  // 100ms between commands
             log(bot, `Used /setblock to break block at ${x}, ${y}, ${z}.`);
             return true;
         }
@@ -774,6 +775,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
      * await skills.placeBlock(bot, "oak_log", p.x + 2, p.y, p.x);
      * await skills.placeBlock(bot, "torch", p.x + 1, p.y, p.x, 'side');
      **/
+    //console.log(`[DEBUG] Attempting to place ${blockType} at x:${x.toFixed(1)}, y:${y.toFixed(1)}, z:${z.toFixed(1)}...`);
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
     if (blockType === 'air') {
@@ -838,6 +840,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     else if (item_name === 'lava') {
         item_name = 'lava_bucket';
     }
+    
     let block_item = bot.inventory.items().find(item => item.name === item_name);
     if (!block_item && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
@@ -849,6 +852,17 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
 
     const targetBlock = bot.blockAt(target_dest);
+    if (!targetBlock) {
+        log(bot, `Block at ${target_dest} is not loaded. Waiting for chunks...`);
+        // Wait a moment for chunks to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const retryBlock = bot.blockAt(target_dest);
+        if (!retryBlock) {
+            log(bot, `Cannot place ${blockType} at ${target_dest}: chunk not loaded.`);
+            return false;
+        }
+    }
+
     if (targetBlock.name === blockType || (targetBlock.name === 'grass_block' && blockType === 'dirt')) {
         log(bot, `${blockType} already at ${targetBlock.position}.`);
         return false;
@@ -867,12 +881,12 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     let buildOffBlock = null;
     let faceVec = null;
     const dir_map = {
-        'top': Vec3(0, 1, 0),
-        'bottom': Vec3(0, -1, 0),
-        'north': Vec3(0, 0, -1),
-        'south': Vec3(0, 0, 1),
-        'east': Vec3(1, 0, 0),
-        'west': Vec3(-1, 0, 0),
+        'top': new Vec3(0, 1, 0),
+        'bottom': new Vec3(0, -1, 0),
+        'north': new Vec3(0, 0, -1),
+        'south': new Vec3(0, 0, 1),
+        'east': new Vec3(1, 0, 0),
+        'west': new Vec3(-1, 0, 0),
     }
     let dirs = [];
     if (placeOn === 'side') {
@@ -923,17 +937,22 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     try {
         if (item_name.includes('bucket')) {
             await useToolOnBlock(bot, item_name, buildOffBlock);
+            log(bot, `Placed ${blockType} at ${target_dest}.`);
+            return true;
         }
         else {
             await bot.equip(block_item, 'hand');
             await bot.lookAt(buildOffBlock.position.offset(0.5, 0.5, 0.5));
             await bot.placeBlock(buildOffBlock, faceVec);
             log(bot, `Placed ${blockType} at ${target_dest}.`);
+            //console.log(`[DEBUG] Placed ${blockType} at x:${x.toFixed(1)}, y:${y.toFixed(1)}, z:${z.toFixed(1)}.`);
             await new Promise(resolve => setTimeout(resolve, 200));
             return true;
         }
     } catch (err) {
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
+        console.warn(`[DEBUG] Failed to place ${blockType} at x:${x.toFixed(1)}, y:${y.toFixed(1)}, z:${z.toFixed(1)}. Error: ${err}`);
+        
         return false;
     }
 }
@@ -1824,7 +1843,7 @@ export async function goToPosition(bot, x, y, z, min_distance=2) {
         }
     };
     
-    const progressInterval = setInterval(checkDigProgress, 1000);
+    const progressInterval = setInterval(checkProgress, 1000);
     
     try {
         await bot.pathfinder.goto(new pf.goals.GoalNear(x, y, z, min_distance));

@@ -21,27 +21,47 @@ import { ExternalAPI } from './external_api.js';
 import settings from './settings.js';
 
 export class Agent {
-    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null, spawnLocation = null) {
+    async start(load_mem = false, init_message = null, count_id = 0, botName = null, port = null, spawnLocation = null, workerType = null) {
         this.last_sender = null;
         this.count_id = count_id;
+        this.worker_type = workerType;
+        // DEBUG
+        //console.log(`[Agent.start] workerType param:`, workerType);
+        //console.log(`[Agent.start] settings.profileMap:`, settings.profileMap);
 
         // DEBUG: Check if settings is populated
         const apiPort = port || settings.leader_bot_base_port || 5000; 
-        console.log(`[DEBUG] Loading profile from:`, path.resolve(settings.profiles[0]));
         // Load profile from file
         let profile = settings.profile || {};
-        if (!settings.profile && settings.profiles && settings.profiles.length > 0) {
+        if (workerType && settings.profileMap && settings.profileMap[workerType]) {
+            const profilePath = settings.profileMap[workerType];
+            try {
+                const fileContent = readFileSync(profilePath, 'utf8');
+                profile = JSON.parse(fileContent);
+                console.log(`[Agent.start] Loaded ${workerType} profile from ${profilePath}`);
+            } catch (error) {
+                console.warn(`[Agent.start] Failed to load ${workerType} profile: ${error.message}`);
+                // Fall back to default
+                if (settings.profileMap.default) {
+                    const defaultPath = settings.profileMap.default;
+                    try {
+                        const fileContent = readFileSync(defaultPath, 'utf8');
+                        profile = JSON.parse(fileContent);
+                        console.log(`[Agent.start] Fell back to default profile from ${defaultPath}`);
+                    } catch (e) {
+                        console.warn(`[Agent.start] Failed to load default profile: ${e.message}`);
+                    }
+                }
+            }
+        } else if (!settings.profile && settings.profiles && settings.profiles.length > 0) {
+            // Default: use first profile in list
             try {
                 const profilePath = settings.profiles[0];
                 const fileContent = readFileSync(profilePath, 'utf8');
-                //console.log(`Raw file (first 500 chars):`, fileContent.substring(0, 500));
-                
                 profile = JSON.parse(fileContent);
-                //console.log(`Parsed profile keys:`, Object.keys(profile));
-                //console.log(`Profile.modes:`, profile.modes);
-                //console.log(`Loaded profile from ${profilePath}`);
+                console.log(`[Agent.start] Loaded default profile from ${profilePath}`);
             } catch (error) {
-                console.warn(`Failed to load profile: ${error.message}`);
+                console.warn(`[Agent.start] Failed to load profile: ${error.message}`);
             }
         }
 
@@ -657,8 +677,9 @@ export class Agent {
         this.history.save();
         process.kill(process.pid, 'SIGINT'); 
     }
+    
     async checkTaskDone() {
-        if (this.task.data) {
+        if (this.task && this.task.data) {
             let res = this.task.isDone();
             if (res) {
                 await this.history.add('system', `Task ended with score : ${res.score}`);

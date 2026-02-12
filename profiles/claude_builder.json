@@ -1,5 +1,5 @@
 {
-    "name": "andy",
+    "name": "Claude Builder",
     "model": {
         "api": "openrouter",
         "model": "openrouter/anthropic/claude-haiku-4.5",

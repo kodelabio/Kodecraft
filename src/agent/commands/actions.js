@@ -1,6 +1,7 @@
 import * as skills from '../library/skills.js';
 import settings from '../settings.js';
 import convoManager from '../conversation.js';
+import { Vec3 } from 'vec3'
 
 
 function runAsAction (actionFn, resume = false, timeout = -1) {
@@ -16,10 +17,20 @@ function runAsAction (actionFn, resume = false, timeout = -1) {
         const actionFnWithAgent = async () => {
             await actionFn(agent, ...args);
         };
+
         const code_return = await agent.actions.runAction(`action:${actionLabel}`, actionFnWithAgent, { timeout, resume });
-        if (code_return.interrupted && !code_return.timedout)
-            return;
-        return code_return.message;
+
+        if (!code_return) {
+            console.warn(`[runAsAction] ${actionLabel} returned undefined`);
+            return '';
+        }
+
+        if (code_return.interrupted && !code_return.timedout) {
+            console.log(`[runAsAction] ${actionLabel} was interrupted`);
+            return code_return.message || '';
+        }
+
+        return code_return.message || '';
     }
 
     return wrappedAction;
@@ -439,25 +450,32 @@ export const actionsList = [
                 const commands = result.commands;
                 
                 console.log(`[autoBuild] Generated ${commands.length} setblock commands`);
-                
-                // Parse setblock commands and place blocks directly
+                const skills = await import('../library/skills.js');
                 let blocksPlaced = 0;
                 for (const command of commands) {
-                    // Parse: /setblock x y z blockType
                     const match = command.match(/\/setblock\s+([-\d]+)\s+([-\d]+)\s+([-\d]+)\s+(\S+)/);
                     if (match) {
                         const [, x, y, z, blockType] = match;
                         try {
-                            // Use bot's placeBlock skill instead of chat command
-                            const skills = await import('../library/skills.js');
-                            await skills.placeBlock(agent.bot, blockType, parseInt(x), parseInt(y), parseInt(z));
-                            blocksPlaced++;
+                            // DEBUG: Check inventory
+                            //const inventory = agent.bot.inventory.items();
+                            //console.log(`[autoBuild] Placing ${blockType} - Inventory has:`, inventory.map(i => `${i.name}(${i.count})`).join(', ') || 'NOTHING');
+                            // DEBUG: Check target location
+                            //const targetBlock = agent.bot.blockAt(new Vec3(parseInt(x), parseInt(y), parseInt(z)));
+                            //console.log(`[autoBuild] Target block at ${x},${y},${z}:`, targetBlock ? targetBlock.name : 'NOT LOADED');
+                            const success = await skills.placeBlock(agent.bot, blockType, parseInt(x), parseInt(y), parseInt(z), 'bottom', true); // Force dontCheat=true
+                            //console.log(`[autoBuild] Result for ${blockType}: ${success}`);
+                            if (success) {
+                                blocksPlaced++;
+                            } else {
+                                console.warn(`[autoBuild] Failed to place ${blockType} at ${x},${y},${z}`);
+                            }
                             
-                            if (blocksPlaced % 50 === 0) {
+                            if (blocksPlaced > 0 && blocksPlaced % 50 === 0) {
                                 console.log(`[autoBuild] Placed ${blocksPlaced}/${commands.length} blocks`);
                             }
                             
-                            await new Promise(r => setTimeout(r, 75));
+                            await new Promise(r => setTimeout(r, 100));
                         } catch (err) {
                             console.error(`[autoBuild] Error placing block at ${x},${y},${z}: ${err.message}`);
                         }
@@ -468,7 +486,7 @@ export const actionsList = [
                 return `Auto-build complete! Placed ${blocksPlaced} blocks.`;
             } catch (error) {
                 console.error('[autoBuild] Fatal error:', error);
-                throw error;
+                return `Error: ${error.message}`;
             }
         })
     },

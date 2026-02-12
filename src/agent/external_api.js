@@ -22,7 +22,10 @@ export class ExternalAPI {
 
         this.orchestration = new OrchestrationAPI(agent);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
-        this.agent.orchestration = this.orchestration; 
+        this.agent.orchestration = this.orchestration;
+        // Required for building tasks from blueprints that can spawn workers
+        this.activeTasks = new Map();
+
         // Kick workers on bot disconnect
         if (this.agent?.bot) {
             this.agent.bot.on('end', async () => {
@@ -367,13 +370,13 @@ export class ExternalAPI {
         if (!validation.valid) {
             console.warn(`⚠️ ${validation.error}`);
             return res.status(403).json({
-                error: validation.error,
-                code: 'realm_trespass',
-                realmBounds: validation.bounds,
-                attemptedPosition: { x, y, z }
+                success: false,
+                code: 'realm_trespass_leader',
+                message: `Trespass detected! Position (${targetPos.x}, ${targetPos.y}, ${targetPos.z}) outside realm bounds`,
+                bounds: validation.bounds
             });
         }
-        next();
+        return next();
     }
 
 
@@ -407,14 +410,13 @@ export class ExternalAPI {
         if (!validation.valid) {
             console.warn(`⚠️ Trespass detected! Position ${JSON.stringify(targetPos)} outside realm bounds`);
             return res.status(403).json({
-                error: validation.error,
+                success: false,
                 code: 'realm_trespass_worker',
-                realmBounds: validation.bounds,
-                attemptedPosition: targetPos,
-                sessionId
+                message: `Trespass detected! Position (${targetPos.x}, ${targetPos.y}, ${targetPos.z}) outside realm bounds`,
+                bounds: validation.bounds
             });
         }
-        next();
+        return next();
     }
 
 
@@ -2187,7 +2189,7 @@ export class ExternalAPI {
     // TASKS Management
     async handleAssignTask(req, res) {
         try {
-            const { taskPath, taskId } = req.body;
+            const { taskPath, taskId, workerNames = [], profile, taskLocation } = req.body;
 
             if (!taskPath || !taskId) {
                 return res.status(400).json({
@@ -2209,60 +2211,69 @@ export class ExternalAPI {
                 });
             }
 
-            // Return immediately
             res.status(202).json({
                 success: true,
                 taskId: taskId,
-                agentCount: taskData.agent_count,
+                workerCount: workerNames.length,
                 message: `Task ${taskId} queued for execution`
             });
 
-            // Execute task in background
+            // Execute work in background
             setImmediate(async () => {
-                const originalBrainMode = settings.brain_mode;
-                const originalHistory = this.agent.history;
-                const originalCoder = this.agent.coder;
-                const originalProfile = settings.profile;
-                if (req.body.profile) {
-                    await switchAgentProfile(this.agent, req.body.profile);
-                    console.log(`[Task] Using profile: ${req.body.profile}`);
-                }
+                const originalProfile = profile ? settings.profiles[0] : null;
                 
                 try {
-                    settings.brain_mode = 'internal';
-                    this.agent.history = new History(this.agent);
-                    this.agent.coder = new Coder(this.agent);
+                    // Switch profile if specified
+                    if (profile) {
+                        await switchAgentProfile(this.agent, profile);
+                        console.log(`[Task] Using profile: ${profile}`);
+                    }
+                    // Create task instance
+                    const task = new Task(this.agent, taskData, Date.now(), taskLocation);
+                    this.agent.task = task;
+                    task.updateAvailableAgents(workerNames);
+                    await task.initBotTask();
                     
-                    // Assign and initialize task
-                    this.agent.task = new Task(this.agent, taskData, Date.now());
-                    this.agent.task.updateAvailableAgents([this.agent.name]);
-                    await this.agent.task.initBotTask();
-
+                    console.log(`[Task] Worker ${this.agent.name} executing ${taskId}`);
+                    console.log(`[Task] Available agents: ${workerNames.join(', ')}`);
+                    
                     // Wait for task to complete
-                    // Wait for task to complete with longer timeout for large builds
                     const maxWaitTime = 5 * 60 * 1000; // 5 minutes
                     const startTime = Date.now();
-                    while (!this.agent.task.isDone()) {
+                    
+                    while (!task.isDone()) {
                         if (Date.now() - startTime > maxWaitTime) {
                             console.error('[Task] Task execution timeout');
                             break;
                         }
-                        await new Promise(r => setTimeout(r, 2000)); // Check every 2 seconds instead of 1
+                        await new Promise(r => setTimeout(r, 2000));
                     }
-                                
-                    console.log('[Task] Task completed successfully');
+                    
+                    console.log('[Task] Work completed successfully'); 
+                    // TODO: send completion webhook to n8n   
+                    /*
+                    if (global.reportTaskCompletion) {
+                        await global.reportTaskCompletion({
+                            taskId: taskId,
+                            status: 'complete',
+                            score: task.isDone()?.score || 0
+                        });
+                    }
+                    */                
+                    // Stop self
+                    await fetch(`http://localhost:${this.port}/api/agent/stop`, {
+                        method: 'POST',
+                        timeout: 5000
+                    }).catch(err => console.warn('[Task] Failed to stop worker:', err.message));
+
                 } catch (error) {
                     console.error('[Task] Background execution error:', error);
                 } finally {
-                    // Always restore
-                    settings.brain_mode = originalBrainMode;
-                    this.agent.history = originalHistory;
-                    this.agent.coder = originalCoder;
-                    if (req.body.profile) {
+                    // Restore original profile if it was changed
+                    if (originalProfile) {
                         await switchAgentProfile(this.agent, originalProfile);
+                        console.log('[Task] Restored original profile');
                     }
-                    console.log('[Task] Restored external mode');
-
                 }
             });
 
@@ -2283,23 +2294,37 @@ export class ExternalAPI {
                 });
             }
 
-            const status = this.agent.task.isDone();
+            const task = this.agent.task;
+            const elapsed = Date.now() - task.taskStartTime;
+            
+            // Get current validation score
+            let score = 0;
+            if (task.validator) {
+                const validation = task.validator.validate();
+                score = validation.score || 0;
+            }
+
+            const status = task.isDone();
 
             if (status) {
+                // Task complete
                 res.json({
                     success: true,
-                    ...status
+                    ...status,
+                    elapsedMs: elapsed
                 });
             } else {
-                const elapsed = Date.now() - this.agent.task.taskStartTime;
+                // Task in progress
                 res.json({
                     success: false,
-                    taskId: this.agent.task.data.task_id,
+                    taskId: task.data?.task_id,
                     elapsedMs: elapsed,
+                    score: score,
                     message: 'Task in progress'
                 });
             }
         } catch (error) {
+            console.error('[Task Status] Error:', error);
             res.status(500).json({
                 error: error.message
             });
@@ -2309,7 +2334,8 @@ export class ExternalAPI {
     // assign a task (usually a building task with a blueprint) to workers via the OrchestrationAPI
     async handleOrchestrationAssignTask(req, res) {
         try {
-            const { sessionId, taskPath, taskId, agents, profile } = req.body;
+            const { sessionId, taskPath, taskId, agents, profile, taskLocation } = req.body;
+            console.log('[Orchestration] Assign request received:', { sessionId, taskPath, taskId, agents, profile });
 
             if (!sessionId || !taskPath || !taskId) {
                 return res.status(400).json({
@@ -2336,12 +2362,23 @@ export class ExternalAPI {
                     error: `Task ${taskId} not found in ${taskPath}`
                 });
             }
-
+            taskData.task_id = taskId; 
+            // If buildLocation not provided, use leader position
+            let finalTasklocation = taskLocation;
+            if (!finalTasklocation) {
+                const leaderPos = this.agent.bot.entity.position;
+                finalTasklocation = {
+                    x: Math.floor(leaderPos.x) + 5,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + 5
+                };
+                console.log(`[Orchestration] taskLocation not provided, using leader position:`, finalTasklocation);
+            }
             // Select target workers
             let targetWorkers;
             if (agents && Array.isArray(agents)) {
                 // Use specified agent names
-                targetWorkers = session.workers.filter(w => agents.includes(w.name));
+                targetWorkers = session.workers.filter(w => agents.includes(w.workerName));
                 if (targetWorkers.length === 0) {
                     return res.status(400).json({
                         error: `No workers found matching names: ${agents.join(', ')}`
@@ -2364,19 +2401,24 @@ export class ExternalAPI {
                 sessionId: sessionId,
                 taskId: taskId,
                 workersAssigned: targetWorkers,
-                message: `Task ${taskId} assigned to ${targetWorkers.map(w => w.name).join(', ')}`
+                taskLocation: finalTasklocation,
+                message: `Task ${taskId} assigned to ${targetWorkers.map(w => w.workerName).join(', ')}`
             });
-
-            // Assign in background
+            console.log(`[Orchestration] Task ${taskId} assigned to workers: ${targetWorkers.map(w => w.workerName).join(', ')}`);    
+            // Create task ONCE on leader
             setImmediate(async () => {
-                const result = await this.orchestration.assignTaskToWorkers(
-                    sessionId,
-                    taskPath,
-                    taskId,
-                    targetWorkers,
-                    profile 
-                );
-                console.log('[Orchestration] Assignment result:', result);
+                try {
+                    await this.orchestration.assignTaskToWorkers(
+                        sessionId,
+                        taskPath,
+                        taskId,
+                        targetWorkers,
+                        profile,
+                        finalTasklocation
+                    );
+                } catch (error) {
+                    console.error('[Orchestration] Error:', error);
+                }
             });
 
         } catch (error) {
@@ -2779,7 +2821,7 @@ export class ExternalAPI {
     async handleOrchestrationSpawnWorkers(req, res) {
         try {
             const totalNeeded = Number(req.body.count);
-            const { userId, basePort = settings.worker_base_port, sessionId, realmId, realmBounds, callbackWebhookUrl, currentWorkers = [] } = req.body;
+            const { userId, basePort = settings.worker_base_port, sessionId, workerType, realmId, realmBounds, callbackWebhookUrl, currentWorkers = [] } = req.body;
 
             console.log(`[API SPWN] Total needed: ${totalNeeded}, existing: ${currentWorkers.length}`);
 
@@ -2841,7 +2883,8 @@ export class ExternalAPI {
                     callbackWebhookUrl || settings.n8n_callback_url,
                     userId,
                     realmId,
-                    realmBounds
+                    realmBounds,
+                    workerType
                 );
                 
                 spawnResults.push(result);
@@ -3547,6 +3590,7 @@ async handleOrchestrationSessionTasks(req, res) {
     }
 
     start(port = settings.api_gateway_port) {
+        this.port = port; // will come handy somewhere
         return new Promise((resolve) => {
             this.server = this.app.listen(port, () => {
                 console.log(`API server running on port ${port}`);

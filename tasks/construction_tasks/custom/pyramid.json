@@ -3,7 +3,7 @@
     "type": "construction",
     "goal": "Make a structure with the blueprint below",
     "conversation": "Let's share materials and make a structure with the blueprint",
-    "agent_count": 1,
+    "agent_count": 2,
     "timeout": 1000,
     "blueprint": {
       "materials": {
@@ -21,9 +21,9 @@
         {
           "level": 0,
           "coordinates": [
+            0,
             -60,
-            -60,
-            6
+            0
           ],
           "placement": [
             [
@@ -151,9 +151,9 @@
         {
           "level": 1,
           "coordinates": [
-            -60,
+            0,
             -59,
-            6
+            0
           ],
           "placement": [
             [
@@ -281,9 +281,9 @@
         {
           "level": 2,
           "coordinates": [
-            -60,
+            0,
             -58,
-            6
+            0
           ],
           "placement": [
             [
@@ -411,9 +411,9 @@
         {
           "level": 3,
           "coordinates": [
-            -60,
+            0,
             -57,
-            6
+            0
           ],
           "placement": [
             [
@@ -541,9 +541,9 @@
         {
           "level": 4,
           "coordinates": [
-            -60,
+            0,
             -56,
-            6
+            0
           ],
           "placement": [
             [

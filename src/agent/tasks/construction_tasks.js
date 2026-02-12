@@ -1,8 +1,9 @@
 import {Vec3} from 'vec3';
 
 export class ConstructionTaskValidator {
-    constructor(data, agent) {
-        this.blueprint = new Blueprint(data.blueprint);
+    constructor(task, agent) {
+        //this.blueprint = new Blueprint(data.blueprint);
+        this.blueprint = task.blueprint;  // Use task's blueprint
         this.agent = agent;
     }
     validate() {
@@ -12,22 +13,23 @@ export class ConstructionTaskValidator {
             let valid = false;
             let score = 0;
             let result = this.blueprint.check(this.agent.bot);
+            //console.log(`[Validator] Checked ${result.matches.length} matches, ${result.mismatches.length} mismatches`);
+            //console.log(`[Validator] First few mismatches:`, result.mismatches.slice(0, 3));
             if (result.mismatches.length === 0) {
                 valid = true;
                 console.log('Task is complete');
             }
             let total_blocks = result.mismatches.length + result.matches.length;
             score = (result.matches.length / total_blocks) * 100;
-            // Log score less frequently (every 2 seconds)
+            // Log score less frequently (every 30 seconds)
             const now = Date.now();
             if (!this._lastScoreLog) {
                 this._lastScoreLog = 0;
             }
-            if (now - this._lastScoreLog >= 2000) {
+            if (now - this._lastScoreLog >= 30000) {
                 console.log(`Task score: ${score}%`);
                 this._lastScoreLog = now;
             }
-            console.log(`Task score: ${score}%`);
             return {
                 "valid": valid, 
                 "score": score
@@ -67,7 +69,6 @@ export function checkLevelBlueprint(agent, levelNum) {
 
 export function checkBlueprint(agent) {
     console.log('Checking blueprint...');
-    console.log(agent);
     const blueprint = agent.task.blueprint;
     const bot = agent.bot;
     const result = blueprint.check(bot);
@@ -80,21 +81,25 @@ export function checkBlueprint(agent) {
 }
 
 export class Blueprint {
-    constructor(blueprint) {
+    constructor(blueprint, task = null) {
         this.data = blueprint;
+        this.task = task;  
     }
-    explain() {
+    explain(taskLocation = null) {
         var explanation = "";
 
         for (let item of this.data.levels) {
             var coordinates = item.coordinates;
+            const x = taskLocation ? coordinates[0] + taskLocation.x : coordinates[0];
+            const y =  coordinates[1]; // Y is typically the vertical axis, so we might not want to offset it based on taskLocation
+            const z = taskLocation ? coordinates[2] + taskLocation.z : coordinates[2];
+            
             explanation += `Level ${item.level}: `;
-            explanation += `Start at coordinates X: ${coordinates[0]}, Y: ${coordinates[1]}, Z: ${coordinates[2]}`;
-            // let placement_string = this._getPlacementString(item.placement);
-            // explanation += `\n${placement_string}\n`;
+            explanation += `Start at coordinates X: ${x}, Y: ${y}, Z: ${z}`;
         }
         return explanation;
     }
+
     _getPlacementString(placement) {
         var placement_string = "[\n";
         for (let row of placement) {
@@ -165,21 +170,28 @@ export class Blueprint {
             "matches": matches
         };
     }
+
     checkLevel(bot, levelNum) {
         const levelData = this.data.levels[levelNum];
         const startCoords = levelData.coordinates;
         const placement = levelData.placement;
         const mismatches = [];
         const matches = [];
+        const taskLocation = this.task?.taskLocation;
+        const offsetX = taskLocation?.x || 0;
+        const offsetZ = taskLocation?.z || 0;
+        //console.log(`[TASK][checkLevel] taskLocation:`, taskLocation);
+        //console.log(`[TASK][checkLevel] this.task:`, this.task ? 'exists' : 'undefined');
+        //console.log(`[TASK][checkLevel] Using offsets: X=${offsetX}, Z=${offsetZ}`);
     
         for (let zOffset = 0; zOffset < placement.length; zOffset++) {
             const row = placement[zOffset];
             for (let xOffset = 0; xOffset < row.length; xOffset++) {
                 const blockName = row[xOffset];
     
-                const x = startCoords[0] + xOffset;
+                const x = startCoords[0] + xOffset + offsetX;  // ADD offsetX
                 const y = startCoords[1];
-                const z = startCoords[2] + zOffset;
+                const z = startCoords[2] + zOffset + offsetZ;  // ADD offsetZ
 
                 try {
                     const blockAtLocation = bot.blockAt(new Vec3(x, y, z));
@@ -225,17 +237,33 @@ export class Blueprint {
     autoBuild() {
         const commands = [];
         let blueprint = this.data
+        const taskLocation = this.task?.taskLocation;
+        let baseOffsetX = 0, baseOffsetY = 0, baseOffsetZ = 0;
+    
+        if (taskLocation) {
+            baseOffsetX = Math.floor(taskLocation.x);
+            //baseOffsetY = Math.floor(taskLocation.y);
+            baseOffsetZ = Math.floor(taskLocation.z);
+        } else {
+            console.log(`[autoBuild] No taskLocation provided, using blueprint coordinates as-is`);
+        }
 
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
         let minZ = Infinity, maxZ = -Infinity;
 
         for (const level of blueprint.levels) {
-            console.log(level.level)
-            const baseX = level.coordinates[0];
-            const baseY = level.coordinates[1];
-            const baseZ = level.coordinates[2];
+            console.log(`[AUTOBUILD] Processing level: ${level.level}`);
+            const blueprintX = level.coordinates[0];
+            const blueprintY = level.coordinates[1];
+            const blueprintZ = level.coordinates[2];
+        
+            const baseX = blueprintX + baseOffsetX;
+            const baseY = blueprintY;
+            const baseZ = blueprintZ + baseOffsetZ;
             const placement = level.placement;
+
+            console.log(`[autoBuild] Using buildLocation:`, { x: baseX, y: baseY, z: baseZ });
 
             // Update bounds
             minX = Math.min(minX, baseX);

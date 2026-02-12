@@ -29,6 +29,16 @@ const settings = {
         // using more than 1 profile requires you to /msg each bot indivually
         // individual profiles override values from the base profile
     ],
+    "profileMap": {
+        "builder": "./profiles/kodecraft.json",
+        "soldier": "./profiles/kodecraft.json",
+        "planner": "./profiles/kodecraft.json",
+        "farmer": "./profiles/kodecraft.json",
+        "fisherman": "./profiles/kodecraft.json",
+        "worker": "./profiles/kodecraft.json",
+        "default": "./profiles/kodecraft.json"
+
+    },
 
     "load_memory": false, // load memory from previous session
     "init_message": "Respond with hello world and your name", // sends to all on spawn

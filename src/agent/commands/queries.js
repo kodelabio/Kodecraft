@@ -253,7 +253,7 @@ export const queryList = [
         description: 'Get the blueprint for the building',
         perform: function (agent) {
             console.log('[getBlueprint] Called');
-            let res = agent.task.blueprint.explain();
+            let res = agent.task.blueprint.explain(agent.task.taskLocation);
             return pad(res);
         }
     },

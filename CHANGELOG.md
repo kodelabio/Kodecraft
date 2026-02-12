@@ -98,3 +98,10 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - realms created starting close to spawn point
 - workers movement validation
 
+## [1.3.0]
+### Added
+- workers can be started with different profiles like builder, soldier, etc. affecting game modes, LLMs, conversation examples, and code generation.
+### Fixed
+- workers orchestration when collaborating to a building task (based on Blueprint)
+
+

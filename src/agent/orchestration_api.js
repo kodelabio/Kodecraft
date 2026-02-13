@@ -1849,4 +1849,62 @@ registerWorkersForSession(sessionId, workers) {
             message: `Task assigned to ${results.filter(r => r.success).length}/${targetWorkers.length} workers`
         };
     }
+
+    async assignBlueprintToWorkers(sessionId, blueprint, targetWorkers, taskLocation) {
+        const results = [];
+        const workerNames = targetWorkers.map(w => w.workerName);
+
+        for (const worker of targetWorkers) {
+            try {
+                console.log(`[Orchestration] Assigning task ${blueprint.name} to ${worker.workerName} on port ${worker.port}`);
+                const body = { 
+                    blueprint: blueprint,
+                    taskId: blueprint.name,
+                    workerNames: workerNames,  // ← Add all worker names
+                    taskLocation: taskLocation
+                };
+                
+                const response = await fetch(`http://localhost:${worker.port}/api/agent/build-blueprint`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    timeout: 5000
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    results.push({
+                        worker: worker.workerName,
+                        success: true,
+                        message: result.message
+                    });
+                    console.log(`✓ Task assigned to ${worker.workerName}`);
+                } else {
+                    const error = await response.text();
+                    results.push({
+                        worker: worker.workerName,
+                        success: false,
+                        error: error
+                    });
+                    console.error(`✗ Failed to assign to ${worker.workerName}: ${error}`);
+                }
+            } catch (error) {
+                results.push({
+                    worker: worker.workerName,
+                    success: false,
+                    error: error.message
+                });
+                console.error(`✗ Error assigning to ${worker.workerName}:`, error.message);
+            }
+        }
+
+        return {
+            success: results.every(r => r.success),
+            sessionId: sessionId,
+            blueprint: blueprint.name,
+            workersAssigned: targetWorkers.length,
+            results: results,
+            message: `Task assigned to ${results.filter(r => r.success).length}/${targetWorkers.length} workers`
+        };
+    }
 }

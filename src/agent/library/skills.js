@@ -875,7 +875,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             log(bot, `Cannot place ${blockType} at ${targetBlock.position}: block in the way.`);
             return false;
         }
-        await new Promise(resolve => setTimeout(resolve, 200)); // wait for block to break
+        await new Promise(resolve => setTimeout(resolve, 100)); // wait for block to break
     }
     // get the buildoffblock and facevec based on whichever adjacent block is not empty
     let buildOffBlock = null;
@@ -946,13 +946,11 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             await bot.placeBlock(buildOffBlock, faceVec);
             log(bot, `Placed ${blockType} at ${target_dest}.`);
             //console.log(`[DEBUG] Placed ${blockType} at x:${x.toFixed(1)}, y:${y.toFixed(1)}, z:${z.toFixed(1)}.`);
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, 100));
             return true;
         }
     } catch (err) {
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
-        console.warn(`[DEBUG] Failed to place ${blockType} at x:${x.toFixed(1)}, y:${y.toFixed(1)}, z:${z.toFixed(1)}. Error: ${err}`);
-        
         return false;
     }
 }

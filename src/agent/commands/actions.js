@@ -468,7 +468,7 @@ export const actionsList = [
                             if (success) {
                                 blocksPlaced++;
                             } else {
-                                console.warn(`[autoBuild] Failed to place ${blockType} at ${x},${y},${z}`);
+                                //console.warn(`[autoBuild] Failed to place ${blockType} at ${x},${y},${z}`);
                             }
                             
                             if (blocksPlaced > 0 && blocksPlaced % 50 === 0) {
@@ -562,7 +562,9 @@ export const actionsList = [
         name: '!endGoal',
         description: 'Call when you have accomplished your goal. It will stop self-prompting and the current action. ',
         perform: async function (agent) {
+            console.log(`[!endGoal] Called for ${agent.name}, worker_type: ${settings.worker_type}`);
             agent.self_prompter.stop();
+            console.log(`[!endGoal] Finished for ${agent.name}`);
             return 'Self-prompting stopped.';
         }
     },

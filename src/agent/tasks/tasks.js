@@ -241,6 +241,7 @@ export class Task {
     this.validator = null;
     this.reset_function = null;
     this.blocked_actions = [];
+    this.completed = false; // Added to track task completion status
     this.task_data = task_data;
     if (task_data) {
       console.log("[TASK]: Starting task", task_data.task_id);
@@ -375,12 +376,14 @@ export class Task {
     let res = null;
     if (this.validator) res = this.validator.validate();
     if (res && res.valid) {
+      this.completed = true;
       // Find all the agents and clear their inventories
       for (let agent of this.available_agents) {
         this.agent.bot.chat(`/clear ${agent}`);
       }
+      this._isDoneResult = { message: "Task successful", score: res.score };
       // this.agent.bot.chat(`/clear @a`);
-      return { message: "Task successful", score: res.score };
+      return this._isDoneResult;
     }
     let other_names = this.available_agents.filter((n) => n !== this.name);
     const elapsedTime = (Date.now() - this.taskStartTime) / 1000;
@@ -396,12 +399,11 @@ export class Task {
     if (this.taskTimeout) {
       if (elapsedTime >= this.taskTimeout) {
         console.log("Task timeout reached. Task unsuccessful.");
-        if (res) {
-          return { message: "Task timeout reached", score: res.score };
-        } else {
-          return { message: "Task timeout reached", score: 0 };
-        }
+        this.completed = true;
+        this._isDoneResult = { message: "Task timeout reached", score: 0 };
+        return this._isDoneResult;
       }
+        
     }
     return false;
   }

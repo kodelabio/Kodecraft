@@ -17,7 +17,7 @@ export class ConstructionTaskValidator {
             //console.log(`[Validator] First few mismatches:`, result.mismatches.slice(0, 3));
             if (result.mismatches.length === 0) {
                 valid = true;
-                console.log('Task is complete');
+                console.log('[TASK VALIDATOR] Task is complete');
             }
             let total_blocks = result.mismatches.length + result.matches.length;
             score = (result.matches.length / total_blocks) * 100;
@@ -35,7 +35,7 @@ export class ConstructionTaskValidator {
                 "score": score
             };
         } catch (error) {
-            console.error('Error validating task:', error);
+            console.error('[TASK VALIDATOR] Error validating task:', error);
             return {
                 "valid": false,
                 "score": 0
@@ -68,7 +68,7 @@ export function checkLevelBlueprint(agent, levelNum) {
 }
 
 export function checkBlueprint(agent) {
-    console.log('Checking blueprint...');
+    console.log('[TASK] Checking blueprint...');
     const blueprint = agent.task.blueprint;
     const bot = agent.bot;
     const result = blueprint.check(bot);

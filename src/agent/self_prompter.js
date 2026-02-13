@@ -1,3 +1,5 @@
+import settings from './settings.js';
+
 const STOPPED = 0
 const ACTIVE = 1
 const PAUSED = 2
@@ -81,12 +83,15 @@ export class SelfPrompter {
                 await new Promise(r => setTimeout(r, this.cooldown));
             }
         }
-        console.log('self prompt loop stopped')
+        console.log('[SelfPrompter] Stopping self prompt loop...')
         this.loop_active = false;
         this.interrupt = false;
+        console.log(`[SelfPrompter] Loop ended. Worker type: ${settings.worker_type}, Agent: ${this.agent.name}`);
     }
 
     update(delta) {
+        // Skip auto-restart for workers - they wait for next task
+        if (settings.worker_type) return;
         // automatically restarts loop
         if (this.state === ACTIVE && !this.loop_active && !this.interrupt) {
             if (this.agent.isIdle())

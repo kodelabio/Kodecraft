@@ -104,4 +104,11 @@ The workers now spawn and are instantly teleported to safe positions near the le
 ### Fixed
 - workers orchestration when collaborating to a building task (based on Blueprint)
 
+## [1.3.1]
+### Added
+- workflows to build from Blueprint
+- script to import blueprints from files into DB (`import_blueprints.sh`)
+### Fixed
+- workers exiting after completing building task
+- stop self-prompting loop auto-restart once workers have completed task
 

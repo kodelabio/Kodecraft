@@ -29,8 +29,10 @@ export class ExternalAPI {
         // Kick workers on bot disconnect
         if (this.agent?.bot) {
             this.agent.bot.on('end', async () => {
-                console.log(`[ExternalAPI] Bot disconnected - kicking all workers`);
-                await this.orchestration.kickAllWorkers();
+                console.log(`[ExternalAPI] Bot ${this.agent.name} on 'end' event fired. worker_type: ${settings.worker_type}`);
+                if (this.orchestration.workers.size > 0) {
+                    await this.orchestration.kickAllWorkers();
+                }
             });
         }
         
@@ -149,9 +151,13 @@ export class ExternalAPI {
         this.app.post('/api/agent/goal', this.handleGoal.bind(this));
         this.app.post('/api/agent/endGoal', this.handleEndGoal.bind(this));
 
-        // Tasks Management
+        // Tasks Management (Build from blueprint, fetch blueprint from disk, assign to worker, check status)
         this.app.post('/api/agent/task/assign', this.handleAssignTask.bind(this));
         this.app.get('/api/agent/task/status', this.handleTaskStatus.bind(this));
+
+        this.app.post('/api/agent/build-blueprint', this.handleBuildBlueprint.bind(this));
+
+
 
 
         // Realm management
@@ -206,7 +212,7 @@ export class ExternalAPI {
 
         // Assign tasks based on blueprints
         this.app.post('/api/orchestration/assign-task', this.handleOrchestrationAssignTask.bind(this));
-        
+        this.app.post('/api/orchestration/build-from-blueprint', this.handleOrchestrationBuildFromBlueprint.bind(this));
         
     }
     
@@ -2186,6 +2192,93 @@ export class ExternalAPI {
         });
     }
 
+    async handleBuildBlueprint(req, res) {
+        try {
+            const { blueprint, taskId, workerNames = [], taskLocation } = req.body;
+
+            if (!blueprint || !taskId) {
+                return res.status(400).json({
+                    error: 'taskPath and taskId required'
+                });
+            }
+            
+            const taskData = blueprint;
+            taskData.task_id = taskId;
+
+            if (!taskData) {
+                return res.status(404).json({
+                    error: `Task ${taskId} not found in ${taskPath}`
+                });
+            }
+
+            res.status(202).json({
+                success: true,
+                taskId: taskId,
+                workerCount: workerNames.length,
+                message: `Task ${taskId} queued for execution`
+            });
+
+            // Execute work in background
+            setImmediate(async () => {
+                
+                
+                try {
+                    // Create task instance
+                    const task = new Task(this.agent, taskData, Date.now(), taskLocation);
+                    this.agent.task = task;
+                    task.updateAvailableAgents(workerNames);
+                    console.log(`[Blueprint] Initialized with blueprint: ${blueprint.blueprint.levels.length} levels`);
+                    await task.initBotTask();
+                    
+                    console.log(`[Blueprint] Worker ${this.agent.name} executing ${taskId}`);
+                    console.log(`[Blueprint] Available agents: ${workerNames.join(', ')}`);
+                    
+                    // Wait for task to complete
+                    /*
+                    const maxWaitTime = 5 * 60 * 1000; // 5 minutes
+                    const startTime = Date.now();
+                    
+                    while (!task.isDone()) {
+                        if (Date.now() - startTime > maxWaitTime) {
+                            console.error('[Task] Task execution timeout');
+                            break;
+                        }
+                        await new Promise(r => setTimeout(r, 2000));
+                    }
+                    
+                    console.log('[Blueprint] Work completed successfully'); 
+                    */
+                    // TODO: send completion webhook to n8n   
+                    /*
+                    if (global.reportTaskCompletion) {
+                        await global.reportTaskCompletion({
+                            taskId: taskId,
+                            status: 'complete',
+                            score: task.isDone()?.score || 0
+                        });
+                    }
+                    */                
+                    // Stop self
+                    //await fetch(`http://localhost:${this.port}/api/agent/stop`, {
+                    //    method: 'POST',
+                    //    timeout: 5000
+                    //}).catch(err => console.warn('[Blueprint] Failed to stop worker:', err.message));
+
+                } catch (error) {
+                    console.error('[Blueprint] Background execution error:', error);
+                } finally {
+                    
+                }
+            });
+
+        } catch (error) {
+            console.error('Error assigning task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+
     // TASKS Management
     async handleAssignTask(req, res) {
         try {
@@ -2295,6 +2388,12 @@ export class ExternalAPI {
             }
 
             const task = this.agent.task;
+            if (!task) {
+                return res.json({
+                    success: false,
+                    message: 'No task found'
+                });
+            }
             const elapsed = Date.now() - task.taskStartTime;
             
             // Get current validation score
@@ -2429,6 +2528,90 @@ export class ExternalAPI {
         }
     }
             
+
+    async handleOrchestrationBuildFromBlueprint(req, res) {
+        try {
+            const { sessionId, blueprint, agents, taskLocation } = req.body;
+            console.log('[Orchestration] Blueprint request received:', { sessionId });
+
+            if (!sessionId || !blueprint || !taskLocation) {
+                return res.status(400).json({
+                    error: 'sessionId, blueprint, and taskLocation required'
+                });
+            }
+
+            // Get session
+            const session = this.orchestration.taskSessions.get(sessionId);
+            if (!session) {
+                return res.status(404).json({
+                    error: `Build session ${sessionId} not found`
+                });
+            }
+            // If buildLocation not provided, use leader position
+            let finalTasklocation = taskLocation;
+            if (!finalTasklocation) {
+                const leaderPos = this.agent.bot.entity.position;
+                finalTasklocation = {
+                    x: Math.floor(leaderPos.x) + 5,
+                    y: Math.floor(leaderPos.y),
+                    z: Math.floor(leaderPos.z) + 5
+                };
+                console.log(`[Orchestration] taskLocation not provided, using leader position:`, finalTasklocation);
+            }
+            // Select target workers
+            let targetWorkers;
+            if (agents && Array.isArray(agents)) {
+                // Use specified agent names
+                targetWorkers = session.workers.filter(w => agents.includes(w.workerName));
+                if (targetWorkers.length === 0) {
+                    return res.status(400).json({
+                        error: `No workers found matching names: ${agents.join(', ')}`
+                    });
+                }
+            } else {
+                // Use first agent_count workers
+                
+                const count = blueprint.agent_count || 1;
+                console.log(`[Orchestration] Blueprint requires ${count} workers`);
+                targetWorkers = session.workers.slice(0, count);
+                
+                if (targetWorkers.length < count) {
+                    return res.status(400).json({
+                        error: `Task requires ${count} agents but only ${targetWorkers.length} available`
+                    });
+                }
+            }
+
+            res.status(202).json({
+                success: true,
+                sessionId: sessionId,
+                blueprint: blueprint.name,
+                workersAssigned: targetWorkers,
+                taskLocation: finalTasklocation,
+                message: `Task ${blueprint.name} assigned to ${targetWorkers.map(w => w.workerName).join(', ')}`
+            });
+            console.log(`[Orchestration] Task ${blueprint.name} assigned to workers: ${targetWorkers.map(w => w.workerName).join(', ')}`);    
+            // Create task ONCE on leader
+            setImmediate(async () => {
+                try {
+                    await this.orchestration.assignBlueprintToWorkers(
+                        sessionId,
+                        blueprint,
+                        targetWorkers,
+                        finalTasklocation
+                    );
+                } catch (error) {
+                    console.error('[Orchestration] Error:', error);
+                }
+            });
+
+        } catch (error) {
+            console.error('Error assigning build task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)
 

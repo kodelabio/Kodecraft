@@ -1,5 +1,5 @@
 {
-  "house": {
+  "small_house": {
     "type": "construction",
     "goal": "Make a house with the blueprint below",
     "conversation": "Let's share materials and make a house with the blueprint",

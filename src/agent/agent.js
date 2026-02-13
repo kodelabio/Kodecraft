@@ -172,7 +172,7 @@ export class Agent {
                 // wait for a bit so stats are not undefined
                 await new Promise((resolve) => setTimeout(resolve, 1000));
 
-                console.log(`Worker ${this.name} spawned.`);
+                console.log(`Agent ${this.name} spawned.`);
                 this.clearBotLogs();
                 
                 // Setup event handlers based on brain mode
@@ -578,14 +578,15 @@ export class Agent {
             console.error('Error event!', err);
         });
         this.bot.on('end', (reason) => {
-            console.warn('[Agent] Bot end event fired! Reason:', reason);
+            console.warn(`[Agent] Bot ${this.name} end event fired! Reason: ${reason}`);
             // Stop all workers before killing agent
             // Stop all workers in background (don't await)
-            if (this.orchestration) {
+            if (this.orchestration && this.orchestration.workers.size > 0) {
                 this.orchestration.stopAllWorkers().catch(error => {
                     console.error(`❌ Error stopping workers:`, error);
                 });
             }
+            console.log(`[Agent] ${this.name} Bot disconnected with reason: ${reason}. Killing agent process.`);
             this.cleanKill('Bot disconnected! Killing agent process.');
         });
         this.bot.on('death', () => {
@@ -593,11 +594,11 @@ export class Agent {
             this.actions.stop();
         });
         this.bot.on('kicked', (reason) => {
-            console.warn('[Agent] Bot kicked event fired! Reason:', reason);
+            console.warn(`[Agent] ${this.name} Bot kicked event fired! Reason: ${reason}`);
             // Stop all workers in background (don't await)
-            console.log(`[Agent] Checking orchestration:`, !!this.orchestration);
+            //console.log(`[Agent] Checking orchestration:`, !!this.orchestration);
     
-            if (this.orchestration) {
+            if (this.orchestration && this.orchestration.workers.size > 0) {
                 console.log(`[Agent] Orchestration found, stopping ${this.orchestration.workers.size} workers...`);
                 this.orchestration.kickAllWorkers().then(result => {
                     console.log(`[Agent] stopAllWorkers result:`, result);
@@ -605,7 +606,7 @@ export class Agent {
                     console.error(`❌ Error stopping workers:`, error);
                 });
             } else {
-                console.warn(`[Agent] No orchestration available!`);
+                //console.warn(`[Agent] No orchestration available!`);
             }
             this.cleanKill('Bot kicked! Killing agent process.');
         });
@@ -665,28 +666,24 @@ export class Agent {
     isIdle() {
         return !this.actions.executing;
     }
-
-
-    hmgdfrseawfcdq(msg = 'Killing agent process...', code = 1) {
-        if (this.externalAPI) {
-            this.externalAPI.stop();
-        }
-        
-        this.history.add('system', msg);
-        this.bot.chat(code > 1 ? 'Restarting.' : 'Exiting.');
-        this.history.save();
-        process.kill(process.pid, 'SIGINT'); 
-    }
     
     async checkTaskDone() {
-        if (this.task && this.task.data) {
+        if (this.task && this.task.data && !this.task.completed) {
             let res = this.task.isDone();
             if (res) {
+                console.log('[AGENT] Task isDone returned:', res.message);
                 await this.history.add('system', `Task ended with score : ${res.score}`);
                 await this.history.save();
                 // await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 second for save to complete
-                console.log('Task finished:', res.message);
-                this.killAll();
+                console.log('[AGENT] Task finished:', res.message);
+                // Only kill if worker_type is NOT set (i.e., this is the leader)
+                if (!settings.worker_type) {
+                    console.log('[AGENT]- shutting down all workers and exiting...');
+                    this.killAll();
+                }
+                console.log('[AGENT] Task completed, stopping self-prompter loop...');
+                // Stop the self-prompter loop
+                await this.self_prompter.stopLoop();
             }
         }
     }

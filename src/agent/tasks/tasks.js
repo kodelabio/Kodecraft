@@ -141,7 +141,7 @@ function checkItemForSingleAgent(data, agent) {
     );
   }
 
-  function normalizeTargets(target) {
+function normalizeTargets(target) {
     if (typeof target === "string") {
       return { [target]: 1 };
     } else if (Array.isArray(target)) {
@@ -155,7 +155,7 @@ function checkItemForSingleAgent(data, agent) {
     throw new Error("Invalid target format");
   }
 
-  function normalizeQuantities(targets, quantities) {
+function normalizeQuantities(targets, quantities) {
     if (quantities === undefined) {
       return Object.keys(targets).reduce((acc, key) => {
         acc[key] = 1;
@@ -253,23 +253,47 @@ export class Task {
       }
       this.data = task_data;
       this.task_type = this.data.type;
+      // In your task.js constructor, replace the blueprint initialization section with:
+
       if (this.task_type === "construction" && this.data.blueprint) {
         console.log('[Task Constructor] Creating Blueprint...');
-        this.blueprint = new Blueprint(this.data.blueprint, this);
-        console.log('[Task Constructor] Blueprint created:', !!this.blueprint);
-        console.log('[Task Constructor] Blueprint.explain():', this.blueprint.explain(this.taskLocation));
-        this.data.goal =
-          this.data.goal +
-          " \n" +
-          this.blueprint.explain(this.taskLocation) +
-          " \n" +
-          "make sure to place the lower levels of the blueprint first";
-        this.conversation =
-          this.data.conversation + " \n" + this.blueprint.explain(this.taskLocation);
-      } else {
+      
+        // Detect which blueprint format to use
+        const levels = this.data.blueprint.levels;
+        let isBlueprintBlocks = false;
+        
+        if (levels && levels.length > 0) {
+            // Check if first level has 'blocks' (new GrabCraft format) or 'placement' (old grid format)
+            isBlueprintBlocks = !!levels[0].blocks;
+        }
+      
+        if (isBlueprintBlocks) {
+            console.log('[Task Constructor] Detected block-based blueprint format (GrabCraft)');
+            // Block-based blueprints use the same Blueprint class
+            // but with "blocks" array instead of "placement" grid
+            this.blueprint = new Blueprint(this.data.blueprint, this);
+        } else {
+            console.log('[Task Constructor] Detected grid-based blueprint format');
+            this.blueprint = new Blueprint(this.data.blueprint, this);
+        }
+      
+      console.log('[Task Constructor] Blueprint created:', !!this.blueprint);
+      console.log('[Task Constructor] Blueprint.explain():', this.blueprint.explain(this.taskLocation));
+      
+      this.data.goal =
+        this.data.goal +
+        " \n" +
+        this.blueprint.explain(this.taskLocation) +
+        " \n" +
+        "make sure to place the lower levels of the blueprint first";
+      this.conversation =
+        this.data.conversation + " \n" + this.blueprint.explain(this.taskLocation);
+    } else {
         this.goal = this.data.goal;
         this.conversation = this.data.conversation;
-      }
+    }
+
+
       this.taskTimeout = this.data.timeout || 300;
       // Set validator based on task_type
 
@@ -544,6 +568,136 @@ export class Task {
   }
     await this.setAgentGoal();
   }
+
+
+  /**
+ * Initialize bot task WITHOUT starting self-prompt loop
+ * This does inventory setup, validation, etc. but skips the goal/self-prompt
+ */
+  async initBotTaskDirect() {
+    await this.agent.bot.chat(`/clear ${this.name}`);
+    console.log(`Cleared ${this.name}'s inventory.`);
+
+    //wait for a bit so inventory is cleared
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (this.data === null) return;
+
+    if (this.task_type === "cooking") {
+      this.initiator = new CookingTaskInitiator(this.data, this.agent.bot);
+    } else {
+      this.initiator = null;
+    }
+
+    //wait for a bit so bots are teleported
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    if (this.agent.count_id === 0 && this.data.human_count > 0) {
+      console.log("Clearing human player inventories");
+      for (let i = 0; i < this.data.human_count; i++) {
+        const username = this.data.usernames[i];
+        await this.agent.bot.chat(`/clear ${username}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    if (this.data.initial_inventory) {
+      console.log("[TASK] Setting inventory...");
+      let initialInventory = {};
+
+      initialInventory =
+        this.data.initial_inventory[this.agent.count_id.toString()] || {};
+      console.log(
+        "Initial inventory for agent",
+        this.agent.count_id,
+        ":",
+        initialInventory,
+      );
+      console.log("");
+
+      if (this.data.human_count > 0 && this.agent.count_id === 0) {
+        if (this.data.human_count !== this.data.usernames.length) {
+          console.log(
+            `Number of human players ${this.human_count} does not match the number of usernames provided. ${this.data.usernames.length}`,
+          );
+          throw new Error(
+            `Number of human players ${this.human_count} does not match the number of usernames provided. ${this.data.usernames.length}`,
+          );
+          return;
+        }
+
+        const starting_idx = this.data.agent_count;
+        for (let i = 0; i < this.data.human_count; i++) {
+          const username = this.data.usernames[i];
+          const inventory = this.data.initial_inventory[starting_idx + i];
+          console.log(Object.keys(inventory));
+          for (let key of Object.keys(inventory)) {
+            const itemName = key.toLowerCase();
+            const quantity = inventory[key];
+            console.log(`Give ${username} ${quantity} ${itemName}`);
+            await this.agent.bot.chat(
+              `/give ${username} ${itemName} ${quantity}`,
+            );
+          }
+        }
+      }
+      console.log(this.data.initial_inventory);
+
+      // Assign inventory items
+      for (let key of Object.keys(initialInventory)) {
+        const itemName = key.toLowerCase();
+        const quantity = initialInventory[key];
+        await this.agent.bot.chat(`/give ${this.name} ${itemName} ${quantity}`);
+        console.log(`Gave ${this.name} ${quantity} ${itemName}`);
+      }
+
+      // Wait briefly for inventory commands to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    if (this.initiator && this.agent.count_id === 0) {
+      await this.initiator.init();
+    }
+
+    console.log(
+      "[TASK]: Agent count:",
+      this.data.agent_count,
+      "available agents:",
+      this.available_agents,
+    );
+    
+    // For orchestration tasks, workers are already assigned
+    // Only check if this is a multi-agent task
+    if (this.data.agent_count && this.data.agent_count > 1) {
+      if (this.available_agents.length < this.data.agent_count) {
+        console.log(
+          `Missing ${this.data.agent_count - this.available_agents.length} bot(s).`,
+        );
+        this.agent.killAll();
+        return;
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    if (this.data.conversation && this.available_agents.length > 1) {
+      if (this.available_agents[0] === this.name) {
+          let other_name = this.available_agents.filter((n) => n !== this.name)[0];
+          
+          if (other_name) {
+              await executeCommand(
+                  this.agent,
+                  `!startConversation("${other_name}", "${this.data.conversation}")`
+              );
+          }
+      }
+    }
+    
+    // ✅ DO NOT call setAgentGoal() - this is what starts the self-prompt loop
+    console.log(`[BlueprintDirect] Task initialized (no self-prompt started)`);
+  }
+
+
 
   async teleportBots() {
     console.log("\n\nTeleporting bots");

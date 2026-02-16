@@ -1,0 +1,735 @@
+{
+  "stone_house_part3": {
+    "type": "construction",
+    "goal": "Build the stone_house structure (Agent 3/3)",
+    "conversation": "Let's build the stone_house structure together (Agent 3/3)",
+    "agent_count": 1,
+    "timeout": 5000,
+    "blueprint": {
+      "materials": {
+        "stone_brick_slab": 63,
+        "cracked_stone_bricks": 49,
+        "black_wool": 10
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "black_wool"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 9,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 10,
+              "material": "black_wool"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_brick_slab"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone_brick_slab": 63,
+        "cracked_stone_bricks": 49,
+        "black_wool": 10
+      }
+    }
+  }
+}

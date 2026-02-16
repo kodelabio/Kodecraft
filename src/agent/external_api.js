@@ -155,7 +155,9 @@ export class ExternalAPI {
         this.app.post('/api/agent/task/assign', this.handleAssignTask.bind(this));
         this.app.get('/api/agent/task/status', this.handleTaskStatus.bind(this));
 
-        this.app.post('/api/agent/build-blueprint', this.handleBuildBlueprint.bind(this));
+        this.app.post('/api/agent/build-blueprint-self-prompt', this.handleBuildBlueprint.bind(this));
+        // In your agent class or worker routes
+        this.app.post('/api/agent/build-blueprint', (req, res) => this.handleBuildBlueprintDirect(req, res));
 
 
 
@@ -2192,6 +2194,113 @@ export class ExternalAPI {
         });
     }
 
+    async handleBuildBlueprintDirect(req, res) {
+        /**
+         * Direct blueprint building handler - skips self-prompt loop
+         * Immediately starts building the blueprint at the given location
+         */
+        try {
+            console.log(`[BlueprintDirect] Received build for task ${req.body.taskId} at location ${req.body.taskLocation}`);
+            const { blueprint, taskId, workerNames = [], taskLocation } = req.body;
+
+            if (!blueprint || !taskId || !taskLocation) {
+                return res.status(400).json({
+                    error: 'blueprint and taskId and taskLocation (3D coordinates) are required'
+                });
+            }
+            
+            const taskData = blueprint;
+            taskData.task_id = taskId;
+
+            res.status(202).json({
+                success: true,
+                taskId: taskId,
+                workerCount: workerNames.length,
+                message: `Task ${taskId} queued for direct execution`
+            });
+
+            // Execute work in background
+            setImmediate(async () => {
+                try {
+                    // Create task instance
+                    const task = new Task(this.agent, taskData, Date.now(), taskLocation);
+                    this.agent.task = task;
+                    task.updateAvailableAgents(workerNames);
+                    console.log(`[BlueprintDirect] Initialized with blueprint: ${taskData.blueprint.levels.length} levels`);
+                    
+                    // Initialize bot task (sets up inventory, validator, etc.)
+                    await task.initBotTaskDirect();
+                    
+                    console.log(`[BlueprintDirect] Worker ${this.agent.name} starting direct build for ${taskId}`);
+                    console.log(`[BlueprintDirect] Building at location: X: ${taskLocation.x}, Y: ${taskLocation.y}, Z: ${taskLocation.z}`);
+                    
+                    // Directly execute !autoBuild action without self-prompt loop
+                    const command = '!autoBuild';
+                    console.log(`[BlueprintDirect] Executing: ${command}`);
+                    
+                    try {
+                        // Import command executor if available
+                        const result = await executeCommand(this.agent, command);
+                        console.log(`[BlueprintDirect] Build result: ${result ? 'success' : 'failed'}`);
+                        
+                    } catch (buildError) {
+                        console.error(`[BlueprintDirect] Build execution error: ${buildError.message}`);
+                    }
+                    
+                    // Optional: Wait for task completion and report
+                    const maxWaitTime = 15 * 60 * 1000; // 15 minutes max
+                    const startTime = Date.now();
+                    const pollInterval = 2000; // Check every 2 seconds
+                    
+                    while (!task.isDone()) {
+                        if (Date.now() - startTime > maxWaitTime) {
+                            console.warn('[BlueprintDirect] Task execution timeout after 15 minutes');
+                            break;
+                        }
+                        await new Promise(r => setTimeout(r, pollInterval));
+                    }
+                    
+                    // Get final score
+                    const finalScore = task.getScore ? task.getScore() : 'unknown';
+                    console.log(`[BlueprintDirect] Build completed. Final score: ${finalScore}`);
+                    
+                    // Optional: Report task completion to external system
+                    if (global.reportTaskCompletion) {
+                        await global.reportTaskCompletion({
+                            taskId: taskId,
+                            status: 'complete',
+                            score: finalScore,
+                            agent: this.agent.name
+                        });
+                    }
+
+                } catch (error) {
+                    console.error('[BlueprintDirect] Background execution error:', error);
+                    
+                    // Report failure if possible
+                    if (global.reportTaskCompletion) {
+                        await global.reportTaskCompletion({
+                            taskId: taskId,
+                            status: 'error',
+                            error: error.message,
+                            agent: this.agent.name
+                        }).catch(err => console.warn('[BlueprintDirect] Failed to report error:', err.message));
+                    }
+                } finally {
+                    // Cleanup if needed
+                    console.log(`[BlueprintDirect] Cleaning up task ${taskId}`);
+                }
+            });
+
+        } catch (error) {
+            console.error('[BlueprintDirect] Error handling direct build task:', error);
+            res.status(500).json({
+                error: error.message
+            });
+        }
+    }
+    
+    // Build from Blueprint usinf self-prompt loop
     async handleBuildBlueprint(req, res) {
         try {
             const { blueprint, taskId, workerNames = [], taskLocation } = req.body;

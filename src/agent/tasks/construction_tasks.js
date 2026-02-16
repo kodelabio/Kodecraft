@@ -2,34 +2,60 @@ import {Vec3} from 'vec3';
 
 export class ConstructionTaskValidator {
     constructor(task, agent) {
-        //this.blueprint = new Blueprint(data.blueprint);
-        this.blueprint = task.blueprint;  // Use task's blueprint
+        // Works with both block-based and grid-based blueprints
+        // Both use the same Blueprint class with .check() method
+        this.blueprint = task.blueprint;
         this.agent = agent;
+        this.blueprintType = this.detectBlueprintType();
     }
+
+    detectBlueprintType() {
+        if (!this.blueprint || !this.blueprint.data) {
+            return 'unknown';
+        }
+        
+        const levels = this.blueprint.data.levels;
+        if (levels && levels.length > 0) {
+            if (levels[0].blocks) {
+                return 'blocks';
+            } else if (levels[0].placement) {
+                return 'grid';
+            }
+        }
+        return 'unknown';
+    }
+
     validate() {
         try {
-            //todo: somehow make this more of a percentage or something
-            // console.log('Validating task...');
+            //console.log(`[Validator] Validating ${this.blueprintType} blueprint...`);
+            
             let valid = false;
             let score = 0;
+            
+            // Blueprint class handles both block and grid formats
             let result = this.blueprint.check(this.agent.bot);
+            
             //console.log(`[Validator] Checked ${result.matches.length} matches, ${result.mismatches.length} mismatches`);
             //console.log(`[Validator] First few mismatches:`, result.mismatches.slice(0, 3));
+            
             if (result.mismatches.length === 0) {
                 valid = true;
                 console.log('[TASK VALIDATOR] Task is complete');
             }
+            
             let total_blocks = result.mismatches.length + result.matches.length;
-            score = (result.matches.length / total_blocks) * 100;
+            score = total_blocks > 0 ? (result.matches.length / total_blocks) * 100 : 0;
+            
             // Log score less frequently (every 30 seconds)
             const now = Date.now();
             if (!this._lastScoreLog) {
                 this._lastScoreLog = 0;
             }
             if (now - this._lastScoreLog >= 30000) {
-                console.log(`Task score: ${score}%`);
+                console.log(`[Validator] Task score: ${score.toFixed(2)}% (${result.matches.length}/${total_blocks} blocks correct)`);
                 this._lastScoreLog = now;
             }
+            
             return {
                 "valid": valid, 
                 "score": score
@@ -47,9 +73,27 @@ export class ConstructionTaskValidator {
 export function resetConstructionWorld(bot, blueprint) {
     console.log('Resetting world...');
     const starting_position = blueprint.levels[0].coordinates;
-    const length = blueprint.levels[0].placement.length + 5;
-    const height = blueprint.levels.length + 5;
-    const width = blueprint.levels[0].placement[0].length + 5;
+    
+    // Calculate dimensions based on blueprint format
+    let length = 5;
+    let height = blueprint.levels.length + 5;
+    let width = 5;
+    
+    if (blueprint.levels[0].placement) {
+        // Grid-based format
+        length = blueprint.levels[0].placement.length + 5;
+        width = blueprint.levels[0].placement[0].length + 5;
+    } else if (blueprint.levels[0].blocks) {
+        // Block-based format - estimate from block coordinates
+        let maxX = 0, maxZ = 0;
+        for (let block of blueprint.levels[0].blocks) {
+            maxX = Math.max(maxX, block.x);
+            maxZ = Math.max(maxZ, block.z);
+        }
+        width = maxX + 10;
+        length = maxZ + 10;
+    }
+    
     const command = `/fill ${starting_position[0]} ${starting_position[1]} ${starting_position[2]} ${starting_position[0] + width} ${starting_position[1] + height} ${starting_position[2] + length} air`;
     bot.chat(command);
     console.log('World reset');
@@ -80,23 +124,58 @@ export function checkBlueprint(agent) {
     }
 }
 
+/**
+ * Updated Blueprint class that handles both grid-based and block-based formats
+ */
 export class Blueprint {
     constructor(blueprint, task = null) {
         this.data = blueprint;
-        this.task = task;  
+        this.task = task;
+        this.isBlockBased = this.detectFormat();
     }
+
+    detectFormat() {
+        // Check if this is block-based (individual voxels) or grid-based (placement arrays)
+        if (this.data.levels && this.data.levels.length > 0) {
+            return !!this.data.levels[0].blocks;
+        }
+        return false;
+    }
+
     explain(taskLocation = null) {
         var explanation = "";
 
         for (let item of this.data.levels) {
             var coordinates = item.coordinates;
             const x = taskLocation ? coordinates[0] + taskLocation.x : coordinates[0];
-            const y =  coordinates[1]; // Y is typically the vertical axis, so we might not want to offset it based on taskLocation
+            const y = coordinates[1];
             const z = taskLocation ? coordinates[2] + taskLocation.z : coordinates[2];
             
             explanation += `Level ${item.level}: `;
             explanation += `Start at coordinates X: ${x}, Y: ${y}, Z: ${z}`;
+            
+            if (this.isBlockBased && item.blocks) {
+                explanation += ` (${item.blocks.length} blocks)`;
+            } else if (item.placement) {
+                explanation += ` (grid size: ${item.placement.length}x${item.placement[0]?.length || 0})`;
+            }
+            explanation += "\n";
         }
+        return explanation;
+    }
+
+    explainLevel(levelNum) {
+        const levelData = this.data.levels[levelNum];
+        var explanation = `Level ${levelData.level} `;
+        explanation += `starting at coordinates X: ${levelData.coordinates[0]}, Y: ${levelData.coordinates[1]}, Z: ${levelData.coordinates[2]}`;
+        
+        if (this.isBlockBased && levelData.blocks) {
+            explanation += `\n${levelData.blocks.length} individual blocks`;
+        } else if (levelData.placement) {
+            let placement_string = this._getPlacementString(levelData.placement);
+            explanation += `\n${placement_string}\n`;
+        }
+        
         return explanation;
     }
 
@@ -114,45 +193,7 @@ export class Blueprint {
         placement_string += "]";
         return placement_string;
     }
-    explainLevel(levelNum) {
-        const levelData = this.data.levels[levelNum];
-        var explanation = `Level ${levelData.level} `;
-        explanation += `starting at coordinates X: ${levelData.coordinates[0]}, Y: ${levelData.coordinates[1]}, Z: ${levelData.coordinates[2]}`;
-        let placement_string = this._getPlacementString(levelData.placement);
-        explanation += `\n${placement_string}\n`;
-        return explanation;
-    }
-    explainBlueprintDifference(bot) {
-        var explanation = "";
-        const levels = this.data.levels;
-        for (let i = 0; i < levels.length; i++) {
-            let level_explanation = this.explainLevelDifference(bot, i);
-            explanation += level_explanation + "\n";
-        }
-        return explanation;
-    }
-    explainLevelDifference(bot, levelNum) {
-        const results = this.checkLevel(bot, levelNum);
-        const mismatches = results.mismatches;
-        const levelData = this.data.levels[levelNum];
 
-        if (mismatches.length === 0) {
-            return `Level ${levelData.level} is complete`;
-        }
-        var explanation = `Level ${levelData.level} `;
-        // explanation += `at coordinates X: ${levelData.coordinates[0]}, Y: ${levelData.coordinates[1]}, Z: ${levelData.coordinates[2]}`;
-        explanation += " requires the following fixes:\n";
-        for (let item of mismatches) {
-            if (item.actual === 'air') { 
-                explanation += `Place ${item.expected} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]}\n`;
-            } else if (item.expected === 'air') {
-                explanation += `Remove the ${item.actual} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]}\n`;
-            } else {
-                explanation += `Replace the ${item.actual} with a ${item.expected} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]} \n`;
-            }
-        }
-        return explanation;
-    }
     check(bot) {
         if (!bot || typeof bot !== 'object' || !bot.hasOwnProperty('blockAt')) {
             throw new Error('Invalid bot object. Expected a mineflayer bot.');
@@ -173,79 +214,134 @@ export class Blueprint {
 
     checkLevel(bot, levelNum) {
         const levelData = this.data.levels[levelNum];
-        const startCoords = levelData.coordinates;
-        const placement = levelData.placement;
-        const mismatches = [];
-        const matches = [];
         const taskLocation = this.task?.taskLocation;
         const offsetX = taskLocation?.x || 0;
         const offsetZ = taskLocation?.z || 0;
-        //console.log(`[TASK][checkLevel] taskLocation:`, taskLocation);
-        //console.log(`[TASK][checkLevel] this.task:`, this.task ? 'exists' : 'undefined');
-        //console.log(`[TASK][checkLevel] Using offsets: X=${offsetX}, Z=${offsetZ}`);
-    
-        for (let zOffset = 0; zOffset < placement.length; zOffset++) {
-            const row = placement[zOffset];
-            for (let xOffset = 0; xOffset < row.length; xOffset++) {
-                const blockName = row[xOffset];
-    
-                const x = startCoords[0] + xOffset + offsetX;  // ADD offsetX
-                const y = startCoords[1];
-                const z = startCoords[2] + zOffset + offsetZ;  // ADD offsetZ
+        const mismatches = [];
+        const matches = [];
+
+        if (this.isBlockBased && levelData.blocks) {
+            // Block-based format: check individual blocks
+            for (let blockData of levelData.blocks) {
+                const x = levelData.coordinates[0] + blockData.x + offsetX;
+                const y = levelData.coordinates[1];
+                const z = levelData.coordinates[2] + blockData.z + offsetZ;
+                const expectedBlockName = blockData.material;
 
                 try {
                     const blockAtLocation = bot.blockAt(new Vec3(x, y, z));
                     const actualBlockName = blockAtLocation ? bot.registry.blocks[blockAtLocation.type].name : "air";
 
-                    // Skip if both expected and actual block are air
-                    if (blockName === "air" && actualBlockName === "air") {
-                        continue;
-                    }
-
-                    if (actualBlockName !== blockName) {
+                    if (actualBlockName !== expectedBlockName) {
                         mismatches.push({
                             level: levelData.level,
                             coordinates: [x, y, z],
-                            expected: blockName,
+                            expected: expectedBlockName,
                             actual: actualBlockName
                         });
                     } else {
                         matches.push({
                             level: levelData.level,
                             coordinates: [x, y, z],
-                            expected: blockName,
+                            expected: expectedBlockName,
                             actual: actualBlockName
                         });
                     }
                 } catch (err) {
-                    console.error(`Error getting block at (${x}, ${y}, ${z}):`, err);
-                    return false; // Stop checking if there's an issue getting blocks
+                    console.error(`Error checking block at (${x}, ${y}, ${z}):`, err);
+                }
+            }
+        } else if (levelData.placement) {
+            // Grid-based format: check placement array
+            const startCoords = levelData.coordinates;
+            const placement = levelData.placement;
+
+            for (let zOffset = 0; zOffset < placement.length; zOffset++) {
+                const row = placement[zOffset];
+                for (let xOffset = 0; xOffset < row.length; xOffset++) {
+                    const blockName = row[xOffset];
+
+                    const x = startCoords[0] + xOffset + offsetX;
+                    const y = startCoords[1];
+                    const z = startCoords[2] + zOffset + offsetZ;
+
+                    try {
+                        const blockAtLocation = bot.blockAt(new Vec3(x, y, z));
+                        const actualBlockName = blockAtLocation ? bot.registry.blocks[blockAtLocation.type].name : "air";
+
+                        if (blockName === "air" && actualBlockName === "air") {
+                            continue;
+                        }
+
+                        if (actualBlockName !== blockName) {
+                            mismatches.push({
+                                level: levelData.level,
+                                coordinates: [x, y, z],
+                                expected: blockName,
+                                actual: actualBlockName
+                            });
+                        } else {
+                            matches.push({
+                                level: levelData.level,
+                                coordinates: [x, y, z],
+                                expected: blockName,
+                                actual: actualBlockName
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`Error getting block at (${x}, ${y}, ${z}):`, err);
+                    }
                 }
             }
         }
+
         return {
             "mismatches": mismatches,
             "matches": matches
         };
     }
 
-    /**
-     * Takes in the blueprint, and then converts it into a set of /setblock commands for the bot to follow
-     * @Returns: An object containing the setblock commands as a list of strings, and a position nearby the blueprint but not in it
-     * @param blueprint
-     */
+    explainBlueprintDifference(bot) {
+        var explanation = "";
+        const levels = this.data.levels;
+        for (let i = 0; i < levels.length; i++) {
+            let level_explanation = this.explainLevelDifference(bot, i);
+            explanation += level_explanation + "\n";
+        }
+        return explanation;
+    }
+
+    explainLevelDifference(bot, levelNum) {
+        const results = this.checkLevel(bot, levelNum);
+        const mismatches = results.mismatches;
+        const levelData = this.data.levels[levelNum];
+
+        if (mismatches.length === 0) {
+            return `Level ${levelData.level} is complete`;
+        }
+        
+        var explanation = `Level ${levelData.level} requires the following fixes:\n`;
+        for (let item of mismatches) {
+            if (item.actual === 'air') { 
+                explanation += `Place ${item.expected} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]}\n`;
+            } else if (item.expected === 'air') {
+                explanation += `Remove the ${item.actual} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]}\n`;
+            } else {
+                explanation += `Replace the ${item.actual} with a ${item.expected} at coordinates X: ${item.coordinates[0]}, Y: ${item.coordinates[1]}, Z: ${item.coordinates[2]}\n`;
+            }
+        }
+        return explanation;
+    }
+
     autoBuild() {
         const commands = [];
         let blueprint = this.data
         const taskLocation = this.task?.taskLocation;
-        let baseOffsetX = 0, baseOffsetY = 0, baseOffsetZ = 0;
+        let baseOffsetX = 0, baseOffsetZ = 0;
     
         if (taskLocation) {
             baseOffsetX = Math.floor(taskLocation.x);
-            //baseOffsetY = Math.floor(taskLocation.y);
             baseOffsetZ = Math.floor(taskLocation.z);
-        } else {
-            console.log(`[autoBuild] No taskLocation provided, using blueprint coordinates as-is`);
         }
 
         let minX = Infinity, maxX = -Infinity;
@@ -261,45 +357,59 @@ export class Blueprint {
             const baseX = blueprintX + baseOffsetX;
             const baseY = blueprintY;
             const baseZ = blueprintZ + baseOffsetZ;
-            const placement = level.placement;
 
             console.log(`[autoBuild] Using buildLocation:`, { x: baseX, y: baseY, z: baseZ });
 
-            // Update bounds
-            minX = Math.min(minX, baseX);
-            maxX = Math.max(maxX, baseX + placement[0].length - 1);
-            minY = Math.min(minY, baseY);
-            maxY = Math.max(maxY, baseY);
-            minZ = Math.min(minZ, baseZ);
-            maxZ = Math.max(maxZ, baseZ + placement.length - 1);
+            if (this.isBlockBased && level.blocks) {
+                // Block-based format
+                for (let blockData of level.blocks) {
+                    const x = baseX + blockData.x;
+                    const y = baseY;
+                    const z = baseZ + blockData.z;
+                    const blockType = blockData.material;
 
-            // Loop through the 2D placement array
-            for (let z = 0; z < placement.length; z++) {
-                for (let x = 0; x < placement[z].length; x++) {
-                    const blockType = placement[z][x];
-                    if (blockType) {
-                        const setblockCommand = `/setblock ${baseX + x} ${baseY} ${baseZ + z} ${blockType}`;
-                        commands.push(setblockCommand);
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                    minZ = Math.min(minZ, z);
+                    maxZ = Math.max(maxZ, z);
+
+                    const setblockCommand = `/setblock ${x} ${y} ${z} ${blockType}`;
+                    commands.push(setblockCommand);
+                }
+            } else if (level.placement) {
+                // Grid-based format
+                const placement = level.placement;
+
+                minX = Math.min(minX, baseX);
+                maxX = Math.max(maxX, baseX + placement[0].length - 1);
+                minY = Math.min(minY, baseY);
+                maxY = Math.max(maxY, baseY);
+                minZ = Math.min(minZ, baseZ);
+                maxZ = Math.max(maxZ, baseZ + placement.length - 1);
+
+                for (let z = 0; z < placement.length; z++) {
+                    for (let x = 0; x < placement[z].length; x++) {
+                        const blockType = placement[z][x];
+                        if (blockType) {
+                            const setblockCommand = `/setblock ${baseX + x} ${baseY} ${baseZ + z} ${blockType}`;
+                            commands.push(setblockCommand);
+                        }
                     }
                 }
             }
         }
 
-        // Calculate a position nearby the blueprint but not in it
         const nearbyPosition = {
-            x: maxX + 5, // Move 5 blocks to the right
-            y: minY,     // Stay on the lowest level of the blueprint
-            z: minZ      // Stay aligned with the front of the blueprint
+            x: maxX + 5,
+            y: minY,
+            z: minZ
         };
 
         return { commands, nearbyPosition };
     }
 
-
-    /**
-     * Takes in a blueprint, and returns a set of commands to clear up the space.
-     *
-     */
     autoDelete() {
         console.log("auto delete called!")
         const commands = [];
@@ -313,33 +423,51 @@ export class Blueprint {
             const baseX = level.coordinates[0];
             const baseY = level.coordinates[1];
             const baseZ = level.coordinates[2];
-            const placement = level.placement;
 
-            // Update bounds
-            minX = Math.min(minX, baseX);
-            maxX = Math.max(maxX, baseX + placement[0].length - 1);
-            minY = Math.min(minY, baseY);
-            maxY = Math.max(maxY, baseY);
-            minZ = Math.min(minZ, baseZ);
-            maxZ = Math.max(maxZ, baseZ + placement.length - 1);
+            if (this.isBlockBased && level.blocks) {
+                // Block-based format
+                for (let blockData of level.blocks) {
+                    const x = baseX + blockData.x;
+                    const y = baseY;
+                    const z = baseZ + blockData.z;
 
-            // Loop through the 2D placement array
-            for (let z = 0; z < placement.length; z++) {
-                for (let x = 0; x < placement[z].length; x++) {
-                    const blockType = placement[z][x];
-                    if (blockType) {
-                        const setblockCommand = `/setblock ${baseX + x} ${baseY} ${baseZ + z} air`;
-                        commands.push(setblockCommand);
+                    minX = Math.min(minX, x);
+                    maxX = Math.max(maxX, x);
+                    minY = Math.min(minY, y);
+                    maxY = Math.max(maxY, y);
+                    minZ = Math.min(minZ, z);
+                    maxZ = Math.max(maxZ, z);
+
+                    const setblockCommand = `/setblock ${x} ${y} ${z} air`;
+                    commands.push(setblockCommand);
+                }
+            } else if (level.placement) {
+                // Grid-based format
+                const placement = level.placement;
+
+                minX = Math.min(minX, baseX);
+                maxX = Math.max(maxX, baseX + placement[0].length - 1);
+                minY = Math.min(minY, baseY);
+                maxY = Math.max(maxY, baseY);
+                minZ = Math.min(minZ, baseZ);
+                maxZ = Math.max(maxZ, baseZ + placement.length - 1);
+
+                for (let z = 0; z < placement.length; z++) {
+                    for (let x = 0; x < placement[z].length; x++) {
+                        const blockType = placement[z][x];
+                        if (blockType) {
+                            const setblockCommand = `/setblock ${baseX + x} ${baseY} ${baseZ + z} air`;
+                            commands.push(setblockCommand);
+                        }
                     }
                 }
             }
         }
 
-        // Calculate a position nearby the blueprint but not in it
         const nearbyPosition = {
-            x: maxX + 5, // Move 5 blocks to the right
-            y: minY,     // Stay on the lowest level of the blueprint
-            z: minZ      // Stay aligned with the front of the blueprint
+            x: maxX + 5,
+            y: minY,
+            z: minZ
         };
 
         return { commands, nearbyPosition };

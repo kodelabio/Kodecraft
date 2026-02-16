@@ -435,61 +435,196 @@ export const actionsList = [
             await skills.placeBlock(agent.bot, type, pos.x, pos.y, pos.z);
         })
     },
+    /**
+     * Universal !autoBuild action - works with both block-based and grid-based blueprints
+     * Directly places blocks without intermediate command generation
+     * Replaces both the old !autoBuild and !autoBuildBlocks actions
+     */
     {
         name: '!autoBuild',
-        description: 'Automatically build the entire blueprint structure using setblock commands',
+        description: 'Automatically build the blueprint structure (supports both block and grid formats)',
         params: {},
         perform: runAsAction(async (agent) => {
+            console.log('[autoBuild] Starting universal auto-build...');
+            //console.log('[autoBuild] agent.task exists:', !!agent.task);
+            //console.log('[autoBuild] agent.task.blueprint exists:', !!agent.task?.blueprint);
+            
             try {
                 if (!agent.task || !agent.task.blueprint) {
                     return 'No blueprint available for this task';
                 }
+                //console.log('[autoBuild] agent.task:', !!agent.task);
+                //console.log('[autoBuild] agent.task.blueprint:', !!agent.task.blueprint);
+
+
+                //const levels = agent.task.data.blueprint.levels;
+                const blueprint = agent.task.blueprint;
+                const levels = blueprint.data.levels;
+                const taskLocation = agent.task.taskLocation;
+                const offsetX = taskLocation?.x || 0;
+                const offsetZ = taskLocation?.z || 0;
                 
-                console.log('[autoBuild] Starting blueprint auto-build...');
-                const result = agent.task.blueprint.autoBuild();
-                const commands = result.commands;
+                //console.log(`[BlueprintDirect] task.blueprint exists:`, !!agent.task.blueprint);
+                //console.log(`[BlueprintDirect] task.blueprint.data exists:`, !!agent.task.blueprint?.data);
+                //console.log(`[BlueprintDirect] task.blueprint.data.levels exists:`, !!agent.task.blueprint?.data?.levels);
+                //console.log(`[BlueprintDirect] task.blueprint.data.levels length:`, agent.task.blueprint?.data?.levels?.length);
                 
-                console.log(`[autoBuild] Generated ${commands.length} setblock commands`);
-                const skills = await import('../library/skills.js');
+                
+                let totalBlocks = 0;
                 let blocksPlaced = 0;
-                for (const command of commands) {
-                    const match = command.match(/\/setblock\s+([-\d]+)\s+([-\d]+)\s+([-\d]+)\s+(\S+)/);
-                    if (match) {
-                        const [, x, y, z, blockType] = match;
-                        try {
-                            // DEBUG: Check inventory
-                            //const inventory = agent.bot.inventory.items();
-                            //console.log(`[autoBuild] Placing ${blockType} - Inventory has:`, inventory.map(i => `${i.name}(${i.count})`).join(', ') || 'NOTHING');
-                            // DEBUG: Check target location
-                            //const targetBlock = agent.bot.blockAt(new Vec3(parseInt(x), parseInt(y), parseInt(z)));
-                            //console.log(`[autoBuild] Target block at ${x},${y},${z}:`, targetBlock ? targetBlock.name : 'NOT LOADED');
-                            const success = await skills.placeBlock(agent.bot, blockType, parseInt(x), parseInt(y), parseInt(z), 'bottom', true); // Force dontCheat=true
-                            //console.log(`[autoBuild] Result for ${blockType}: ${success}`);
-                            if (success) {
-                                blocksPlaced++;
-                            } else {
-                                //console.warn(`[autoBuild] Failed to place ${blockType} at ${x},${y},${z}`);
+                let blocksFailed = 0;
+                
+                // Detect format and count blocks
+                const isBlockBased = levels && levels.length > 0 && !!levels[0].blocks;
+                
+                if (isBlockBased) {
+                    // Count block-based blocks
+                    for (const level of levels) {
+                        if (level.blocks) {
+                            totalBlocks += level.blocks.length;
+                        }
+                    }
+                } else {
+                    // Count grid-based blocks
+                    for (const level of levels) {
+                        if (level.placement) {
+                            for (const row of level.placement) {
+                                for (const blockType of row) {
+                                    if (blockType && blockType !== "air") {
+                                        totalBlocks++;
+                                    }
+                                }
                             }
-                            
-                            if (blocksPlaced > 0 && blocksPlaced % 50 === 0) {
-                                console.log(`[autoBuild] Placed ${blocksPlaced}/${commands.length} blocks`);
-                            }
-                            
-                            await new Promise(r => setTimeout(r, 100));
-                        } catch (err) {
-                            console.error(`[autoBuild] Error placing block at ${x},${y},${z}: ${err.message}`);
                         }
                     }
                 }
                 
-                console.log(`[autoBuild] Completed! Placed ${blocksPlaced} blocks`);
-                return `Auto-build complete! Placed ${blocksPlaced} blocks.`;
+                
+                
+                // Import skills module
+                let skillsModule;
+                try {
+                    skillsModule = await import('../library/skills.js');
+                    //console.log('[autoBuild] Skills module imported successfully');
+                    //console.log('[autoBuild] placeBlock function exists:', !!skillsModule.placeBlock);
+                } catch (err) {
+                    console.error('[autoBuild] Failed to import skills module:', err);
+                    return `Error: Could not load skills module`;
+                }
+                                
+                // Place blocks
+                for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
+                    const level = levels[levelIdx];
+                    const baseX = level.coordinates[0];
+                    const baseY = level.coordinates[1];
+                    const baseZ = level.coordinates[2];
+                    
+                    console.log(`[autoBuild] Processing level ${level.level} (${levelIdx + 1}/${levels.length})`);
+                    
+                    if (isBlockBased && level.blocks) {
+                        // Block-based: place individual blocks
+                        for (let blockIdx = 0; blockIdx < level.blocks.length; blockIdx++) {
+                            const block = level.blocks[blockIdx];
+                            const x = baseX + block.x + offsetX;
+                            const y = baseY;
+                            const z = baseZ + block.z + offsetZ;
+                            const blockType = block.material;
+                            
+                            try {
+                                //console.log(`[autoBuild] About to place ${blockType} at (${x},${y},${z})`);
+                                const success = await skillsModule.placeBlock(
+                                    agent.bot,
+                                    blockType,
+                                    x,
+                                    y,
+                                    z,
+                                    'bottom',
+                                    true
+                                );
+                                //console.log(`[autoBuild] placeBlock returned: ${success}`);
+                                
+                                if (success) {
+                                    blocksPlaced++;
+                                } else {
+                                    blocksFailed++;
+                                }
+                                
+                                // Progress update every 50 blocks
+                                if ((blocksPlaced + blocksFailed) > 0 && (blocksPlaced + blocksFailed) % 50 === 0) {
+                                    console.log(`[autoBuild] Progress: ${blocksPlaced}/${totalBlocks} placed, ${blocksFailed} failed`);
+                                }
+                                
+                                // Small delay between placements
+                                await new Promise(r => setTimeout(r, 200));
+                                
+                            } catch (err) {
+                                console.error(`[autoBuild] Error placing ${blockType} at (${x},${y},${z}): ${err.message}`);
+                                await new Promise(r => setTimeout(r, 100));
+                                blocksFailed++;
+                            }
+                        }
+                    } else if (level.placement) {
+                        // Grid-based: place blocks from 2D grid
+                        const placement = level.placement;
+                        
+                        for (let z = 0; z < placement.length; z++) {
+                            for (let x = 0; x < placement[z].length; x++) {
+                                const blockType = placement[z][x];
+                                
+                                if (!blockType || blockType === "air") {
+                                    continue;
+                                }
+                                
+                                const worldX = baseX + x + offsetX;
+                                const worldY = baseY;
+                                const worldZ = baseZ + z + offsetZ;
+                                
+                                try {
+                                    const success = await skillsModule.placeBlock(
+                                        agent.bot,
+                                        blockType,
+                                        worldX,
+                                        worldY,
+                                        worldZ,
+                                        'bottom',
+                                        true
+                                    );
+                                    
+                                    if (success) {
+                                        blocksPlaced++;
+                                    } else {
+                                        blocksFailed++;
+                                    }
+                                    
+                                    // Progress update every 50 blocks
+                                    if ((blocksPlaced + blocksFailed) > 0 && (blocksPlaced + blocksFailed) % 50 === 0) {
+                                        console.log(`[autoBuild] Progress: ${blocksPlaced}/${totalBlocks} placed, ${blocksFailed} failed`);
+                                    }
+                                    
+                                    // Small delay between placements
+                                    await new Promise(r => setTimeout(r, 200));
+                                    
+                                } catch (err) {
+                                    console.error(`[autoBuild] Error placing ${blockType} at (${worldX},${worldY},${worldZ}): ${err.message}`);
+                                    await new Promise(r => setTimeout(r, 100));
+                                    blocksFailed++;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                console.log(`[autoBuild] Completed! Placed ${blocksPlaced} blocks (${blocksFailed} failed)`);
+                return `Auto-build complete! Placed ${blocksPlaced}/${totalBlocks} blocks.${blocksFailed > 0 ? ` (${blocksFailed} failed)` : ''}`;
+                
             } catch (error) {
                 console.error('[autoBuild] Fatal error:', error);
+                await new Promise(r => setTimeout(r, 100));
                 return `Error: ${error.message}`;
             }
         })
     },
+    
     {
         name: '!attack',
         description: 'Attack and kill the nearest entity of a given type.',

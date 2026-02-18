@@ -759,7 +759,7 @@ export async function breakBlockAt(bot, x, y, z) {
 }
 
 
-export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false) {
+export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dontCheat=false, isScaffold=false) {
     /**
      * Place the given block type at the given position. It will build off from any adjacent blocks. Will fail if there is a block in the way or nothing to build off of.
      * @param {MinecraftBot} bot, reference to the minecraft bot.
@@ -775,17 +775,17 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     const target_dest = new Vec3(Math.floor(x), Math.floor(y), Math.floor(z));
 
     if (blockType === 'air') {
-        console.log(`[placeBlock] Placing air (removing block) at ${target_dest}.`);
+        //console.log(`[placeBlock] Placing air (removing block) at ${target_dest}.`);
         log(bot, `Placing air (removing block) at ${target_dest}.`);
         return await breakBlockAt(bot, x, y, z);
     }
 
     if (bot.modes.isOn('cheat') && !dontCheat) {
-        console.log(`[placeBlock] Using cheat mode (/setblock)`);
+        //console.log(`[placeBlock] Using cheat mode (/setblock)`);
         if (bot.restrict_to_inventory) {
             let block = bot.inventory.items().find(item => item.name === blockType);
             if (!block) {
-                console.log(`[placeBlock] ❌ Inventory restricted and no ${blockType} in inventory`);
+                console.warn(`[placeBlock] ❌ Inventory restricted and no ${blockType} in inventory`);
                 log(bot, `Cannot place ${blockType}, you are restricted to your current inventory.`);
                 return false;
             }
@@ -819,7 +819,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
         if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
         let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockType;
-        console.log(`[placeBlock] Sending command: ${msg}`);
+        //console.log(`[placeBlock] Sending command: ${msg}`);
         bot.chat(msg);
         if (blockType.includes('door'))
             if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
@@ -828,7 +828,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
             bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
         log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
-        console.log(`[placeBlock] ✓ Placed via /setblock`);
+        //console.log(`[placeBlock] ✓ Placed via /setblock`);
         return true;
     }
 
@@ -844,22 +844,22 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     
     let block_item = bot.inventory.items().find(item => item.name === item_name);
-    console.log(`[placeBlock] Looking for item "${item_name}", found: ${!!block_item}`);
+    //console.log(`[placeBlock] Looking for item "${item_name}", found: ${!!block_item}`);
     
     if (!block_item && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
-        console.log(`[placeBlock] Not in inventory, trying to get from creative inventory`);
+        //console.log(`[placeBlock] Not in inventory, trying to get from creative inventory`);
         await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
         block_item = bot.inventory.items().find(item => item.name === item_name);
-        console.log(`[placeBlock] After creative slot set, found: ${!!block_item}`);
+        //console.log(`[placeBlock] After creative slot set, found: ${!!block_item}`);
     }
     if (!block_item) {
-        console.log(`[placeBlock] ❌ Don't have any ${item_name} to place`);
+        console.warn(`[placeBlock] ❌ Don't have any ${item_name} to place`);
         log(bot, `Don't have any ${item_name} to place.`);
         return false;
     }
 
     const targetBlock = bot.blockAt(target_dest);
-    console.log(`[placeBlock] Target block at ${target_dest}: ${targetBlock ? targetBlock.name : 'NOT LOADED'}`);
+    //console.log(`[placeBlock] Target block at ${target_dest}: ${targetBlock ? targetBlock.name : 'NOT LOADED'}`);
     
     if (!targetBlock) {
         console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
@@ -868,24 +868,34 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         await new Promise(resolve => setTimeout(resolve, 500));
         const retryBlock = bot.blockAt(target_dest);
         if (!retryBlock) {
-            console.log(`[placeBlock] ❌ Chunk still not loaded after retry`);
+            console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);
             log(bot, `Cannot place ${blockType} at ${target_dest}: chunk not loaded.`);
             return false;
         }
     }
 
     if (targetBlock.name === blockType || (targetBlock.name === 'grass_block' && blockType === 'dirt')) {
-        console.log(`[placeBlock] ⚠️ ${blockType} already at ${targetBlock.position}`);
+        //console.log(`[placeBlock] ⚠️ ${blockType} already at ${targetBlock.position}`);
         log(bot, `${blockType} already at ${targetBlock.position}.`);
         return false;
     }
     const empty_blocks = ['air', 'water', 'lava', 'grass', 'short_grass', 'tall_grass', 'snow', 'dead_bush', 'fern'];
     if (!empty_blocks.includes(targetBlock.name)) {
+        if (targetBlock.name === blockType) {
+            return true; // correct block already there
+        }
+        // Don't break blocks that look like they belong to the structure
+        const structureBlocks = ['stone_bricks', 'cracked_stone_bricks', 'black_wool', 'stone_brick_slab'];
+        if (structureBlocks.includes(targetBlock.name)) {
+            console.warn(`[placeBlock] ⚠️ Structure block ${targetBlock.name} in the way at (${x},${y},${z}), skipping`);
+            return false;
+        }
+      
         console.log(`[placeBlock] Block in the way: ${targetBlock.name}, attempting to break it`);
         log(bot, `${targetBlock.name} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
-            console.log(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
+            console.warn(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
             log(bot, `Cannot place ${blockType} at ${targetBlock.position}: block in the way.`);
             return false;
         }
@@ -924,13 +934,59 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         if (!empty_blocks.includes(block.name)) {
             buildOffBlock = block;
             faceVec = new Vec3(-d.x, -d.y, -d.z); // invert
-            //console.log(`[placeBlock] Found buildoff block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
+            console.log(`[placeBlock] Found buildoff block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
             break;
         }
     }
-    
+    // Try scaffold approach - place temp block, use it as buildoff, then remove it
+    /*
+    if (!buildOffBlock && !isScaffold) {
+        //console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
+        //console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
+        //log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
+        //return false;
+        
+        console.log(`[placeBlock] Attempting scaffold for isolated block ${blockType} at (${x},${y},${z})`);
+        
+        const scaffoldDirs = [
+            new Vec3(0, -1, 0),  // prefer below first
+            new Vec3(-1, 0, 0),
+            new Vec3(1, 0, 0),
+            new Vec3(0, 0, -1),
+            new Vec3(0, 0, 1),
+        ];
+        
+        for (const d of scaffoldDirs) {
+            const scaffoldPos = target_dest.plus(d);
+            const scaffoldBlock = bot.blockAt(scaffoldPos);
+            
+            // Only place scaffold in air
+            if (!empty_blocks.includes(scaffoldBlock?.name)) continue;
+            
+            // Place scaffold (recursive call with isScaffold=true to prevent infinite recursion)
+            const scaffoldPlaced = await placeBlock(bot, 'dirt', scaffoldPos.x, scaffoldPos.y, scaffoldPos.z, 'bottom', dontCheat, true);
+            if (!scaffoldPlaced) continue;
+            
+            // Now try placing the actual block
+            const success = await placeBlock(bot, blockType, x, y, z, placeOn, dontCheat, true);
+            
+            // Always remove scaffold
+            await breakBlockAt(bot, scaffoldPos.x, scaffoldPos.y, scaffoldPos.z);
+            
+            if (success) {
+                console.log(`[placeBlock] ✓ Scaffold approach worked for ${blockType} at (${x},${y},${z})`);
+                return true;
+            }
+        }
+        
+        console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
+        log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
+        return false;
+    }
+    */
     if (!buildOffBlock) {
-        console.log(`[placeBlock] ❌ No adjacent block to place on!`);
+        console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
+        console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
         log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
@@ -940,18 +996,23 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     const dont_move_for = ['torch', 'redstone_torch', 'redstone', 'lever', 'button', 'rail', 'detector_rail', 
         'powered_rail', 'activator_rail', 'tripwire_hook', 'tripwire', 'water_bucket', 'string'];
     if (!dont_move_for.includes(item_name) && (pos.distanceTo(targetBlock.position) < 1.1 || pos_above.distanceTo(targetBlock.position) < 1.1)) {
-        console.log(`[placeBlock] Too close to target, moving away`);
+        //console.log(`[placeBlock] Too close to target, moving away`);
         // too close
         let goal = new pf.goals.GoalNear(targetBlock.position.x, targetBlock.position.y, targetBlock.position.z, 2);
         let inverted_goal = new pf.goals.GoalInvert(goal);
-        bot.pathfinder.setMovements(new pf.Movements(bot));
+        let movements = new pf.Movements(bot);
+        // so that he doesn't try to break already placed block if he's too close
+        movements.canDig = false;
+        bot.pathfinder.setMovements(movements);
         await bot.pathfinder.goto(inverted_goal);
     }
     if (bot.entity.position.distanceTo(targetBlock.position) > 4.5) {
-        console.log(`[placeBlock] Too far from target, moving closer`);
+        //console.log(`[placeBlock] Too far from target, moving closer`);
         // too far
         let pos = targetBlock.position;
         let movements = new pf.Movements(bot);
+        // so that he doesn't try to break already placed block on the way
+        movements.canDig = false;
         bot.pathfinder.setMovements(movements);
         await goToGoal(bot, new pf.goals.GoalNear(pos.x, pos.y, pos.z, 4));
     }
@@ -959,10 +1020,10 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     // will throw error if an entity is in the way, and sometimes even if the block was placed
     try {
         if (item_name.includes('bucket')) {
-            console.log(`[placeBlock] Placing bucket item`);
+            //console.log(`[placeBlock] Placing bucket item`);
             await useToolOnBlock(bot, item_name, buildOffBlock);
             log(bot, `Placed ${blockType} at ${target_dest}.`);
-            console.log(`[placeBlock] ✓ Placed bucket successfully`);
+            //console.log(`[placeBlock] ✓ Placed bucket successfully`);
             return true;
         }
         else {
@@ -971,15 +1032,25 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             await bot.lookAt(buildOffBlock.position.offset(0.5, 0.5, 0.5));
             await bot.placeBlock(buildOffBlock, faceVec);
             log(bot, `Placed ${blockType} at ${target_dest}.`);
-            console.log(`[placeBlock] ✓ Placed block successfully`);
+            //console.log(`[placeBlock] ✓ Placed block successfully`);
             await new Promise(resolve => setTimeout(resolve, 100));
             return true;
         }
     } catch (err) {
+        if (err.message.includes('blockUpdate') && err.message.includes('timeout')) {
+            const block = bot.blockAt(target_dest);
+            console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
+            //console.log(`[placeBlock] Post-timeout check at ${target_dest}: ${block?.name} (expected: ${blockType})`);
+            if (block && block.name === blockType) {
+                console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
+                log(bot, `Placed ${blockType} at ${target_dest}.`);
+                return true;
+            }
+        }
         console.error(`[placeBlock] ❌ Exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at ${target_dest}.`);
         return false;
-    }
+        }
 }
 
 export async function equip(bot, itemName) {
@@ -1829,7 +1900,7 @@ function startDoorInterval(bot) {
     return doorCheckInterval;
 }
 
-export async function goToPosition(bot, x, y, z, min_distance=2) {
+export async function goToPosition(bot, x, y, z, min_distance=2, canDig=true) {
     /**
      * Navigate to the given position.
      * @param {MinecraftBot} bot, reference to the minecraft bot.
@@ -1854,6 +1925,7 @@ export async function goToPosition(bot, x, y, z, min_distance=2) {
     }
     */
     const movements = new pf.Movements(bot);
+    movements.canDig = canDig;
     bot.pathfinder.setMovements(movements);
     
     const checkProgress = () => {

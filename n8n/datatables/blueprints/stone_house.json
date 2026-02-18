@@ -8,7 +8,7 @@
     "blueprint": {
       "materials": {
         "cracked_stone_bricks": 161,
-        "stone_brick_slab": 176,
+        "stone_bricks": 176,
         "black_wool": 10
       },
       "levels": [
@@ -21,168 +21,163 @@
           ],
           "blocks": [
             {
-              "x": 9,
-              "z": 3,
+              "x": 1,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 2,
+              "x": 6,
+              "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
-              "z": 1,
-              "material": "stone_brick_slab"
+              "x": 7,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
               "x": 9,
               "z": 0,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 10,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 4,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 10,
               "z": 5,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 10,
               "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 7,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 10,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 8,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 10,
               "z": 9,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 8,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 8,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
+              "x": 10,
               "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
               "material": "black_wool"
             },
             {
               "x": 5,
-              "z": 0,
-              "material": "cracked_stone_bricks"
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 2,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 11,
-              "material": "cracked_stone_bricks"
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 1,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
               "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 3,
-              "material": "cracked_stone_bricks"
+              "z": 10,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 7,
+              "z": 9,
               "material": "cracked_stone_bricks"
             },
             {
@@ -192,33 +187,38 @@
             },
             {
               "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
+              "z": 7,
+              "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
-              "z": 10,
-              "material": "stone_brick_slab"
+              "z": 6,
+              "material": "stone_bricks"
             },
             {
-              "x": 3,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "x": 0,
+              "z": 5,
+              "material": "stone_bricks"
             },
             {
-              "x": 3,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 4,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 4,
-              "z": 0,
+              "x": 0,
+              "z": 4,
               "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone_bricks"
             }
           ]
         },
@@ -231,158 +231,178 @@
           ],
           "blocks": [
             {
-              "x": 9,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 8,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 3,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 2,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
               "x": 1,
-              "z": 11,
-              "material": "cracked_stone_bricks"
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
-              "x": 1,
+              "x": 2,
               "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 3,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 4,
+              "z": 11,
               "material": "black_wool"
             },
             {
               "x": 3,
-              "z": 0,
+              "z": 12,
               "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 4,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 4,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 5,
-              "z": 0,
-              "material": "stone_brick_slab"
             },
             {
               "x": 2,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 11,
+              "z": 12,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 7,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 8,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 8,
-              "z": 0,
+              "x": 1,
+              "z": 12,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "z": 11,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 1,
-              "material": "stone_brick_slab"
+              "z": 10,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
+              "z": 9,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 6,
               "material": "cracked_stone_bricks"
             },
             {
@@ -392,43 +412,23 @@
             },
             {
               "x": 0,
-              "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
               "z": 4,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
-              "z": 7,
-              "material": "stone_brick_slab"
+              "z": 3,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
+              "z": 2,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "z": 1,
+              "material": "stone_bricks"
             }
           ]
         },
@@ -441,24 +441,179 @@
           ],
           "blocks": [
             {
-              "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
+              "x": 1,
+              "z": 0,
+              "material": "cracked_stone_bricks"
             },
             {
-              "x": 0,
+              "x": 2,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 2,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
             },
             {
-              "x": 0,
+              "x": 10,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 7,
               "material": "cracked_stone_bricks"
             },
             {
+              "x": 10,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "black_wool"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
               "x": 0,
               "z": 6,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
@@ -473,172 +628,17 @@
             {
               "x": 0,
               "z": 3,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 9,
-              "z": 3,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
               "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 4,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 4,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 10,
-              "material": "black_wool"
-            },
-            {
-              "x": 5,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 11,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
+              "z": 1,
               "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 8,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 8,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "stone_brick_slab"
             }
           ]
         },
@@ -651,203 +651,203 @@
           ],
           "blocks": [
             {
-              "x": 4,
+              "x": 1,
               "z": 0,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "cracked_stone_bricks"
             },
             {
               "x": 4,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
               "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 11,
               "material": "black_wool"
             },
             {
-              "x": 9,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 0,
+              "x": 4,
+              "z": 12,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 3,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
               "z": 10,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
-              "x": 9,
+              "x": 0,
               "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 9,
-              "z": 5,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
+              "x": 0,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
               "z": 6,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 9,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 9,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 8,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 8,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 11,
-              "material": "cracked_stone_bricks"
+              "x": 0,
+              "z": 5,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 1,
-              "material": "stone_brick_slab"
+              "z": 4,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 0,
+              "z": 3,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
               "z": 2,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 8,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 0,
+              "z": 1,
               "material": "cracked_stone_bricks"
             }
           ]
@@ -861,174 +861,9 @@
           ],
           "blocks": [
             {
-              "x": 5,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 3,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 4,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 4,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
               "x": 1,
               "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
               "x": 2,
@@ -1036,8 +871,173 @@
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 2,
+              "x": 3,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
               "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
               "material": "cracked_stone_bricks"
             }
           ]
@@ -1051,158 +1051,18 @@
           ],
           "blocks": [
             {
-              "x": 7,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 3,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 7,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 7,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 6,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 8,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 2,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
               "x": 1,
               "z": 0,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
-              "x": 4,
-              "z": 11,
+              "x": 2,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
@@ -1211,24 +1071,164 @@
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 3,
+              "x": 5,
               "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 3,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
+              "x": 6,
               "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 2,
+              "x": 7,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
               "z": 11,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "cracked_stone_bricks"
             }
           ]
         },
@@ -1241,38 +1241,123 @@
           ],
           "blocks": [
             {
-              "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
+              "x": 1,
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
-              "z": 4,
-              "material": "stone_brick_slab"
+              "x": 2,
+              "z": 0,
+              "material": "cracked_stone_bricks"
             },
             {
-              "x": 0,
-              "z": 6,
-              "material": "stone_brick_slab"
+              "x": 3,
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
+              "x": 4,
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
+              "x": 5,
+              "z": 0,
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
+              "x": 6,
               "z": 1,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 7,
+              "z": 11,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
               "material": "cracked_stone_bricks"
             },
             {
@@ -1282,123 +1367,38 @@
             },
             {
               "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 2,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 3,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 10,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
               "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
+              "z": 6,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 11,
-              "material": "stone_brick_slab"
+              "z": 5,
+              "material": "stone_bricks"
             },
             {
-              "x": 3,
-              "z": 11,
+              "x": 0,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
               "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 4,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 4,
-              "z": 11,
-              "material": "stone_brick_slab"
             }
           ]
         },
@@ -1413,32 +1413,127 @@
             {
               "x": 1,
               "z": 0,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 1,
-              "z": 11,
-              "material": "stone_brick_slab"
+              "z": 12,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
-              "z": 6,
+              "z": 11,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "stone_brick_slab"
+              "z": 10,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
               "z": 9,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
             },
             {
               "x": 0,
@@ -1447,128 +1542,33 @@
             },
             {
               "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 4,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 4,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 2,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
               "z": 6,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
-              "x": 5,
-              "z": 7,
-              "material": "cracked_stone_bricks"
+              "x": 0,
+              "z": 5,
+              "material": "stone_bricks"
             },
             {
-              "x": 5,
-              "z": 8,
-              "material": "cracked_stone_bricks"
+              "x": 0,
+              "z": 4,
+              "material": "stone_bricks"
             },
             {
-              "x": 5,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 5,
+              "x": 0,
               "z": 3,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
-              "x": 5,
+              "x": 0,
               "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 5,
-              "z": 0,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 5,
+              "x": 0,
               "z": 1,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             }
           ]
         },
@@ -1581,143 +1581,143 @@
           ],
           "blocks": [
             {
-              "x": 0,
-              "z": 1,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 9,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 8,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 10,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 2,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 5,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 3,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 3,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 11,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 11,
-              "material": "stone_brick_slab"
-            },
-            {
               "x": 1,
               "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 2,
-              "z": 11,
               "material": "cracked_stone_bricks"
             },
             {
               "x": 2,
               "z": 0,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
               "material": "cracked_stone_bricks"
             }
           ]
@@ -1732,118 +1732,118 @@
           "blocks": [
             {
               "x": 0,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 0,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 7,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 6,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
-              "z": 5,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
               "z": 0,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
+              "x": 2,
               "z": 0,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
+              "x": 2,
               "z": 1,
               "material": "cracked_stone_bricks"
             },
             {
-              "x": 0,
+              "x": 2,
               "z": 2,
-              "material": "stone_brick_slab"
+              "material": "stone_bricks"
             },
             {
-              "x": 0,
-              "z": 4,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 0,
+              "x": 2,
               "z": 3,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
-              "x": 1,
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
               "z": 5,
-              "material": "cracked_stone_bricks"
+              "material": "stone_bricks"
             },
             {
-              "x": 1,
-              "z": 4,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 2,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 1,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 0,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 0,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 8,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 3,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
-              "z": 9,
-              "material": "cracked_stone_bricks"
-            },
-            {
-              "x": 1,
-              "z": 7,
-              "material": "stone_brick_slab"
-            },
-            {
-              "x": 1,
+              "x": 2,
               "z": 6,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "stone_bricks"
             },
             {
               "x": 0,
               "z": 10,
-              "material": "stone_brick_slab"
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "cracked_stone_bricks"
             }
           ]
         }
@@ -1852,7 +1852,7 @@
     "initial_inventory": {
       "0": {
         "cracked_stone_bricks": 161,
-        "stone_brick_slab": 176,
+        "stone_bricks": 176,
         "black_wool": 10
       }
     }

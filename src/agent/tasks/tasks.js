@@ -409,15 +409,21 @@ export class Task {
       // this.agent.bot.chat(`/clear @a`);
       return this._isDoneResult;
     }
+    //console.log(`Available agents: ${this.available_agents.join(", ")}`);
     let other_names = this.available_agents.filter((n) => n !== this.name);
     const elapsedTime = (Date.now() - this.taskStartTime) / 1000;
+    //console.log(`[isDone] Check: available_agents.length=${this.available_agents.length}, agent_count=${this.data.agent_count}, elapsedTime=${elapsedTime}`);
 
-    if (
-      elapsedTime >= 30 &&
-      this.available_agents.length !== this.data.agent_count
-    ) {
-      console.log("No other agents found. Task unsuccessful.");
-      return { message: "No other agents found", score: 0 };
+    // Only check agent count for multi-agent orchestration tasks
+    // For direct builds with split blueprints, skip this check
+    if (this.data.agent_count && this.data.agent_count > 1) {
+      if (
+        elapsedTime >= 30 &&
+        this.available_agents.length !== this.data.agent_count
+      ) {
+        console.log("No other agents found. Task unsuccessful.");
+        return { message: "No other agents found", score: 0 };
+      }
     }
 
     if (this.taskTimeout) {
@@ -667,8 +673,8 @@ export class Task {
     );
     
     // For orchestration tasks, workers are already assigned
-    // Only check if this is a multi-agent task
-    if (this.data.agent_count && this.data.agent_count > 1) {
+    // Check agent count for both single and multi-agent tasks
+    if (this.data.agent_count) {
       if (this.available_agents.length < this.data.agent_count) {
         console.log(
           `Missing ${this.data.agent_count - this.available_agents.length} bot(s).`,
@@ -677,21 +683,7 @@ export class Task {
         return;
       }
     }
-
     await new Promise((resolve) => setTimeout(resolve, 500));
-
-    if (this.data.conversation && this.available_agents.length > 1) {
-      if (this.available_agents[0] === this.name) {
-          let other_name = this.available_agents.filter((n) => n !== this.name)[0];
-          
-          if (other_name) {
-              await executeCommand(
-                  this.agent,
-                  `!startConversation("${other_name}", "${this.data.conversation}")`
-              );
-          }
-      }
-    }
     
     // ✅ DO NOT call setAgentGoal() - this is what starts the self-prompt loop
     console.log(`[BlueprintDirect] Task initialized (no self-prompt started)`);

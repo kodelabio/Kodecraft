@@ -126,11 +126,20 @@ for INPUT_FILE in "${json_files[@]}"; do
   
   echo -n "Importing $filename ($row_count rows)... "
   
+  # Create a temporary JSON payload file
+  TEMP_PAYLOAD="/tmp/payload_$$.json"
+  jq -n --arg table "$DATATABLE_NAME" --slurpfile data "$INPUT_FILE" \
+    '{tableName: $table, data: $data[0]}' > "$TEMP_PAYLOAD"
+
+  # Send it using --data-binary
   HTTP_CODE=$(curl -s -w "%{http_code}" -o /tmp/import_response.json \
     -X POST \
     --location "$WEBHOOK_URL" \
     --header "Content-Type: application/json" \
-    --data-raw "{\"tableName\": \"$DATATABLE_NAME\", \"data\": $(cat "$INPUT_FILE")}")
+    --data-binary @"$TEMP_PAYLOAD")
+
+  # Clean up
+  rm "$TEMP_PAYLOAD"
   
   if [[ "$HTTP_CODE" -eq 200 ]]; then
     echo "✓ Success"

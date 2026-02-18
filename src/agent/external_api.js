@@ -15,7 +15,8 @@ export class ExternalAPI {
     constructor(agent) {
         this.agent = agent;
         this.app = express();
-        this.app.use(express.json());
+        this.app.use(express.json({ limit: '50mb' }));
+        this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
         
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
@@ -2201,7 +2202,7 @@ export class ExternalAPI {
          */
         try {
             console.log(`[BlueprintDirect] Received build for task ${req.body.taskId} at location ${req.body.taskLocation}`);
-            const { blueprint, taskId, workerNames = [], taskLocation } = req.body;
+            const { blueprint, taskId, agents = [], taskLocation, dontCheat=true } = req.body;
 
             if (!blueprint || !taskId || !taskLocation) {
                 return res.status(400).json({
@@ -2215,7 +2216,7 @@ export class ExternalAPI {
             res.status(202).json({
                 success: true,
                 taskId: taskId,
-                workerCount: workerNames.length,
+                workerCount: agents.length,
                 message: `Task ${taskId} queued for direct execution`
             });
 
@@ -2224,8 +2225,11 @@ export class ExternalAPI {
                 try {
                     // Create task instance
                     const task = new Task(this.agent, taskData, Date.now(), taskLocation);
+                    task.dontCheat = dontCheat; // if false, use setBlock instead of placeBlock
                     this.agent.task = task;
-                    task.updateAvailableAgents(workerNames);
+                    //console.log(`[BlueprintDirect] agents:`, agents);
+                    console.log(`[BlueprintDirect] agents:`, agents, `is array:`, Array.isArray(agents));
+                    task.updateAvailableAgents(agents);
                     console.log(`[BlueprintDirect] Initialized with blueprint: ${taskData.blueprint.levels.length} levels`);
                     
                     // Initialize bot task (sets up inventory, validator, etc.)

@@ -112,3 +112,11 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - workers exiting after completing building task
 - stop self-prompting loop auto-restart once workers have completed task
 
+## [1.3.2]
+### Fixed
+- agents breaking blocks while building
+- check level structure 99% complete before moving to upper level
+- movement set with dig=false to prevent breaking structure
+### Added
+- Grabcraft blueprint conversion and validaton scripts
+

@@ -10,7 +10,8 @@ import settings from './settings.js';
 export class APIServer {
     constructor() {
         this.app = express();
-        this.app.use(express.json());
+        this.app.use(express.json({ limit: '2mb' }));
+        this.app.use(express.urlencoded({ limit: '2mb', extended: true }));
         this.worldInfo = null;
         this.leaderBotManager = leaderBotManager; // this is instantiated in /agent/leader_bot_manager.js
         this.globalRealmManager = globalRealmManager; // Use the shared globalRealmManager

@@ -12,7 +12,7 @@ MATERIAL_MAPPING = {
     "Cracked Stone Bricks": "cracked_stone_bricks",
     "Chiseled Stone Bricks": "chiseled_stone_bricks",
     "Mossy Stone Bricks": "mossy_stone_bricks",
-    "Double Stone Brick Slab": "stone_brick_slab",  # Maps to stone_brick_slab (not double)
+    "Double Stone Brick Slab": "stone_bricks",  # Maps to stone_brick (it's a double )
     "Stone Brick Slab": "stone_brick_slab",
     
     # Wood variants
@@ -97,17 +97,90 @@ MATERIAL_MAPPING = {
     "Green Wool": "green_wool",
     "Red Wool": "red_wool",
     "Black Wool": "black_wool",
+
+    # Japanese house materials (add these at the end)
+    "Oak Wood Stairs": "oak_stairs",
+    "Jungle Wood Stairs": "jungle_stairs",
+    "Oak Wood Plank": "oak_planks",
+    "Jungle Wood Plank": "jungle_planks",
+    "Oak Door": "oak_door",
+    "Ladder": "ladder",
+    "Clay": "terracotta",
+    "Stone Pressure Plate": "stone_pressure_plate"
 }
+
+
 
 def get_minecraft_block(grabcraft_name):
     """Convert GrabCraft material name to Minecraft block ID."""
-    if grabcraft_name in MATERIAL_MAPPING:
-        return MATERIAL_MAPPING[grabcraft_name]
+
+    # Strip directional data first: remove everything from first '(' onward
+    clean_name = grabcraft_name.split('(')[0].rstrip(' _')
+    # Check if cleaned name has a mapping
+    if clean_name in MATERIAL_MAPPING:
+        return MATERIAL_MAPPING[clean_name]
     
     # Fallback: convert to lowercase and replace spaces with underscores
-    fallback = grabcraft_name.lower().replace(" ", "_")
-    print(f"Warning: No mapping for '{grabcraft_name}', using fallback '{fallback}'")
+    fallback = clean_name.lower().replace(" ", "_")
+    print(f"Warning: No mapping for '{grabcraft_name}' (cleaned: '{clean_name}'), using fallback '{fallback}'")
     return fallback
+
+def snake_sort(blocks):
+    from itertools import groupby
+    sorted_by_x = sorted(blocks, key=lambda b: (b['x'], b['z']))
+    result = []
+    for x, group in groupby(sorted_by_x, key=lambda b: b['x']):
+        col = list(group)
+        if len(result) > 0:
+            # Check last block's z to determine direction
+            last_z = result[-1]['z']
+            if abs(col[0]['z'] - last_z) > abs(col[-1]['z'] - last_z):
+                col = list(reversed(col))
+        result.extend(col)
+    return result
+
+def perimeter_walk_sort(blocks):
+    """Sort blocks to walk around the perimeter clockwise"""
+    if not blocks:
+        return blocks
+    
+    # Find bounding box
+    xs = [b['x'] for b in blocks]
+    zs = [b['z'] for b in blocks]
+    min_x, max_x = min(xs), max(xs)
+    min_z, max_z = min(zs), max(zs)
+    
+    # Classify each block by which edge it's closest to
+    classified = []
+    for b in blocks:
+        dist_to_left = b['x'] - min_x
+        dist_to_right = max_x - b['x']
+        dist_to_front = b['z'] - min_z
+        dist_to_back = max_z - b['z']
+        
+        min_dist = min(dist_to_left, dist_to_right, dist_to_front, dist_to_back)
+        
+        # Determine edge and sort key for clockwise walk
+        if min_dist == dist_to_front:
+            edge = 'front'
+            sort_key = b['x']  # left to right along front
+        elif min_dist == dist_to_right:
+            edge = 'right'
+            sort_key = b['z']  # front to back along right
+        elif min_dist == dist_to_back:
+            edge = 'back'
+            sort_key = max_x - b['x']  # right to left along back
+        else:  # dist_to_left
+            edge = 'left'
+            sort_key = max_z - b['z']  # back to front along left
+        
+        classified.append({'block': b, 'edge': edge, 'sort_key': sort_key})
+    
+    # Sort by edge priority, then by sort_key within edge
+    edge_priority = {'front': 0, 'right': 1, 'back': 2, 'left': 3}
+    classified.sort(key=lambda c: (edge_priority[c['edge']], c['sort_key']))
+    
+    return [c['block'] for c in classified]
 
 def convert_grabcraft_to_construction(parsed_blueprint, name, starting_coords=None):
     """
@@ -156,30 +229,50 @@ def convert_grabcraft_to_construction(parsed_blueprint, name, starting_coords=No
         placement_blocks = []
         
         # Determine pixel size from the first block's 's' value
-        pixel_size = blocks[0].get('s', 21) if blocks else 21
+        # pixel_size = blocks[0].get('s', 21) if blocks else 21
+        all_coords = sorted(set(b['x'] for b in blocks)) + sorted(set(b['y'] for b in blocks))
+        all_coords_x = sorted(set(b['x'] for b in blocks))
+        all_coords_y = sorted(set(b['y'] for b in blocks))
+        gaps_x = [all_coords_x[i+1] - all_coords_x[i] for i in range(len(all_coords_x)-1)]
+        gaps_y = [all_coords_y[i+1] - all_coords_y[i] for i in range(len(all_coords_y)-1)]
+        all_gaps = gaps_x + gaps_y
+        pixel_size = min(all_gaps) if all_gaps else blocks[0].get('s', 21)
+
+
         
         # Find min coordinates to normalize relative to
         min_x = min(b['x'] for b in blocks) if blocks else 0
         min_y = min(b['y'] for b in blocks) if blocks else 0
+
         
+        # seen = {}
         for block in blocks:
             minecraft_material = get_minecraft_block(block['h'])
-            
-            # Count as 1 block
             construction_blueprint[name]["blueprint"]["materials"][minecraft_material] += 1
-            
-            # Convert from GrabCraft pixel coordinates to Minecraft block coordinates
-            # Divide by pixel_size to get block offsets, then subtract minimum to get relative position
-            block_x = (block['x'] - min_x) // pixel_size
-            block_z = (block['y'] - min_y) // pixel_size  # GrabCraft y = Z in world
-            
-            placement_block = {
-                "x": block_x,
-                "z": block_z,
-                "material": minecraft_material
-            }
-            placement_blocks.append(placement_block)
-        
+            block_x = round((block['x'] - min_x) / pixel_size)
+            block_z = round((block['y'] - min_y) / pixel_size)
+            # Add directly to list (no deduplication)
+            placement_blocks.append({"x": block_x, "z": block_z, "material": minecraft_material})
+            #
+            #key = (block_x, block_z)
+            #if key in seen:
+            #    # Remove the material count for the block being overwritten
+            #    old_material = seen[key]['material']
+            #    construction_blueprint[name]["blueprint"]["materials"][old_material] -= 1
+            #seen[key] = {"x": block_x, "z": block_z, "material": minecraft_material}
+
+        # placement_blocks = perimeter_walk_sort(list(seen.values()))
+        placement_blocks = perimeter_walk_sort(placement_blocks)
+
+
+        # ← ADD DEBUG HERE
+        if layer_id == "1":
+            x_coords = [b['x'] for b in placement_blocks]
+            z_coords = [b['z'] for b in placement_blocks]
+            print(f"Level 1 footprint:")
+            print(f"  X range: {min(x_coords)} to {max(x_coords)} (width: {max(x_coords) - min(x_coords) + 1})")
+            print(f"  Z range: {min(z_coords)} to {max(z_coords)} (depth: {max(z_coords) - min(z_coords) + 1})")
+            print(f"  Block count: {len(placement_blocks)}")
         if placement_blocks:
             # Each layer should be at a different height
             # Layer 1 at base_y, layer 2 at base_y + 1, layer 3 at base_y + 2, etc.
@@ -232,6 +325,34 @@ def convert_file(input_json_path, output_json_path, blueprint_name, starting_coo
     print(f"\nMaterials:")
     for material, count in sorted(bp['materials'].items()):
         print(f"  {material}: {count}")
+
+    print("\n" + "="*60)
+    print("CONVERSION VERIFICATION")
+    print("="*60)
+    
+    # Count original blocks from parsed_data (input)
+    original_block_count = 0
+    for layer_num in grabcraft_data["layers"]:
+        original_block_count += len(grabcraft_data["layers"][layer_num]["blocks"])
+    
+    # Count converted blocks
+    converted_block_count = 0
+    for level in bp["levels"]:
+        converted_block_count += len(level["blocks"])
+    
+    print(f"Original blocks (Grabcraft):  {original_block_count}")
+    print(f"Converted blocks (Blueprint): {converted_block_count}")
+    print(f"Materials total:              {total_blocks}")
+    
+    if original_block_count == converted_block_count == total_blocks:
+        print("✓ All counts match perfectly!")
+    else:
+        print(f"✗ MISMATCH DETECTED!")
+        if original_block_count != converted_block_count:
+            print(f"  Lost {original_block_count - converted_block_count} blocks in conversion!")
+        if converted_block_count != total_blocks:
+            print(f"  Material count doesn't match block count!")
+    
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

@@ -68,6 +68,41 @@ export class ConstructionTaskValidator {
             };
         }
     }
+    validateLevel(levelNumber) {
+        try {
+            const levels = this.blueprint.data.levels;
+            const targetLevel = levels.find(l => l.level === levelNumber);
+            const levelIndex = levels.findIndex(l => l.level === levelNumber);
+            
+            if (!targetLevel) {
+                console.warn(`[Validator] Level ${levelNumber} not found`);
+                return { valid: false, score: 0 };
+            }
+            
+            // Check only blocks/cells in this level
+            let result = this.blueprint.checkLevel(this.agent.bot, levelIndex);
+            
+            // Filter results to only this level
+            const levelMatches = result.matches.filter(match => match.level === levelNumber);
+            const levelMismatches = result.mismatches.filter(mismatch => mismatch.level === levelNumber);
+            
+            const totalLevelBlocks = levelMatches.length + levelMismatches.length;
+            const score = totalLevelBlocks > 0 ? (levelMatches.length / totalLevelBlocks) * 100 : 0;
+            const valid = score >= 99;
+            
+            console.log(`[Validator] Level ${levelNumber}: ${score.toFixed(2)}% (${levelMatches.length}/${totalLevelBlocks} blocks correct)`);
+            
+            return {
+                valid: valid,
+                score: score,
+                matches: levelMatches.length,
+                total: totalLevelBlocks
+            };
+        } catch (error) {
+            console.error(`[Validator] Error validating level ${levelNumber}:`, error);
+            return { valid: false, score: 0 };
+        }
+    }
 }
 
 export function resetConstructionWorld(bot, blueprint) {

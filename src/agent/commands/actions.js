@@ -4,6 +4,31 @@ import convoManager from '../conversation.js';
 import { Vec3 } from 'vec3'
 
 
+// Helper function for autoBuild to check if a block position is isolated
+async function isBlockIsolated(bot, x, y, z) {
+    const directions = [
+        [0, -1, 0],  // below
+        [0, 1, 0],   // above
+        [0, 0, -1],  // north
+        [0, 0, 1],   // south
+        [1, 0, 0],   // east
+        [-1, 0, 0]   // west
+    ];
+    
+    for (const [dx, dy, dz] of directions) {
+        const adjacent = bot.blockAt(x + dx, y + dy, z + dz);
+        //console.log(`[isIsolated] Checking (${x+dx},${y+dy},${z+dz}): ${adjacent?.name || 'null'}`);
+        if (adjacent && adjacent.type !== 0) {
+            console.log(`[isIsolated] Found solid block, NOT isolated`);
+            return false;
+        }
+    }
+    
+    //console.log(`[isIsolated] All air, IS isolated`);
+    return true;
+}
+
+
 function runAsAction (actionFn, resume = false, timeout = -1) {
     let actionLabel = null;  // Will be set on first use
     
@@ -442,77 +467,51 @@ export const actionsList = [
      */
     {
         name: '!autoBuild',
-        description: 'Automatically build the blueprint structure (supports both block and grid formats)',
+        description: 'Automatically build the blueprint structure using nearest-neighbor placement',
         params: {},
         perform: runAsAction(async (agent) => {
-            console.log('[autoBuild] Starting universal auto-build...');
-            //console.log('[autoBuild] agent.task exists:', !!agent.task);
-            //console.log('[autoBuild] agent.task.blueprint exists:', !!agent.task?.blueprint);
+            console.log('[autoBuild] Starting nearest-neighbor auto-build...');
             
             try {
                 if (!agent.task || !agent.task.blueprint) {
                     return 'No blueprint available for this task';
                 }
-                //console.log('[autoBuild] agent.task:', !!agent.task);
-                //console.log('[autoBuild] agent.task.blueprint:', !!agent.task.blueprint);
+                
+                agent.bot.modes.pause('unstuck');
 
-
-                //const levels = agent.task.data.blueprint.levels;
                 const blueprint = agent.task.blueprint;
                 const levels = blueprint.data.levels;
                 const taskLocation = agent.task.taskLocation;
                 const offsetX = taskLocation?.x || 0;
                 const offsetZ = taskLocation?.z || 0;
-                
-                //console.log(`[BlueprintDirect] task.blueprint exists:`, !!agent.task.blueprint);
-                //console.log(`[BlueprintDirect] task.blueprint.data exists:`, !!agent.task.blueprint?.data);
-                //console.log(`[BlueprintDirect] task.blueprint.data.levels exists:`, !!agent.task.blueprint?.data?.levels);
-                //console.log(`[BlueprintDirect] task.blueprint.data.levels length:`, agent.task.blueprint?.data?.levels?.length);
-                
+                const dontCheat = agent.task?.dontCheat ?? true;
+                console.log(`[autoBuild] Building in ${dontCheat ? 'normal' : 'cheat'} mode.`);
                 
                 let totalBlocks = 0;
                 let blocksPlaced = 0;
                 let blocksFailed = 0;
                 
-                // Detect format and count blocks
-                const isBlockBased = levels && levels.length > 0 && !!levels[0].blocks;
-                
-                if (isBlockBased) {
-                    // Count block-based blocks
-                    for (const level of levels) {
-                        if (level.blocks) {
-                            totalBlocks += level.blocks.length;
-                        }
-                    }
-                } else {
-                    // Count grid-based blocks
-                    for (const level of levels) {
-                        if (level.placement) {
-                            for (const row of level.placement) {
-                                for (const blockType of row) {
-                                    if (blockType && blockType !== "air") {
-                                        totalBlocks++;
-                                    }
-                                }
-                            }
-                        }
+                // Count total blocks
+                for (const level of levels) {
+                    if (level.blocks) {
+                        totalBlocks += level.blocks.length;
                     }
                 }
-                
-                
                 
                 // Import skills module
                 let skillsModule;
                 try {
                     skillsModule = await import('../library/skills.js');
-                    //console.log('[autoBuild] Skills module imported successfully');
-                    //console.log('[autoBuild] placeBlock function exists:', !!skillsModule.placeBlock);
                 } catch (err) {
                     console.error('[autoBuild] Failed to import skills module:', err);
                     return `Error: Could not load skills module`;
                 }
-                                
-                // Place blocks
+                
+                let retryCount = 0;
+                const maxRetries = 5;
+                const reCheckedLevels = new Set();
+                
+                // Place blocks level by level
                 for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
                     const level = levels[levelIdx];
                     const baseX = level.coordinates[0];
@@ -521,106 +520,207 @@ export const actionsList = [
                     
                     console.log(`[autoBuild] Processing level ${level.level} (${levelIdx + 1}/${levels.length})`);
                     
-                    if (isBlockBased && level.blocks) {
-                        // Block-based: place individual blocks
-                        for (let blockIdx = 0; blockIdx < level.blocks.length; blockIdx++) {
-                            const block = level.blocks[blockIdx];
+                    if (!level.blocks || level.blocks.length === 0) {
+                        console.log(`[autoBuild] Level ${level.level} has no blocks, skipping`);
+                        continue;
+                    }
+                    
+                    // Track placed blocks for this level
+                    const placedBlockIndices = new Set();
+                    const attemptedBlocks = new Map(); // Track attempts per block
+                    let previousPlacedCount = 0;
+                    
+                    // Greedy nearest-neighbor placement loop
+                    while (placedBlockIndices.size < level.blocks.length) {
+                        const botPos = agent.bot.entity.position;
+                        
+                        // Find unplaced blocks
+                        const unplacedBlocks = level.blocks
+                            .map((block, idx) => ({ block, idx }))
+                            .filter(({ idx }) => !placedBlockIndices.has(idx));
+                        
+                        if (unplacedBlocks.length === 0) break;
+                        
+                        // Sort by distance from current bot position
+                        unplacedBlocks.sort((a, b) => {
+                            const ax = baseX + a.block.x + offsetX;
+                            const ay = baseY;
+                            const az = baseZ + a.block.z + offsetZ;
+                            const distA = (ax - botPos.x) ** 2 + (ay - botPos.y) ** 2 + (az - botPos.z) ** 2;
+                            
+                            const bx = baseX + b.block.x + offsetX;
+                            const by = baseY;
+                            const bz = baseZ + b.block.z + offsetZ;
+                            const distB = (bx - botPos.x) ** 2 + (by - botPos.y) ** 2 + (bz - botPos.z) ** 2;
+                            
+                            return distA - distB;
+                        });
+                        
+                        // Try placing blocks in order of distance
+                        let placedThisIteration = false;
+                        
+                        for (const { block, idx } of unplacedBlocks) {
+                            // Skip if we've tried this block too many times
+                            const attempts = attemptedBlocks.get(idx) || 0;
+                            if (attempts >= 3) continue;
+                            
                             const x = baseX + block.x + offsetX;
                             const y = baseY;
                             const z = baseZ + block.z + offsetZ;
                             const blockType = block.material;
                             
+                            // Check if already placed
+                            const existing = agent.bot.blockAt(x, y, z);
+                            if (existing && existing.name === blockType) {
+                                placedBlockIndices.add(idx);
+                                placedThisIteration = true;
+                                break;
+                            }
+                            // Try to place the block
                             try {
-                                //console.log(`[autoBuild] About to place ${blockType} at (${x},${y},${z})`);
                                 const success = await skillsModule.placeBlock(
                                     agent.bot,
                                     blockType,
-                                    x,
-                                    y,
-                                    z,
+                                    x, y, z,
                                     'bottom',
-                                    true
+                                    dontCheat //
                                 );
-                                //console.log(`[autoBuild] placeBlock returned: ${success}`);
+                                
+                                attemptedBlocks.set(idx, attempts + 1);
                                 
                                 if (success) {
                                     blocksPlaced++;
-                                } else {
-                                    blocksFailed++;
-                                }
-                                
-                                // Progress update every 50 blocks
-                                if ((blocksPlaced + blocksFailed) > 0 && (blocksPlaced + blocksFailed) % 50 === 0) {
-                                    console.log(`[autoBuild] Progress: ${blocksPlaced}/${totalBlocks} placed, ${blocksFailed} failed`);
-                                }
-                                
-                                // Small delay between placements
-                                await new Promise(r => setTimeout(r, 200));
-                                
-                            } catch (err) {
-                                console.error(`[autoBuild] Error placing ${blockType} at (${x},${y},${z}): ${err.message}`);
-                                await new Promise(r => setTimeout(r, 100));
-                                blocksFailed++;
-                            }
-                        }
-                    } else if (level.placement) {
-                        // Grid-based: place blocks from 2D grid
-                        const placement = level.placement;
-                        
-                        for (let z = 0; z < placement.length; z++) {
-                            for (let x = 0; x < placement[z].length; x++) {
-                                const blockType = placement[z][x];
-                                
-                                if (!blockType || blockType === "air") {
-                                    continue;
-                                }
-                                
-                                const worldX = baseX + x + offsetX;
-                                const worldY = baseY;
-                                const worldZ = baseZ + z + offsetZ;
-                                
-                                try {
-                                    const success = await skillsModule.placeBlock(
-                                        agent.bot,
-                                        blockType,
-                                        worldX,
-                                        worldY,
-                                        worldZ,
-                                        'bottom',
-                                        true
-                                    );
+                                    placedBlockIndices.add(idx);
+                                    placedThisIteration = true;
                                     
-                                    if (success) {
-                                        blocksPlaced++;
-                                    } else {
-                                        blocksFailed++;
-                                    }
-                                    
-                                    // Progress update every 50 blocks
-                                    if ((blocksPlaced + blocksFailed) > 0 && (blocksPlaced + blocksFailed) % 50 === 0) {
+                                    // Progress update
+                                    if ((blocksPlaced + blocksFailed) % 50 === 0) {
                                         console.log(`[autoBuild] Progress: ${blocksPlaced}/${totalBlocks} placed, ${blocksFailed} failed`);
                                     }
                                     
-                                    // Small delay between placements
                                     await new Promise(r => setTimeout(r, 200));
-                                    
-                                } catch (err) {
-                                    console.error(`[autoBuild] Error placing ${blockType} at (${worldX},${worldY},${worldZ}): ${err.message}`);
-                                    await new Promise(r => setTimeout(r, 100));
+                                    break; // Re-sort from new position
+                                } else {
+                                    // Normal placement failed, check if isolated
+                                    const isIsolated = await isBlockIsolated(agent.bot, x, y, z);
+                                    if (isIsolated && attempts >= 2) {
+                                        // Retry with setblock for isolated blocks
+                                        console.log(`[autoBuild] Retrying isolated block with setblock at (${x},${y},${z})`);
+                                        const retrySuccess = await skillsModule.placeBlock(
+                                            agent.bot,
+                                            blockType,
+                                            x, y, z,
+                                            'bottom',
+                                            false  // use setblock
+                                        );
+                                        
+                                        if (retrySuccess) {
+                                            blocksPlaced++;
+                                            placedBlockIndices.add(idx);
+                                            placedThisIteration = true;
+                                            await new Promise(r => setTimeout(r, 200));
+                                            break;
+                                        }
+                                    }
                                     blocksFailed++;
                                 }
+                                
+                            } catch (err) {
+                                console.error(`[autoBuild] Error placing ${blockType} at (${x},${y},${z}): ${err.message}`);
+                                blocksFailed++;
+                                await new Promise(r => setTimeout(r, 100));
+                            }
+                        }
+                                              
+                        // If nothing placed this iteration, all remaining blocks are unreachable
+                        if (!placedThisIteration) {
+                            console.log(`[autoBuild] No blocks placeable at level ${level.level}, moving on`);
+                            break;
+                        }
+                    }
+                    const blocksPlacedThisAttempt = placedBlockIndices.size - previousPlacedCount;
+                    previousPlacedCount = placedBlockIndices.size;
+                    
+                    // Level validation with smart retry, only if we made some progress placing blocks
+                    // Simplified validation - just ensure level is reasonably complete before moving on
+                    const levelValidation = agent.task.validator.validateLevel(level.level);
+
+                    if (!levelValidation.valid && levelValidation.score < 0.95) {
+                        console.log(`[autoBuild] Level ${level.level} at ${levelValidation.score.toFixed(1)}% - retrying once`);
+                        
+                        // Single retry attempt
+                        await new Promise(r => setTimeout(r, 1000));
+                        levelIdx--;
+                        
+                        // But don't retry more than once per level
+                        if (reCheckedLevels.has(level.level)) {
+                            console.log(`[autoBuild] Level ${level.level} already retried, moving on`);
+                            reCheckedLevels.delete(level.level);
+                            levelIdx++; // cancel the retry
+                        } else {
+                            reCheckedLevels.add(level.level);
+                        }
+                    } else {
+                        retryCount = 0;
+                        console.log(`[autoBuild] Level ${level.level} complete (${levelValidation.score.toFixed(1)}%)`);
+                    }
+                }
+                // After all levels complete, do a final cleanup pass
+                /*
+                console.log('[autoBuild] All levels processed. Starting final cleanup pass...');
+
+                for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
+                    const level = levels[levelIdx];
+                    const baseX = level.coordinates[0];
+                    const baseY = level.coordinates[1];
+                    const baseZ = level.coordinates[2];
+                    
+                    // Check what's missing in this level
+                    const missingBlocks = [];
+                    
+                    for (let blockIdx = 0; blockIdx < level.blocks.length; blockIdx++) {
+                        const block = level.blocks[blockIdx];
+                        const x = baseX + block.x + offsetX;
+                        const y = baseY;
+                        const z = baseZ + block.z + offsetZ;
+                        const blockType = block.material;
+                        
+                        const existing = agent.bot.blockAt(x, y, z);
+                        if (!existing || existing.name !== blockType) {
+                            missingBlocks.push({ block, x, y, z, blockType });
+                        }
+                    }
+                    
+                    if (missingBlocks.length > 0) {
+                        console.log(`[autoBuild] Cleanup: Level ${level.level} has ${missingBlocks.length} missing blocks`);
+                        
+                        // Re-place missing blocks (using setblock for reliability)
+                        for (const { blockType, x, y, z } of missingBlocks) {
+                            try {
+                                await skillsModule.placeBlock(
+                                    agent.bot,
+                                    blockType,
+                                    x, y, z,
+                                    'bottom',
+                                    false  // use setblock for cleanup
+                                );
+                                blocksPlaced++;
+                                await new Promise(r => setTimeout(r, 100));
+                            } catch (err) {
+                                console.error(`[autoBuild] Cleanup failed for ${blockType} at (${x},${y},${z})`);
                             }
                         }
                     }
                 }
-                
+                */
                 console.log(`[autoBuild] Completed! Placed ${blocksPlaced} blocks (${blocksFailed} failed)`);
                 return `Auto-build complete! Placed ${blocksPlaced}/${totalBlocks} blocks.${blocksFailed > 0 ? ` (${blocksFailed} failed)` : ''}`;
                 
             } catch (error) {
                 console.error('[autoBuild] Fatal error:', error);
-                await new Promise(r => setTimeout(r, 100));
                 return `Error: ${error.message}`;
+            } finally {
+                agent.bot.modes.unpause('unstuck');
             }
         })
     },

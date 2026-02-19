@@ -56,7 +56,7 @@ function nbtVal(node) {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 
-async function schemToMongo(inputPath, outputPath) {
+async function schemToJSON(inputPath, outputPath) {
     console.log(`📂 Reading: ${inputPath}`);
 
     // Read file
@@ -180,7 +180,7 @@ async function schemToMongo(inputPath, outputPath) {
 
         // Individual blocks (non-air only)
         // Each doc: { x, y, z, block, properties? }
-        blocks
+        blocks: blockList
     };
 
     // ── Write output ────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ async function schemToMongo(inputPath, outputPath) {
 
     const sizeKB = (fs.statSync(outPath).size / 1024).toFixed(1);
     console.log(`\n💾 Saved to: ${outPath} (${sizeKB} KB)`);
-    console.log(`\n📋 MongoDB document summary:`);
+    console.log(`\n📋 Document summary:`);
     console.log(`   Collection suggestion: "schematics"`);
     console.log(`   Document name:         ${schematicName}`);
     console.log(`   Block types:           ${Object.keys(palette).length}`);
@@ -240,7 +240,7 @@ if (!fs.existsSync(inputArg)) {
     process.exit(1);
 }
 
-schemToMongo(inputArg, outputArg).catch(err => {
+schemToJSON(inputArg, outputArg).catch(err => {
     console.error('❌ Error:', err.message);
     process.exit(1);
 });

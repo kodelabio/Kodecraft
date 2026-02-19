@@ -1850,18 +1850,24 @@ registerWorkersForSession(sessionId, workers) {
         };
     }
 
-    async assignBlueprintToWorkers(sessionId, blueprint, targetWorkers, taskLocation) {
+    async assignBlueprintToWorkers(sessionId, blueprint, targetWorkers, taskLocation, conversationId) {
         const results = [];
         const workerNames = targetWorkers.map(w => w.workerName);
 
         for (const worker of targetWorkers) {
             try {
+                console.log(`[Orchestration] Granting OP to ${worker.workerName}...`);
+                await this.agent.bot.chat(`/op ${worker.workerName}`);
+                await new Promise(r => setTimeout(r, 500));
                 console.log(`[Orchestration] Assigning task ${blueprint.name} to ${worker.workerName} on port ${worker.port}`);
                 const body = { 
                     blueprint: blueprint,
                     taskId: blueprint.name,
-                    workerNames: workerNames,  // ← Add all worker names
-                    taskLocation: taskLocation
+                    sessionId: sessionId,
+                    workerNames: workerNames,
+                    taskLocation: taskLocation,
+                    conversationId: conversationId,
+                    isOrchestrated: true  // Always true here
                 };
                 
                 const response = await fetch(`http://localhost:${worker.port}/api/agent/build-blueprint`, {
@@ -1906,5 +1912,5 @@ registerWorkersForSession(sessionId, workers) {
             results: results,
             message: `Task assigned to ${results.filter(r => r.success).length}/${targetWorkers.length} workers`
         };
+        }
     }
-}

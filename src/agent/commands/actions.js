@@ -476,7 +476,7 @@ export const actionsList = [
                 if (!agent.task || !agent.task.blueprint) {
                     return 'No blueprint available for this task';
                 }
-                
+                // This prevennts unstuck from interruprint autoBuild and start a self-prompt loop
                 agent.bot.modes.pause('unstuck');
 
                 const blueprint = agent.task.blueprint;
@@ -489,7 +489,9 @@ export const actionsList = [
                 
                 let totalBlocks = 0;
                 let blocksPlaced = 0;
-                let blocksFailed = 0;
+                let blocksPlacedNormal = 0;
+                let blocksPlacedSetblock = 0;
+                let totalBlocksFailed = 0;
                 
                 // Count total blocks
                 for (const level of levels) {
@@ -506,11 +508,7 @@ export const actionsList = [
                     console.error('[autoBuild] Failed to import skills module:', err);
                     return `Error: Could not load skills module`;
                 }
-                
-                let retryCount = 0;
-                const maxRetries = 5;
-                const reCheckedLevels = new Set();
-                
+                             
                 // Place blocks level by level
                 for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
                     const level = levels[levelIdx];
@@ -528,7 +526,7 @@ export const actionsList = [
                     // Track placed blocks for this level
                     const placedBlockIndices = new Set();
                     const attemptedBlocks = new Map(); // Track attempts per block
-                    let previousPlacedCount = 0;
+                    let blocksFailed = 0;  // Level-specific
                     
                     // Greedy nearest-neighbor placement loop
                     while (placedBlockIndices.size < level.blocks.length) {
@@ -541,7 +539,8 @@ export const actionsList = [
                         
                         if (unplacedBlocks.length === 0) break;
                         
-                        // Sort by distance from current bot position
+                        // Sort by distance from current bot position, removed for performance - we will just iterate through all unplaced blocks and place the first one we can place, then re-check distances after each placement
+                        /*
                         unplacedBlocks.sort((a, b) => {
                             const ax = baseX + a.block.x + offsetX;
                             const ay = baseY;
@@ -555,14 +554,14 @@ export const actionsList = [
                             
                             return distA - distB;
                         });
+                        */
                         
                         // Try placing blocks in order of distance
                         let placedThisIteration = false;
                         
                         for (const { block, idx } of unplacedBlocks) {
                             // Skip if we've tried this block too many times
-                            const attempts = attemptedBlocks.get(idx) || 0;
-                            if (attempts >= 3) continue;
+                            if ((attemptedBlocks.get(idx) || 0) >= 3) continue; 
                             
                             const x = baseX + block.x + offsetX;
                             const y = baseY;
@@ -586,13 +585,11 @@ export const actionsList = [
                                     dontCheat //
                                 );
                                 
-                                attemptedBlocks.set(idx, attempts + 1);
-                                
                                 if (success) {
                                     blocksPlaced++;
+                                    blocksPlacedNormal++;
                                     placedBlockIndices.add(idx);
                                     placedThisIteration = true;
-                                    
                                     // Progress update
                                     if ((blocksPlaced + blocksFailed) % 50 === 0) {
                                         console.log(`[autoBuild] Progress: ${blocksPlaced}/${totalBlocks} placed, ${blocksFailed} failed`);
@@ -601,28 +598,34 @@ export const actionsList = [
                                     await new Promise(r => setTimeout(r, 200));
                                     break; // Re-sort from new position
                                 } else {
-                                    // Normal placement failed, check if isolated
-                                    const isIsolated = await isBlockIsolated(agent.bot, x, y, z);
-                                    if (isIsolated && attempts >= 2) {
-                                        // Retry with setblock for isolated blocks
-                                        console.log(`[autoBuild] Retrying isolated block with setblock at (${x},${y},${z})`);
-                                        const retrySuccess = await skillsModule.placeBlock(
-                                            agent.bot,
-                                            blockType,
-                                            x, y, z,
-                                            'bottom',
-                                            false  // use setblock
-                                        );
+                                    attemptedBlocks.set(idx, (attemptedBlocks.get(idx) || 0) + 1);
+                                    if (attemptedBlocks.get(idx) === 2) {
+                                        // Normal placement failed, check if isolated
+                                        // This checl might be too strict
+                                        //const isIsolated = await isBlockIsolated(agent.bot, x, y, z);
+                                        //if (isIsolated) {
+                                            // Retry with setblock for isolated blocks
+                                            console.log(`[autoBuild] Retrying isolated block with setblock at (${x},${y},${z})`);
+                                            const retrySuccess = await skillsModule.placeBlock(
+                                                agent.bot,
+                                                blockType,
+                                                x, y, z,
+                                                'bottom',
+                                                false  // use setblock
+                                            );
                                         
-                                        if (retrySuccess) {
-                                            blocksPlaced++;
-                                            placedBlockIndices.add(idx);
-                                            placedThisIteration = true;
-                                            await new Promise(r => setTimeout(r, 200));
-                                            break;
-                                        }
+                                            if (retrySuccess) {
+                                                blocksPlaced++;
+                                                blocksPlacedSetblock++;
+                                                placedBlockIndices.add(idx);
+                                                placedThisIteration = true;
+                                                await new Promise(r => setTimeout(r, 200));
+                                                break;
+                                            }
+                                        //}
                                     }
                                     blocksFailed++;
+                                    totalBlocksFailed++;
                                 }
                                 
                             } catch (err) {
@@ -638,30 +641,25 @@ export const actionsList = [
                             break;
                         }
                     }
-                    const blocksPlacedThisAttempt = placedBlockIndices.size - previousPlacedCount;
-                    previousPlacedCount = placedBlockIndices.size;
+                    
                     
                     // Level validation with smart retry, only if we made some progress placing blocks
                     // Simplified validation - just ensure level is reasonably complete before moving on
-                    const levelValidation = agent.task.validator.validateLevel(level.level);
+                    const completionThreshold = 0.99;
+                    const levelValidation = agent.task.validator.validateLevel(level.level, completionThreshold);
+                     // 99% complete - strict because setblock fallback exists
 
-                    if (!levelValidation.valid && levelValidation.score < 0.95) {
-                        console.log(`[autoBuild] Level ${level.level} at ${levelValidation.score.toFixed(1)}% - retrying once`);
+                    if (!levelValidation.valid) {
+                        const levelRetries = attemptedBlocks.get(`level_${level.level}`) || 0;
                         
-                        // Single retry attempt
-                        await new Promise(r => setTimeout(r, 1000));
-                        levelIdx--;
-                        
-                        // But don't retry more than once per level
-                        if (reCheckedLevels.has(level.level)) {
-                            console.log(`[autoBuild] Level ${level.level} already retried, moving on`);
-                            reCheckedLevels.delete(level.level);
-                            levelIdx++; // cancel the retry
+                        if (levelRetries < 1) {
+                            console.log(`[autoBuild] Level ${level.level} at ${levelValidation.score.toFixed(1)}% - retrying`);
+                            attemptedBlocks.set(`level_${level.level}`, levelRetries + 1);
+                            levelIdx--;  // Retry this level
                         } else {
-                            reCheckedLevels.add(level.level);
+                            console.log(`[autoBuild] Level ${level.level} already retried, moving on at ${levelValidation.score.toFixed(1)}%`);
                         }
                     } else {
-                        retryCount = 0;
                         console.log(`[autoBuild] Level ${level.level} complete (${levelValidation.score.toFixed(1)}%)`);
                     }
                 }
@@ -713,8 +711,10 @@ export const actionsList = [
                     }
                 }
                 */
-                console.log(`[autoBuild] Completed! Placed ${blocksPlaced} blocks (${blocksFailed} failed)`);
-                return `Auto-build complete! Placed ${blocksPlaced}/${totalBlocks} blocks.${blocksFailed > 0 ? ` (${blocksFailed} failed)` : ''}`;
+                
+                console.log(`[autoBuild] Completed! Placed ${blocksPlaced}/${totalBlocks} blocks`);
+                console.log(`   Normal: ${blocksPlacedNormal}, Setblock: ${blocksPlacedSetblock}`);
+                return `Auto-build complete! Placed ${blocksPlaced}/${totalBlocks} blocks`;
                 
             } catch (error) {
                 console.error('[autoBuild] Fatal error:', error);

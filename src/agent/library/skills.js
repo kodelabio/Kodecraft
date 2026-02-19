@@ -7,6 +7,47 @@ import settings from "../../../settings.js";
 const blockPlaceDelay = settings.block_place_delay == null ? 0 : settings.block_place_delay;
 const useDelay = blockPlaceDelay > 0;
 
+// Workaround to prevent multiple inventory operations at the same time, which can cause issues with creative mode item granting and crafting. All inventory operations should go through queueInventoryOp to ensure they are properly serialized.   
+// Source: https://github.com/PrismarineJS/mineflayer/issues/2865
+let currentHeldItem = null;  // Add this
+
+
+async function ensureHeldItem(bot, itemName) {
+    if (currentHeldItem === itemName) {
+        return;
+    }
+    
+    try {
+        const item = mc.makeItem(itemName, 1);
+        if (!item) {
+            console.warn(`[ensureHeldItem] Cannot create item: ${itemName}`);
+            return;
+        }
+        
+        await new Promise(r => setTimeout(r, 300));
+        
+        // Dynamic import for prismarine-item
+        const prismarineItem = await import('prismarine-item');
+        const PrismarineItem = prismarineItem.default(bot.version);
+        
+        bot._client.write('set_creative_slot', {
+            slot: 36,
+            item: PrismarineItem.toNotch(item)
+        });
+        
+        bot._setSlot(36, item);
+        
+        await new Promise(r => setTimeout(r, 300));
+        currentHeldItem = itemName;
+        console.log(`[ensureHeldItem] ✓ Set to ${itemName}`);
+    } catch (error) {
+        console.error(`[ensureHeldItem] Error setting ${itemName}:`, error.message);
+        currentHeldItem = null;
+    }
+}
+
+
+
 export function log(bot, message) {
     bot.output += message + '\n';
 }
@@ -114,7 +155,10 @@ export async function craftRecipe(bot, itemName, num=1) {
             log(bot, `${itemName} is not a valid item.`);
             return false;
         }
-        await bot.creative.setInventorySlot(36, mc.makeItem(itemName, num));
+        //
+        // await bot.creative.setInventorySlot(36, mc.makeItem(itemName, num));
+        // Rather use a Mutex
+        await ensureHeldItem(bot, itemName);
         log(bot, `Successfully created ${num} ${itemName}.`);
         bot.armorManager.equipAll();
         return true;
@@ -297,8 +341,9 @@ export async function smeltItem(bot, itemName, num=1) {
             }
             
             // Add to first available hotbar slot
-            await bot.creative.setInventorySlot(36, item); // 36 is first hotbar slot
-            
+            //await bot.creative.setInventorySlot(36, item); // 36 is first hotbar slot
+            // use Mutex to avoid creative mode inventory conflicts
+            await ensureHeldItem(bot, itemName);
             log(bot, `Successfully smelted ${num} ${itemName} to ${smeltedName}.`);
             return true;
         } catch (error) {
@@ -848,7 +893,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     
     if (!block_item && bot.game.gameMode === 'creative' && !bot.restrict_to_inventory) {
         //console.log(`[placeBlock] Not in inventory, trying to get from creative inventory`);
-        await bot.creative.setInventorySlot(36, mc.makeItem(item_name, 1)); // 36 is first hotbar slot
+        await ensureHeldItem(bot, item_name);
         block_item = bot.inventory.items().find(item => item.name === item_name);
         //console.log(`[placeBlock] After creative slot set, found: ${!!block_item}`);
     }
@@ -927,63 +972,18 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     dirs.push(...Object.values(dir_map).filter(d => !dirs.includes(d)));
 
-    console.log(`[placeBlock] Looking for adjacent block to place on, checking ${dirs.length} directions`);
+    //console.log(`[placeBlock] Looking for adjacent block to place on, checking ${dirs.length} directions`);
     for (let d of dirs) {
         const block = bot.blockAt(target_dest.plus(d));
         //console.log(`[placeBlock]   Checking direction (${d.x},${d.y},${d.z}): ${block ? block.name : 'UNLOADED'}`);
         if (!empty_blocks.includes(block.name)) {
             buildOffBlock = block;
             faceVec = new Vec3(-d.x, -d.y, -d.z); // invert
-            console.log(`[placeBlock] Found buildoff block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
+            //console.log(`[placeBlock] Found buildoff block: ${buildOffBlock.name} at ${buildOffBlock.position}`);
             break;
         }
     }
-    // Try scaffold approach - place temp block, use it as buildoff, then remove it
-    /*
-    if (!buildOffBlock && !isScaffold) {
-        //console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
-        //console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
-        //log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
-        //return false;
-        
-        console.log(`[placeBlock] Attempting scaffold for isolated block ${blockType} at (${x},${y},${z})`);
-        
-        const scaffoldDirs = [
-            new Vec3(0, -1, 0),  // prefer below first
-            new Vec3(-1, 0, 0),
-            new Vec3(1, 0, 0),
-            new Vec3(0, 0, -1),
-            new Vec3(0, 0, 1),
-        ];
-        
-        for (const d of scaffoldDirs) {
-            const scaffoldPos = target_dest.plus(d);
-            const scaffoldBlock = bot.blockAt(scaffoldPos);
-            
-            // Only place scaffold in air
-            if (!empty_blocks.includes(scaffoldBlock?.name)) continue;
-            
-            // Place scaffold (recursive call with isScaffold=true to prevent infinite recursion)
-            const scaffoldPlaced = await placeBlock(bot, 'dirt', scaffoldPos.x, scaffoldPos.y, scaffoldPos.z, 'bottom', dontCheat, true);
-            if (!scaffoldPlaced) continue;
-            
-            // Now try placing the actual block
-            const success = await placeBlock(bot, blockType, x, y, z, placeOn, dontCheat, true);
-            
-            // Always remove scaffold
-            await breakBlockAt(bot, scaffoldPos.x, scaffoldPos.y, scaffoldPos.z);
-            
-            if (success) {
-                console.log(`[placeBlock] ✓ Scaffold approach worked for ${blockType} at (${x},${y},${z})`);
-                return true;
-            }
-        }
-        
-        console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
-        log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
-        return false;
-    }
-    */
+    
     if (!buildOffBlock) {
         console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
         console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
@@ -1031,24 +1031,24 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
             await bot.equip(block_item, 'hand');
             await bot.lookAt(buildOffBlock.position.offset(0.5, 0.5, 0.5));
             await bot.placeBlock(buildOffBlock, faceVec);
+            await new Promise(resolve => setTimeout(resolve, 300)); 
+            
             log(bot, `Placed ${blockType} at ${target_dest}.`);
-            //console.log(`[placeBlock] ✓ Placed block successfully`);
-            await new Promise(resolve => setTimeout(resolve, 100));
             return true;
         }
     } catch (err) {
         if (err.message.includes('blockUpdate') && err.message.includes('timeout')) {
-            const block = bot.blockAt(target_dest);
+            const block = bot.blockAt(x, y, z);
             console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
             //console.log(`[placeBlock] Post-timeout check at ${target_dest}: ${block?.name} (expected: ${blockType})`);
             if (block && block.name === blockType) {
                 console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
-                log(bot, `Placed ${blockType} at ${target_dest}.`);
+                log(bot, `Placed ${blockType} at (${x}, ${y}, ${z}).`);
                 return true;
             }
         }
         console.error(`[placeBlock] ❌ Exception: ${err.message}`);
-        log(bot, `Failed to place ${blockType} at ${target_dest}.`);
+        log(bot, `Failed to place ${blockType} at (${x}, ${y}, ${z}).`);
         return false;
         }
 }
@@ -1070,7 +1070,9 @@ export async function equip(bot, itemName) {
     let item = bot.inventory.slots.find(slot => slot && slot.name === itemName);
     if (!item) {
         if (bot.game.gameMode === "creative") {
-            await bot.creative.setInventorySlot(36, mc.makeItem(itemName, 1));
+            // use Mutex to prevent multiple simultaneous calls to ensureHeldItem which can cause issues
+            await ensureHeldItem(bot, itemName);
+            //await bot.creative.setInventorySlot(36, mc.makeItem(itemName, 1));
             item = bot.inventory.items().find(item => item.name === itemName);
         }
         else {

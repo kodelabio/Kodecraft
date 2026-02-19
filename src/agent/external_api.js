@@ -142,6 +142,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/restart', this.handleRestart.bind(this));
         this.app.post('/api/agent/clearChat', this.handleClearChat.bind(this));
         this.app.post('/api/agent/spawnWorkers', this.handleSpawnWorkers.bind(this));
+        this.app.post('/api/agent/grant-op', this.handleGrantOp.bind(this));
+        this.app.post('/api/agent/revoke-op', this.handleRevokeOp.bind(this));
         
         // Vision
         this.app.post('/api/agent/vision', this.handleVision.bind(this));
@@ -215,7 +217,7 @@ export class ExternalAPI {
 
         // Assign tasks based on blueprints
         this.app.post('/api/orchestration/assign-task', this.handleOrchestrationAssignTask.bind(this));
-        this.app.post('/api/orchestration/build-from-blueprint', this.handleOrchestrationBuildFromBlueprint.bind(this));
+        this.app.post('/api/orchestration/build-blueprint', this.handleOrchestrationBuildFromBlueprint.bind(this));
         
     }
     
@@ -1063,7 +1065,10 @@ export class ExternalAPI {
             if (bot && bot.game.gameMode === 1) { // 1 = Creative
                 // In creative mode, give the item first
                 try {
-                    await bot.creative.setInventorySlot(36, new bot.Item(bot.registry.itemsByName[item], 64));
+                    //await bot.creative.setInventorySlot(36, new bot.Item(bot.registry.itemsByName[item], 64));
+                    // Import and use ensureHeldItem from skills
+                    const skillsModule = await import('./library/skills.js');
+                    await skillsModule.ensureHeldItem(bot, item);
                     console.log(`[Equip] Creative mode: gave ${item} to inventory`);
                 } catch (e) {
                     console.warn(`[Equip] Failed to give creative item: ${e.message}`);
@@ -2202,7 +2207,7 @@ export class ExternalAPI {
          */
         try {
             console.log(`[BlueprintDirect] Received build for task ${req.body.taskId} at location ${req.body.taskLocation}`);
-            const { blueprint, taskId, agents = [], taskLocation, dontCheat=true } = req.body;
+            const { blueprint, taskId, agents = [], taskLocation, conversationId, isOrchestrated = false, dontCheat=true } = req.body;
 
             if (!blueprint || !taskId || !taskLocation) {
                 return res.status(400).json({
@@ -2217,6 +2222,7 @@ export class ExternalAPI {
                 success: true,
                 taskId: taskId,
                 workerCount: agents.length,
+                isOrchestrated: isOrchestrated,
                 message: `Task ${taskId} queued for direct execution`
             });
 
@@ -2225,36 +2231,32 @@ export class ExternalAPI {
                 try {
                     // Create task instance
                     const task = new Task(this.agent, taskData, Date.now(), taskLocation);
-                    task.dontCheat = dontCheat; // if false, use setBlock instead of placeBlock
+                    task.dontCheat = dontCheat;
                     this.agent.task = task;
-                    //console.log(`[BlueprintDirect] agents:`, agents);
-                    console.log(`[BlueprintDirect] agents:`, agents, `is array:`, Array.isArray(agents));
                     task.updateAvailableAgents(agents);
                     console.log(`[BlueprintDirect] Initialized with blueprint: ${taskData.blueprint.levels.length} levels`);
                     
-                    // Initialize bot task (sets up inventory, validator, etc.)
+                    // Initialize bot task
                     await task.initBotTaskDirect();
                     
                     console.log(`[BlueprintDirect] Worker ${this.agent.name} starting direct build for ${taskId}`);
                     console.log(`[BlueprintDirect] Building at location: X: ${taskLocation.x}, Y: ${taskLocation.y}, Z: ${taskLocation.z}`);
                     
-                    // Directly execute !autoBuild action without self-prompt loop
+                    // Execute !autoBuild
                     const command = '!autoBuild';
                     console.log(`[BlueprintDirect] Executing: ${command}`);
                     
                     try {
-                        // Import command executor if available
                         const result = await executeCommand(this.agent, command);
                         console.log(`[BlueprintDirect] Build result: ${result ? 'success' : 'failed'}`);
-                        
                     } catch (buildError) {
                         console.error(`[BlueprintDirect] Build execution error: ${buildError.message}`);
                     }
                     
-                    // Optional: Wait for task completion and report
-                    const maxWaitTime = 15 * 60 * 1000; // 15 minutes max
+                    // Wait for task completion
+                    const maxWaitTime = 60 * 60 * 1000; // 60 minutes
                     const startTime = Date.now();
-                    const pollInterval = 2000; // Check every 2 seconds
+                    const pollInterval = 2000;
                     
                     while (!task.isDone()) {
                         if (Date.now() - startTime > maxWaitTime) {
@@ -2268,10 +2270,11 @@ export class ExternalAPI {
                     const finalScore = task.getScore ? task.getScore() : 'unknown';
                     console.log(`[BlueprintDirect] Build completed. Final score: ${finalScore}`);
                     
-                    // Optional: Report task completion to external system
+                    // Report task completion
                     if (global.reportTaskCompletion) {
                         await global.reportTaskCompletion({
                             taskId: taskId,
+                            conversationId: conversationId,
                             status: 'complete',
                             score: finalScore,
                             agent: this.agent.name
@@ -2281,18 +2284,28 @@ export class ExternalAPI {
                 } catch (error) {
                     console.error('[BlueprintDirect] Background execution error:', error);
                     
-                    // Report failure if possible
                     if (global.reportTaskCompletion) {
                         await global.reportTaskCompletion({
                             taskId: taskId,
+                            conversationId: conversationId,
                             status: 'error',
                             error: error.message,
-                            agent: this.agent.name
+                            agent: this.agent.name,
                         }).catch(err => console.warn('[BlueprintDirect] Failed to report error:', err.message));
                     }
                 } finally {
-                    // Cleanup if needed
                     console.log(`[BlueprintDirect] Cleaning up task ${taskId}`);
+                    
+                    // If orchestrated, kill the worker
+                    if (isOrchestrated) {
+                        console.log('[BlueprintDirect] Orchestrated build complete, shutting down worker...');
+                        try {
+                            await new Promise(r => setTimeout(r, 500));
+                            this.agent.cleanKill('Orchestrated task completed', 0);
+                        } catch (e) {
+                            console.warn('[BlueprintDirect] Error during shutdown:', e.message);
+                        }
+                    }
                 }
             });
 
@@ -2542,6 +2555,44 @@ export class ExternalAPI {
             });
         }
     }
+    // Grant/revoke OP to workers (to temporary use setBlock in creative mode for building tasks - will be replaced by proper build mode in the future)
+    async handleGrantOp(req, res) {
+        try {
+            const { workerName } = req.body;
+            
+            if (!workerName) {
+                return res.status(400).json({ error: 'workerName required' });
+            }
+            
+            // Leader (OP) sends /op command to server for the worker
+            await this.agent.bot.chat(`/op ${workerName}`);
+            await new Promise(r => setTimeout(r, 500));
+            
+            console.log(`✓ OP granted to ${workerName}`);
+            res.json({ success: true, message: `OP granted to ${workerName}` });
+        } catch (error) {
+            console.error('Failed to grant OP:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    async handleRevokeOp(req, res) {
+        try {
+            const { workerName } = req.body;
+            
+            if (!workerName) {
+                return res.status(400).json({ error: 'workerName required' });
+            }
+            
+            await this.agent.bot.chat(`/deop ${workerName}`);
+            
+            console.log(`✓ OP revoked from ${workerName}`);
+            res.json({ success: true, message: `OP revoked from ${workerName}` });
+        } catch (error) {
+            console.error('Failed to revoke OP:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
 
     // assign a task (usually a building task with a blueprint) to workers via the OrchestrationAPI
     async handleOrchestrationAssignTask(req, res) {
@@ -2644,12 +2695,12 @@ export class ExternalAPI {
 
     async handleOrchestrationBuildFromBlueprint(req, res) {
         try {
-            const { sessionId, blueprint, agents, taskLocation } = req.body;
+            const { sessionId, blueprints, taskLocation, conversationId } = req.body;
             console.log('[Orchestration] Blueprint request received:', { sessionId });
 
-            if (!sessionId || !blueprint || !taskLocation) {
+            if (!sessionId || !blueprints || !taskLocation || !Array.isArray(blueprints)) {
                 return res.status(400).json({
-                    error: 'sessionId, blueprint, and taskLocation required'
+                    error: 'sessionId, blueprint, and taskLocation are required'
                 });
             }
 
@@ -2671,59 +2722,50 @@ export class ExternalAPI {
                 };
                 console.log(`[Orchestration] taskLocation not provided, using leader position:`, finalTasklocation);
             }
-            // Select target workers
-            let targetWorkers;
-            if (agents && Array.isArray(agents)) {
-                // Use specified agent names
-                targetWorkers = session.workers.filter(w => agents.includes(w.workerName));
-                if (targetWorkers.length === 0) {
-                    return res.status(400).json({
-                        error: `No workers found matching names: ${agents.join(', ')}`
-                    });
-                }
-            } else {
-                // Use first agent_count workers
-                
-                const count = blueprint.agent_count || 1;
-                console.log(`[Orchestration] Blueprint requires ${count} workers`);
-                targetWorkers = session.workers.slice(0, count);
-                
-                if (targetWorkers.length < count) {
-                    return res.status(400).json({
-                        error: `Task requires ${count} agents but only ${targetWorkers.length} available`
-                    });
-                }
-            }
 
             res.status(202).json({
                 success: true,
                 sessionId: sessionId,
-                blueprint: blueprint.name,
-                workersAssigned: targetWorkers,
+                blueprintCount: blueprints.length,
+                //workersAssigned: agents,
                 taskLocation: finalTasklocation,
-                message: `Task ${blueprint.name} assigned to ${targetWorkers.map(w => w.workerName).join(', ')}`
+                message: `${blueprints.length} blueprint(s) assigned to workers`
             });
-            console.log(`[Orchestration] Task ${blueprint.name} assigned to workers: ${targetWorkers.map(w => w.workerName).join(', ')}`);    
+              
             // Create task ONCE on leader
+            // Assign each blueprint to its worker
             setImmediate(async () => {
                 try {
-                    await this.orchestration.assignBlueprintToWorkers(
-                        sessionId,
-                        blueprint,
-                        targetWorkers,
-                        finalTasklocation
-                    );
+                    for (const blueprint of blueprints) {
+                        const targetWorker = session.workers.find(w => w.workerName === blueprint.assignedWorker);
+                        
+                        if (!targetWorker) {
+                            console.warn(`[Orchestration] Worker ${blueprint.assignedWorker} not found for blueprint ${blueprint.name}`);
+                            continue;
+                        }
+
+                        console.log(`[Orchestration] Assigning ${blueprint.name} to ${blueprint.assignedWorker} on port ${blueprint.assignedWorkerPort}`);
+                        
+                        await this.orchestration.assignBlueprintToWorkers(
+                            sessionId,
+                            blueprint,
+                            [targetWorker],
+                            finalTasklocation,
+                            conversationId,
+                            true  // isOrchestrated flag
+                        );
+                    }
                 } catch (error) {
-                    console.error('[Orchestration] Error:', error);
+                    console.error('[Orchestration] Error assigning blueprints:', error);
                 }
             });
 
-        } catch (error) {
-            console.error('Error assigning build task:', error);
-            res.status(500).json({
-                error: error.message
-            });
-        }
+            } catch (error) {
+                console.error('Error assigning build task:', error);
+                res.status(500).json({
+                    error: error.message
+                });
+            }
     }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)

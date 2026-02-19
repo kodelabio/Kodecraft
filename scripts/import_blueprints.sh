@@ -3,8 +3,8 @@
 # Default values
 WEBHOOK_URL="https://svdev-avatar.kodelab.io/webhook/kodecraft/update-blueprints"
 BASE_DIR="./n8n/datatables"
-SUBDIR=""
-DATATABLE_NAME=""
+SUBDIR="blueprints"
+DATATABLE_NAME="blueprints"
 
 # Help function
 show_help() {

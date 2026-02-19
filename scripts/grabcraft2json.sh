@@ -36,7 +36,7 @@ echo ""
 
 # Step 1: Convert Grabcraft to blueprint
 echo "Step 1: Converting Grabcraft format..."
-python3 scripts/grabcraft_to_json.py "$GRABCRAFT_JSON" "${OUTPUT_NAME}.json" "$STRUCTURE_NAME" "$START_COORDS"
+python3 scripts/grabcraft2json.py "$GRABCRAFT_JSON" "${OUTPUT_NAME}.json" "$STRUCTURE_NAME" "$START_COORDS"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Conversion failed!${NC}"

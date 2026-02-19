@@ -68,7 +68,7 @@ export class ConstructionTaskValidator {
             };
         }
     }
-    validateLevel(levelNumber) {
+    validateLevel(levelNumber, threshold = 99) {
         try {
             const levels = this.blueprint.data.levels;
             const targetLevel = levels.find(l => l.level === levelNumber);
@@ -88,7 +88,7 @@ export class ConstructionTaskValidator {
             
             const totalLevelBlocks = levelMatches.length + levelMismatches.length;
             const score = totalLevelBlocks > 0 ? (levelMatches.length / totalLevelBlocks) * 100 : 0;
-            const valid = score >= 99;
+            const valid = score >= threshold;
             
             console.log(`[Validator] Level ${levelNumber}: ${score.toFixed(2)}% (${levelMatches.length}/${totalLevelBlocks} blocks correct)`);
             

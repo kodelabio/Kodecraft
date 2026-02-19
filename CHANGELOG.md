@@ -118,5 +118,10 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - check level structure 99% complete before moving to upper level
 - movement set with dig=false to prevent breaking structure
 ### Added
-- Grabcraft blueprint conversion and validaton scripts
+- `Grabcraft` blueprint conversion and validaton scripts
 
+## [1.3.3]
+### Added
+- supports `schem` Blueprints
+### Fixed
+- workers setInventorySlot exception

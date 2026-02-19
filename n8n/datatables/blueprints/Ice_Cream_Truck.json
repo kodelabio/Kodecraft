@@ -1,0 +1,1075 @@
+{
+  "Ice_Cream_Truck": {
+    "source": "schematic",
+    "type": "construction",
+    "goal": "Build the Ice_Cream_Truck structure",
+    "conversation": "Let's build the Ice_Cream_Truck structure together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "blueprint": {
+      "materials": {
+        "birch_wall_sign": 12,
+        "smooth_quartz_slab": 41,
+        "cherry_button": 4,
+        "black_concrete": 4,
+        "cherry_planks": 49,
+        "quartz_pillar": 6,
+        "cherry_stairs": 10,
+        "iron_block": 2,
+        "blast_furnace": 1,
+        "player_head": 2,
+        "black_stained_glass_pane": 7,
+        "stone_button": 2,
+        "polished_deepslate_stairs": 1,
+        "lever": 2,
+        "smooth_quartz_stairs": 8,
+        "light_blue_wall_banner": 2,
+        "pink_wall_banner": 2,
+        "white_wall_banner": 1,
+        "black_stained_glass": 9,
+        "black_wall_banner": 2,
+        "iron_trapdoor": 7,
+        "light": 1,
+        "pink_carpet": 5,
+        "white_carpet": 5,
+        "smooth_quartz": 2
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 0,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "cherry_button"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "black_concrete"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "black_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "cherry_button"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "cherry_button"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "black_concrete"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "black_concrete"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "cherry_button"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "birch_wall_sign"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "iron_block"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_wall_sign"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "cherry_planks"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "player_head"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "player_head"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "iron_block"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_button"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "polished_deepslate_stairs"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_button"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "lever"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "lever"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "cherry_stairs"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "light_blue_wall_banner"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "pink_wall_banner"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "white_wall_banner"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "light_blue_wall_banner"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "pink_wall_banner"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "black_stained_glass_pane"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 0,
+              "material": "black_wall_banner"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "black_wall_banner"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "quartz_pillar"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "light"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "cherry_planks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "cherry_stairs"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "cherry_stairs"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "pink_carpet"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "white_carpet"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "white_carpet"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "pink_carpet"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "pink_carpet"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "white_carpet"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "white_carpet"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "pink_carpet"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "pink_carpet"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "white_carpet"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "smooth_quartz_slab"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "iron_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "iron_trapdoor"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "birch_wall_sign": 12,
+        "smooth_quartz_slab": 41,
+        "cherry_button": 4,
+        "black_concrete": 4,
+        "cherry_planks": 49,
+        "quartz_pillar": 6,
+        "cherry_stairs": 10,
+        "iron_block": 2,
+        "blast_furnace": 1,
+        "player_head": 2,
+        "black_stained_glass_pane": 7,
+        "stone_button": 2,
+        "polished_deepslate_stairs": 1,
+        "lever": 2,
+        "smooth_quartz_stairs": 8,
+        "light_blue_wall_banner": 2,
+        "pink_wall_banner": 2,
+        "white_wall_banner": 1,
+        "black_stained_glass": 9,
+        "black_wall_banner": 2,
+        "iron_trapdoor": 7,
+        "light": 1,
+        "pink_carpet": 5,
+        "white_carpet": 5,
+        "smooth_quartz": 2
+      }
+    }
+  }
+}

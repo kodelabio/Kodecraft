@@ -198,6 +198,7 @@ def convert_grabcraft_to_construction(parsed_blueprint, name, starting_coords=No
     
     construction_blueprint = {
         name: {
+            "source": "grabcraft",
             "type": "construction",
             "goal": f"Build the {name} structure",
             "conversation": f"Let's build the {name} structure together",

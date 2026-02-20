@@ -663,54 +663,33 @@ export const actionsList = [
                         console.log(`[autoBuild] Level ${level.level} complete (${levelValidation.score.toFixed(1)}%)`);
                     }
                 }
-                // After all levels complete, do a final cleanup pass
-                /*
-                console.log('[autoBuild] All levels processed. Starting final cleanup pass...');
 
-                for (let levelIdx = 0; levelIdx < levels.length; levelIdx++) {
-                    const level = levels[levelIdx];
-                    const baseX = level.coordinates[0];
-                    const baseY = level.coordinates[1];
-                    const baseZ = level.coordinates[2];
-                    
-                    // Check what's missing in this level
-                    const missingBlocks = [];
-                    
-                    for (let blockIdx = 0; blockIdx < level.blocks.length; blockIdx++) {
-                        const block = level.blocks[blockIdx];
-                        const x = baseX + block.x + offsetX;
-                        const y = baseY;
-                        const z = baseZ + block.z + offsetZ;
-                        const blockType = block.material;
-                        
-                        const existing = agent.bot.blockAt(x, y, z);
-                        if (!existing || existing.name !== blockType) {
-                            missingBlocks.push({ block, x, y, z, blockType });
-                        }
+                // Final repair stage - fix any broken blocks that have air instead of the correct block
+                console.log(`[autoBuild] Starting final validation & repair stage...`);
+                const validationResult = agent.task.validator.blueprint.check(agent.bot);
+                const missingBlocks = validationResult.mismatches.filter(block => block.actual === "air");
+                if (missingBlocks.length > 0) {
+                console.log(`[autoBuild] Found ${missingBlocks.length} missing blocks, repairing...`);
+                
+                for (const block of missingBlocks) {
+                    try {
+                    const [x, y, z] = block.coordinates;
+                    await skillsModule.placeBlock(
+                        agent.bot,
+                        block.expected,
+                        x, y, z,
+                        'bottom',
+                        false  // use setblock
+                    );
+                    } catch (error) {
+                    console.error(`[autoBuild] Failed to place ${block.expected} at ${block.coordinates}:`, error);
                     }
-                    
-                    if (missingBlocks.length > 0) {
-                        console.log(`[autoBuild] Cleanup: Level ${level.level} has ${missingBlocks.length} missing blocks`);
-                        
-                        // Re-place missing blocks (using setblock for reliability)
-                        for (const { blockType, x, y, z } of missingBlocks) {
-                            try {
-                                await skillsModule.placeBlock(
-                                    agent.bot,
-                                    blockType,
-                                    x, y, z,
-                                    'bottom',
-                                    false  // use setblock for cleanup
-                                );
-                                blocksPlaced++;
-                                await new Promise(r => setTimeout(r, 100));
-                            } catch (err) {
-                                console.error(`[autoBuild] Cleanup failed for ${blockType} at (${x},${y},${z})`);
-                            }
-                        }
-                    }
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                */
+                console.log(`[autoBuild] Repair complete. Placed ${missingBlocks.length} blocks`);
+                } else {
+                console.log(`[autoBuild] Validation passed - no missing blocks`);
+                }
                 
                 console.log(`[autoBuild] Completed! Placed ${blocksPlaced}/${totalBlocks} blocks`);
                 console.log(`   Normal: ${blocksPlacedNormal}, Setblock: ${blocksPlacedSetblock}`);

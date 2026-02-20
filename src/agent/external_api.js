@@ -2564,9 +2564,28 @@ export class ExternalAPI {
                 return res.status(400).json({ error: 'workerName required' });
             }
             
-            // Leader (OP) sends /op command to server for the worker
+            let errorDetected = false;
+            
+            const messageListener = (message) => {
+                const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+                //console.log(`[Message] ${messageText}`); // Debug log
+                if (messageText.toLowerCase().includes("not found") || 
+                    messageText.toLowerCase().includes("failed") ||
+                    messageText.toLowerCase().includes("unknown") ||
+                    messageText.toLowerCase().includes("incomplete command") ||
+                    messageText.toLowerCase().includes("nothing changed")) {
+                    errorDetected = true;
+                }
+            };
+            
+            this.agent.bot.on('message', messageListener);
             await this.agent.bot.chat(`/op ${workerName}`);
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 1000));
+            this.agent.bot.off('message', messageListener);
+            
+            if (errorDetected) {
+                return res.status(404).json({ error: `Player ${workerName} not found or already OP` });
+            }
             
             console.log(`✓ OP granted to ${workerName}`);
             res.json({ success: true, message: `OP granted to ${workerName}` });
@@ -2578,13 +2597,32 @@ export class ExternalAPI {
 
     async handleRevokeOp(req, res) {
         try {
-            const { workerName } = req.body;
-            
+            const { workerName } = req.body;       
             if (!workerName) {
                 return res.status(400).json({ error: 'workerName required' });
             }
             
+            let errorDetected = false;
+        
+            const messageListener = (message) => {
+                const messageText = typeof message === 'string' ? message : JSON.stringify(message);
+                if (messageText.toLowerCase().includes("not found") ||
+                    messageText.toLowerCase().includes("failed") || 
+                    messageText.toLowerCase().includes("unknown") ||
+                    messageText.toLowerCase().includes("incomplete command") ||
+                    messageText.toLowerCase().includes("nothing changed")) {
+                    errorDetected = true;
+                }
+            };
+            this.agent.bot.on('message', messageListener);
+            
             await this.agent.bot.chat(`/deop ${workerName}`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            this.agent.bot.off('message', messageListener);
+
+            if (errorDetected) {
+                return res.status(404).json({ error: `Player ${workerName} not found or not OP` });
+            }
             
             console.log(`✓ OP revoked from ${workerName}`);
             res.json({ success: true, message: `OP revoked from ${workerName}` });
@@ -2982,6 +3020,10 @@ export class ExternalAPI {
 
             const command = `!teleportToPlayer("${playerName}")`;
             const result = await executeCommand(this.agent, command);
+            if (!result || typeof result !== 'string') {
+                res.json({success: false, message: 'Teleport command failed or returned invalid result'});
+                return;
+            }
 
             res.json({ 
                 success: true, 

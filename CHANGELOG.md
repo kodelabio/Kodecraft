@@ -125,3 +125,7 @@ The workers now spawn and are instantly teleported to safe positions near the le
 - supports `schem` Blueprints
 ### Fixed
 - workers setInventorySlot exception
+
+## [1.3.4]
+### Fixed
+- broken blocks during building repair

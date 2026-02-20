@@ -281,8 +281,23 @@ export class APIServer {
                 timeout: 600000
             });
 
-            const data = await response.json();
-            //console.log(`[APIServer] Response status: ${response.status}`);
+            let data;
+            const contentType = response.headers.get('content-type');
+
+            if (contentType?.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                console.error(`[APIServer] Non-JSON response from ${fullUrl}`);
+                console.error(`   Status: ${response.status}`);
+                console.error(`   Content-Type: ${contentType}`);
+                console.error(`   Body: ${text.substring(0, 500)}`);
+                return res.status(502).json({
+                    error: 'Worker API returned invalid response',
+                    workerPort: port,
+                    status: response.status
+                });
+            }
             res.status(response.status).json(data);
         } catch (error) {
             console.error(`[APIServer] Error in handleAgentRequest:`, error);

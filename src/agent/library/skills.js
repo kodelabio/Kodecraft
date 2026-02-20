@@ -39,7 +39,7 @@ async function ensureHeldItem(bot, itemName) {
         
         await new Promise(r => setTimeout(r, 300));
         currentHeldItem = itemName;
-        console.log(`[ensureHeldItem] ✓ Set to ${itemName}`);
+        //console.log(`[ensureHeldItem] ✓ Set to ${itemName}`);
     } catch (error) {
         console.error(`[ensureHeldItem] Error setting ${itemName}:`, error.message);
         currentHeldItem = null;

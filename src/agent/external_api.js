@@ -21,18 +21,54 @@ export class ExternalAPI {
 
         this.orchestration = new OrchestrationAPI(agent);
         // Make orchestration accessible from agent, this will allow us to stop workers when an agent is stopped
-        this.agent.orchestration = this.orchestration; 
+        this.agent.orchestration = this.orchestration;
+        
+        // Action tracking for testing (in-memory, last 100 actions)
+        this.recentActions = new Map();
+        this.MAX_HISTORY = 100;
         
         // CORS for n8n
         this.app.use((req, res, next) => {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, X-Action-ID');
             if (req.method === 'OPTIONS') {
                 res.sendStatus(200);
             } else {
                 next();
             }
+        });
+        
+        // Optional Action ID middleware for Postman testing
+        // Only processes actionId if explicitly provided by client
+        this.app.use((req, res, next) => {
+            // Extract actionId from header or body (client-provided)
+            const clientActionId = req.headers['x-action-id'] || 
+                                 req.body?.actionId || 
+                                 req.query?.actionId;
+            
+            if (clientActionId) {
+                req.actionId = clientActionId;
+                res.setHeader('X-Action-ID', clientActionId);
+                
+                // Track action for testing/debugging
+                if (req.path.startsWith('/api/agent/') && req.method !== 'GET') {
+                    this.recentActions.set(clientActionId, {
+                        timestamp: Date.now(),
+                        method: req.method,
+                        path: req.path,
+                        status: 'pending'
+                    });
+                    
+                    // Cleanup old entries
+                    if (this.recentActions.size > this.MAX_HISTORY) {
+                        const oldest = Array.from(this.recentActions.keys())[0];
+                        this.recentActions.delete(oldest);
+                    }
+                }
+            }
+            
+            next();
         });
 
         this.setupRoutes();
@@ -43,6 +79,33 @@ export class ExternalAPI {
     }
 
     setupRoutes() {
+        
+        // Action tracking endpoint for Postman testing
+        this.app.get('/api/agent/actions/:actionId', (req, res) => {
+            const actionInfo = this.recentActions.get(req.params.actionId);
+            if (!actionInfo) {
+                return res.status(404).json({ 
+                    error: 'Action not found or expired from cache',
+                    note: 'Actions are kept for last 100 requests only'
+                });
+            }
+            res.json({
+                actionId: req.params.actionId,
+                ...actionInfo
+            });
+        });
+        
+        // List recent actions for testing
+        this.app.get('/api/agent/actions', (req, res) => {
+            const actions = Array.from(this.recentActions.entries()).map(([id, info]) => ({
+                actionId: id,
+                ...info
+            }));
+            res.json({ 
+                count: actions.length,
+                actions: actions.slice(-20) // Return last 20
+            });
+        });
 
         this.app.get('/api/agent/world-info', this.handleWorldInfo.bind(this));
 
@@ -224,9 +287,9 @@ export class ExternalAPI {
                 spawnPoint: bot.spawnPoint || null
             };
             
-            res.json({ success: true, ...worldInfo });
+            res.json(this._buildResponse(req, { success: true, ...worldInfo }));
         } catch (error) {
-            this.handleError(res, error, 'worldInfo');
+            this.handleError(res, error, 'worldInfo', req.actionId);
         }
     }
 
@@ -391,14 +454,22 @@ export class ExternalAPI {
             const directionText = direction ? `to the ${direction}` : `to ${x}, ${y}, ${z}`;
             const message = result || `Moving ${directionText}`;
             
-            res.json({ 
+            const response = { 
                 success: true, 
                 message: message,
                 direction: direction || null,
                 coordinates: direction ? null : { x, y, z }
-            });
+            };
+            
+            // Include actionId only if provided(for Postman testing)
+            if (req.actionId) {
+                response.actionId = req.actionId;
+                this._updateActionStatus(req.actionId, 'completed');
+            }
+            
+            res.json(response);
         } catch (error) {
-            this.handleError(res, error, 'move');
+            this.handleError(res, error, 'move', req.actionId);
         }
     }
 
@@ -437,16 +508,24 @@ export class ExternalAPI {
             if (result.toLowerCase().includes('not found')) {
                 return res.status(404).json({ 
                     error: result, 
-                    code: 'player_not_found' 
+                    code: 'player_not_found',
+                    ...(req.actionId && { actionId: req.actionId })
                 });
             }
             
-            res.json({ 
+            const response = { 
                 success: true, 
                 message: result || `Going to ${player}` 
-            });
+            };
+            
+            if (req.actionId) {
+                response.actionId = req.actionId;
+                this._updateActionStatus(req.actionId, 'completed');
+            }
+            
+            res.json(response);
         } catch (error) {
-            this.handleError(res, error, 'goToPlayer');
+            this.handleError(res, error, 'goToPlayer', req.actionId);
         }
     }
 
@@ -488,12 +567,12 @@ export class ExternalAPI {
                 });
             }
             
-            res.json({ 
+            res.json(this._buildResponse(req, { 
                 success: true, 
                 message: result || `Moving to ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}` 
-            });
+            }));
         } catch (error) {
-            this.handleError(res, error, 'goToCoordinates');
+            this.handleError(res, error, 'goToCoordinates', req.actionId);
         }
     }
 
@@ -531,7 +610,7 @@ export class ExternalAPI {
                 message: result || `Moved away ${distance} blocks` 
             });
         } catch (error) {
-            this.handleError(res, error, 'moveAway');
+            this.handleError(res, error, 'moveAway', req.actionId);
         }
     }
 
@@ -589,7 +668,7 @@ export class ExternalAPI {
                 message: result || `Searching for ${blockType}` 
             });
         } catch (error) {
-            this.handleError(res, error, 'searchForBlock');
+            this.handleError(res, error, 'searchForBlock', req.actionId);
         }
     }
 
@@ -651,7 +730,7 @@ export class ExternalAPI {
                 message: result || `Searching for ${entityType}` 
             });
         } catch (error) {
-            this.handleError(res, error, 'searchForEntity');
+            this.handleError(res, error, 'searchForEntity', req.actionId);
         }
     }
 
@@ -670,9 +749,12 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'not_found' });
             }
             
-            res.json({ success: true, message: result || `Collected ${quantity} ${block}` });
+            res.json(this._buildResponse(req, { 
+                success: true, 
+                message: result || `Collected ${quantity} ${block}` 
+            }));
         } catch (error) {
-            this.handleError(res, error, 'collect');
+            this.handleError(res, error, 'collect', req.actionId);
         }
     }
 
@@ -796,9 +878,12 @@ export class ExternalAPI {
                 }
             }
 
-            res.json({ success: true, message: result || `Placed ${material}` });
+            res.json(this._buildResponse(req, { 
+                success: true, 
+                message: result || `Placed ${material}` 
+            }));
         } catch (error) {
-            this.handleError(res, error, 'place');
+            this.handleError(res, error, 'place', req.actionId);
         }
     }
 
@@ -818,12 +903,12 @@ export class ExternalAPI {
             const command = `!newAction("Break block at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}")`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ 
+            res.json(this._buildResponse(req, { 
                 success: true, 
                 message: result || `Breaking block at ${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}` 
-            });
+            }));
         } catch (error) {
-            this.handleError(res, error, 'break');
+            this.handleError(res, error, 'break', req.actionId);
         }
     }
 
@@ -848,9 +933,9 @@ export class ExternalAPI {
             
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Using door' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Using door' }));
         } catch (error) {
-            this.handleError(res, error, 'useDoor');
+            this.handleError(res, error, 'useDoor', req.actionId);
         }
     }
 
@@ -865,9 +950,9 @@ export class ExternalAPI {
             const command = `!digDown(${distance})`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || `Digging down ${distance} blocks` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Digging down ${distance} blocks` }));
         } catch (error) {
-            this.handleError(res, error, 'digDown');
+            this.handleError(res, error, 'digDown', req.actionId);
         }
     }
 
@@ -886,9 +971,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'block_not_found' });
             }
             
-            res.json({ success: true, message: result || `Activated ${blockType}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Activated ${blockType}` }));
         } catch (error) {
-            this.handleError(res, error, 'activate');
+            this.handleError(res, error, 'activate', req.actionId);
         }
     }
 
@@ -921,9 +1006,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Equipped ${item}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Equipped ${item}` }));
         } catch (error) {
-            this.handleError(res, error, 'equip');
+            this.handleError(res, error, 'equip', req.actionId);
         }
     }
 
@@ -942,9 +1027,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Discarded ${item}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Discarded ${item}` }));
         } catch (error) {
-            this.handleError(res, error, 'discard');
+            this.handleError(res, error, 'discard', req.actionId);
         }
     }
 
@@ -963,9 +1048,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Consumed ${item}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Consumed ${item}` }));
         } catch (error) {
-            this.handleError(res, error, 'consume');
+            this.handleError(res, error, 'consume', req.actionId);
         }
     }
 
@@ -1001,9 +1086,9 @@ export class ExternalAPI {
                 return res.status(408).json({ error: result, code: 'fishing_timeout' });
             }
             
-            res.json({ success: true, message: result || 'Fishing completed' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Fishing completed' }));
         } catch (error) {
-            this.handleError(res, error, 'fish');
+            this.handleError(res, error, 'fish', req.actionId);
         }
     }
 
@@ -1037,9 +1122,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'no_fish_nearby' });
             }
             
-            res.json({ success: true, message: result || `Caught ${fishType}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Caught ${fishType}` }));
         } catch (error) {
-            this.handleError(res, error, 'catchFish');
+            this.handleError(res, error, 'catchFish', req.actionId);
         }
     }
 
@@ -1065,13 +1150,13 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'no_sheep_nearby' });
             }
             
-            res.json({ success: true, message: result || 'Shearing completed' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Shearing completed' }));
         } catch (error) {
-            this.handleError(res, error, 'shear');
+            this.handleError(res, error, 'shear', req.actionId);
         }
     }
 
-    async handleGivePlayer(req, res) {x
+    async handleGivePlayer(req, res) {
         try {
             const { player, item, quantity = 1 } = req.body;
             
@@ -1090,9 +1175,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Gave ${quantity} ${item} to ${player}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Gave ${quantity} ${item} to ${player}` }));
         } catch (error) {
-            this.handleError(res, error, 'givePlayer');
+            this.handleError(res, error, 'givePlayer', req.actionId);
         }
     }
 
@@ -1115,9 +1200,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Put ${item} in chest` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Put ${item} in chest` }));
         } catch (error) {
-            this.handleError(res, error, 'putInChest');
+            this.handleError(res, error, 'putInChest', req.actionId);
         }
     }
 
@@ -1136,9 +1221,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'chest_not_found' });
             }
             
-            res.json({ success: true, message: result || `Took ${item} from chest` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Took ${item} from chest` }));
         } catch (error) {
-            this.handleError(res, error, 'takeFromChest');
+            this.handleError(res, error, 'takeFromChest', req.actionId);
         }
     }
 
@@ -1151,9 +1236,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'chest_not_found' });
             }
             
-            res.json({ success: true, chest_contents: result });
+            res.json(this._buildResponse(req, { success: true, chest_contents: result }));
         } catch (error) {
-            this.handleError(res, error, 'viewChest');
+            this.handleError(res, error, 'viewChest', req.actionId);
         }
     }
 
@@ -1167,9 +1252,9 @@ export class ExternalAPI {
 
             await this.agent.openChat(message);
             
-            res.json({ success: true, message: `Sent: ${message}` });
+            res.json(this._buildResponse(req, { success: true, message: `Sent: ${message}` }));
         } catch (error) {
-            this.handleError(res, error, 'chat');
+            this.handleError(res, error, 'chat', req.actionId);
         }
     }
 
@@ -1195,9 +1280,9 @@ export class ExternalAPI {
                 raw_stats: result
             };
             
-            res.json(status);
+            res.json(this._buildResponse(req, status));
         } catch (error) {
-            this.handleError(res, error, 'status');
+            this.handleError(res, error, 'status', req.actionId);
         }
     }
 
@@ -1206,9 +1291,9 @@ export class ExternalAPI {
             const inventoryCommand = getCommand('!inventory');
             const result = await inventoryCommand.perform(this.agent);
             
-            res.json({ inventory: result, raw: result });
+            res.json(this._buildResponse(req, { inventory: result, raw: result }));
         } catch (error) {
-            this.handleError(res, error, 'inventory');
+            this.handleError(res, error, 'inventory', req.actionId);
         }
     }
 
@@ -1243,9 +1328,9 @@ export class ExternalAPI {
                 return res.status(500).json({ error: result, code: 'craft_error' });
             }
             
-            res.json({ success: true, message: result || `Crafted ${quantity} ${item}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Crafted ${quantity} ${item}` }));
         } catch (error) {
-            this.handleError(res, error, 'craft');
+            this.handleError(res, error, 'craft', req.actionId);
         }
     }
 
@@ -1269,9 +1354,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'item_not_found' });
             }
             
-            res.json({ success: true, message: result || `Smelted ${quantity} ${item}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Smelted ${quantity} ${item}` }));
         } catch (error) {
-            this.handleError(res, error, 'smelt');
+            this.handleError(res, error, 'smelt', req.actionId);
         }
     }
 
@@ -1284,9 +1369,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'furnace_not_found' });
             }
             
-            res.json({ success: true, message: result || 'Cleared furnace' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Cleared furnace' }));
         } catch (error) {
-            this.handleError(res, error, 'clearFurnace');
+            this.handleError(res, error, 'clearFurnace', req.actionId);
         }
     }
 
@@ -1305,9 +1390,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'player_not_found' });
             }
             
-            res.json({ success: true, message: result || `Attacking ${player}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Attacking ${player}` }));
         } catch (error) {
-            this.handleError(res, error, 'attackPlayer');
+            this.handleError(res, error, 'attackPlayer', req.actionId);
         }
     }
 
@@ -1318,9 +1403,9 @@ export class ExternalAPI {
             const command = `!newAction("Defend myself from nearby threats within ${range} blocks")`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Defending myself' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Defending myself' }));
         } catch (error) {
-            this.handleError(res, error, 'defendSelf');
+            this.handleError(res, error, 'defendSelf', req.actionId);
         }
     }
 
@@ -1335,9 +1420,9 @@ export class ExternalAPI {
             const command = `!rememberHere("${name}")`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || `Saved location as ${name}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Saved location as ${name}` }));
         } catch (error) {
-            this.handleError(res, error, 'rememberHere');
+            this.handleError(res, error, 'rememberHere', req.actionId);
         }
     }
 
@@ -1356,9 +1441,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'location_not_found' });
             }
             
-            res.json({ success: true, message: result || `Going to ${name}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Going to ${name}` }));
         } catch (error) {
-            this.handleError(res, error, 'goToRememberedPlace');
+            this.handleError(res, error, 'goToRememberedPlace', req.actionId);
         }
     }
 
@@ -1367,9 +1452,9 @@ export class ExternalAPI {
             const command = '!savedPlaces';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, saved_places: result });
+            res.json(this._buildResponse(req, { success: true, saved_places: result }));
         } catch (error) {
-            this.handleError(res, error, 'savedPlaces');
+            this.handleError(res, error, 'savedPlaces', req.actionId);
         }
     }
 
@@ -1378,9 +1463,9 @@ export class ExternalAPI {
             const command = '!nearbyBlocks';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, nearby_blocks: result });
+            res.json(this._buildResponse(req, { success: true, nearby_blocks: result }));
         } catch (error) {
-            this.handleError(res, error, 'nearbyBlocks');
+            this.handleError(res, error, 'nearbyBlocks', req.actionId);
         }
     }
 
@@ -1389,9 +1474,9 @@ export class ExternalAPI {
             const command = '!craftable';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, craftable_items: result });
+            res.json(this._buildResponse(req, { success: true, craftable_items: result }));
         } catch (error) {
-            this.handleError(res, error, 'craftable');
+            this.handleError(res, error, 'craftable', req.actionId);
         }
     }
 
@@ -1400,9 +1485,9 @@ export class ExternalAPI {
             const command = '!entities';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, nearby_entities: result });
+            res.json(this._buildResponse(req, { success: true, nearby_entities: result }));
         } catch (error) {
-            this.handleError(res, error, 'entities');
+            this.handleError(res, error, 'entities', req.actionId);
         }
     }
 
@@ -1411,9 +1496,9 @@ export class ExternalAPI {
             const command = '!modes';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, modes: result });
+            res.json(this._buildResponse(req, { success: true, modes: result }));
         } catch (error) {
-            this.handleError(res, error, 'modes');
+            this.handleError(res, error, 'modes', req.actionId);
         }
     }
 
@@ -1428,9 +1513,9 @@ export class ExternalAPI {
             const command = `!getCraftingPlan("${item}", ${quantity})`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, crafting_plan: result });
+            res.json(this._buildResponse(req, { success: true, crafting_plan: result }));
         } catch (error) {
-            this.handleError(res, error, 'getCraftingPlan');
+            this.handleError(res, error, 'getCraftingPlan', req.actionId);
         }
     }
 
@@ -1456,7 +1541,7 @@ export class ExternalAPI {
             const statsCommand = getCommand('!stats');
             const rawStats = await statsCommand.perform(this.agent);
 
-            res.json({
+            res.json(this._buildResponse(req, {
                 success: true,
                 playerName: playerName,
                 position: {
@@ -1472,9 +1557,9 @@ export class ExternalAPI {
                 time_of_day: bot.time.timeOfDay,
                 weather: bot.rainState > 0 ? 'rain' : 'clear',
                 raw_stats: rawStats
-            });
+            }));
         } catch (error) {
-            this.handleError(res, error, 'getPlayerPosition');
+            this.handleError(res, error, 'getPlayerPosition', req.actionId);
         }
     }
 
@@ -1493,7 +1578,7 @@ export class ExternalAPI {
             // Check if worker spawned by this bot FIRST
             if (this.orchestration && this.orchestration.workers.has(name)) {
                 const workerInfo = this.orchestration.workers.get(name);
-                return res.json({
+                return res.json(this._buildResponse(req, {
                     success: true,
                     name: name,
                     type: 'worker',
@@ -1501,7 +1586,7 @@ export class ExternalAPI {
                     port: workerInfo.port,
                     status: workerInfo.status,
                     pid: workerInfo.process.pid
-                });
+                }));
             }
 
             console.log(`[API] Searching for ${targetCount > 1 ? targetCount + ' ' : ''}${name}`);
@@ -1541,20 +1626,20 @@ export class ExternalAPI {
 
             // Return single or multiple results based on count
             if (targetCount === 1) {
-                return res.json({
+                return res.json(this._buildResponse(req, {
                     success: true,
                     ...matches[0]
-                });
+                }));
             } else {
-                return res.json({
+                return res.json(this._buildResponse(req, {
                     success: true,
                     targetCount: targetCount,
                     found: matches.length,
                     entities: matches
-                });
+                }));
             }
         } catch (error) {
-            this.handleError(res, error, 'identifyEntity');
+            this.handleError(res, error, 'identifyEntity', req.actionId);
         }
     }
 
@@ -1590,9 +1675,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'mode_not_found' });
             }
             
-            res.json({ success: true, message: result || `Set ${mode} to ${enabled}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Set ${mode} to ${enabled}` }));
         } catch (error) {
-            this.handleError(res, error, 'setMode');
+            this.handleError(res, error, 'setMode', req.actionId);
         }
     }
 
@@ -1607,9 +1692,9 @@ export class ExternalAPI {
             const command = `!stay(${seconds})`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || `Staying for ${seconds} seconds` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Staying for ${seconds} seconds` }));
         } catch (error) {
-            this.handleError(res, error, 'stay');
+            this.handleError(res, error, 'stay', req.actionId);
         }
     }
 
@@ -1622,9 +1707,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'bed_not_found' });
             }
             
-            res.json({ success: true, message: result || 'Going to bed' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Going to bed' }));
         } catch (error) {
-            this.handleError(res, error, 'goToBed');
+            this.handleError(res, error, 'goToBed', req.actionId);
         }
     }
 
@@ -1739,9 +1824,9 @@ export class ExternalAPI {
                 return res.status(400).json({ error: result, code: 'not_a_bot' });
             }
             
-            res.json({ success: true, message: result || `Started conversation with ${player}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Started conversation with ${player}` }));
         } catch (error) {
-            this.handleError(res, error, 'startConversation');
+            this.handleError(res, error, 'startConversation', req.actionId);
         }
     }
 
@@ -1760,9 +1845,9 @@ export class ExternalAPI {
                 return res.status(400).json({ error: result, code: 'not_in_conversation' });
             }
             
-            res.json({ success: true, message: result || `Ended conversation with ${player}` });
+            res.json(this._buildResponse(req, { success: true, message: result || `Ended conversation with ${player}` }));
         } catch (error) {
-            this.handleError(res, error, 'endConversation');
+            this.handleError(res, error, 'endConversation', req.actionId);
         }
     }
 
@@ -1771,9 +1856,9 @@ export class ExternalAPI {
             const command = '!restart';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Restarting agent' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Restarting agent' }));
         } catch (error) {
-            this.handleError(res, error, 'restart');
+            this.handleError(res, error, 'restart', req.actionId);
         }
     }
 
@@ -1782,9 +1867,9 @@ export class ExternalAPI {
             const command = '!clearChat';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Chat history cleared' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Chat history cleared' }));
         } catch (error) {
-            this.handleError(res, error, 'clearChat');
+            this.handleError(res, error, 'clearChat', req.actionId);
         }
     }
 
@@ -1807,9 +1892,9 @@ export class ExternalAPI {
                 return res.status(404).json({ error: result, code: 'player_not_found' });
             }
             
-            res.json({ success: true, vision_result: result });
+            res.json(this._buildResponse(req, { success: true, vision_result: result }));
         } catch (error) {
-            this.handleError(res, error, 'lookAtPlayer');
+            this.handleError(res, error, 'lookAtPlayer', req.actionId);
         }
     }
 
@@ -1824,9 +1909,9 @@ export class ExternalAPI {
             const command = `!lookAtPosition(${x}, ${y}, ${z})`;
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, vision_result: result });
+            res.json(this._buildResponse(req, { success: true, vision_result: result }));
         } catch (error) {
-            this.handleError(res, error, 'lookAtPosition');
+            this.handleError(res, error, 'lookAtPosition', req.actionId);
         }
     }
 
@@ -1835,9 +1920,9 @@ export class ExternalAPI {
             const command = '!endGoal';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Goal ended' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Goal ended' }));
         } catch (error) {
-            this.handleError(res, error, 'endGoal');
+            this.handleError(res, error, 'endGoal', req.actionId);
         }
     }
 
@@ -1860,9 +1945,8 @@ export class ExternalAPI {
                 return res.status(200).json({ success: false, error: result, code: 'target_not_found' });
             }
             
-            res.json({ success: true, message: result || `Attacking ${target}` });
-        } catch (error) {
-            this.handleError(res, error, 'attack');
+            res.json(this._buildResponse(req, { success: true, message: result || `Attacking ${target}` }));        } catch (error) {
+            this.handleError(res, error, 'attack', req.actionId);
         }
     }
 
@@ -1883,13 +1967,13 @@ export class ExternalAPI {
             });
             
             // Return immediately
-            res.json({ 
+            res.json(this._buildResponse(req, { 
                 success: true, 
                 message: `Following ${player}`,
                 status: 'queued'
-            });
+            }));
         } catch (error) {
-            this.handleError(res, error, 'followPlayer');
+            this.handleError(res, error, 'followPlayer', req.actionId);
         }
     }
     
@@ -1921,9 +2005,9 @@ export class ExternalAPI {
             const command = '!stop';
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result || 'Stopped all actions' });
+            res.json(this._buildResponse(req, { success: true, message: result || 'Stopped all actions' }));
         } catch (error) {
-            this.handleError(res, error, 'stop');
+            this.handleError(res, error, 'stop', req.actionId);
         }
     }
 
@@ -1944,9 +2028,9 @@ export class ExternalAPI {
             
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, vision_result: result });
+            res.json(this._buildResponse(req, { success: true, vision_result: result }));
         } catch (error) {
-            this.handleError(res, error, 'vision');
+            this.handleError(res, error, 'vision', req.actionId);
         }
     }
 
@@ -1967,42 +2051,83 @@ export class ExternalAPI {
             
             const result = await executeCommand(this.agent, command);
             
-            res.json({ success: true, message: result });
+            res.json(this._buildResponse(req, { success: true, message: result }));
         } catch (error) {
-            this.handleError(res, error, 'goal');
+            this.handleError(res, error, 'goal', req.actionId);
         }
     }
 
-
+    // Helper to update action status in tracking (for Postman testing)
+    _updateActionStatus(actionId, status, error = null) {
+        if (this.recentActions.has(actionId)) {
+            const action = this.recentActions.get(actionId);
+            action.status = status;
+            action.completedAt = Date.now();
+            action.duration = action.completedAt - action.timestamp;
+            if (error) action.error = error;
+        }
+    }
+    
+    // Helper to add actionId to response if present (for Postman testing, backward compatible)
+    _buildResponse(req, baseResponse, status = 'completed') {
+        if (req.actionId) {
+            baseResponse.actionId = req.actionId;
+            this._updateActionStatus(req.actionId, status);
+        }
+        return baseResponse;
+    }
 
     handleError(res, error, action) {
         console.error(`External API error in ${action}:`, error);
         
         // Check if agent is busy
         if (this.agent.actions && this.agent.actions.executing) {
-            return res.status(409).json({ 
+            const busyResponse = { 
                 error: 'Agent is busy with another action', 
                 code: 'busy',
                 current_action: this.agent.actions.currentActionLabel 
-            });
+            };
+            
+            // Include actionId if present (for Postman testing)
+            if (res.req?.actionId) {
+                busyResponse.actionId = res.req.actionId;
+                this._updateActionStatus(res.req.actionId, 'error', 'Agent busy');
+            }
+            
+            return res.status(409).json(busyResponse);
         }
         
         // Handle external brain mode specific errors
         if (error.message && error.message.includes('coder')) {
-            return res.status(400).json({
+            const externalBrainResponse = {
                 error: 'External brain mode: complex actions should be handled by the workflow AI brain',
                 code: 'external_brain_required',
                 details: 'This action requires the external AI brain to break it down into simpler commands'
-            });
+            };
+            
+            if (res.req?.actionId) {
+                externalBrainResponse.actionId = res.req.actionId;
+                this._updateActionStatus(res.req.actionId, 'error', 'External brain required');
+            }
+            
+            return res.status(400).json(externalBrainResponse);
         }
         
         // Generic error response
-        res.status(500).json({ 
+        const errorResponse = { 
             error: 'Internal server error', 
             code: 'internal_error',
             action: action,
             details: error.message 
-        });
+        };
+        
+        // Include actionId if present (for Postman testing)
+        if (res.req?.actionId) {
+            errorResponse.actionId = res.req.actionId;
+            this._updateActionStatus(res.req.actionId, 'error', error.message);
+        }
+        
+        res.status(500).json(errorResponse);
     }
 
     // Multi-bot management handlers (Updated to use OrchestrationAPI)

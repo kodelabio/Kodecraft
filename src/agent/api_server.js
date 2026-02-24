@@ -14,7 +14,7 @@ export class APIServer {
         this.app.use((req, res, next) => {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Action-ID');
             if (req.method === 'OPTIONS') {
                 res.sendStatus(200);
             } else {
@@ -36,6 +36,10 @@ export class APIServer {
 
         // Proxy all agent requests to user's bot
         this.app.all('/api/agent/:userId/*', this.handleAgentRequest.bind(this));
+
+        // Proxy action tracking requests
+        this.app.get('/api/agent/:userId/actions/:actionId', this.handleAgentRequest.bind(this));
+        this.app.get('/api/agent/:userId/actions', this.handleAgentRequest.bind(this));
 
         // Proxy all orchestration requests to user's bot
         this.app.all('/api/orchestration/:userId/*', this.handleOrchestrationRequest.bind(this));
@@ -126,9 +130,19 @@ export class APIServer {
             const fullUrl = `http://localhost:${port}/api/agent${action}`;
             console.log(`[APIServer] Forwarding to: ${fullUrl}`);
 
+            // Forward all relevant headers including X-Action-ID
+            const forwardHeaders = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Forward X-Action-ID if present (for action tracking)
+            if (req.headers['x-action-id']) {
+                forwardHeaders['X-Action-ID'] = req.headers['x-action-id'];
+            }
+
             const response = await fetch(fullUrl, {
                 method: req.method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: forwardHeaders,
                 body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
                 timeout: 60000
             });
@@ -159,9 +173,19 @@ export class APIServer {
                 userId: userId  // Pass userId in body
             } : undefined;
 
+            // Forward all relevant headers including X-Action-ID
+            const forwardHeaders = {
+                'Content-Type': 'application/json'
+            };
+            
+            // Forward X-Action-ID if present (for action tracking)
+            if (req.headers['x-action-id']) {
+                forwardHeaders['X-Action-ID'] = req.headers['x-action-id'];
+            }
+
             const response = await fetch(`http://localhost:${port}/api/orchestration${action}`, {
                 method: req.method,
-                headers: { 'Content-Type': 'application/json' },
+                headers: forwardHeaders,
                 body: body ? JSON.stringify(body) : undefined,
                 timeout: 60000
             });

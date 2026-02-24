@@ -86,6 +86,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/catchFish', this.handleCatchFish.bind(this));
         this.app.post('/api/agent/shear', this.handleShear.bind(this));
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
+        this.app.get('/api/agent/registry-item', this.handleRegistryItem.bind(this));
+        this.app.get('/api/agent/registry-items', this.handleRegistryItems.bind(this));
         
         // Chest operations
         this.app.post('/api/agent/putInChest', this.handlePutInChest.bind(this));
@@ -1316,6 +1318,69 @@ export class ExternalAPI {
             res.json({ success: true, chest_contents: result });
         } catch (error) {
             this.handleError(res, error, 'viewChest');
+        }
+    }
+
+
+    async handleRegistryItem(req, res) {
+        try {
+            const { itemName } = req.query;
+            
+            if (!itemName) {
+                return res.status(400).json({ 
+                    error: 'itemName query parameter required' 
+                });
+            }
+            
+            const itemData = this.agent.bot.registry.itemsByName[itemName];
+            
+            if (!itemData) {
+                return res.status(404).json({
+                    error: `Item not found: ${itemName}`,
+                    code: 'item_not_found'
+                });
+            }
+            
+            res.json({
+                success: true,
+                itemName: itemName,
+                id: itemData.id,
+                displayName: itemData.displayName,
+                stackSize: itemData.stackSize
+            });
+        } catch (error) {
+            this.handleError(res, error, 'registryItem');
+        }
+    }
+
+    async handleRegistryItems(req, res) {
+        console.log(`[Registry] Method: ${req.method}`);
+        console.log(`[Registry] Query:`, req.query);
+        console.log(`[Registry] Body:`, req.body);
+        console.log(`[Registry] Headers:`, req.headers);
+        try {
+            const { search } = req.query;
+            
+            const items = [];
+            for (const [name, data] of Object.entries(this.agent.bot.registry.itemsByName)) {
+                if (!search || name.includes(search.toLowerCase())) {
+                    items.push({
+                        name: name,
+                        id: data.id,
+                        displayName: data.displayName,
+                        stackSize: data.stackSize
+                    });
+                    if (items.length >= 100) break;
+                }
+            }
+            
+            res.json({
+                success: true,
+                foundItems: items.length,
+                items: items
+            });
+        } catch (error) {
+            this.handleError(res, error, 'registryItems');
         }
     }
 

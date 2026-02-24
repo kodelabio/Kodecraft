@@ -100,6 +100,7 @@ const settings = {
     // realms management
     "realms_enabled": process.env.REALMS_ENABLED === "true" || false,
     "realm_base_size": parseInt(process.env.REALM_BASE_SIZE) || 512, // size of each realm in blocks
+    "minecraft_world_type": process.env.MINECRAFT_WORLD_TYPE || 'normal', // affects default spawn location and realm allocation strategy
 
 };
 

@@ -1,6 +1,7 @@
 // schem_to_blueprint.js
 import fs from 'fs';
 import path from 'path';
+import { itemMappings } from './item_mappings.js';
 
 function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ = 0) {
     console.log(`schemToBlueprint called with name: "${name}"`);  // Debug
@@ -18,7 +19,9 @@ function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ
 
     for (const block of blockList) {
         const y = block.y;
-        const blockType = block.block.split('[')[0].split(':').pop(); // Remove properties
+        let blockType = block.block.split('[')[0].split(':').pop(); // Remove properties
+        // Apply mapping if needed
+        blockType = itemMappings[blockType] || blockType;
 
         materials[blockType] = (materials[blockType] || 0) + 1;
 
@@ -47,6 +50,7 @@ function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ
         [name]: {
             source: "schematic",
             type: "construction",
+            description: `A ${name} structure`,
             goal: `Build the ${name} structure`,
             conversation: `Let's build the ${name} structure together`,
             agent_count: 1,

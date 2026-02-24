@@ -129,3 +129,13 @@ The workers now spawn and are instantly teleported to safe positions near the le
 ## [1.3.4]
 ### Fixed
 - broken blocks during building repair
+
+# [1.3.5]
+### Added
+- conversion script for blueprint `.schematic` file
+
+### Fixed
+- Leader spawnLocation null if missing realm
+Notes: 
+- add variable `MINECRAFT_WORLD_TYPE=flat` to `.env`
+- add `"minecraft_world_type": process.env.MINECRAFT_WORLD_TYPE || 'normal'` to `settings.js`

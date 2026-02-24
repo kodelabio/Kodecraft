@@ -1,0 +1,1548 @@
+{
+  "Fire_Truck": {
+    "source": "schematic",
+    "type": "construction",
+    "description": "A Fire_Truck structure",
+    "goal": "Build the Fire_Truck structure",
+    "conversation": "Let's build the Fire_Truck structure together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "blueprint": {
+      "materials": {
+        "mangrove_button": 4,
+        "smooth_quartz_slab": 55,
+        "black_concrete": 4,
+        "mangrove_sign": 35,
+        "tripwire_hook": 8,
+        "smooth_quartz_stairs": 19,
+        "red_concrete": 30,
+        "smooth_quartz": 20,
+        "red_nether_bricks": 36,
+        "blast_furnace": 1,
+        "iron_block": 7,
+        "smooth_stone_slab": 2,
+        "red_shulker_box": 3,
+        "iron_bars": 20,
+        "lever": 2,
+        "stone_button": 4,
+        "black_stained_glass_pane": 2,
+        "black_stained_glass": 7,
+        "red_nether_brick_stairs": 21,
+        "player_head": 2,
+        "daylight_detector": 3
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 0,
+              "material": "mangrove_button"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "mangrove_button"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "black_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "black_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 14,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 14,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 15,
+              "z": 2,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "black_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "black_concrete"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 14,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "mangrove_button"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "mangrove_button"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 12,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 13,
+              "z": 0,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 14,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 14,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 15,
+              "z": 1,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "red_shulker_box"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "red_shulker_box"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "red_shulker_box"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 14,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 15,
+              "z": 2,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 14,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 15,
+              "z": 3,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 13,
+              "z": 4,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 14,
+              "z": 4,
+              "material": "mangrove_sign"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 0,
+              "material": "lever"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone_button"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone_button"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 14,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 14,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "tripwire_hook"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 14,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "lever"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_button"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stone_button"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "tripwire_hook"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 0,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 12,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 13,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 14,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 14,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 15,
+              "z": 1,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "red_concrete"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "iron_block"
+            },
+            {
+              "x": 14,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 15,
+              "z": 2,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "black_stained_glass"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "red_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 14,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 15,
+              "z": 3,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "black_stained_glass_pane"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 13,
+              "z": 4,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 14,
+              "z": 4,
+              "material": "mangrove_sign"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 0,
+              "material": "mangrove_sign"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 14,
+              "z": 1,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 14,
+              "z": 2,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "red_nether_bricks"
+            },
+            {
+              "x": 14,
+              "z": 3,
+              "material": "red_nether_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "mangrove_sign"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 1,
+              "material": "player_head"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 13,
+              "z": 1,
+              "material": "iron_bars"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "daylight_detector"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "daylight_detector"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "daylight_detector"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "smooth_quartz_slab"
+            },
+            {
+              "x": 13,
+              "z": 2,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "player_head"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 13,
+              "z": 3,
+              "material": "iron_bars"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "mangrove_button": 4,
+        "smooth_quartz_slab": 55,
+        "black_concrete": 4,
+        "mangrove_sign": 35,
+        "tripwire_hook": 8,
+        "smooth_quartz_stairs": 19,
+        "red_concrete": 30,
+        "smooth_quartz": 20,
+        "red_nether_bricks": 36,
+        "blast_furnace": 1,
+        "iron_block": 7,
+        "smooth_stone_slab": 2,
+        "red_shulker_box": 3,
+        "iron_bars": 20,
+        "lever": 2,
+        "stone_button": 4,
+        "black_stained_glass_pane": 2,
+        "black_stained_glass": 7,
+        "red_nether_brick_stairs": 21,
+        "player_head": 2,
+        "daylight_detector": 3
+      }
+    }
+  }
+}

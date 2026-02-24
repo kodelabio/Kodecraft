@@ -3,6 +3,7 @@ import * as world from "./world.js";
 import pf from 'mineflayer-pathfinder';
 import Vec3 from 'vec3';
 import settings from "../../../settings.js";
+import prismarineItemModule from 'prismarine-item';
 
 const blockPlaceDelay = settings.block_place_delay == null ? 0 : settings.block_place_delay;
 const useDelay = blockPlaceDelay > 0;
@@ -13,6 +14,9 @@ let currentHeldItem = null;  // Add this
 
 
 async function ensureHeldItem(bot, itemName) {
+
+    const PrismarineItem = prismarineItemModule(bot.version);
+
     if (currentHeldItem === itemName) {
         return;
     }
@@ -27,8 +31,8 @@ async function ensureHeldItem(bot, itemName) {
         await new Promise(r => setTimeout(r, 300));
         
         // Dynamic import for prismarine-item
-        const prismarineItem = await import('prismarine-item');
-        const PrismarineItem = prismarineItem.default(bot.version);
+        //const prismarineItem = await import('prismarine-item');
+        //const PrismarineItem = prismarineItem.default(bot.version);
         
         bot._client.write('set_creative_slot', {
             slot: 36,
@@ -37,7 +41,7 @@ async function ensureHeldItem(bot, itemName) {
         
         bot._setSlot(36, item);
         
-        await new Promise(r => setTimeout(r, 300));
+        //await new Promise(r => setTimeout(r, 300));
         currentHeldItem = itemName;
         //console.log(`[ensureHeldItem] ✓ Set to ${itemName}`);
     } catch (error) {

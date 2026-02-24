@@ -2,13 +2,14 @@
   "Ice_Cream_Truck": {
     "source": "schematic",
     "type": "construction",
+    "description": "A Ice_Cream_Truck structure",
     "goal": "Build the Ice_Cream_Truck structure",
     "conversation": "Let's build the Ice_Cream_Truck structure together",
     "agent_count": 1,
     "timeout": 300000,
     "blueprint": {
       "materials": {
-        "birch_wall_sign": 12,
+        "birch_sign": 12,
         "smooth_quartz_slab": 41,
         "cherry_button": 4,
         "black_concrete": 4,
@@ -46,7 +47,7 @@
             {
               "x": 4,
               "z": 0,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -206,7 +207,7 @@
             {
               "x": 4,
               "z": 10,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             }
           ]
         },
@@ -251,7 +252,7 @@
             {
               "x": 2,
               "z": 3,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -266,12 +267,12 @@
             {
               "x": 6,
               "z": 3,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 2,
               "z": 4,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -286,12 +287,12 @@
             {
               "x": 6,
               "z": 4,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 2,
               "z": 5,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -306,12 +307,12 @@
             {
               "x": 6,
               "z": 5,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 2,
               "z": 6,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -331,12 +332,12 @@
             {
               "x": 6,
               "z": 6,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 2,
               "z": 7,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -356,7 +357,7 @@
             {
               "x": 6,
               "z": 7,
-              "material": "birch_wall_sign"
+              "material": "birch_sign"
             },
             {
               "x": 3,
@@ -1044,7 +1045,7 @@
     },
     "initial_inventory": {
       "0": {
-        "birch_wall_sign": 12,
+        "birch_sign": 12,
         "smooth_quartz_slab": 41,
         "cherry_button": 4,
         "black_concrete": 4,

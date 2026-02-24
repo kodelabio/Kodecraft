@@ -79,7 +79,8 @@ async function schemToJSON(inputPath, outputPath) {
     //console.log('DEBUG: root.value exists?', 'value' in root);
 
     // ── Extract dimensions ──────────────────────────────────────────────────
-    const schematic = nbtVal(root.Schematic);
+    let schematic = nbtVal(root.Schematic);
+    
     if (!schematic) throw new Error('No Schematic compound found');
 
     const width  = nbtVal(schematic.Width);
@@ -92,6 +93,7 @@ async function schemToJSON(inputPath, outputPath) {
 
     console.log(`📐 Dimensions: ${width} x ${height} x ${length}`);
     const blocks = nbtVal(schematic.Blocks);
+
     if (!blocks) throw new Error('No Blocks compound found in schematic');
 
     const rawPalette = nbtVal(blocks.Palette);

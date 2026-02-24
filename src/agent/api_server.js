@@ -171,8 +171,15 @@ export class APIServer {
                 spawnPosition = globalRealmManager.getRandomPosInRealm(realmBounds, globalRealmManager.worldInfo?.worldType );
                 console.log(`[APIServer] Generated random position: ${JSON.stringify(spawnPosition)}`);
             }
-
-            
+            // 👇 Default spawn location if realm or player not supplied
+            if (!spawnPosition) {
+                const worldType = settings.minecraft_world_type;
+                spawnPosition = worldType === 'flat' 
+                    ? { x: 0, y: -60, z: 0 }
+                    : { x: 0, y: 64, z: 0 };
+                console.log(`[APIServer] Using ${worldType || 'normal'} world default spawn: ${JSON.stringify(spawnPosition)}`);
+            }
+                        
             const normalizedUserId = String(userId);
             //console.log(`[APIServer] ✓ Normalized: ${normalizedUserId}, map size: ${leaderBotManager.leaderBots.size}/${settings.max_leader_bots}`);
             //console.log(`[APIServer] Current users: ${Array.from(leaderBotManager.leaderBots.keys()).join(', ')}`);

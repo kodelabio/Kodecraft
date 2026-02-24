@@ -11,7 +11,7 @@ services:
       VERSION: "1.21.4"
       MODE: "creative"
       DIFFICULTY: "peaceful"
-      LEVEL_TYPE: "flat"
+      LEVEL_TYPE: ${MINECRAFT_WORLD_TYPE:-flat}
       ONLINE_MODE: "FALSE"
       OPS: "ALIEN"
       BRAIN_MODE: "internal"

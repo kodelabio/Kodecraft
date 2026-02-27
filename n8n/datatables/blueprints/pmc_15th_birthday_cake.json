@@ -1,7 +1,8 @@
 {
-  "pmc_15th_birthday_cake": {
+  "15th_birthday_cake": {
     "source": "schematic",
     "type": "construction",
+    "verified": false,
     "description": "A pmc_15th_birthday_cake structure",
     "goal": "Build the pmc_15th_birthday_cake structure",
     "conversation": "Let's build the pmc_15th_birthday_cake structure together",

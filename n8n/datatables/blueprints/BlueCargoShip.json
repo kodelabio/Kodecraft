@@ -2,11 +2,13 @@
   "BlueCargoShip": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A BlueCargoShip structure",
     "goal": "Build the BlueCargoShip structure",
     "conversation": "Let's build the BlueCargoShip structure together",
     "agent_count": 1,
     "timeout": 300000,
+    "totalBlocks": 6655,
     "blueprint": {
       "materials": {
         "mangrove_slab": 228,

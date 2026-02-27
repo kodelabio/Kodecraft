@@ -2,11 +2,13 @@
   "YellowCargoShip": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A YellowCargoShip structure",
     "goal": "Build the YellowCargoShip structure",
     "conversation": "Let's build the YellowCargoShip structure together",
     "agent_count": 1,
     "timeout": 300000,
+    "totalBlocks": 3240,
     "blueprint": {
       "materials": {
         "mangrove_slab": 146,

@@ -1,7 +1,8 @@
 {
-  "Modern_Starter_House_b1": {
+  "Modern_Starter_House": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A Modern_Starter_House_b1 structure",
     "goal": "Build the Modern_Starter_House_b1 structure",
     "conversation": "Let's build the Modern_Starter_House_b1 structure together",

@@ -2,6 +2,7 @@
   "McDonald's_Simple": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A McDonald's_Simple structure",
     "goal": "Build the McDonald's_Simple structure",
     "conversation": "Let's build the McDonald's_Simple structure together",

@@ -914,7 +914,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
         log(bot, `Block at ${target_dest} is not loaded. Waiting for chunks...`);
         // Wait a moment for chunks to load
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 200));
         const retryBlock = bot.blockAt(target_dest);
         if (!retryBlock) {
             console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);

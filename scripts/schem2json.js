@@ -74,14 +74,25 @@ async function schemToJSON(inputPath, outputPath) {
     const { parsed } = await nbt.parse(raw);
     const root = parsed.value;
 
+    console.log('🔍 Checking schematic format...');
+    console.log('Root keys:', Object.keys(root));
+
+    // ── Detect format ───────────────────────────────────────────────────────
+    const isNewSchem = root.DataVersion !== undefined;  // New format has DataVersion at root
+    let schematic;
+    if (isNewSchem) {
+        console.log('📦 Format: Sponge v2+ (.schem)');
+        schematic = root;  // New format: everything at root
+    } else {
+        console.log('📦 Format: Old WorldEdit (.schem)');
+        schematic = nbtVal(root.Schematic);  // Old format: nested under Schematic
+        if (!schematic) throw new Error('No Schematic compound found');
+    }
+
+
     //console.log('DEBUG: parsed structure:', JSON.stringify(parsed, null, 2).substring(0, 500));
     //console.log('DEBUG: root keys:', Object.keys(root));
     //console.log('DEBUG: root.value exists?', 'value' in root);
-
-    // ── Extract dimensions ──────────────────────────────────────────────────
-    let schematic = nbtVal(root.Schematic);
-    
-    if (!schematic) throw new Error('No Schematic compound found');
 
     const width  = nbtVal(schematic.Width);
     const height = nbtVal(schematic.Height);
@@ -92,12 +103,21 @@ async function schemToJSON(inputPath, outputPath) {
     }
 
     console.log(`📐 Dimensions: ${width} x ${height} x ${length}`);
-    const blocks = nbtVal(schematic.Blocks);
+    // ── Extract palette and blocks ──────────────────────────────────────────
+    let rawPalette, blockData;
 
-    if (!blocks) throw new Error('No Blocks compound found in schematic');
+    if (isNewSchem) {
+        // New format: Palette and BlockData at root
+        rawPalette = nbtVal(schematic.Palette);
+        blockData = nbtVal(schematic.BlockData);
+    } else {
+        // Old format: nested under Blocks compound
+        const blocks = nbtVal(schematic.Blocks);
+        if (!blocks) throw new Error('No Blocks compound found');
+        rawPalette = nbtVal(blocks.Palette);
+        blockData = nbtVal(blocks.Data);
+    }
 
-    const rawPalette = nbtVal(blocks.Palette);
-    if (!rawPalette) throw new Error('No Palette found in schematic');
 
     // palette: blockStateName -> paletteIndex
     const palette = {};
@@ -112,10 +132,6 @@ async function schemToJSON(inputPath, outputPath) {
     }
 
     console.log(`🎨 Palette size: ${Object.keys(palette).length} block types`);
-
-    // ── Extract block data ──────────────────────────────────────────────────
-    const blockData = nbtVal(blocks.Data);
-    if (!blockData) throw new Error('No BlockData found in schematic');
 
 
     // BlockData is a varint-encoded byte array in .schem v2+

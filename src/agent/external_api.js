@@ -15,8 +15,8 @@ export class ExternalAPI {
     constructor(agent) {
         this.agent = agent;
         this.app = express();
-        this.app.use(express.json({ limit: '50mb' }));
-        this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
+        this.app.use(express.json({ limit: '5mb' }));
+        this.app.use(express.urlencoded({ limit: '5mb', extended: true }));
         
         // Initialize multi-bot manager: REMOVED, REPLLACES WITH ORCHESTRATION API
         //this.multiBotManager = new MultiBotManager(agent);
@@ -88,6 +88,8 @@ export class ExternalAPI {
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
         this.app.get('/api/agent/registry-item', this.handleRegistryItem.bind(this));
         this.app.get('/api/agent/registry-items', this.handleRegistryItems.bind(this));
+        this.app.get('/api/agent/registry-categorized', this.handleRegistryCategorized.bind(this));
+        
         
         // Chest operations
         this.app.post('/api/agent/putInChest', this.handlePutInChest.bind(this));
@@ -164,8 +166,10 @@ export class ExternalAPI {
         // In your agent class or worker routes
         this.app.post('/api/agent/build-blueprint', (req, res) => this.handleBuildBlueprintDirect(req, res));
 
-
-
+        // To be used to verify blueprints
+        this.app.post('/api/agent/quickBuild', this.handleQuickBuild.bind(this));
+        // verify if all blueprint required materials exist
+        this.app.post('/api/agent/verify-materials', this.handleVerifyMaterials.bind(this));
 
         // Realm management
         // Assign a leader to an existing realm
@@ -1370,7 +1374,7 @@ export class ExternalAPI {
                         displayName: data.displayName,
                         stackSize: data.stackSize
                     });
-                    if (items.length >= 100) break;
+                    //if (items.length >= 100) break;
                 }
             }
             
@@ -1383,6 +1387,87 @@ export class ExternalAPI {
             this.handleError(res, error, 'registryItems');
         }
     }
+
+    async handleRegistryCategorized(req, res) {
+        try {
+            const categories = this.categorizeItems(this.agent.bot.registry.itemsByName);
+            
+            res.json({
+                success: true,
+                totalItems: Object.values(categories).reduce((sum, items) => sum + items.length, 0),
+                categories: categories
+            });
+        } catch (error) {
+            this.handleError(res, error, 'registryCategorized');
+        }
+    }
+
+    categorizeItems(itemsByName) {
+        const categories = {
+            building_blocks: [],
+            roofing: [],
+            flooring: [],
+            decorative: [],
+            furniture: [],
+            terrain: [],
+            redstone: [],
+            lighting: [],
+            plants: [],
+            mining: [],
+            tools: [],
+            food: [],
+            wearables: [],
+            other: []
+        };
+
+        const categoryKeywords = {
+            building_blocks: ['brick', 'stone', 'cobble', 'block', 'concrete', 'purpur', 'blackstone', 'deepslate', 'tuff', 'granite', 'diorite', 'andesite', 'basalt', 'quartz', 'prismarine', 'amethyst', 'copper', 'nylium', 'mosaic', 'terracotta'],
+            roofing: ['stairs', 'slab', 'roof'],
+            flooring: ['planks', 'tile', 'floor', 'parquet', 'mosaic'],
+            decorative: ['lantern', 'candle', 'torch', 'lamp', 'light', 'carpet', 'banner', 'painting', 'glass', 'pane', 'frame', 'vines', 'coral', 'sculk', 'bell', 'pot', 'bush', 'flower', 'rose', 'tulip', 'daisy', 'orchid', 'iris', 'mushroom', 'kelp', 'seaweed', 'lichen'],
+            furniture: ['chest', 'barrel', 'table', 'chair', 'bed', 'door', 'gate', 'trapdoor', 'shelf', 'cauldron', 'bench', 'cabinet', 'lectern', 'loom', 'jukebox', 'furnace', 'smoker', 'blast_furnace'],
+            terrain: ['grass', 'dirt', 'sand', 'gravel', 'clay', 'mud', 'podzol', 'mycelium', 'soul_sand', 'netherrack', 'soul_soil', 'ice', 'snow', 'farmland'],
+            redstone: ['redstone', 'repeater', 'comparator', 'dispenser', 'dropper', 'piston', 'observer', 'button', 'lever', 'tripwire', 'rail', 'powered', 'detector'],
+            lighting: ['lantern', 'candle', 'torch', 'lamp', 'glow', 'light', 'bulb'],
+            plants: ['sapling', 'leaf', 'leaves', 'log', 'wood', 'stem', 'hyphae', 'vines', 'roots', 'fern', 'bush', 'flower', 'rose', 'tulip', 'daisy', 'orchid', 'mushroom', 'fungus', 'kelp', 'seaweed', 'berry', 'cane', 'bamboo'],
+            mining: ['ore', 'coal', 'iron', 'copper', 'gold', 'diamond', 'emerald', 'lapis', 'quartz', 'debris'],
+            tools: ['sword', 'pickaxe', 'axe', 'shovel', 'hoe', 'shears', 'fishing_rod', 'bow', 'crossbow', 'trident', 'flint'],
+            food: ['apple', 'bread', 'meat', 'beef', 'chicken', 'pork', 'fish', 'salmon', 'cod', 'tropical', 'pufferfish', 'mushroom_stew', 'stew', 'cookie', 'cake', 'melon', 'carrot', 'potato', 'wheat', 'berry', 'honey', 'chocolate', 'sugar'],
+            wearables: ['helmet', 'leggings', 'boots', 'armor', 'chestplate', 'elytra', 'turtle_shell', 'wolf_armor']
+        };
+
+        for (const [name, data] of Object.entries(itemsByName)) {
+            let categorized = false;
+
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+                if (keywords.some(keyword => name.includes(keyword))) {
+                    categories[category].push({
+                        name: name,
+                        id: data.id,
+                        displayName: data.displayName,
+                        stackSize: data.stackSize
+                    });
+                    categorized = true;
+                    break;
+                }
+            }
+
+            if (!categorized) {
+                categories.other.push({
+                    name: name,
+                    id: data.id,
+                    displayName: data.displayName,
+                    stackSize: data.stackSize
+                });
+            }
+        }
+
+        return Object.fromEntries(
+            Object.entries(categories).filter(([_, items]) => items.length > 0)
+        );
+    }
+
+
 
     async handleChat(req, res) {
         try {
@@ -2381,6 +2466,89 @@ export class ExternalAPI {
             });
         }
     }
+
+    async handleQuickBuild(req, res) {
+        try {
+            const { blueprint, taskLocation } = req.body;
+            
+            if (!blueprint) {
+                return res.status(400).json({ 
+                    error: 'blueprint parameter required'
+                });
+            }
+            
+            // Set task context
+            if (!this.agent.task) {
+                this.agent.task = {};
+            }
+            this.agent.task.blueprint = blueprint;
+            this.agent.task.taskLocation = taskLocation || { x: 0, y: -60, z: 0 };
+            
+            const command = `!quickBuild`;
+            const result = await executeCommand(this.agent, command);
+            
+            res.json({ success: true, message: result });
+        } catch (error) {
+            this.handleError(res, error, 'quickBuild');
+        }
+    }
+
+    async handleVerifyMaterials(req, res) {
+        try {
+            const { materials, userId } = req.body;
+
+            if (!materials) {
+                return res.status(400).json({
+                    error: 'blueprint with materials required'
+                });
+            }
+
+            if (!userId) {
+                return res.status(400).json({
+                    error: 'userId required'
+                });
+            }
+
+            const valid = [];
+            const invalid = [];
+
+            // Check each material exists in registry
+            for (const itemName of Object.keys(materials)) {
+                try {
+                    const response = await fetch(
+                        `http://localhost:4001/api/agent/${userId}/registry-item?itemName=${itemName}`,
+                        { method: 'GET', timeout: 5000 }
+                    );
+
+                    if (response.ok) {
+                        valid.push(itemName);
+                    } else {
+                        invalid.push(itemName);
+                    }
+                } catch (error) {
+                    invalid.push(itemName);
+                }
+            }
+
+            const allValid = invalid.length === 0;
+
+            res.json({
+                success: true,
+                allValid: allValid,
+                summary: {
+                    totalMaterials: Object.keys(materials).length,
+                    valid: valid.length,
+                    invalid: invalid.length
+                },
+                validItems: valid,
+                invalidItems: invalid
+            });
+
+        } catch (error) {
+            this.handleError(res, error, 'verifyMaterials');
+        }
+    }
+
     
     // Build from Blueprint usinf self-prompt loop
     async handleBuildBlueprint(req, res) {

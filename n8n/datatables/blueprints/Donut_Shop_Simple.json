@@ -2,6 +2,7 @@
   "Donut_Shop_Simple": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A Donut_Shop_Simple structure",
     "goal": "Build the Donut_Shop_Simple structure",
     "conversation": "Let's build the Donut_Shop_Simple structure together",

@@ -2,11 +2,13 @@
   "Tender": {
     "source": "schematic",
     "type": "construction",
+    "verified": false,
     "description": "A Tender structure",
     "goal": "Build the Tender structure",
     "conversation": "Let's build the Tender structure together",
     "agent_count": 1,
     "timeout": 300000,
+    "totalBlocks": 6852,
     "blueprint": {
       "materials": {
         "jungle_planks": 93,

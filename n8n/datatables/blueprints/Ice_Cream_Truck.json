@@ -2,6 +2,7 @@
   "Ice_Cream_Truck": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A Ice_Cream_Truck structure",
     "goal": "Build the Ice_Cream_Truck structure",
     "conversation": "Let's build the Ice_Cream_Truck structure together",

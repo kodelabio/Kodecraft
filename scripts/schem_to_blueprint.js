@@ -46,15 +46,18 @@ function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ
         }));
 
     // Build blueprint
+    const totalBlocks = Object.values(materials).reduce((a, b) => a + b, 0);
     const blueprint = {
         [name]: {
             source: "schematic",
             type: "construction",
+            verified: false,
             description: `A ${name} structure`,
             goal: `Build the ${name} structure`,
             conversation: `Let's build the ${name} structure together`,
             agent_count: 1,
             timeout: 300000,
+            totalBlocks: totalBlocks,
             blueprint: {
                 materials: materials,
                 levels: levels

@@ -5,6 +5,7 @@ WEBHOOK_URL="https://svdev-avatar.kodelab.io/webhook/kodecraft/update-blueprints
 BASE_DIR="./n8n/datatables"
 SUBDIR="blueprints"
 DATATABLE_NAME="blueprints"
+BLUEPRINT_NAME=""  # ← Add this
 
 # Help function
 show_help() {
@@ -17,12 +18,14 @@ Options:
   -d, --dir         Base directory containing exports (default: ./n8n/datatables)
   -s, --subdir      Timestamped subdirectory to import from (required for import)
   -n, --name        Name of the datatable to import to (required for import)
+  -b, --blueprint   Specific blueprint file to update (optional, without .json)
   -w, --webhook     Webhook URL for import (default: https://svdev-avatar.kodelab.io/webhook/kodecraft/update-datatable)
   -h, --help        Show this help message and exit
 
 Examples:
   $(basename "$0")                                                    # List available exports
   $(basename "$0") -s 20250101_120000 -n Blueprints                 # Import all files to datatable
+  $(basename "$0") -s 20250101_120000 -n Blueprints -b Tower        # Import only Tower blueprint
   $(basename "$0") -s 20250101_120000 -n Blueprints -w https://custom-url.com
 EOF
   exit 0
@@ -41,6 +44,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     -n|--name)
       DATATABLE_NAME="$2"
+      shift 2
+      ;;
+    -b|--blueprint)
+      BLUEPRINT_NAME="$2"
       shift 2
       ;;
     -w|--webhook)
@@ -101,17 +108,32 @@ if [[ -z "$DATATABLE_NAME" ]]; then
   show_help
 fi
 
-# Find all JSON files
-shopt -s nullglob
-json_files=("$SUBDIR_PATH"/*.json)
-shopt -u nullglob
+# If blueprint name specified, use only that file
+if [[ -n "$BLUEPRINT_NAME" ]]; then
+  # Add .json if not already there
+  [[ "$BLUEPRINT_NAME" != *.json ]] && BLUEPRINT_NAME="${BLUEPRINT_NAME}.json"
+  
+  INPUT_FILE="$SUBDIR_PATH/$BLUEPRINT_NAME"
+  if [[ ! -f "$INPUT_FILE" ]]; then
+    echo "Error: Blueprint file not found: $INPUT_FILE"
+    exit 1
+  fi
+  json_files=("$INPUT_FILE")
+  echo "Importing blueprint: $BLUEPRINT_NAME"
+else
+  # Find all JSON files
+  shopt -s nullglob
+  json_files=("$SUBDIR_PATH"/*.json)
+  shopt -u nullglob
 
-if [[ ${#json_files[@]} -eq 0 ]]; then
-  echo "Error: No JSON files found in $SUBDIR_PATH"
-  exit 1
+  if [[ ${#json_files[@]} -eq 0 ]]; then
+    echo "Error: No JSON files found in $SUBDIR_PATH"
+    exit 1
+  fi
+  echo "Importing ${#json_files[@]} file(s)..."
 fi
 
-echo "Importing ${#json_files[@]} file(s) to datatable: $DATATABLE_NAME"
+echo "Datatable: $DATATABLE_NAME"
 echo "Source directory: $SUBDIR_PATH"
 echo "Webhook URL: $WEBHOOK_URL"
 echo ""

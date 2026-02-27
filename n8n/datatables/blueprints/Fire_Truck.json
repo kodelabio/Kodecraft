@@ -2,11 +2,13 @@
   "Fire_Truck": {
     "source": "schematic",
     "type": "construction",
+    "verified": false,
     "description": "A Fire_Truck structure",
     "goal": "Build the Fire_Truck structure",
     "conversation": "Let's build the Fire_Truck structure together",
     "agent_count": 1,
     "timeout": 300000,
+    "totalBlocks": 285,
     "blueprint": {
       "materials": {
         "mangrove_button": 4,

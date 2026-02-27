@@ -54,8 +54,19 @@ function runAsAction (actionFn, resume = false, timeout = -1) {
             console.log(`[runAsAction] ${actionLabel} was interrupted`);
             return code_return.message || '';
         }
+        let message = code_return.message || '';
+        if (message.includes('returnsOnly')) {
+            try {
+                const parsed = JSON.parse(message);
+                if (parsed.returnsOnly) {
+                    return parsed.returnsOnly;
+                }
+            } catch (e) {
+                // Not JSON, continue normally
+            }
+        }
 
-        return code_return.message || '';
+        return message;
     }
 
     return wrappedAction;
@@ -697,6 +708,89 @@ export const actionsList = [
                 
             } catch (error) {
                 console.error('[autoBuild] Fatal error:', error);
+                return `Error: ${error.message}`;
+            } finally {
+                agent.bot.modes.unpause('unstuck');
+            }
+        })
+        },
+        {
+        name: '!quickBuild',
+        description: 'Ultra-fast setblock-only build for verification',
+        params: {},
+        perform: runAsAction(async (agent) => {
+            try {
+                if (!agent.task?.blueprint) {
+                    return 'No blueprint available';
+                }
+
+                agent.bot.modes.pause('unstuck');
+                
+                const blueprint = agent.task.blueprint;
+                const levels = blueprint.levels;
+                const taskLocation = agent.task.taskLocation;
+                const offsetX = taskLocation?.x || 0;
+                const offsetZ = taskLocation?.z || 0;
+                
+                let blocksPlaced = 0;
+                let blocksFailed = 0;
+                
+                // Import skills
+                const skillsModule = await import('../library/skills.js');
+                
+                // Place blocks WITHOUT movement logic - just iterate all blocks
+                for (const level of levels) {
+                    const baseX = level.coordinates[0];
+                    const baseY = level.coordinates[1];
+                    const baseZ = level.coordinates[2];
+                    
+                    if (!level.blocks) continue;
+                    
+                    for (const block of level.blocks) {
+                        try {
+                            const x = baseX + block.x + offsetX;
+                            const y = baseY;
+                            const z = baseZ + block.z + offsetZ;
+                            
+                            // Skip if already correct
+                            //const existing = agent.bot.blockAt(x, y, z);
+                            //if (existing?.name === block.material) {
+                            //    blocksPlaced++;
+                            //    continue;
+                            //}
+                            
+                            // Use setblock directly (dontCheat = false)
+                            const success = await skillsModule.placeBlock(
+                                agent.bot,
+                                block.material,
+                                x, y, z,
+                                'bottom',
+                                false  // Force setblock
+                            );
+                            
+                            if (success) {
+                                blocksPlaced++;
+                            } else {
+                                blocksFailed++;
+                            }
+                            
+                            // Minimal delay between setblock calls
+                            await new Promise(r => setTimeout(r, 5));
+                            
+                        } catch (err) {
+                            blocksFailed++;
+                        }
+                    }
+                    console.log(`Level ${level.level} completed.`)
+                }
+                console.log(`Quick build completed. Placed ${blocksPlaced} blocks.`)
+                return JSON.stringify({
+                    returnsOnly: `Quick build complete: ${blocksPlaced} placed, ${blocksFailed} failed`
+                    });
+                //return `Quick build complete: ${blocksPlaced} placed, ${blocksFailed} failed`;
+                
+            } catch (error) {
+                console.error('[quickBuild] Error:', error);
                 return `Error: ${error.message}`;
             } finally {
                 agent.bot.modes.unpause('unstuck');

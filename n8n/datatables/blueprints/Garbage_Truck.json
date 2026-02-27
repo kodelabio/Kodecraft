@@ -1,0 +1,1642 @@
+{
+  "Garbage_Truck": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": false,
+    "description": "A Garbage_Truck structure",
+    "goal": "Build the Garbage_Truck structure",
+    "conversation": "Let's build the Garbage_Truck structure together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "totalBlocks": 305,
+    "blueprint": {
+      "materials": {
+        "stone_button": 6,
+        "smooth_stone_slab": 57,
+        "coal_block": 6,
+        "smooth_quartz": 32,
+        "dark_oak_door": 4,
+        "orange_concrete": 101,
+        "stone_stairs": 2,
+        "rooted_dirt": 24,
+        "light_gray_banner": 6,
+        "orange_carpet": 3,
+        "acacia_trapdoor": 1,
+        "orange_wall_banner": 44,
+        "glass_pane": 4,
+        "glass": 6,
+        "iron_bars": 2,
+        "smooth_quartz_stairs": 5,
+        "orange_stained_glass": 2
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone_button"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone_button"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "stone_button"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "coal_block"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "coal_block"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "coal_block"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "coal_block"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "coal_block"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "coal_block"
+            },
+            {
+              "x": 12,
+              "z": 5,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_button"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_button"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "stone_button"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "dark_oak_door"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "orange_carpet"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "acacia_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "orange_carpet"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_stairs"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "orange_carpet"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "dark_oak_door"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 5,
+              "material": "orange_concrete"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 12,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "glass_pane"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "dark_oak_door"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "glass_pane"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "dark_oak_door"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 12,
+              "z": 6,
+              "material": "orange_wall_banner"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 0,
+              "material": "iron_bars"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "glass_pane"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "glass"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "smooth_stone_slab"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "light_gray_banner"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "glass_pane"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 12,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "iron_bars"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "orange_wall_banner"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_quartz_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smooth_quartz"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "orange_concrete"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "orange_wall_banner"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "orange_wall_banner"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "orange_stained_glass"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "orange_stained_glass"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone_button": 6,
+        "smooth_stone_slab": 57,
+        "coal_block": 6,
+        "smooth_quartz": 32,
+        "dark_oak_door": 4,
+        "orange_concrete": 101,
+        "stone_stairs": 2,
+        "rooted_dirt": 24,
+        "light_gray_banner": 6,
+        "orange_carpet": 3,
+        "acacia_trapdoor": 1,
+        "orange_wall_banner": 44,
+        "glass_pane": 4,
+        "glass": 6,
+        "iron_bars": 2,
+        "smooth_quartz_stairs": 5,
+        "orange_stained_glass": 2
+      }
+    }
+  }
+}

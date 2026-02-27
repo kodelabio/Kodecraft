@@ -2,11 +2,13 @@
   "Galeon": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A Galeon structure",
     "goal": "Build the Galeon structure",
     "conversation": "Let's build the Galeon structure together",
     "agent_count": 1,
     "timeout": 300000,
+    "totalBlocks": 23821,
     "blueprint": {
       "materials": {
         "deepslate_tile_slab": 204,
@@ -33,7 +35,7 @@
         "composter": 38,
         "campfire": 37,
         "spruce_fence": 371,
-        "light_gray_banner": 4,
+        "light_gray_banner": 6,
         "cartography_table": 19,
         "spruce_log": 11,
         "ladder": 28,
@@ -43,14 +45,13 @@
         "soul_lantern": 9,
         "dark_oak_fence_gate": 153,
         "spruce_pressure_plate": 27,
-        "dark_oak_wall_hanging_sign": 53,
+        "dark_oak_hanging_sign": 71,
         "warped_trapdoor": 48,
         "spruce_stairs": 77,
         "spruce_button": 54,
         "light_gray_carpet": 2,
-        "light_gray_wall_banner": 2,
         "stone_pressure_plate": 9,
-        "spruce_hanging_sign": 8,
+        "spruce_hanging_sign": 12,
         "tuff_stairs": 8,
         "rail": 19,
         "lever": 1242,
@@ -67,7 +68,7 @@
         "deepslate_tile_stairs": 422,
         "stripped_spruce_log": 3,
         "dark_oak_door": 68,
-        "wither_skeleton_skull": 25,
+        "wither_skeleton_skull": 79,
         "dark_oak_button": 73,
         "stone_button": 14,
         "glow_lichen": 2,
@@ -84,13 +85,10 @@
         "nether_brick_stairs": 334,
         "nether_bricks": 108,
         "chain": 154,
-        "spruce_wall_hanging_sign": 4,
         "polished_deepslate_slab": 154,
-        "wither_skeleton_wall_skull": 54,
         "polished_tuff_wall": 220,
         "cobbled_deepslate_wall": 42,
         "tuff_bricks": 78,
-        "dark_oak_hanging_sign": 18,
         "anvil": 31,
         "redstone_block": 141,
         "spruce_planks": 42,
@@ -99,7 +97,7 @@
         "mud_brick_wall": 88,
         "mangrove_trapdoor": 63,
         "nether_brick_wall": 43,
-        "water_cauldron": 2,
+        "cauldron": 2,
         "spruce_slab": 43,
         "smoker": 4,
         "brown_carpet": 45,
@@ -123,7 +121,7 @@
         "white_banner": 9,
         "tripwire_hook": 9,
         "dark_oak_pressure_plate": 4,
-        "carrots": 2,
+        "carrot": 2,
         "polished_tuff": 66,
         "mangrove_stairs": 44,
         "cracked_deepslate_tiles": 61,
@@ -141,7 +139,7 @@
         "red_nether_brick_wall": 47,
         "polished_deepslate": 20,
         "deepslate_brick_stairs": 22,
-        "attached_melon_stem": 12,
+        "melon_stem": 12,
         "acacia_button": 2,
         "decorated_pot": 3,
         "tuff_slab": 3,
@@ -151,7 +149,7 @@
         "polished_blackstone_stairs": 60,
         "tuff_wall": 30,
         "soul_torch": 12,
-        "potted_cornflower": 1,
+        "cornflower": 1,
         "mangrove_sign": 50,
         "crimson_slab": 14,
         "warped_fence": 2,
@@ -166,13 +164,13 @@
         "lectern": 1,
         "red_wool": 6,
         "red_glazed_terracotta": 3,
-        "potted_oak_sapling": 2,
+        "oak_sapling": 2,
         "warped_hyphae": 1,
         "birch_fence": 13,
         "polished_blackstone_brick_wall": 6,
-        "potted_dark_oak_sapling": 1,
+        "dark_oak_sapling": 1,
         "red_carpet": 4,
-        "torchflower_crop": 2,
+        "torchflower": 2,
         "brewing_stand": 1,
         "jungle_pressure_plate": 1,
         "polished_blackstone_brick_slab": 2,
@@ -13481,7 +13479,7 @@
             {
               "x": 40,
               "z": 99,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -13506,7 +13504,7 @@
             {
               "x": 40,
               "z": 100,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -13531,7 +13529,7 @@
             {
               "x": 40,
               "z": 101,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -13551,7 +13549,7 @@
             {
               "x": 40,
               "z": 102,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -13566,7 +13564,7 @@
             {
               "x": 40,
               "z": 103,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -15551,7 +15549,7 @@
             {
               "x": 29,
               "z": 108,
-              "material": "light_gray_wall_banner"
+              "material": "light_gray_banner"
             },
             {
               "x": 32,
@@ -15566,7 +15564,7 @@
             {
               "x": 39,
               "z": 108,
-              "material": "light_gray_wall_banner"
+              "material": "light_gray_banner"
             },
             {
               "x": 40,
@@ -28336,12 +28334,12 @@
             {
               "x": 28,
               "z": 83,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 40,
               "z": 83,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -28366,7 +28364,7 @@
             {
               "x": 28,
               "z": 84,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 29,
@@ -28401,7 +28399,7 @@
             {
               "x": 40,
               "z": 84,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -28426,12 +28424,12 @@
             {
               "x": 28,
               "z": 85,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 40,
               "z": 85,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -28461,7 +28459,7 @@
             {
               "x": 28,
               "z": 86,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 31,
@@ -28501,7 +28499,7 @@
             {
               "x": 40,
               "z": 86,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 41,
@@ -28856,12 +28854,12 @@
             {
               "x": 26,
               "z": 93,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 93,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 43,
@@ -28886,7 +28884,7 @@
             {
               "x": 26,
               "z": 94,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 39,
@@ -28896,7 +28894,7 @@
             {
               "x": 42,
               "z": 94,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 43,
@@ -28921,12 +28919,12 @@
             {
               "x": 26,
               "z": 95,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 95,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 43,
@@ -28951,12 +28949,12 @@
             {
               "x": 26,
               "z": 96,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 96,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 43,
@@ -28981,12 +28979,12 @@
             {
               "x": 26,
               "z": 97,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 97,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 43,
@@ -29061,12 +29059,12 @@
             {
               "x": 26,
               "z": 99,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 99,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29091,12 +29089,12 @@
             {
               "x": 26,
               "z": 100,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 100,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29121,7 +29119,7 @@
             {
               "x": 26,
               "z": 101,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 39,
@@ -29131,7 +29129,7 @@
             {
               "x": 42,
               "z": 101,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29156,12 +29154,12 @@
             {
               "x": 26,
               "z": 102,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 102,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29186,12 +29184,12 @@
             {
               "x": 26,
               "z": 103,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 103,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29276,7 +29274,7 @@
             {
               "x": 26,
               "z": 105,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 30,
@@ -29326,7 +29324,7 @@
             {
               "x": 42,
               "z": 105,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29351,12 +29349,12 @@
             {
               "x": 26,
               "z": 106,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 106,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29381,12 +29379,12 @@
             {
               "x": 26,
               "z": 107,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 107,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29411,12 +29409,12 @@
             {
               "x": 26,
               "z": 108,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 42,
               "z": 108,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29606,7 +29604,7 @@
             {
               "x": 26,
               "z": 111,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 30,
@@ -29656,7 +29654,7 @@
             {
               "x": 42,
               "z": 111,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29681,7 +29679,7 @@
             {
               "x": 26,
               "z": 112,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 34,
@@ -29691,7 +29689,7 @@
             {
               "x": 42,
               "z": 112,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29716,7 +29714,7 @@
             {
               "x": 26,
               "z": 113,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 34,
@@ -29726,7 +29724,7 @@
             {
               "x": 42,
               "z": 113,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -29751,7 +29749,7 @@
             {
               "x": 26,
               "z": 114,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 34,
@@ -29761,7 +29759,7 @@
             {
               "x": 42,
               "z": 114,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 44,
@@ -37041,12 +37039,12 @@
             {
               "x": 31,
               "z": 131,
-              "material": "spruce_wall_hanging_sign"
+              "material": "spruce_hanging_sign"
             },
             {
               "x": 32,
               "z": 131,
-              "material": "spruce_wall_hanging_sign"
+              "material": "spruce_hanging_sign"
             },
             {
               "x": 33,
@@ -37066,12 +37064,12 @@
             {
               "x": 36,
               "z": 131,
-              "material": "spruce_wall_hanging_sign"
+              "material": "spruce_hanging_sign"
             },
             {
               "x": 37,
               "z": 131,
-              "material": "spruce_wall_hanging_sign"
+              "material": "spruce_hanging_sign"
             },
             {
               "x": 38,
@@ -38636,7 +38634,7 @@
             {
               "x": 22,
               "z": 79,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 23,
@@ -38696,7 +38694,7 @@
             {
               "x": 46,
               "z": 79,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
@@ -38841,7 +38839,7 @@
             {
               "x": 22,
               "z": 84,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 23,
@@ -38901,7 +38899,7 @@
             {
               "x": 46,
               "z": 84,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 31,
@@ -39021,7 +39019,7 @@
             {
               "x": 21,
               "z": 89,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -39076,7 +39074,7 @@
             {
               "x": 47,
               "z": 89,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 26,
@@ -39211,7 +39209,7 @@
             {
               "x": 20,
               "z": 94,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -39266,7 +39264,7 @@
             {
               "x": 48,
               "z": 94,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -39351,7 +39349,7 @@
             {
               "x": 20,
               "z": 99,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -39406,7 +39404,7 @@
             {
               "x": 48,
               "z": 99,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 42,
@@ -39546,7 +39544,7 @@
             {
               "x": 20,
               "z": 104,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -39611,7 +39609,7 @@
             {
               "x": 48,
               "z": 104,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
@@ -39766,7 +39764,7 @@
             {
               "x": 20,
               "z": 109,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -39826,7 +39824,7 @@
             {
               "x": 48,
               "z": 109,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 33,
@@ -39991,7 +39989,7 @@
             {
               "x": 20,
               "z": 114,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -40046,7 +40044,7 @@
             {
               "x": 48,
               "z": 114,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -40136,7 +40134,7 @@
             {
               "x": 20,
               "z": 119,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 21,
@@ -40216,7 +40214,7 @@
             {
               "x": 48,
               "z": 119,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -40386,7 +40384,7 @@
             {
               "x": 21,
               "z": 124,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -40441,7 +40439,7 @@
             {
               "x": 47,
               "z": 124,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 32,
@@ -44631,12 +44629,12 @@
             {
               "x": 31,
               "z": 127,
-              "material": "water_cauldron"
+              "material": "cauldron"
             },
             {
               "x": 32,
               "z": 127,
-              "material": "water_cauldron"
+              "material": "cauldron"
             },
             {
               "x": 33,
@@ -53511,7 +53509,7 @@
             {
               "x": 42,
               "z": 142,
-              "material": "carrots"
+              "material": "carrot"
             },
             {
               "x": 43,
@@ -53596,7 +53594,7 @@
             {
               "x": 42,
               "z": 143,
-              "material": "carrots"
+              "material": "carrot"
             },
             {
               "x": 43,
@@ -66646,7 +66644,7 @@
             {
               "x": 24,
               "z": 76,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 25,
@@ -66711,7 +66709,7 @@
             {
               "x": 44,
               "z": 76,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 26,
@@ -66881,7 +66879,7 @@
             {
               "x": 24,
               "z": 81,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 25,
@@ -66961,7 +66959,7 @@
             {
               "x": 44,
               "z": 81,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 26,
@@ -67131,7 +67129,7 @@
             {
               "x": 23,
               "z": 86,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -67186,7 +67184,7 @@
             {
               "x": 45,
               "z": 86,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 25,
@@ -67416,12 +67414,12 @@
             {
               "x": 30,
               "z": 91,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 38,
               "z": 91,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 39,
@@ -67596,12 +67594,12 @@
             {
               "x": 29,
               "z": 96,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 39,
               "z": 96,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 40,
@@ -67766,12 +67764,12 @@
             {
               "x": 29,
               "z": 101,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 39,
               "z": 101,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 40,
@@ -68081,12 +68079,12 @@
             {
               "x": 29,
               "z": 111,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 39,
               "z": 111,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 40,
@@ -68281,7 +68279,7 @@
             {
               "x": 29,
               "z": 117,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 32,
@@ -68296,7 +68294,7 @@
             {
               "x": 39,
               "z": 117,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 40,
@@ -72056,7 +72054,7 @@
             {
               "x": 22,
               "z": 91,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 23,
@@ -72121,7 +72119,7 @@
             {
               "x": 46,
               "z": 91,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 25,
@@ -72261,7 +72259,7 @@
             {
               "x": 21,
               "z": 96,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -72326,7 +72324,7 @@
             {
               "x": 47,
               "z": 96,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -72461,7 +72459,7 @@
             {
               "x": 21,
               "z": 101,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -72526,7 +72524,7 @@
             {
               "x": 47,
               "z": 101,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -72746,7 +72744,7 @@
             {
               "x": 21,
               "z": 111,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -72816,7 +72814,7 @@
             {
               "x": 47,
               "z": 111,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -72961,7 +72959,7 @@
             {
               "x": 21,
               "z": 117,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 22,
@@ -73026,7 +73024,7 @@
             {
               "x": 47,
               "z": 117,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -73496,7 +73494,7 @@
             {
               "x": 23,
               "z": 128,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 24,
@@ -73526,7 +73524,7 @@
             {
               "x": 29,
               "z": 128,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 31,
@@ -73541,7 +73539,7 @@
             {
               "x": 39,
               "z": 128,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 40,
@@ -73571,7 +73569,7 @@
             {
               "x": 45,
               "z": 128,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 26,
@@ -77776,7 +77774,7 @@
             {
               "x": 40,
               "z": 134,
-              "material": "potted_cornflower"
+              "material": "cornflower"
             },
             {
               "x": 41,
@@ -87201,7 +87199,7 @@
             {
               "x": 38,
               "z": 137,
-              "material": "potted_oak_sapling"
+              "material": "oak_sapling"
             },
             {
               "x": 39,
@@ -88171,7 +88169,7 @@
             {
               "x": 35,
               "z": 75,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 39,
@@ -88201,7 +88199,7 @@
             {
               "x": 34,
               "z": 76,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 35,
@@ -88211,7 +88209,7 @@
             {
               "x": 36,
               "z": 76,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 37,
@@ -88226,7 +88224,7 @@
             {
               "x": 35,
               "z": 77,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 39,
@@ -88241,7 +88239,7 @@
             {
               "x": 26,
               "z": 79,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 27,
@@ -88296,7 +88294,7 @@
             {
               "x": 42,
               "z": 79,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 33,
@@ -88406,7 +88404,7 @@
             {
               "x": 25,
               "z": 85,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 26,
@@ -88461,7 +88459,7 @@
             {
               "x": 43,
               "z": 85,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 25,
@@ -89231,7 +89229,7 @@
             {
               "x": 37,
               "z": 134,
-              "material": "potted_dark_oak_sapling"
+              "material": "dark_oak_sapling"
             },
             {
               "x": 40,
@@ -89341,7 +89339,7 @@
             {
               "x": 39,
               "z": 136,
-              "material": "potted_oak_sapling"
+              "material": "oak_sapling"
             },
             {
               "x": 40,
@@ -89566,12 +89564,12 @@
             {
               "x": 31,
               "z": 141,
-              "material": "torchflower_crop"
+              "material": "torchflower"
             },
             {
               "x": 32,
               "z": 141,
-              "material": "torchflower_crop"
+              "material": "torchflower"
             },
             {
               "x": 33,
@@ -101966,12 +101964,12 @@
             {
               "x": 40,
               "z": 140,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 39,
               "z": 141,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 40,
@@ -101981,7 +101979,7 @@
             {
               "x": 41,
               "z": 141,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 38,
@@ -101991,7 +101989,7 @@
             {
               "x": 40,
               "z": 142,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
@@ -102511,7 +102509,7 @@
             {
               "x": 28,
               "z": 144,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 30,
@@ -102561,7 +102559,7 @@
             {
               "x": 27,
               "z": 145,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 28,
@@ -102571,12 +102569,12 @@
             {
               "x": 29,
               "z": 145,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 28,
               "z": 146,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
@@ -107261,12 +107259,12 @@
             {
               "x": 34,
               "z": 143,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 33,
               "z": 144,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
@@ -107276,12 +107274,12 @@
             {
               "x": 35,
               "z": 144,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             },
             {
               "x": 34,
               "z": 145,
-              "material": "wither_skeleton_wall_skull"
+              "material": "wither_skeleton_skull"
             }
           ]
         },
@@ -120318,7 +120316,7 @@
         "composter": 38,
         "campfire": 37,
         "spruce_fence": 371,
-        "light_gray_banner": 4,
+        "light_gray_banner": 6,
         "cartography_table": 19,
         "spruce_log": 11,
         "ladder": 28,
@@ -120328,14 +120326,13 @@
         "soul_lantern": 9,
         "dark_oak_fence_gate": 153,
         "spruce_pressure_plate": 27,
-        "dark_oak_wall_hanging_sign": 53,
+        "dark_oak_hanging_sign": 71,
         "warped_trapdoor": 48,
         "spruce_stairs": 77,
         "spruce_button": 54,
         "light_gray_carpet": 2,
-        "light_gray_wall_banner": 2,
         "stone_pressure_plate": 9,
-        "spruce_hanging_sign": 8,
+        "spruce_hanging_sign": 12,
         "tuff_stairs": 8,
         "rail": 19,
         "lever": 1242,
@@ -120352,7 +120349,7 @@
         "deepslate_tile_stairs": 422,
         "stripped_spruce_log": 3,
         "dark_oak_door": 68,
-        "wither_skeleton_skull": 25,
+        "wither_skeleton_skull": 79,
         "dark_oak_button": 73,
         "stone_button": 14,
         "glow_lichen": 2,
@@ -120369,13 +120366,10 @@
         "nether_brick_stairs": 334,
         "nether_bricks": 108,
         "chain": 154,
-        "spruce_wall_hanging_sign": 4,
         "polished_deepslate_slab": 154,
-        "wither_skeleton_wall_skull": 54,
         "polished_tuff_wall": 220,
         "cobbled_deepslate_wall": 42,
         "tuff_bricks": 78,
-        "dark_oak_hanging_sign": 18,
         "anvil": 31,
         "redstone_block": 141,
         "spruce_planks": 42,
@@ -120384,7 +120378,7 @@
         "mud_brick_wall": 88,
         "mangrove_trapdoor": 63,
         "nether_brick_wall": 43,
-        "water_cauldron": 2,
+        "cauldron": 2,
         "spruce_slab": 43,
         "smoker": 4,
         "brown_carpet": 45,
@@ -120408,7 +120402,7 @@
         "white_banner": 9,
         "tripwire_hook": 9,
         "dark_oak_pressure_plate": 4,
-        "carrots": 2,
+        "carrot": 2,
         "polished_tuff": 66,
         "mangrove_stairs": 44,
         "cracked_deepslate_tiles": 61,
@@ -120426,7 +120420,7 @@
         "red_nether_brick_wall": 47,
         "polished_deepslate": 20,
         "deepslate_brick_stairs": 22,
-        "attached_melon_stem": 12,
+        "melon_stem": 12,
         "acacia_button": 2,
         "decorated_pot": 3,
         "tuff_slab": 3,
@@ -120436,7 +120430,7 @@
         "polished_blackstone_stairs": 60,
         "tuff_wall": 30,
         "soul_torch": 12,
-        "potted_cornflower": 1,
+        "cornflower": 1,
         "mangrove_sign": 50,
         "crimson_slab": 14,
         "warped_fence": 2,
@@ -120451,13 +120445,13 @@
         "lectern": 1,
         "red_wool": 6,
         "red_glazed_terracotta": 3,
-        "potted_oak_sapling": 2,
+        "oak_sapling": 2,
         "warped_hyphae": 1,
         "birch_fence": 13,
         "polished_blackstone_brick_wall": 6,
-        "potted_dark_oak_sapling": 1,
+        "dark_oak_sapling": 1,
         "red_carpet": 4,
-        "torchflower_crop": 2,
+        "torchflower": 2,
         "brewing_stand": 1,
         "jungle_pressure_plate": 1,
         "polished_blackstone_brick_slab": 2,

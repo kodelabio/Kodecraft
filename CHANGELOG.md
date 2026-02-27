@@ -139,3 +139,10 @@ The workers now spawn and are instantly teleported to safe positions near the le
 Notes: 
 - add variable `MINECRAFT_WORLD_TYPE=flat` to `.env`
 - add `"minecraft_world_type": process.env.MINECRAFT_WORLD_TYPE || 'normal'` to `settings.js`
+
+# [1.3.6]
+### Added
+- Verify blueprint API
+- Quick Build from blueprint API
+# Fixed
+- blueprint import script for legacy formats

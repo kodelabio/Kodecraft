@@ -2,6 +2,7 @@
   "medieval_house_b10": {
     "source": "schematic",
     "type": "construction",
+    "verified": true,
     "description": "A medieval_house_b10 structure",
     "goal": "Build the medieval_house_b10 structure",
     "conversation": "Let's build the medieval_house_b10 structure together",

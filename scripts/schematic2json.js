@@ -21,6 +21,19 @@ const gunzipAsync = promisify(gunzip);
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+
+function unsignIndex(idx) {
+    return idx < 0 ? 256 + idx : idx;
+}
+
+function fallbackToLegacy(idx) {
+    if (idx < 0 || idx > 255) return null;
+    const legacyMap = getLegacyBlockMap();
+    const blockName = legacyMap[idx];
+    return blockName ? blockName : null;
+}
+
+
 function getLegacyBlockMap() {
     return legacyBlockIds;
 }
@@ -86,9 +99,6 @@ async function schematicToJSON(inputPath, outputPath) {
 
     console.log(`📐 Dimensions: ${width} x ${height} x ${length}`);
     const tileEntities = nbtVal(root.TileEntities);
-    //console.log('DEBUG: TileEntities sample:', JSON.stringify(tileEntities, null, 2).substring(0, 1000));
-    //console.log('DEBUG: root keys:', Object.keys(root).slice(0, 20));
-    //console.log('DEBUG: full root structure:', JSON.stringify(root, null, 2).substring(0, 1000));
 
     // ── Extract palette from Materials ──────────────────────────────────────────
     // ── Extract palette ─────────────────────────────────────────────────────────
@@ -97,7 +107,6 @@ async function schematicToJSON(inputPath, outputPath) {
 
     if (!rawPalette) {
         console.log('⚠️  No palette found, building from block IDs');
-        // For old WorldEdit format, build palette from actual block IDs in the data
         const blockIds = nbtVal(root.Blocks);
         const uniqueIds = new Set(
             Array.isArray(blockIds) 
@@ -109,8 +118,9 @@ async function schematicToJSON(inputPath, outputPath) {
         const legacyMap = getLegacyBlockMap();
         
         for (const id of uniqueIds) {
-            const blockName = legacyMap[id] || `minecraft:block_${id}`;
-            rawPalette[blockName] = id;
+            const unsignedId = unsignIndex(id);  // ← Convert negative to unsigned
+            const blockName = legacyMap[unsignedId] || `minecraft:block_${unsignedId}`;
+            rawPalette[blockName] = unsignedId;
         }
         
         console.log(`🔍 Found ${uniqueIds.size} unique block IDs in file`);
@@ -119,8 +129,10 @@ async function schematicToJSON(inputPath, outputPath) {
     // Palette: blockStateName -> paletteIndex
     const palette = {};
     for (const [name, val] of Object.entries(rawPalette)) {
-        palette[name] = nbtVal(val);
+        const unsignedIdx = unsignIndex(nbtVal(val));
+        palette[name] = unsignedIdx;
     }
+    
 
     // Invert: paletteIndex -> blockStateName
     const indexToName = {};
@@ -155,8 +167,8 @@ async function schematicToJSON(inputPath, outputPath) {
         for (let z = 0; z < length; z++) {
             for (let x = 0; x < width; x++) {
                 const i = y * width * length + z * width + x;
-                const paletteIdx = indices[i];
-                const fullName = indexToName[paletteIdx] ?? 'minecraft:air';
+                const paletteIdx = unsignIndex(indices[i]);
+                const fullName = indexToName[paletteIdx] ?? fallbackToLegacy(paletteIdx) ?? 'minecraft:air';
 
                 if (fullName === 'minecraft:air') {
                     airCount++;

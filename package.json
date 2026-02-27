@@ -27,6 +27,7 @@
         "prismarine-item": "^1.15.0",
         "prismarine-viewer": "^1.32.0",
         "replicate": "^0.29.4",
+        "schematic2schem": "^1.2.2",
         "ses": "^1.9.1",
         "socket.io": "^4.7.2",
         "socket.io-client": "^4.7.2",

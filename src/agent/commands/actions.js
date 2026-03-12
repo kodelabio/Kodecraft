@@ -297,6 +297,17 @@ export const actionsList = [
         })
     },
     {
+        name: '!acquireItem',
+        description: 'Acquire an item for yourself (bot).',
+        params: { 
+            'item_name': { type: 'ItemName', description: 'The name of the item to acquire.' },
+            'num': { type: 'int', description: 'The number of items to acquire.', domain: [1, Number.MAX_SAFE_INTEGER] }
+        },
+        perform: runAsAction(async (agent, item_name, num) => {
+            return await skills.acquireItem(agent.bot, item_name, num);
+        }, false, 5)
+    },
+    {
         name: '!givePlayer',
         description: 'Give the specified item to the given player.',
         params: { 
@@ -468,7 +479,29 @@ export const actionsList = [
         params: {'type': { type: 'BlockOrItemName', description: 'The block type to place.' }},
         perform: runAsAction(async (agent, type) => {
             let pos = agent.bot.entity.position;
-            await skills.placeBlock(agent.bot, type, pos.x, pos.y, pos.z);
+            await skills.placeBlock(agent.bot, type, pos.x, pos.y, pos.z, 'top', true);
+        })
+    },
+    {
+        name: '!activate',
+        description: 'Activate or interact with a nearby block of the given type.',
+        params: {
+            'blockType': { type: 'string', description: 'The type of block to activate (door, lever, button, furnace, etc).' }
+        },
+        perform: runAsAction(async (agent, blockType) => {
+            try {
+                const result = await skills.activateNearestBlock(agent.bot, blockType);
+                return result || `Activated ${blockType}.`;
+            } catch (error) {
+                throw new Error(`Failed to activate ${blockType}: ${error.message}`);
+            }
+        }, false, 5)
+    },
+    {
+        name: '!useDoor',
+        description: 'Use the nearest door or a door at specific coordinates.',
+        perform: runAsAction(async (agent, x, y, z) => {
+            return await skills.useDoor(agent.bot, x && y && z ? new Vec3(x, y, z) : null);
         })
     },
     /**
@@ -823,7 +856,9 @@ export const actionsList = [
         name: '!goToBed',
         description: 'Go to the nearest bed and sleep.',
         perform: runAsAction(async (agent) => {
-            await skills.goToBed(agent.bot);
+            const result = await skills.goToBed(agent.bot);
+            return result;
+
         })
     },
     {
@@ -957,14 +992,25 @@ export const actionsList = [
             'z': { type: 'int', description: 'z coordinate' }
         },
         perform: async function(agent, x, y, z) {
+            agent.bot.modes.pause('unstuck');
+            try {
+                const result = await agent.vision_interpreter.lookAtPosition(x, y, z);
+                console.log(`[!lookAtPosition] Got result:`, result?.substring?.(0, 100));
+                return result;
+            } finally {
+                agent.bot.modes.unpause('unstuck');
+            }
+        }
+    },
+        /*
+        perform: async function(agent, x, y, z) {
             let result = "";
             const actionFn = async () => {
                 result = await agent.vision_interpreter.lookAtPosition(x, y, z);
             };
             await agent.actions.runAction('action:lookAtPosition', actionFn);
             return result;
-        }
-    },
+        }*/
     {
         name: '!digDown',
         description: 'Digs down a specified distance. Will stop if it reaches lava, water, or a fall of >=4 blocks below the bot.',

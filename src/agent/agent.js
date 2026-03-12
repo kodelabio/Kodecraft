@@ -87,7 +87,8 @@ export class Agent {
                 add: () => {}, 
                 save: () => {}, 
                 load: () => null,
-                memory: ''
+                memory: '',
+                getHistory: () => [],  // ← Add this
             };
             // Create dummy self_prompter to prevent errors in modes.js
             this.self_prompter = {

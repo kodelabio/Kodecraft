@@ -34,4 +34,4 @@ logs/
 mindcraft/
 kodecraft_src/
 .env
-
+.config

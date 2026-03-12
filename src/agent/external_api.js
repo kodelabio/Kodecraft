@@ -85,7 +85,9 @@ export class ExternalAPI {
         this.app.post('/api/agent/fish', this.handleFish.bind(this));
         this.app.post('/api/agent/catchFish', this.handleCatchFish.bind(this));
         this.app.post('/api/agent/shear', this.handleShear.bind(this));
+
         this.app.post('/api/agent/givePlayer', this.handleGivePlayer.bind(this));
+        this.app.post('/api/agent/acquireItem', this.handleAcquireItem.bind(this));
         this.app.get('/api/agent/registry-item', this.handleRegistryItem.bind(this));
         this.app.get('/api/agent/registry-items', this.handleRegistryItems.bind(this));
         this.app.get('/api/agent/registry-categorized', this.handleRegistryCategorized.bind(this));
@@ -389,7 +391,7 @@ export class ExternalAPI {
             return res.status(403).json({
                 success: false,
                 code: 'realm_trespass_leader',
-                message: `Trespass detected! Position (${targetPos.x}, ${targetPos.y}, ${targetPos.z}) outside realm bounds`,
+                message: `Trespass detected! Position (${x}, ${y}, ${z}) outside realm bounds`,
                 bounds: validation.bounds
             });
         }
@@ -406,13 +408,13 @@ export class ExternalAPI {
         
         console.log(`[Validation] sessionId: ${sessionId}, targetPos:`, targetPos);
         
-        if (!targetPos || !sessionId) {
-            console.log(`[Validation] Skipping - no targetPos or sessionId`);
+        if (!targetPos) {
+            console.log(`[Validation] Skipping - no targetPos`);
             return next();
         }
         
-        const session = this.orchestration.taskSessions.get(sessionId);
-        console.log(`[Validation] Session found:`, session ? 'yes' : 'no');
+        //const session = this.orchestration.taskSessions.get(sessionId);
+        //console.log(`[Validation] Session found:`, session ? 'yes' : 'no');
 
         // Use LEADER realm bounds (not session-specific)
         if (!this.leaderRealmBounds) {
@@ -992,7 +994,8 @@ export class ExternalAPI {
         }
     }
 
-    // âœ… FIXED handleUseDoor
+    // âœ… FIXED handleUseDoor: WHY USE newAction???
+    /*
     async handleUseDoor(req, res) {
         try {
             const { x, y, z } = req.body;
@@ -1010,6 +1013,32 @@ export class ExternalAPI {
             } else {
                 command = `!newAction("Use nearest door")`;
             }
+            
+            const result = await executeCommand(this.agent, command);
+            
+            res.json({ success: true, message: result || 'Using door' });
+        } catch (error) {
+            this.handleError(res, error, 'useDoor');
+        }
+    }
+    */
+    async handleUseDoor(req, res) {
+        try {
+            const { x, y, z, action = 'toggle' } = req.body;
+            
+            let command;
+            if (x !== undefined && y !== undefined && z !== undefined) {
+                const coordValidation = this.validateAndRoundCoordinates(x, y, z);
+                if (typeof coordValidation === 'string') {
+                    return res.status(400).json({ 
+                        error: coordValidation,
+                        code: 'invalid_coordinates'
+                    });
+                }
+                command = `!useDoor(${coordValidation.x}, ${coordValidation.y}, ${coordValidation.z}, "${action}")`;
+                } else {
+                    command = `!useDoor(null, "${action}")`;
+                }
             
             const result = await executeCommand(this.agent, command);
             
@@ -1239,7 +1268,28 @@ export class ExternalAPI {
         }
     }
 
-    async handleGivePlayer(req, res) {x
+    async handleAcquireItem(req, res) {
+        try {
+            const { item, quantity = 1 } = req.body;
+            
+            if (!item) {
+                return res.status(400).json({ error: 'item parameter required' });
+            }
+
+            if (typeof quantity !== 'number' || quantity <= 0) {
+                return res.status(400).json({ error: 'quantity must be a positive number' });
+            }
+
+            const command = `!acquireItem("${item}", ${quantity})`;
+            const result = await executeCommand(this.agent, command);
+            
+            res.json({ success: true, message: result || `Acquired ${quantity} ${item}` });
+        } catch (error) {
+            this.handleError(res, error, 'acquireItem');
+        }
+    }
+
+    async handleGivePlayer(req, res) {
         try {
             const { player, item, quantity = 1 } = req.body;
             
@@ -1760,7 +1810,7 @@ export class ExternalAPI {
             this.handleError(res, error, 'getCraftingPlan');
         }
     }
-
+    /*
     async handleGetPlayerPosition(req, res) {
         try {
             const { playerName } = req.query;
@@ -1804,6 +1854,115 @@ export class ExternalAPI {
             this.handleError(res, error, 'getPlayerPosition');
         }
     }
+    */
+
+    async getPlayerPositionViaCommand(playerName) {
+        const bot = this.agent.bot;
+        
+        return new Promise((resolve) => {
+            let response = '';
+            
+            const messageListener = (jsonMsg) => {
+                if (jsonMsg.translate === 'commands.data.entity.query') {
+                    try {
+                        const dataMsg = jsonMsg.with[1];
+                        response = dataMsg.text + (dataMsg.extra?.map(e => e.text).join('') || '');
+                        //console.log(`[Command] Extracted response:`, response);
+                    } catch (e) {
+                        console.error(`[Command] Failed to extract response:`, e);
+                    }
+                }
+            };
+            
+            bot.on('message', messageListener);
+            
+            //console.log(`[Command] Executing: /data get entity ${playerName}`);
+            bot.chat(`/data get entity ${playerName}`);
+            
+            setTimeout(() => {
+                bot.removeListener('message', messageListener);
+                //console.log(`[Command] Raw response: "${response}"`);
+                const position = this.parsePlayerPosition(response);
+                //console.log(`[Command] Parsed position:`, position);
+                
+                resolve({
+                    success: !!position,
+                    playerName: playerName,
+                    position: position
+                });
+            }, 2000);
+        }); 
+    }
+
+    parsePlayerPosition(message) {
+        const match = message.match(/Pos:\s*\[([\d.-]+)d,\s*([\d.-]+)d,\s*([\d.-]+)d\]/);
+        if (match) {
+            return {
+                x: Math.floor(parseFloat(match[1])),
+                y: Math.floor(parseFloat(match[2])),
+                z: Math.floor(parseFloat(match[3]))
+            };
+        }
+        return null;
+    }
+   // Uses entity list if player is loaded (fast), falls back to command if not (slower but works for any player on server)
+   async handleGetPlayerPosition(req, res) {
+    try {
+        const { playerName } = req.query;
+        
+        if (!playerName) {
+            return res.status(400).json({ error: 'playerName query parameter required' });
+        }
+
+        let position = null;
+        const player = this.agent.bot.players[playerName];
+        
+        // Try entity list first (fast, loaded players)
+        if (player && player.entity) {
+            position = {
+                x: player.entity.position.x,
+                y: player.entity.position.y,
+                z: player.entity.position.z
+            };
+            console.log(`[GetPlayerPosition] Found ${playerName} in entity list at:`, position);
+        } else {
+            // Fall back to command (slower, any player on server)
+            const cmdResult = await this.getPlayerPositionViaCommand(playerName);
+            if (cmdResult.success) {
+                position = cmdResult.position;
+                console.log(`[GetPlayerPosition] Found ${playerName} via command at:`, position);
+            } else {
+                console.warn(`[GetPlayerPosition] Failed to get position for ${playerName}`);
+                return res.status(404).json({ 
+                    error: `Player ${playerName} not found`,
+                    code: 'player_not_found'
+                });
+            }
+        }
+
+        const bot = this.agent.bot;
+        const statsCommand = getCommand('!stats');
+        const rawStats = await statsCommand.perform(this.agent);
+        console.log(`[GetPlayerPosition] Returning full status for ${playerName}`);
+
+        res.json({
+            success: true,
+            playerName: playerName,
+            position: position,
+            health: player?.entity?.health || 0,
+            hunger: bot.food,
+            gamemode: bot.game.gameMode,
+            current_action: this.agent.actions.currentActionLabel || 'Idle',
+            is_busy: this.agent.actions.executing,
+            time_of_day: bot.time.timeOfDay,
+            weather: bot.rainState > 0 ? 'rain' : 'clear',
+            raw_stats: rawStats
+        });
+    } catch (error) {
+        this.handleError(res, error, 'getPlayerPosition');
+    }
+    }
+
 
     async handleIdentifyEntity(req, res) {
         try {
@@ -2817,7 +2976,7 @@ export class ExternalAPI {
             this.agent.bot.off('message', messageListener);
             
             if (errorDetected) {
-                return res.status(404).json({ error: `Player ${workerName} not found or already OP` });
+                return res.status(202).json({ error: `Player ${workerName} not found or already OP` });
             }
             
             console.log(`✓ OP granted to ${workerName}`);

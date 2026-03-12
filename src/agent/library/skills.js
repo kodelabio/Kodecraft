@@ -332,22 +332,23 @@ export async function smeltItem(bot, itemName, num=1) {
             'chicken': 'cooked_chicken',
             'porkchop': 'cooked_porkchop',
             'wood': 'charcoal',
-            'cobblestone': 'stone'
+            'cobblestone': 'stone',
+            'oak_log': 'charcoal'
         };
         
         const smeltedName = smeltMap[itemName] || itemName;
         try {
             // Use the same method that works in craftRecipe
-            const item = mc.makeItem(smeltedName, num);
-            if (!item) {
-                log(bot, `Cannot create item: ${smeltedName}`);
-                return false;
-            }
+            //const item = mc.makeItem(smeltedName, num);
+            //if (!item) {
+            //    log(bot, `Cannot create item: ${smeltedName}`);
+            //    return false;
+            // }
             
             // Add to first available hotbar slot
             //await bot.creative.setInventorySlot(36, item); // 36 is first hotbar slot
             // use Mutex to avoid creative mode inventory conflicts
-            await ensureHeldItem(bot, itemName);
+            await ensureHeldItem(bot, smeltedName);
             log(bot, `Successfully smelted ${num} ${itemName} to ${smeltedName}.`);
             return true;
         } catch (error) {
@@ -624,6 +625,18 @@ export async function collectBlock(bot, blockType, num=1, exclude=null) {
      * @example
      * await skills.collectBlock(bot, "oak_log");
      **/
+    // Handle creative mode
+    if (bot.game.gameMode === 'creative') {
+        try {
+            await bot.chat(`/give @s ${blockType} ${num}`);
+            log(bot, `Collected ${num} ${blockType} (creative mode).`);
+            return true;
+        } catch (error) {
+            log(bot, `Failed to collect ${blockType}: ${error.message}`);
+            return false;
+        }
+    }
+
     if (num < 1) {
         log(bot, `Invalid number of blocks to collect: ${num}.`);
         return false;
@@ -1691,6 +1704,11 @@ export async function shearSheep(bot, count=1) {
             // Use shears on sheep (right-click/activate)
             console.log(`Shearing sheep...`);
             await bot.activateEntity(sheep);
+
+            // Collect wool drops
+            console.log(`Collecting wool...`);
+            await new Promise(resolve => setTimeout(resolve, 800)); // Wait for drops
+            await pickupNearbyItems(bot);
             
             // Mark this sheep as sheared immediately
             shearedIds.add(sheep.id);
@@ -1720,6 +1738,19 @@ export async function shearSheep(bot, count=1) {
         log(bot, `Failed to shear any sheep.`);
         return false;
     }
+}
+
+export async function acquireItem(bot, itemName, quantity = 1) {
+    if (bot.game.gameMode === 'creative') {
+        // In creative mode, equip the item directly (don't use /give)
+        await bot.creative.flyTo(bot.entity.position); // ensure in flying mode
+        await ensureHeldItem(bot, itemName);
+        log(bot, `Acquired ${quantity} ${itemName} (creative mode)`);
+        return true;
+    }
+    
+    // In survival, try to collect the item
+    return await collectBlock(bot, itemName, quantity);
 }
 
 
@@ -2094,24 +2125,37 @@ export async function teleport(bot, x, y, z) {
 }
 
 export async function teleportToPlayer(bot, playerName) {
-    //console.log(`[teleportToPlayer] START - player: ${playerName}`);
-    
     if (!bot.modes.isOn('cheat')) {
         console.log(`[teleportToPlayer] Cheat mode is OFF`);
         log(bot, `Cannot teleport - cheat mode is off`);
         return false;
     }
     
-    //console.log(`[teleportToPlayer] Cheat mode is ON`);
-    
     const command = `/tp ${playerName}`;
-    //console.log(`[teleportToPlayer] Sending command: ${command}`);
+    let errorDetected = false;
     
+    const errorListener = (message) => {
+        const text = message.toString().toLowerCase();
+        console.log(`[teleportToPlayer] Chat message: ${text}`);
+        if (text.includes('no entity was found') || text.includes('no player named') || text.includes('cannot find') || text.includes('not found')) {
+            errorDetected = true;
+            console.log(`[teleportToPlayer] Error detected: ${text}`);
+        }
+    };
+    
+    bot.on('message', errorListener);
     await bot.chat(command);
     
-    //console.log(`[teleportToPlayer] Command sent, waiting...`);
     await new Promise(resolve => setTimeout(resolve, 1000));
-    // Move away from player
+    
+    bot.removeListener('message', errorListener);
+    
+    if (errorDetected) {
+        console.log(`[teleportToPlayer] Player ${playerName} not found`);
+        log(bot, `Player ${playerName} does not exist`);
+        return false;
+    }
+    
     await moveAway(bot, 5);
     
     console.log(`[teleportToPlayer] ${playerName} DONE`);
@@ -2119,9 +2163,6 @@ export async function teleportToPlayer(bot, playerName) {
     
     return true;
 }
-
-
-
 
 // Allow leader to teleport workers
 export async function teleportWorker(bot, workerName, x, y, z) {
@@ -2243,6 +2284,7 @@ export async function moveAway(bot, distance) {
             let y = Math.floor(last_move.y);
             let z = Math.floor(last_move.z);
             bot.chat('/tp @s ' + x + ' ' + y + ' ' + z);
+            log(bot, `Moved away by ${distance} blocks.`);
             return true;
         }
     }
@@ -2322,11 +2364,12 @@ export async function stay(bot, seconds=30) {
     return true;
 }
 
-export async function useDoor(bot, door_pos=null) {
+export async function useDoor(bot, door_pos=null, action='toggle') {
     /**
      * Use the door at the given position.
      * @param {MinecraftBot} bot, reference to the minecraft bot.
      * @param {Vec3} door_pos, the position of the door to use. If null, the nearest door will be used.
+     * @param {string} action, 'toggle', 'open', or 'close'. Default: 'toggle'
      * @returns {Promise<boolean>} true if the door was used, false otherwise.
      * @example
      * let door = world.getNearestBlock(bot, "oak_door", 16).position;
@@ -2334,36 +2377,48 @@ export async function useDoor(bot, door_pos=null) {
      **/
     if (!door_pos) {
         for (let door_type of ['oak_door', 'spruce_door', 'birch_door', 'jungle_door', 'acacia_door', 'dark_oak_door',
-                               'mangrove_door', 'cherry_door', 'bamboo_door', 'crimson_door', 'warped_door']) {
-            door_pos = world.getNearestBlock(bot, door_type, 16).position;
-            if (door_pos) break;
+                            'mangrove_door', 'cherry_door', 'bamboo_door', 'crimson_door', 'warped_door']) {
+            const door_block = world.getNearestBlock(bot, door_type, 16);
+            if (door_block) {
+                door_pos = door_block.position;
+                break;
+            }
         }
     } else {
-        door_pos = Vec3(door_pos.x, door_pos.y, door_pos.z);
+        door_pos = new Vec3(door_pos.x, door_pos.y, door_pos.z);
     }
+
     if (!door_pos) {
         log(bot, `Could not find a door to use.`);
         return false;
     }
-
+    
     bot.pathfinder.setGoal(new pf.goals.GoalNear(door_pos.x, door_pos.y, door_pos.z, 1));
     await new Promise((resolve) => setTimeout(resolve, 1000));
     while (bot.pathfinder.isMoving()) {
         await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    
+    // Done finding path to door, now interact with it
     let door_block = bot.blockAt(door_pos);
     await bot.lookAt(door_pos);
-    if (!door_block._properties.open)
-        await bot.activateBlock(door_block);
+    const isOpen = door_block._properties.open;
     
-    bot.setControlState("forward", true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    bot.setControlState("forward", false);
-    await bot.activateBlock(door_block);
+    if (action === 'toggle' || 
+        (action === 'open' && !isOpen) || 
+        (action === 'close' && isOpen)) {
+        await bot.activateBlock(door_block);
+    }
+    
+    if (action === 'open' && !isOpen) {
+        // Walk through if opening
+        bot.setControlState("forward", true);
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        bot.setControlState("forward", false);
+    }
 
-    log(bot, `Used door at ${door_pos}.`);
+    log(bot, `${action === 'toggle' ? 'Toggled' : action}ed door at ${door_pos}.`);
     return true;
+
 }
 
 export async function goToBed(bot) {
@@ -2740,6 +2795,8 @@ export async function digDown(bot, distance = 10) {
      **/
 
     let start_block_pos = bot.blockAt(bot.entity.position).position;
+    const isCreative = bot.game.gameMode === 'creative';
+
     for (let i = 1; i <= distance; i++) {
         const targetBlock = bot.blockAt(start_block_pos.offset(0, -i, 0));
         let belowBlock = bot.blockAt(start_block_pos.offset(0, -i-1, 0));
@@ -2749,25 +2806,28 @@ export async function digDown(bot, distance = 10) {
             return true;
         }
 
-        // Check for lava, water
-        if (targetBlock.name === 'lava' || targetBlock.name === 'water' || 
-            belowBlock.name === 'lava' || belowBlock.name === 'water') {
+        // Check for lava, water (skip in creative)
+        if (!isCreative && (targetBlock.name === 'lava' || targetBlock.name === 'water' || 
+            belowBlock.name === 'lava' || belowBlock.name === 'water')) {
             log(bot, `Dug down ${i-1} blocks, but reached ${belowBlock ? belowBlock.name : '(lava/water)'}`)
             return false;
         }
 
-        const MAX_FALL_BLOCKS = 2;
-        let num_fall_blocks = 0;
-        for (let j = 0; j <= MAX_FALL_BLOCKS; j++) {
-            if (!belowBlock || (belowBlock.name !== 'air' && belowBlock.name !== 'cave_air')) {
-                break;
+        // Check for large drops (skip in creative)
+        if (!isCreative) {
+            const MAX_FALL_BLOCKS = 2;
+            let num_fall_blocks = 0;
+            for (let j = 0; j <= MAX_FALL_BLOCKS; j++) {
+                if (!belowBlock || (belowBlock.name !== 'air' && belowBlock.name !== 'cave_air')) {
+                    break;
+                }
+                num_fall_blocks++;
+                belowBlock = bot.blockAt(belowBlock.position.offset(0, -1, 0));
             }
-            num_fall_blocks++;
-            belowBlock = bot.blockAt(belowBlock.position.offset(0, -1, 0));
-        }
-        if (num_fall_blocks > MAX_FALL_BLOCKS) {
-            log(bot, `Dug down ${i-1} blocks, but reached a drop below the next block.`);
-            return false;
+            if (num_fall_blocks > MAX_FALL_BLOCKS) {
+                log(bot, `Dug down ${i-1} blocks, but reached a drop below the next block.`);
+                return false;
+            }
         }
 
         if (targetBlock.name === 'air' || targetBlock.name === 'cave_air') {

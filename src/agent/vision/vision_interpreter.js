@@ -67,6 +67,10 @@ export class VisionInterpreter {
     async analyzeImage(filename) {
         try {
             const imageBuffer = fs.readFileSync(`${this.fp}/${filename}.jpg`);
+            if (!this.agent.history) {
+                console.warn('[Vision] History not initialized');
+                return 'Error: History not available';
+            }
             const messages = this.agent.history.getHistory();
 
             const blockInfo = this.getCenterBlockInfo();

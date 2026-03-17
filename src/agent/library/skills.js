@@ -847,7 +847,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         if (bot.restrict_to_inventory) {
             let block = bot.inventory.items().find(item => item.name === blockType);
             if (!block) {
-                console.warn(`[placeBlock] ❌ Inventory restricted and no ${blockType} in inventory`);
+                //console.warn(`[placeBlock] ❌ Inventory restricted and no ${blockType} in inventory`);
                 log(bot, `Cannot place ${blockType}, you are restricted to your current inventory.`);
                 return false;
             }
@@ -915,7 +915,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         //console.log(`[placeBlock] After creative slot set, found: ${!!block_item}`);
     }
     if (!block_item) {
-        console.warn(`[placeBlock] ❌ Don't have any ${item_name} to place`);
+        //console.warn(`[placeBlock] ❌ Don't have any ${item_name} to place`);
         log(bot, `Don't have any ${item_name} to place.`);
         return false;
     }
@@ -924,13 +924,13 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     //console.log(`[placeBlock] Target block at ${target_dest}: ${targetBlock ? targetBlock.name : 'NOT LOADED'}`);
     
     if (!targetBlock) {
-        console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
+        //console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
         log(bot, `Block at ${target_dest} is not loaded. Waiting for chunks...`);
         // Wait a moment for chunks to load
         await new Promise(resolve => setTimeout(resolve, 200));
         const retryBlock = bot.blockAt(target_dest);
         if (!retryBlock) {
-            console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);
+            //console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);
             log(bot, `Cannot place ${blockType} at ${target_dest}: chunk not loaded.`);
             return false;
         }
@@ -949,15 +949,15 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         // Don't break blocks that look like they belong to the structure
         const structureBlocks = ['stone_bricks', 'cracked_stone_bricks', 'black_wool', 'stone_brick_slab'];
         if (structureBlocks.includes(targetBlock.name)) {
-            console.warn(`[placeBlock] ⚠️ Structure block ${targetBlock.name} in the way at (${x},${y},${z}), skipping`);
+            //console.warn(`[placeBlock] ⚠️ Structure block ${targetBlock.name} in the way at (${x},${y},${z}), skipping`);
             return false;
         }
       
-        console.log(`[placeBlock] Block in the way: ${targetBlock.name}, attempting to break it`);
+        //console.log(`[placeBlock] Block in the way: ${targetBlock.name}, attempting to break it`);
         log(bot, `${targetBlock.name} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
-            console.warn(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
+            //console.warn(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
             log(bot, `Cannot place ${blockType} at ${targetBlock.position}: block in the way.`);
             return false;
         }
@@ -984,7 +984,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     else {
         dirs.push(dir_map['bottom']);
-        console.log(`[placeBlock] Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
+        //console.log(`[placeBlock] Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
         log(bot, `Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
     }
     dirs.push(...Object.values(dir_map).filter(d => !dirs.includes(d)));
@@ -1002,8 +1002,8 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     
     if (!buildOffBlock) {
-        console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
-        console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
+        //console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
+        //console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
         log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
@@ -1056,10 +1056,10 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     } catch (err) {
         if (err.message.includes('blockUpdate') && err.message.includes('timeout')) {
             const block = bot.blockAt(x, y, z);
-            console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
+            //console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
             //console.log(`[placeBlock] Post-timeout check at ${target_dest}: ${block?.name} (expected: ${blockType})`);
             if (block && block.name === blockType) {
-                console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
+                //console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
                 log(bot, `Placed ${blockType} at (${x}, ${y}, ${z}).`);
                 return true;
             }

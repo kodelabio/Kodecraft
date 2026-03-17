@@ -1,0 +1,2687 @@
+{
+  "RuralTower": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": true,
+    "goal": "Build the RuralTower",
+    "conversation": "Let's build the RuralTower together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "metadata": {
+      "description": "A 15-level RuralTower structure using 32 block types. Primary materials: 48 stone, 48 grass_block, 44 packed_mud",
+      "totalBlocks": 488,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1722978726759,
+      "perimeter": 56
+    },
+    "blueprint": {
+      "materials": {
+        "stone": 48,
+        "rooted_dirt": 25,
+        "coarse_dirt": 19,
+        "podzol": 28,
+        "grass_block": 48,
+        "stripped_spruce_wood": 11,
+        "short_grass": 7,
+        "mud": 27,
+        "muddy_mangrove_roots": 10,
+        "fern": 10,
+        "packed_mud": 44,
+        "brown_mushroom_block": 38,
+        "mud_bricks": 32,
+        "ladder": 4,
+        "spruce_trapdoor": 37,
+        "jungle_door": 2,
+        "black_candle": 5,
+        "moss_carpet": 5,
+        "mud_brick_stairs": 4,
+        "spruce_stairs": 15,
+        "spruce_slab": 22,
+        "jungle_fence": 4,
+        "jungle_fence_gate": 4,
+        "jungle_trapdoor": 4,
+        "brown_wall_banner": 1,
+        "spruce_planks": 8,
+        "campfire": 4,
+        "brown_candle": 2,
+        "waxed_cut_copper_stairs": 6,
+        "stripped_acacia_wood": 4,
+        "waxed_cut_copper": 4,
+        "waxed_copper_block": 6
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 12,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "podzol"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "podzol"
+            },
+            {
+              "x": 12,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "podzol"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "podzol"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "podzol"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "grass_block"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "podzol"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 12,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "podzol"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "podzol"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "podzol"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 12,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "podzol"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "grass_block"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "podzol"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "podzol"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "podzol"
+            },
+            {
+              "x": 12,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "podzol"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "podzol"
+            },
+            {
+              "x": 12,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "podzol"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "podzol"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 12,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 12,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "podzol"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "podzol"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 12,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "podzol"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "podzol"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "podzol"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "podzol"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "podzol"
+            },
+            {
+              "x": 11,
+              "z": 9,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 12,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "podzol"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 10,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 10,
+              "material": "grass_block"
+            },
+            {
+              "x": 12,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "podzol"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "grass_block"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "grass_block"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "coarse_dirt"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "podzol"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 9,
+              "z": 11,
+              "material": "rooted_dirt"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "grass_block"
+            },
+            {
+              "x": 11,
+              "z": 11,
+              "material": "podzol"
+            },
+            {
+              "x": 12,
+              "z": 11,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 11,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 12,
+              "z": 12,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "short_grass"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "mud"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "mud"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "fern"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "short_grass"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "mud"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "short_grass"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "mud"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "fern"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "mud"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "mud"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "short_grass"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "fern"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "jungle_door"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "fern"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "mud"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "fern"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "short_grass"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "mud"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "mud"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 11,
+              "z": 9,
+              "material": "short_grass"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "fern"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "mud"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "mud"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "mud"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "fern"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "short_grass"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "muddy_mangrove_roots"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 2,
+              "material": "mud"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "fern"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "mud"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "mud"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "fern"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "muddy_mangrove_roots"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "mud"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "jungle_door"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "black_candle"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "mud"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "mud"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "fern"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "mud"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "mud"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 2,
+              "material": "moss_carpet"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "black_candle"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "mud"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "moss_carpet"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "black_candle"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "moss_carpet"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "black_candle"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "moss_carpet"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "moss_carpet"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "mud"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "black_candle"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "mud_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "mud_brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "mud_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "mud_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "packed_mud"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 3,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "jungle_fence"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "jungle_fence"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "jungle_fence"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "jungle_fence"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "packed_mud"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 6,
+              "z": 2,
+              "material": "jungle_fence_gate"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "jungle_fence_gate"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "jungle_fence_gate"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "jungle_fence_gate"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 2,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "jungle_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "jungle_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "packed_mud"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "jungle_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "brown_wall_banner"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "packed_mud"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "jungle_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "spruce_trapdoor"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 2,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "packed_mud"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "packed_mud"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "brown_mushroom_block"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_bricks"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "spruce_stairs"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 3,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "campfire"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "campfire"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "campfire"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "brown_candle"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "campfire"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "spruce_trapdoor"
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "coordinates": [
+            0,
+            -50,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "waxed_cut_copper_stairs"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "waxed_cut_copper"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "brown_candle"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "waxed_cut_copper_stairs"
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "coordinates": [
+            0,
+            -49,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 6,
+              "z": 5,
+              "material": "waxed_cut_copper"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "waxed_cut_copper"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            }
+          ]
+        },
+        {
+          "level": 13,
+          "coordinates": [
+            0,
+            -48,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 6,
+              "z": 5,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "waxed_copper_block"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "waxed_cut_copper_stairs"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "waxed_cut_copper_stairs"
+            }
+          ]
+        },
+        {
+          "level": 14,
+          "coordinates": [
+            0,
+            -47,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 6,
+              "material": "waxed_cut_copper_stairs"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "waxed_cut_copper"
+            }
+          ]
+        },
+        {
+          "level": 15,
+          "coordinates": [
+            0,
+            -46,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 6,
+              "z": 6,
+              "material": "waxed_cut_copper_stairs"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone": 48,
+        "rooted_dirt": 25,
+        "coarse_dirt": 19,
+        "podzol": 28,
+        "grass_block": 48,
+        "stripped_spruce_wood": 11,
+        "short_grass": 7,
+        "mud": 27,
+        "muddy_mangrove_roots": 10,
+        "fern": 10,
+        "packed_mud": 44,
+        "brown_mushroom_block": 38,
+        "mud_bricks": 32,
+        "ladder": 4,
+        "spruce_trapdoor": 37,
+        "jungle_door": 2,
+        "black_candle": 5,
+        "moss_carpet": 5,
+        "mud_brick_stairs": 4,
+        "spruce_stairs": 15,
+        "spruce_slab": 22,
+        "jungle_fence": 4,
+        "jungle_fence_gate": 4,
+        "jungle_trapdoor": 4,
+        "brown_wall_banner": 1,
+        "spruce_planks": 8,
+        "campfire": 4,
+        "brown_candle": 2,
+        "waxed_cut_copper_stairs": 6,
+        "stripped_acacia_wood": 4,
+        "waxed_cut_copper": 4,
+        "waxed_copper_block": 6
+      }
+    }
+  }
+}

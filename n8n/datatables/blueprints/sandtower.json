@@ -1,0 +1,2533 @@
+{
+  "sandtower": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": true,
+    "goal": "Build the sandtower",
+    "conversation": "Let's build the sandtower together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "metadata": {
+      "description": "A 23-level sandtower structure using 15 block types. Primary materials: 176 smooth_sandstone, 44 sandstone_wall, 40 gray_concrete",
+      "totalBlocks": 448,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
+    "blueprint": {
+      "materials": {
+        "stone": 32,
+        "gray_concrete": 40,
+        "acacia_planks": 37,
+        "smooth_sandstone": 176,
+        "decorated_pot": 7,
+        "brown_carpet": 11,
+        "barrel": 9,
+        "ladder": 15,
+        "birch_door": 2,
+        "sandstone_wall": 44,
+        "birch_fence": 24,
+        "birch_trapdoor": 19,
+        "lantern": 4,
+        "smooth_sandstone_slab": 20,
+        "red_wool": 8
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_door"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_door"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_trapdoor"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "lantern"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_sandstone_slab"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "sandstone_wall"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_sandstone_slab"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "lantern"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "coordinates": [
+            0,
+            -50,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "coordinates": [
+            0,
+            -49,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 13,
+          "coordinates": [
+            0,
+            -48,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_fence"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 14,
+          "coordinates": [
+            0,
+            -47,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "sandstone_wall"
+            }
+          ]
+        },
+        {
+          "level": 15,
+          "coordinates": [
+            0,
+            -46,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "lantern"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 16,
+          "coordinates": [
+            0,
+            -45,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 0,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "ladder"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "birch_trapdoor"
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "coordinates": [
+            0,
+            -44,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "smooth_sandstone"
+            }
+          ]
+        },
+        {
+          "level": 18,
+          "coordinates": [
+            0,
+            -43,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "lantern"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 19,
+          "coordinates": [
+            0,
+            -42,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 20,
+          "coordinates": [
+            0,
+            -41,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 21,
+          "coordinates": [
+            0,
+            -40,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "red_wool"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "red_wool"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "red_wool"
+            }
+          ]
+        },
+        {
+          "level": 22,
+          "coordinates": [
+            0,
+            -39,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "red_wool"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "red_wool"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "red_wool"
+            }
+          ]
+        },
+        {
+          "level": 23,
+          "coordinates": [
+            0,
+            -38,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 4,
+              "material": "red_wool"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "red_wool"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone": 32,
+        "gray_concrete": 40,
+        "acacia_planks": 37,
+        "smooth_sandstone": 176,
+        "decorated_pot": 7,
+        "brown_carpet": 11,
+        "barrel": 9,
+        "ladder": 15,
+        "birch_door": 2,
+        "sandstone_wall": 44,
+        "birch_fence": 24,
+        "birch_trapdoor": 19,
+        "lantern": 4,
+        "smooth_sandstone_slab": 20,
+        "red_wool": 8
+      }
+    }
+  }
+}

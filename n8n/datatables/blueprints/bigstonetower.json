@@ -1,0 +1,8620 @@
+{
+  "bigstonetower": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": true,
+    "goal": "Build the bigstonetower",
+    "conversation": "Let's build the bigstonetower together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "metadata": {
+      "description": "A 52-level bigstonetower structure using 26 block types. Primary materials: 318 stone, 292 andesite, 275 stone_bricks",
+      "totalBlocks": 1603,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
+    "blueprint": {
+      "materials": {
+        "stone": 318,
+        "gray_concrete": 65,
+        "birch_planks": 137,
+        "andesite": 292,
+        "stone_bricks": 275,
+        "deepslate_coal_ore": 1,
+        "crafting_table": 6,
+        "barrel": 20,
+        "brown_carpet": 38,
+        "decorated_pot": 14,
+        "ladder": 44,
+        "iron_ore": 1,
+        "birch_door": 2,
+        "stone_brick_wall": 175,
+        "iron_bars": 42,
+        "stone_brick_stairs": 56,
+        "stone_brick_slab": 84,
+        "lantern": 8,
+        "blast_furnace": 3,
+        "birch_trapdoor": 3,
+        "smoker": 2,
+        "furnace": 4,
+        "brown_bed": 2,
+        "cauldron": 2,
+        "birch_fence": 3,
+        "yellow_wool": 6
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 11,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 11,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 11,
+              "z": 10,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "deepslate_coal_ore"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "crafting_table"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "iron_ore"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "crafting_table"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "birch_door"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "birch_door"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "coordinates": [
+            0,
+            -50,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "smoker"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "smoker"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "crafting_table"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "furnace"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "furnace"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "coordinates": [
+            0,
+            -49,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 13,
+          "coordinates": [
+            0,
+            -48,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 14,
+          "coordinates": [
+            0,
+            -47,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 15,
+          "coordinates": [
+            0,
+            -46,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 16,
+          "coordinates": [
+            0,
+            -45,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "coordinates": [
+            0,
+            -44,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 18,
+          "coordinates": [
+            0,
+            -43,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 19,
+          "coordinates": [
+            0,
+            -42,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 20,
+          "coordinates": [
+            0,
+            -41,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_bed"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_bed"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "crafting_table"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "lantern"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "cauldron"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "furnace"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 21,
+          "coordinates": [
+            0,
+            -40,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 22,
+          "coordinates": [
+            0,
+            -39,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 23,
+          "coordinates": [
+            0,
+            -38,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 24,
+          "coordinates": [
+            0,
+            -37,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 25,
+          "coordinates": [
+            0,
+            -36,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 26,
+          "coordinates": [
+            0,
+            -35,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 27,
+          "coordinates": [
+            0,
+            -34,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone_brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 28,
+          "coordinates": [
+            0,
+            -33,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 29,
+          "coordinates": [
+            0,
+            -32,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 30,
+          "coordinates": [
+            0,
+            -31,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 31,
+          "coordinates": [
+            0,
+            -30,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "crafting_table"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 32,
+          "coordinates": [
+            0,
+            -29,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "lantern"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 33,
+          "coordinates": [
+            0,
+            -28,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 34,
+          "coordinates": [
+            0,
+            -27,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 35,
+          "coordinates": [
+            0,
+            -26,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 36,
+          "coordinates": [
+            0,
+            -25,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 37,
+          "coordinates": [
+            0,
+            -24,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 38,
+          "coordinates": [
+            0,
+            -23,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 39,
+          "coordinates": [
+            0,
+            -22,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 40,
+          "coordinates": [
+            0,
+            -21,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "iron_bars"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "iron_bars"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            }
+          ]
+        },
+        {
+          "level": 41,
+          "coordinates": [
+            0,
+            -20,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 42,
+          "coordinates": [
+            0,
+            -19,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 43,
+          "coordinates": [
+            0,
+            -18,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 44,
+          "coordinates": [
+            0,
+            -17,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_brick_slab"
+            }
+          ]
+        },
+        {
+          "level": 45,
+          "coordinates": [
+            0,
+            -16,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "birch_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "birch_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 46,
+          "coordinates": [
+            0,
+            -15,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "cauldron"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "furnace"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "andesite"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "birch_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "crafting_table"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone_bricks"
+            }
+          ]
+        },
+        {
+          "level": 47,
+          "coordinates": [
+            0,
+            -14,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "andesite"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "andesite"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "andesite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 48,
+          "coordinates": [
+            0,
+            -13,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 49,
+          "coordinates": [
+            0,
+            -12,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 50,
+          "coordinates": [
+            0,
+            -11,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "birch_fence"
+            }
+          ]
+        },
+        {
+          "level": 51,
+          "coordinates": [
+            0,
+            -10,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 5,
+              "material": "yellow_wool"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "yellow_wool"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "yellow_wool"
+            }
+          ]
+        },
+        {
+          "level": 52,
+          "coordinates": [
+            0,
+            -9,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 5,
+              "material": "yellow_wool"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "yellow_wool"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "yellow_wool"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone": 318,
+        "gray_concrete": 65,
+        "birch_planks": 137,
+        "andesite": 292,
+        "stone_bricks": 275,
+        "deepslate_coal_ore": 1,
+        "crafting_table": 6,
+        "barrel": 20,
+        "brown_carpet": 38,
+        "decorated_pot": 14,
+        "ladder": 44,
+        "iron_ore": 1,
+        "birch_door": 2,
+        "stone_brick_wall": 175,
+        "iron_bars": 42,
+        "stone_brick_stairs": 56,
+        "stone_brick_slab": 84,
+        "lantern": 8,
+        "blast_furnace": 3,
+        "birch_trapdoor": 3,
+        "smoker": 2,
+        "furnace": 4,
+        "brown_bed": 2,
+        "cauldron": 2,
+        "birch_fence": 3,
+        "yellow_wool": 6
+      }
+    }
+  }
+}

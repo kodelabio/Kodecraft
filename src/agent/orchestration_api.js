@@ -1874,7 +1874,7 @@ registerWorkersForSession(sessionId, workers) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
-                    timeout: 5000
+                    timeout: 6000000 // 
                 });
 
                 if (response.ok) {

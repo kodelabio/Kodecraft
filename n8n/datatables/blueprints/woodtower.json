@@ -1,0 +1,8148 @@
+{
+  "woodtower": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": true,
+    "goal": "Build the woodtower",
+    "conversation": "Let's build the woodtower together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "metadata": {
+      "description": "A 50-level woodtower structure using 35 block types. Primary materials: 333 oak_planks, 208 stripped_spruce_wood, 119 stripped_oak_wood",
+      "totalBlocks": 1509,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
+    "blueprint": {
+      "materials": {
+        "stone": 40,
+        "gray_concrete": 60,
+        "stripped_spruce_wood": 208,
+        "mud_brick_wall": 96,
+        "oak_wood": 106,
+        "oak_planks": 333,
+        "ladder": 26,
+        "brown_carpet": 39,
+        "barrel": 11,
+        "redstone_ore": 1,
+        "crafting_table": 6,
+        "decorated_pot": 10,
+        "cauldron": 3,
+        "spruce_trapdoor": 12,
+        "spruce_door": 2,
+        "oak_fence": 30,
+        "stripped_oak_wood": 119,
+        "lantern": 7,
+        "oak_stairs": 2,
+        "spruce_stairs": 72,
+        "spruce_slab": 96,
+        "brown_bed": 2,
+        "deepslate_redstone_ore": 1,
+        "mossy_cobblestone": 1,
+        "deepslate_emerald_ore": 1,
+        "lapis_ore": 1,
+        "smoker": 3,
+        "blast_furnace": 3,
+        "furnace": 1,
+        "acacia_slab": 60,
+        "stripped_acacia_wood": 56,
+        "acacia_planks": 78,
+        "acacia_stairs": 12,
+        "acacia_fence": 9,
+        "granite_wall": 2
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 10,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "barrel"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "redstone_ore"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "crafting_table"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "cauldron"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_door"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "lantern"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_door"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_stairs"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_stairs"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "spruce_stairs"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_stairs"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "coordinates": [
+            0,
+            -50,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "coordinates": [
+            0,
+            -49,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 13,
+          "coordinates": [
+            0,
+            -48,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "crafting_table"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 14,
+          "coordinates": [
+            0,
+            -47,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 15,
+          "coordinates": [
+            0,
+            -46,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 16,
+          "coordinates": [
+            0,
+            -45,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 17,
+          "coordinates": [
+            0,
+            -44,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 18,
+          "coordinates": [
+            0,
+            -43,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_bed"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_bed"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "cauldron"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 19,
+          "coordinates": [
+            0,
+            -42,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "lantern"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 20,
+          "coordinates": [
+            0,
+            -41,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 21,
+          "coordinates": [
+            0,
+            -40,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 22,
+          "coordinates": [
+            0,
+            -39,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 23,
+          "coordinates": [
+            0,
+            -38,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "mud_brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "mud_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 24,
+          "coordinates": [
+            0,
+            -37,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            }
+          ]
+        },
+        {
+          "level": 25,
+          "coordinates": [
+            0,
+            -36,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 26,
+          "coordinates": [
+            0,
+            -35,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "deepslate_redstone_ore"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "mossy_cobblestone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "deepslate_emerald_ore"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "lapis_ore"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 27,
+          "coordinates": [
+            0,
+            -34,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "crafting_table"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "smoker"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "cauldron"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "smoker"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "furnace"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 28,
+          "coordinates": [
+            0,
+            -33,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "barrel"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 29,
+          "coordinates": [
+            0,
+            -32,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_fence"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_fence"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 30,
+          "coordinates": [
+            0,
+            -31,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "oak_planks"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "oak_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "oak_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            }
+          ]
+        },
+        {
+          "level": 31,
+          "coordinates": [
+            0,
+            -30,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 32,
+          "coordinates": [
+            0,
+            -29,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "crafting_table"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "barrel"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "barrel"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "crafting_table"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "barrel"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "smoker"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "crafting_table"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "blast_furnace"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 33,
+          "coordinates": [
+            0,
+            -28,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "decorated_pot"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            }
+          ]
+        },
+        {
+          "level": 34,
+          "coordinates": [
+            0,
+            -27,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_spruce_wood"
+            }
+          ]
+        },
+        {
+          "level": 35,
+          "coordinates": [
+            0,
+            -26,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 0,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "acacia_slab"
+            }
+          ]
+        },
+        {
+          "level": 36,
+          "coordinates": [
+            0,
+            -25,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "oak_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "oak_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "oak_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "stripped_acacia_wood"
+            }
+          ]
+        },
+        {
+          "level": 37,
+          "coordinates": [
+            0,
+            -24,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "acacia_slab"
+            }
+          ]
+        },
+        {
+          "level": 38,
+          "coordinates": [
+            0,
+            -23,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "acacia_planks"
+            }
+          ]
+        },
+        {
+          "level": 39,
+          "coordinates": [
+            0,
+            -22,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 2,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "acacia_slab"
+            }
+          ]
+        },
+        {
+          "level": 40,
+          "coordinates": [
+            0,
+            -21,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_slab"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            }
+          ]
+        },
+        {
+          "level": 41,
+          "coordinates": [
+            0,
+            -20,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 3,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "acacia_stairs"
+            }
+          ]
+        },
+        {
+          "level": 42,
+          "coordinates": [
+            0,
+            -19,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 3,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "acacia_stairs"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "acacia_stairs"
+            }
+          ]
+        },
+        {
+          "level": 43,
+          "coordinates": [
+            0,
+            -18,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_acacia_wood"
+            }
+          ]
+        },
+        {
+          "level": 44,
+          "coordinates": [
+            0,
+            -17,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 4,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "acacia_fence"
+            }
+          ]
+        },
+        {
+          "level": 45,
+          "coordinates": [
+            0,
+            -16,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 4,
+              "material": "stripped_acacia_wood"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_planks"
+            }
+          ]
+        },
+        {
+          "level": 46,
+          "coordinates": [
+            0,
+            -15,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 4,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "acacia_fence"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "acacia_fence"
+            }
+          ]
+        },
+        {
+          "level": 47,
+          "coordinates": [
+            0,
+            -14,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "stripped_acacia_wood"
+            }
+          ]
+        },
+        {
+          "level": 48,
+          "coordinates": [
+            0,
+            -13,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "granite_wall"
+            }
+          ]
+        },
+        {
+          "level": 49,
+          "coordinates": [
+            0,
+            -12,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "granite_wall"
+            }
+          ]
+        },
+        {
+          "level": 50,
+          "coordinates": [
+            0,
+            -11,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 5,
+              "material": "acacia_fence"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone": 40,
+        "gray_concrete": 60,
+        "stripped_spruce_wood": 208,
+        "mud_brick_wall": 96,
+        "oak_wood": 106,
+        "oak_planks": 333,
+        "ladder": 26,
+        "brown_carpet": 39,
+        "barrel": 11,
+        "redstone_ore": 1,
+        "crafting_table": 6,
+        "decorated_pot": 10,
+        "cauldron": 3,
+        "spruce_trapdoor": 12,
+        "spruce_door": 2,
+        "oak_fence": 30,
+        "stripped_oak_wood": 119,
+        "lantern": 7,
+        "oak_stairs": 2,
+        "spruce_stairs": 72,
+        "spruce_slab": 96,
+        "brown_bed": 2,
+        "deepslate_redstone_ore": 1,
+        "mossy_cobblestone": 1,
+        "deepslate_emerald_ore": 1,
+        "lapis_ore": 1,
+        "smoker": 3,
+        "blast_furnace": 3,
+        "furnace": 1,
+        "acacia_slab": 60,
+        "stripped_acacia_wood": 56,
+        "acacia_planks": 78,
+        "acacia_stairs": 12,
+        "acacia_fence": 9,
+        "granite_wall": 2
+      }
+    }
+  }
+}

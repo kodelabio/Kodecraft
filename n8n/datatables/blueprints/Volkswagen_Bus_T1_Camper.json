@@ -3,12 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A Volkswagen_Bus_T1_Camper structure",
-    "goal": "Build the Volkswagen_Bus_T1_Camper structure",
-    "conversation": "Let's build the Volkswagen_Bus_T1_Camper structure together",
+    "goal": "Build the Volkswagen_Bus_T1_Camper",
+    "conversation": "Let's build the Volkswagen_Bus_T1_Camper together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 161,
+    "metadata": {
+      "description": "Volkswagen_Bus_T1_Camper",
+      "totalBlocks": 161,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1737835406625,
+      "perimeter": 42
+    },
     "blueprint": {
       "materials": {
         "stone_button": 7,

@@ -36,6 +36,13 @@ process_schematic() {
     local EXT="${FILENAME##*.}"
 
     echo "Processing: $NAME ($EXT)..."
+    echo "🔍 Extracting metadata from $SCHEMATIC_FILE..."
+    METADATA=$(node scripts/extract_schematic_metadata.js "$SCHEMATIC_FILE" 2>/dev/null)
+    if [[ -z "$METADATA" ]]; then
+        echo "⚠️  Warning: Could not extract metadata for $NAME"
+        METADATA="{}"
+    fi
+    
     
     if [[ "$EXT" == "schem" ]]; then
         node scripts/schem2json.js "$SCHEMATIC_FILE" "${NAME}_temp.json"
@@ -63,7 +70,7 @@ process_schematic() {
         return 1
     fi
     
-    node scripts/schem_to_blueprint.js "${NAME}_temp.json" "$NAME"
+    node scripts/schem_to_blueprint.js "${NAME}_temp.json" "$NAME" "$METADATA"
     
     rm -f "${NAME}_temp.json"
     

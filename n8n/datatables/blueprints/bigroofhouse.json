@@ -1,0 +1,3386 @@
+{
+  "bigroofhouse": {
+    "source": "schematic",
+    "type": "construction",
+    "verified": false,
+    "goal": "Build the bigroofhouse",
+    "conversation": "Let's build the bigroofhouse together",
+    "agent_count": 1,
+    "timeout": 300000,
+    "metadata": {
+      "description": "A bigroofhouse",
+      "totalBlocks": 627,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
+    "blueprint": {
+      "materials": {
+        "stone": 49,
+        "gray_concrete": 64,
+        "spruce_planks": 32,
+        "stone_bricks": 5,
+        "cracked_stone_bricks": 3,
+        "spruce_trapdoor": 19,
+        "grass_block": 13,
+        "stripped_birch_wood": 26,
+        "smooth_sandstone": 33,
+        "sandstone": 31,
+        "ladder": 3,
+        "stone_brick_wall": 3,
+        "campfire": 1,
+        "chest": 5,
+        "brown_carpet": 17,
+        "furnace": 3,
+        "crafting_table": 2,
+        "birch_door": 2,
+        "spruce_fence": 4,
+        "short_grass": 5,
+        "dandelion": 4,
+        "poppy": 3,
+        "birch_fence": 9,
+        "stone_brick_slab": 3,
+        "lantern": 2,
+        "brick_stairs": 48,
+        "granite_stairs": 74,
+        "sandstone_wall": 11,
+        "spruce_slab": 38,
+        "terracotta": 22,
+        "granite": 33,
+        "smooth_sandstone_slab": 4,
+        "bricks": 28,
+        "stripped_spruce_wood": 8,
+        "brown_bed": 2,
+        "gray_candle": 1,
+        "spruce_stairs": 6,
+        "granite_wall": 8,
+        "brick_wall": 3
+      },
+      "levels": [
+        {
+          "level": 1,
+          "coordinates": [
+            0,
+            -60,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 0,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 0,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 1,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 2,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "spruce_planks"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 9,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 10,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 11,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 9,
+              "z": 11,
+              "material": "gray_concrete"
+            },
+            {
+              "x": 10,
+              "z": 11,
+              "material": "stone"
+            },
+            {
+              "x": 0,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 1,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 2,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 5,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 6,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 7,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 9,
+              "z": 12,
+              "material": "stone"
+            },
+            {
+              "x": 10,
+              "z": 12,
+              "material": "stone"
+            }
+          ]
+        },
+        {
+          "level": 2,
+          "coordinates": [
+            0,
+            -59,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 0,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 5,
+              "z": 0,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 6,
+              "z": 0,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "grass_block"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "campfire"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 0,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "sandstone"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone_brick_wall"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "sandstone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 4,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 0,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "chest"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "sandstone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 5,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 0,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "chest"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "furnace"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "sandstone"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 6,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 0,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "chest"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "furnace"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 7,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 0,
+              "z": 8,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "chest"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "furnace"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "sandstone"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "grass_block"
+            },
+            {
+              "x": 10,
+              "z": 8,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "crafting_table"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "spruce_trapdoor"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "birch_door"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "spruce_fence"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "spruce_fence"
+            }
+          ]
+        },
+        {
+          "level": 3,
+          "coordinates": [
+            0,
+            -58,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "short_grass"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "dandelion"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "poppy"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "birch_fence"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "dandelion"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "stone_brick_slab"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "birch_fence"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "dandelion"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "short_grass"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "sandstone"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "short_grass"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "birch_fence"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "birch_fence"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "poppy"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "poppy"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "sandstone"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "dandelion"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "short_grass"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "birch_fence"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "birch_fence"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "short_grass"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "lantern"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "sandstone"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "birch_fence"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "birch_door"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "birch_fence"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "spruce_fence"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "spruce_fence"
+            }
+          ]
+        },
+        {
+          "level": 4,
+          "coordinates": [
+            0,
+            -57,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 1,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 9,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 1,
+              "z": 2,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 2,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 1,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "ladder"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "sandstone"
+            },
+            {
+              "x": 9,
+              "z": 4,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 1,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 6,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "sandstone"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 7,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 1,
+              "z": 9,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 9,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 1,
+              "z": 10,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 9,
+              "z": 10,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 9,
+              "z": 11,
+              "material": "granite_stairs"
+            }
+          ]
+        },
+        {
+          "level": 5,
+          "coordinates": [
+            0,
+            -56,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 1,
+              "material": "terracotta"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "granite"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "terracotta"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "terracotta"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "granite"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "granite"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "bricks"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "granite"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "bricks"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "brown_carpet"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "terracotta"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "brown_bed"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "terracotta"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "terracotta"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "chest"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "brown_bed"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "crafting_table"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "granite"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "granite"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "granite"
+            },
+            {
+              "x": 1,
+              "z": 11,
+              "material": "gray_candle"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "granite"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "granite"
+            }
+          ]
+        },
+        {
+          "level": 6,
+          "coordinates": [
+            0,
+            -55,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 2,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 2,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 8,
+              "z": 2,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 8,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 4,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 8,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 7,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 9,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 8,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 2,
+              "z": 10,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 8,
+              "z": 10,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 2,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 8,
+              "z": 11,
+              "material": "brick_stairs"
+            }
+          ]
+        },
+        {
+          "level": 7,
+          "coordinates": [
+            0,
+            -54,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "terracotta"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "bricks"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "terracotta"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "bricks"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "bricks"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "lantern"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "bricks"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "granite"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "granite"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "terracotta"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "terracotta"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "bricks"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "sandstone_wall"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "granite"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "terracotta"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "bricks"
+            }
+          ]
+        },
+        {
+          "level": 8,
+          "coordinates": [
+            0,
+            -53,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 3,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 7,
+              "z": 1,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 2,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 7,
+              "z": 2,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 3,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 4,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 5,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 7,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 7,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 7,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 9,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 3,
+              "z": 10,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "smooth_sandstone_slab"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "stripped_birch_wood"
+            },
+            {
+              "x": 7,
+              "z": 10,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 3,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 11,
+              "material": "granite_stairs"
+            }
+          ]
+        },
+        {
+          "level": 9,
+          "coordinates": [
+            0,
+            -52,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "granite"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "terracotta"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "smooth_sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "terracotta"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "stripped_spruce_wood"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "terracotta"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "spruce_slab"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "granite"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "spruce_stairs"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "bricks"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "bricks"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "bricks"
+            }
+          ]
+        },
+        {
+          "level": 10,
+          "coordinates": [
+            0,
+            -51,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 4,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 1,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 2,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "sandstone"
+            },
+            {
+              "x": 6,
+              "z": 2,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 3,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "granite"
+            },
+            {
+              "x": 6,
+              "z": 3,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone"
+            },
+            {
+              "x": 4,
+              "z": 4,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "granite"
+            },
+            {
+              "x": 6,
+              "z": 4,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 5,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "bricks"
+            },
+            {
+              "x": 6,
+              "z": 5,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "granite"
+            },
+            {
+              "x": 6,
+              "z": 6,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 7,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "bricks"
+            },
+            {
+              "x": 6,
+              "z": 7,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 8,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "bricks"
+            },
+            {
+              "x": 6,
+              "z": 8,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 4,
+              "z": 9,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "bricks"
+            },
+            {
+              "x": 6,
+              "z": 9,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 10,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "sandstone"
+            },
+            {
+              "x": 6,
+              "z": 10,
+              "material": "brick_stairs"
+            },
+            {
+              "x": 4,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "granite_stairs"
+            },
+            {
+              "x": 6,
+              "z": 11,
+              "material": "granite_stairs"
+            }
+          ]
+        },
+        {
+          "level": 11,
+          "coordinates": [
+            0,
+            -50,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "bricks"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "bricks"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "terracotta"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "granite"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "terracotta"
+            }
+          ]
+        },
+        {
+          "level": 12,
+          "coordinates": [
+            0,
+            -49,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 5,
+              "z": 1,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 2,
+              "material": "brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 3,
+              "material": "granite_wall"
+            },
+            {
+              "x": 7,
+              "z": 3,
+              "material": "cracked_stone_bricks"
+            },
+            {
+              "x": 5,
+              "z": 4,
+              "material": "brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 5,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 6,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 7,
+              "material": "brick_wall"
+            },
+            {
+              "x": 5,
+              "z": 8,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 9,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 10,
+              "material": "granite_wall"
+            },
+            {
+              "x": 5,
+              "z": 11,
+              "material": "granite_wall"
+            }
+          ]
+        },
+        {
+          "level": 13,
+          "coordinates": [
+            0,
+            -48,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_brick_wall"
+            }
+          ]
+        },
+        {
+          "level": 14,
+          "coordinates": [
+            0,
+            -47,
+            0
+          ],
+          "blocks": [
+            {
+              "x": 7,
+              "z": 3,
+              "material": "stone_brick_slab"
+            }
+          ]
+        }
+      ]
+    },
+    "initial_inventory": {
+      "0": {
+        "stone": 49,
+        "gray_concrete": 64,
+        "spruce_planks": 32,
+        "stone_bricks": 5,
+        "cracked_stone_bricks": 3,
+        "spruce_trapdoor": 19,
+        "grass_block": 13,
+        "stripped_birch_wood": 26,
+        "smooth_sandstone": 33,
+        "sandstone": 31,
+        "ladder": 3,
+        "stone_brick_wall": 3,
+        "campfire": 1,
+        "chest": 5,
+        "brown_carpet": 17,
+        "furnace": 3,
+        "crafting_table": 2,
+        "birch_door": 2,
+        "spruce_fence": 4,
+        "short_grass": 5,
+        "dandelion": 4,
+        "poppy": 3,
+        "birch_fence": 9,
+        "stone_brick_slab": 3,
+        "lantern": 2,
+        "brick_stairs": 48,
+        "granite_stairs": 74,
+        "sandstone_wall": 11,
+        "spruce_slab": 38,
+        "terracotta": 22,
+        "granite": 33,
+        "smooth_sandstone_slab": 4,
+        "bricks": 28,
+        "stripped_spruce_wood": 8,
+        "brown_bed": 2,
+        "gray_candle": 1,
+        "spruce_stairs": 6,
+        "granite_wall": 8,
+        "brick_wall": 3
+      }
+    }
+  }
+}

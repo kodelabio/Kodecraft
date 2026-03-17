@@ -1,13 +1,24 @@
 {
-  "Modern_Starter_House": {
+  "Modern_Starter_House_b1": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A Modern_Starter_House_b1 structure",
-    "goal": "Build the Modern_Starter_House_b1 structure",
-    "conversation": "Let's build the Modern_Starter_House_b1 structure together",
+    "verified": false,
+    "goal": "Build the Modern_Starter_House_b1",
+    "conversation": "Let's build the Modern_Starter_House_b1 together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "Modern_Starter_House_b1",
+      "totalBlocks": 2119,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1743722388676,
+      "perimeter": 86
+    },
     "blueprint": {
       "materials": {
         "dirt": 378,

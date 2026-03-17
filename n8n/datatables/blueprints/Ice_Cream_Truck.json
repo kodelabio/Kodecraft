@@ -2,12 +2,23 @@
   "Ice_Cream_Truck": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A Ice_Cream_Truck structure",
-    "goal": "Build the Ice_Cream_Truck structure",
-    "conversation": "Let's build the Ice_Cream_Truck structure together",
+    "verified": false,
+    "goal": "Build the Ice_Cream_Truck",
+    "conversation": "Let's build the Ice_Cream_Truck together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "Ice_Cream_Truck",
+      "totalBlocks": 187,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1737835870651,
+      "perimeter": 36
+    },
     "blueprint": {
       "materials": {
         "birch_sign": 12,

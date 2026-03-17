@@ -146,3 +146,10 @@ Notes:
 - Quick Build from blueprint API
 # Fixed
 - blueprint import script for legacy formats
+
+# [1.3.7]
+### Bug Fixes
+
+# [1.3.8]
+### Added
+- blueprints

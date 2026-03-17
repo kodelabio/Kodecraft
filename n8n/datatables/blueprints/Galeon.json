@@ -2,13 +2,23 @@
   "Galeon": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A Galeon structure",
-    "goal": "Build the Galeon structure",
-    "conversation": "Let's build the Galeon structure together",
+    "verified": false,
+    "goal": "Build the Galeon",
+    "conversation": "Let's build the Galeon together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 23821,
+    "metadata": {
+      "description": "Galeon",
+      "totalBlocks": 23821,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1738548498753,
+      "perimeter": 522
+    },
     "blueprint": {
       "materials": {
         "deepslate_tile_slab": 204,

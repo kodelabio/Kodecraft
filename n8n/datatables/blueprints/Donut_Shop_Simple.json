@@ -2,12 +2,23 @@
   "Donut_Shop_Simple": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A Donut_Shop_Simple structure",
-    "goal": "Build the Donut_Shop_Simple structure",
-    "conversation": "Let's build the Donut_Shop_Simple structure together",
+    "verified": false,
+    "goal": "Build the Donut_Shop_Simple",
+    "conversation": "Let's build the Donut_Shop_Simple together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "Donut_Shop_Simple",
+      "totalBlocks": 1477,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1737873691105,
+      "perimeter": 86
+    },
     "blueprint": {
       "materials": {
         "black_concrete": 82,

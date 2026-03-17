@@ -2,13 +2,23 @@
   "BlueCargoShip": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A BlueCargoShip structure",
-    "goal": "Build the BlueCargoShip structure",
-    "conversation": "Let's build the BlueCargoShip structure together",
+    "verified": false,
+    "goal": "Build the BlueCargoShip",
+    "conversation": "Let's build the BlueCargoShip together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 6655,
+    "metadata": {
+      "description": "BlueCargoShip",
+      "totalBlocks": 6655,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1738549084900,
+      "perimeter": 252
+    },
     "blueprint": {
       "materials": {
         "mangrove_slab": 228,

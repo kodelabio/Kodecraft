@@ -2,12 +2,23 @@
   "KFC": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A KFC structure",
-    "goal": "Build the KFC structure",
-    "conversation": "Let's build the KFC structure together",
+    "verified": false,
+    "goal": "Build the KFC",
+    "conversation": "Let's build the KFC together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "KFC",
+      "totalBlocks": 15949,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": 330
+    },
     "blueprint": {
       "materials": {
         "black_wool": 1867,

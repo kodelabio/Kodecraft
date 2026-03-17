@@ -1,13 +1,24 @@
 {
-  "15th_birthday_cake": {
+  "pmc_15th_birthday_cake": {
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A pmc_15th_birthday_cake structure",
-    "goal": "Build the pmc_15th_birthday_cake structure",
-    "conversation": "Let's build the pmc_15th_birthday_cake structure together",
+    "goal": "Build the pmc_15th_birthday_cake",
+    "conversation": "Let's build the pmc_15th_birthday_cake together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "pmc_15th_birthday_cake",
+      "totalBlocks": 5718,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1759359031911,
+      "perimeter": 156
+    },
     "blueprint": {
       "materials": {
         "raw_gold_block": 108,

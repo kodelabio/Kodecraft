@@ -3,12 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A Cherry_Blossom_Tree structure",
-    "goal": "Build the Cherry_Blossom_Tree structure",
-    "conversation": "Let's build the Cherry_Blossom_Tree structure together",
+    "goal": "Build the Cherry_Blossom_Tree",
+    "conversation": "Let's build the Cherry_Blossom_Tree together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 18280,
+    "metadata": {
+      "description": "A Cherry_Blossom_Tree",
+      "totalBlocks": 18280,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
     "blueprint": {
       "materials": {
         "grass_block": 3660,

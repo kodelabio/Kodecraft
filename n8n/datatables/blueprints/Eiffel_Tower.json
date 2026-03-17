@@ -3,12 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A Eiffel_Tower structure",
-    "goal": "Build the Eiffel_Tower structure",
-    "conversation": "Let's build the Eiffel_Tower structure together",
+    "goal": "Build the Eiffel_Tower",
+    "conversation": "Let's build the Eiffel_Tower together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 24162,
+    "metadata": {
+      "description": "Eiffel_Tower",
+      "totalBlocks": 24162,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": 260
+    },
     "blueprint": {
       "materials": {
         "dirt": 4403,

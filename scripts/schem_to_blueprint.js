@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { itemMappings } from './item_mappings.js';
 
-function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ = 0) {
+function schemToBlueprint(schematicJsonPath, name, metadata = {}, baseX = 0, baseY = -60, baseZ = 0) {
     console.log(`schemToBlueprint called with name: "${name}"`);  // Debug
     const schematic = JSON.parse(fs.readFileSync(schematicJsonPath, 'utf8'));
     const blockList = schematic.blocks;
@@ -52,12 +52,19 @@ function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ
             source: "schematic",
             type: "construction",
             verified: false,
-            description: `A ${name} structure`,
-            goal: `Build the ${name} structure`,
-            conversation: `Let's build the ${name} structure together`,
+            goal: `Build the ${name}`,
+            conversation: `Let's build the ${name} together`,
             agent_count: 1,
             timeout: 300000,
-            totalBlocks: totalBlocks,
+            metadata: {
+                description: metadata.description || `A ${name}`,
+                totalBlocks: totalBlocks,
+                dimensions: metadata.dimensions || { width: null, height: null, length: null },
+                author: metadata.author || null,
+                created: metadata.created || null,
+                perimeter: metadata.perimeter || null
+            },
+              // Add perimeter
             blueprint: {
                 materials: materials,
                 levels: levels
@@ -71,7 +78,7 @@ function schemToBlueprint(schematicJsonPath, name, baseX = 0, baseY = -60, baseZ
     return blueprint;
 }
 
-let [, , jsonPath, blueprintName] = process.argv;
+let [, , jsonPath, blueprintName, metadataJson] = process.argv;
 
 // Extract filename without extension if not provided
 if (!blueprintName) {
@@ -86,7 +93,9 @@ blueprintName = blueprintName.replace(/^blueprints[\/\\]/, '');
 
 console.log(`Using blueprint name: ${blueprintName}`);  // Debug
 
-const blueprint = schemToBlueprint(jsonPath, blueprintName);  // Pass stripped name
+const metadata = metadataJson ? JSON.parse(metadataJson) : {};
+
+const blueprint = schemToBlueprint(jsonPath, blueprintName, metadata);  // Pass stripped name
 const outPath = `${blueprintName}_blueprint.json`;
 fs.writeFileSync(outPath, JSON.stringify(blueprint, null, 2));
 

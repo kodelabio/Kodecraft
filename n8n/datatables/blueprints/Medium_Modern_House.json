@@ -2,12 +2,23 @@
   "Medium_Modern_House": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A Medium_Modern_House structure",
-    "goal": "Build the Medium_Modern_House structure",
-    "conversation": "Let's build the Medium_Modern_House structure together",
+    "verified": false,
+    "goal": "Build the Medium_Modern_House",
+    "conversation": "Let's build the Medium_Modern_House together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "Medium_Modern_House",
+      "totalBlocks": 13454,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": 196
+    },
     "blueprint": {
       "materials": {
         "sandstone": 998,

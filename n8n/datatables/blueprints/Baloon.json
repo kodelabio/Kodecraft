@@ -3,11 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A Baloon structure",
-    "goal": "Build the Baloon structure",
-    "conversation": "Let's build the Baloon structure together",
+    "goal": "Build the Baloon",
+    "conversation": "Let's build the Baloon together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "Baloon",
+      "totalBlocks": 7282,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": 238
+    },
     "blueprint": {
       "materials": {
         "spruce_planks": 844,

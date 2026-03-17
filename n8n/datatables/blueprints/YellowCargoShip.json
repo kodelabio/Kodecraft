@@ -2,13 +2,23 @@
   "YellowCargoShip": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A YellowCargoShip structure",
-    "goal": "Build the YellowCargoShip structure",
-    "conversation": "Let's build the YellowCargoShip structure together",
+    "verified": false,
+    "goal": "Build the YellowCargoShip",
+    "conversation": "Let's build the YellowCargoShip together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 3240,
+    "metadata": {
+      "description": "YellowCargoShip",
+      "totalBlocks": 3240,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1738549122189,
+      "perimeter": 202
+    },
     "blueprint": {
       "materials": {
         "mangrove_slab": 146,

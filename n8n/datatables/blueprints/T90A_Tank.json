@@ -3,12 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A T90A_Tank structure",
-    "goal": "Build the T90A_Tank structure",
-    "conversation": "Let's build the T90A_Tank structure together",
+    "goal": "Build the T90A_Tank",
+    "conversation": "Let's build the T90A_Tank together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 437,
+    "metadata": {
+      "description": "A T90A_Tank",
+      "totalBlocks": 437,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": null,
+      "perimeter": null
+    },
     "blueprint": {
       "materials": {
         "glass": 2,

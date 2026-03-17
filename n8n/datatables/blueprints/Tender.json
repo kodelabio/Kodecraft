@@ -3,12 +3,22 @@
     "source": "schematic",
     "type": "construction",
     "verified": false,
-    "description": "A Tender structure",
-    "goal": "Build the Tender structure",
-    "conversation": "Let's build the Tender structure together",
+    "goal": "Build the Tender",
+    "conversation": "Let's build the Tender together",
     "agent_count": 1,
     "timeout": 300000,
-    "totalBlocks": 6852,
+    "metadata": {
+      "description": "Tender",
+      "totalBlocks": 6852,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1738548389161,
+      "perimeter": 362
+    },
     "blueprint": {
       "materials": {
         "jungle_planks": 93,
@@ -63,10 +73,9 @@
         "dark_oak_sign": 8,
         "soul_lantern": 6,
         "mud_brick_wall": 7,
-        "dark_oak_wall_hanging_sign": 3,
+        "dark_oak_hanging_sign": 39,
         "gold_block": 2,
         "warped_trapdoor": 4,
-        "dark_oak_hanging_sign": 36,
         "oak_sign": 13,
         "oak_trapdoor": 12,
         "rail": 4,
@@ -128,7 +137,7 @@
         "oak_button": 110,
         "decorated_pot": 1,
         "smooth_sandstone": 419,
-        "attached_melon_stem": 4,
+        "melon_stem": 4,
         "potted_lily_of_the_valley": 1,
         "chain": 3,
         "diorite_stairs": 2,
@@ -6782,7 +6791,7 @@
             {
               "x": 23,
               "z": 93,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 24,
@@ -6797,7 +6806,7 @@
             {
               "x": 26,
               "z": 93,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 27,
@@ -6812,7 +6821,7 @@
             {
               "x": 29,
               "z": 93,
-              "material": "dark_oak_wall_hanging_sign"
+              "material": "dark_oak_hanging_sign"
             },
             {
               "x": 30,
@@ -18892,12 +18901,12 @@
             {
               "x": 23,
               "z": 87,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 24,
               "z": 87,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 25,
@@ -18917,12 +18926,12 @@
             {
               "x": 28,
               "z": 87,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 29,
               "z": 87,
-              "material": "attached_melon_stem"
+              "material": "melon_stem"
             },
             {
               "x": 30,
@@ -35307,10 +35316,9 @@
         "dark_oak_sign": 8,
         "soul_lantern": 6,
         "mud_brick_wall": 7,
-        "dark_oak_wall_hanging_sign": 3,
+        "dark_oak_hanging_sign": 39,
         "gold_block": 2,
         "warped_trapdoor": 4,
-        "dark_oak_hanging_sign": 36,
         "oak_sign": 13,
         "oak_trapdoor": 12,
         "rail": 4,
@@ -35372,7 +35380,7 @@
         "oak_button": 110,
         "decorated_pot": 1,
         "smooth_sandstone": 419,
-        "attached_melon_stem": 4,
+        "melon_stem": 4,
         "potted_lily_of_the_valley": 1,
         "chain": 3,
         "diorite_stairs": 2,

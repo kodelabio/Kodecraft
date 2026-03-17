@@ -2,12 +2,23 @@
   "medieval_house_b10": {
     "source": "schematic",
     "type": "construction",
-    "verified": true,
-    "description": "A medieval_house_b10 structure",
-    "goal": "Build the medieval_house_b10 structure",
-    "conversation": "Let's build the medieval_house_b10 structure together",
+    "verified": false,
+    "goal": "Build the medieval_house_b10",
+    "conversation": "Let's build the medieval_house_b10 together",
     "agent_count": 1,
     "timeout": 300000,
+    "metadata": {
+      "description": "medieval_house_b10",
+      "totalBlocks": 4238,
+      "dimensions": {
+        "width": null,
+        "height": null,
+        "length": null
+      },
+      "author": null,
+      "created": 1756690229674,
+      "perimeter": 96
+    },
     "blueprint": {
       "materials": {
         "spruce_trapdoor": 429,

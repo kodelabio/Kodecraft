@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "BlueCargoShip",
+      "description": "A 24-level BlueCargoShip structure using 114 block types. Primary materials: 2535 stone, 669 stripped_mangrove_wood, 285 gray_concrete_powder",
       "totalBlocks": 6655,
       "dimensions": {
         "width": null,

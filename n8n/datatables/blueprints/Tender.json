@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Tender",
+      "description": "A 82-level Tender structure using 157 block types. Primary materials: 740 stripped_spruce_wood, 487 spruce_fence, 477 bone_block",
       "totalBlocks": 6852,
       "dimensions": {
         "width": null,

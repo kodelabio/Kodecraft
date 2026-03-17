@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "YellowCargoShip",
+      "description": "A 20-level YellowCargoShip structure using 100 block types. Primary materials: 1040 stone, 336 stripped_mangrove_wood, 284 yellow_terracotta",
       "totalBlocks": 3240,
       "dimensions": {
         "width": null,

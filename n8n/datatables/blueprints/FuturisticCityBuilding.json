@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "FuturisticCityBuilding",
+      "description": "A 64-level FuturisticCityBuilding structure using 15 block types. Primary materials: 13779 quartz_block, 6023 quartz_slab, 4950 quartz_stairs",
       "totalBlocks": 40711,
       "dimensions": {
         "width": null,

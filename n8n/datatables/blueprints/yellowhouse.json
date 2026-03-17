@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A yellowhouse",
+      "description": "A 11-level yellowhouse structure using 26 block types. Primary materials: 136 yellow_terracotta, 126 dark_oak_slab, 76 gray_concrete",
       "totalBlocks": 782,
       "dimensions": {
         "width": null,

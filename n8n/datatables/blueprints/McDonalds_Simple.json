@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "McDonalds_Simple",
+      "description": "A 12-level McDonalds_Simple structure using 27 block types. Primary materials: 441 gray_concrete, 368 smooth_stone, 361 red_concrete",
       "totalBlocks": 2785,
       "dimensions": {
         "width": null,

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Medieval_House",
+      "description": "A 18-level Medieval_House structure using 67 block types. Primary materials: 634 dirt, 523 oak_planks, 239 oak_log",
       "totalBlocks": 2555,
       "dimensions": {
         "width": null,

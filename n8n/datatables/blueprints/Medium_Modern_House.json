@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Medium_Modern_House",
+      "description": "A 30-level Medium_Modern_House structure using 28 block types. Primary materials: 3019 quartz_block, 1664 quartz_slab, 1422 oak_planks",
       "totalBlocks": 13454,
       "dimensions": {
         "width": null,

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A T90A_Tank",
+      "description": "A 11-level T90A_Tank structure using 33 block types. Primary materials: 140 white_concrete, 49 redstone_wire, 39 hopper",
       "totalBlocks": 437,
       "dimensions": {
         "width": null,

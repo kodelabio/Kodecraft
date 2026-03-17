@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Baloon",
+      "description": "A 82-level Baloon structure using 52 block types. Primary materials: 2641 white_wool, 2509 light_blue_wool, 844 spruce_planks",
       "totalBlocks": 7282,
       "dimensions": {
         "width": null,

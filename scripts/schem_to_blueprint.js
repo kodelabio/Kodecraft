@@ -3,6 +3,23 @@ import fs from 'fs';
 import path from 'path';
 import { itemMappings } from './item_mappings.js';
 
+
+function generateDescription(name, blueprint) {
+  const materials = blueprint.materials;
+  const levels = blueprint.levels;
+  
+  const materialCount = Object.keys(materials).length;
+  const topMaterials = Object.entries(materials)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([mat, count]) => `${count} ${mat}`)
+    .join(', ');
+  
+  return `A ${levels.length}-level ${name} structure using ${materialCount} block types. Primary materials: ${topMaterials}`;
+}
+
+
+
 function schemToBlueprint(schematicJsonPath, name, metadata = {}, baseX = 0, baseY = -60, baseZ = 0) {
     console.log(`schemToBlueprint called with name: "${name}"`);  // Debug
     const schematic = JSON.parse(fs.readFileSync(schematicJsonPath, 'utf8'));
@@ -57,7 +74,7 @@ function schemToBlueprint(schematicJsonPath, name, metadata = {}, baseX = 0, bas
             agent_count: 1,
             timeout: 300000,
             metadata: {
-                description: metadata.description || `A ${name}`,
+                description: metadata.description || generateDescription(name, { materials, levels }),
                 totalBlocks: totalBlocks,
                 dimensions: metadata.dimensions || { width: null, height: null, length: null },
                 author: metadata.author || null,

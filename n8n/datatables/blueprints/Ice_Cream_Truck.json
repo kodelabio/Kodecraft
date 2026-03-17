@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Ice_Cream_Truck",
+      "description": "A 7-level Ice_Cream_Truck structure using 25 block types. Primary materials: 49 cherry_planks, 41 smooth_quartz_slab, 12 birch_sign",
       "totalBlocks": 187,
       "dimensions": {
         "width": null,

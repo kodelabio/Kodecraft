@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A smallcastle",
+      "description": "A 24-level smallcastle structure using 52 block types. Primary materials: 349 stone, 284 gray_concrete, 260 stone_bricks",
       "totalBlocks": 2172,
       "dimensions": {
         "width": null,

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A Modern_House",
+      "description": "A 14-level Modern_House structure using 35 block types. Primary materials: 1249 dirt, 331 smooth_quartz, 268 gray_carpet",
       "totalBlocks": 3313,
       "dimensions": {
         "width": null,

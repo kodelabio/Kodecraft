@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A WhiteLighthouse",
+      "description": "A 47-level WhiteLighthouse structure using 9 block types. Primary materials: 2509 white_concrete, 139 glass, 111 oak_fence",
       "totalBlocks": 2880,
       "dimensions": {
         "width": null,

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A japanesecastlegray",
+      "description": "A 48-level japanesecastlegray structure using 167 block types. Primary materials: 1400 gray_concrete, 1384 dark_oak_planks, 1379 stone_bricks",
       "totalBlocks": 18217,
       "dimensions": {
         "width": null,

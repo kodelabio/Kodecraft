@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Volkswagen_Bus_T1_Camper",
+      "description": "A 4-level Volkswagen_Bus_T1_Camper structure using 21 block types. Primary materials: 38 smooth_quartz, 25 yellow_concrete, 23 smooth_stone_slab",
       "totalBlocks": 161,
       "dimensions": {
         "width": null,

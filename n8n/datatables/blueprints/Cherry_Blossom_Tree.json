@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A Cherry_Blossom_Tree",
+      "description": "A 32-level Cherry_Blossom_Tree structure using 50 block types. Primary materials: 7455 dirt, 3660 grass_block, 1507 cherry_leaves",
       "totalBlocks": 18280,
       "dimensions": {
         "width": null,

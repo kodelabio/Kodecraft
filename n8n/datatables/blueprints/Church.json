@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Church",
+      "description": "A 34-level Church structure using 76 block types. Primary materials: 536 stone_bricks, 180 deepslate_tiles, 157 grass_block",
       "totalBlocks": 1878,
       "dimensions": {
         "width": null,

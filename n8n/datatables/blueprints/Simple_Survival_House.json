@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Simple_Survival_House",
+      "description": "A 19-level Simple_Survival_House structure using 63 block types. Primary materials: 137 spruce_log, 91 spruce_trapdoor, 67 stone_bricks",
       "totalBlocks": 1021,
       "dimensions": {
         "width": null,

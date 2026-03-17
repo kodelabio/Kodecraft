@@ -153,3 +153,6 @@ Notes:
 # [1.3.8]
 ### Added
 - blueprints
+- generate a description of the scructure when importing a blueprint
+- using the blueprint description when selecting blueprint to build from
+- using the blueprint description to create new blueprints

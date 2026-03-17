@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A japanese_castle_2",
+      "description": "A 48-level japanese_castle_2 structure using 150 block types. Primary materials: 1400 gray_concrete, 1385 dark_oak_planks, 1363 spruce_wood",
       "totalBlocks": 18274,
       "dimensions": {
         "width": null,

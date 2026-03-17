@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "medieval_house_b10",
+      "description": "A 38-level medieval_house_b10 structure using 57 block types. Primary materials: 1080 stripped_spruce_wood, 599 cobbled_deepslate_stairs, 434 spruce_planks",
       "totalBlocks": 4238,
       "dimensions": {
         "width": null,

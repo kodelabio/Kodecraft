@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A medievalcastle_2",
+      "description": "A 25-level medievalcastle_2 structure using 27 block types. Primary materials: 503 spruce_planks, 450 stone, 368 stone_bricks",
       "totalBlocks": 2388,
       "dimensions": {
         "width": null,

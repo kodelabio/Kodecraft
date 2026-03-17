@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A bigroofhouse",
+      "description": "A 14-level bigroofhouse structure using 39 block types. Primary materials: 74 granite_stairs, 64 gray_concrete, 49 stone",
       "totalBlocks": 627,
       "dimensions": {
         "width": null,

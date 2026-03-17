@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A Garbage_Truck",
+      "description": "A 6-level Garbage_Truck structure using 17 block types. Primary materials: 101 orange_concrete, 57 smooth_stone_slab, 44 orange_wall_banner",
       "totalBlocks": 305,
       "dimensions": {
         "width": null,

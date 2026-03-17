@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A medievalcastle_1",
+      "description": "A 13-level medievalcastle_1 structure using 43 block types. Primary materials: 246 stone_bricks, 236 gray_concrete, 232 stone",
       "totalBlocks": 1681,
       "dimensions": {
         "width": null,

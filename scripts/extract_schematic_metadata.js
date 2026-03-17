@@ -32,7 +32,7 @@ async function extractMetadataSchem(filePath) {
         width: root.Width?.value || null,
         height: root.Height?.value || null,
         length: root.Length?.value || null,
-        description: root.Metadata?.value?.Description?.value || filePath.split('/').pop().split('.')[0],
+        description: root.Metadata?.value?.Description?.value || null,
         author: root.Metadata?.value?.Author?.value || null,
         created: createdTimestamp,
         perimeter: root.Width?.value && root.Length?.value ? (root.Width.value + root.Length.value) * 2 : null
@@ -71,7 +71,7 @@ async function extractMetadataSchematic(filePath) {
           width: root.Width?.value || null,
           height: root.Height?.value || null,
           length: root.Length?.value || null,
-          description: root.Description?.value || filePath.split('/').pop().split('.')[0],
+          description: root.Metadata?.value?.Description?.value || null,
           author: root.Author?.value || null,
           created: root.Date?.value || null,
           perimeter: root.Width?.value && root.Length?.value ? (root.Width.value + root.Length.value) * 2 : null

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Fire_Truck",
+      "description": "A 6-level Fire_Truck structure using 21 block types. Primary materials: 55 smooth_quartz_slab, 36 red_nether_bricks, 35 mangrove_sign",
       "totalBlocks": 285,
       "dimensions": {
         "width": null,

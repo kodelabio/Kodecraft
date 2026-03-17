@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A basalthouse",
+      "description": "A 14-level basalthouse structure using 27 block types. Primary materials: 100 gray_concrete, 77 blackstone, 71 polished_basalt",
       "totalBlocks": 699,
       "dimensions": {
         "width": null,

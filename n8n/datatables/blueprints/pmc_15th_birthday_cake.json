@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "pmc_15th_birthday_cake",
+      "description": "A 42-level pmc_15th_birthday_cake structure using 22 block types. Primary materials: 2693 snow_block, 1320 sand, 308 blue_concrete",
       "totalBlocks": 5718,
       "dimensions": {
         "width": null,

@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Galeon",
+      "description": "A 100-level Galeon structure using 170 block types. Primary materials: 2149 blackstone, 1935 red_nether_bricks, 1330 dark_oak_fence",
       "totalBlocks": 23821,
       "dimensions": {
         "width": null,

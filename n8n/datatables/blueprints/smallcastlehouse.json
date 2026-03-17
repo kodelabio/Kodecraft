@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A smallcastlehouse",
+      "description": "A 7-level smallcastlehouse structure using 25 block types. Primary materials: 75 gray_concrete, 70 stone, 41 oak_planks",
       "totalBlocks": 378,
       "dimensions": {
         "width": null,

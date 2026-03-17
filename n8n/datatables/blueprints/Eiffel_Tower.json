@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "Eiffel_Tower",
+      "description": "A 166-level Eiffel_Tower structure using 46 block types. Primary materials: 10382 stone, 4403 dirt, 2730 stonebrick",
       "totalBlocks": 24162,
       "dimensions": {
         "width": null,

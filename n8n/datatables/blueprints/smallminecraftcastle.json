@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A smallminecraftcastle",
+      "description": "A 8-level smallminecraftcastle structure using 20 block types. Primary materials: 85 stone, 60 gray_concrete, 43 stone_bricks",
       "totalBlocks": 379,
       "dimensions": {
         "width": null,

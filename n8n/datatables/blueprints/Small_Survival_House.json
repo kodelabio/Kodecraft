@@ -8,7 +8,7 @@
     "agent_count": 1,
     "timeout": 300000,
     "metadata": {
-      "description": "A Small_Survival_House",
+      "description": "A 21-level Small_Survival_House structure using 43 block types. Primary materials: 489 spruce_stairs, 412 grass_block, 379 spruce_planks",
       "totalBlocks": 3049,
       "dimensions": {
         "width": null,

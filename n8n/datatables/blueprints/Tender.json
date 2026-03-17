@@ -2,7 +2,7 @@
   "Tender": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Tender",
     "conversation": "Let's build the Tender together",
     "agent_count": 1,

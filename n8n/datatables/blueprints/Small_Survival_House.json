@@ -2,7 +2,7 @@
   "Small_Survival_House": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Small_Survival_House",
     "conversation": "Let's build the Small_Survival_House together",
     "agent_count": 1,

@@ -2,7 +2,7 @@
   "T90A_Tank": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the T90A_Tank",
     "conversation": "Let's build the T90A_Tank together",
     "agent_count": 1,

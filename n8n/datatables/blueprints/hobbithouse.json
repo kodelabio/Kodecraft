@@ -2,7 +2,7 @@
   "hobbithouse": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the hobbithouse",
     "conversation": "Let's build the hobbithouse together",
     "agent_count": 1,

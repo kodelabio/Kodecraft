@@ -2,7 +2,7 @@
   "Galeon": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Galeon",
     "conversation": "Let's build the Galeon together",
     "agent_count": 1,

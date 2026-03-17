@@ -2,7 +2,7 @@
   "McDonalds_Simple": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the McDonalds_Simple",
     "conversation": "Let's build the McDonalds_Simple together",
     "agent_count": 1,

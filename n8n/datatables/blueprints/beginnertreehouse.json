@@ -2,7 +2,7 @@
   "beginnertreehouse": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the beginnertreehouse",
     "conversation": "Let's build the beginnertreehouse together",
     "agent_count": 1,

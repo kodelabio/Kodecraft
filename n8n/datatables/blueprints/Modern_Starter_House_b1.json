@@ -2,7 +2,7 @@
   "Modern_Starter_House_b1": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Modern_Starter_House_b1",
     "conversation": "Let's build the Modern_Starter_House_b1 together",
     "agent_count": 1,

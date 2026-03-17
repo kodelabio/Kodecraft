@@ -2,7 +2,7 @@
   "pmc_15th_birthday_cake": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the pmc_15th_birthday_cake",
     "conversation": "Let's build the pmc_15th_birthday_cake together",
     "agent_count": 1,

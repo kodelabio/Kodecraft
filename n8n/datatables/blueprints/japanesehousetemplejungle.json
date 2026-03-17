@@ -2,7 +2,7 @@
   "japanesehousetemplejungle": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesehousetemplejungle",
     "conversation": "Let's build the japanesehousetemplejungle together",
     "agent_count": 1,

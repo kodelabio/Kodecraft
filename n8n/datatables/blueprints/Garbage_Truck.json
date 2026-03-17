@@ -2,7 +2,7 @@
   "Garbage_Truck": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Garbage_Truck",
     "conversation": "Let's build the Garbage_Truck together",
     "agent_count": 1,

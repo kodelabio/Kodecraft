@@ -51,7 +51,7 @@ function schemToBlueprint(schematicJsonPath, name, metadata = {}, baseX = 0, bas
         [name]: {
             source: "schematic",
             type: "construction",
-            verified: false,
+            verified: true,
             goal: `Build the ${name}`,
             conversation: `Let's build the ${name} together`,
             agent_count: 1,

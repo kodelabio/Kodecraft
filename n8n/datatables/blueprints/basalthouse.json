@@ -2,7 +2,7 @@
   "basalthouse": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the basalthouse",
     "conversation": "Let's build the basalthouse together",
     "agent_count": 1,

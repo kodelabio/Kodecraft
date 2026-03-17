@@ -2,7 +2,7 @@
   "Fire_Truck": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Fire_Truck",
     "conversation": "Let's build the Fire_Truck together",
     "agent_count": 1,

@@ -2,7 +2,7 @@
   "smallcastle": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the smallcastle",
     "conversation": "Let's build the smallcastle together",
     "agent_count": 1,

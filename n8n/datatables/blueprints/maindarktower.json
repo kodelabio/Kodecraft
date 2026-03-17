@@ -2,7 +2,7 @@
   "maindarktower": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the maindarktower",
     "conversation": "Let's build the maindarktower together",
     "agent_count": 1,

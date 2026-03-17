@@ -2,7 +2,7 @@
   "YellowCargoShip": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the YellowCargoShip",
     "conversation": "Let's build the YellowCargoShip together",
     "agent_count": 1,

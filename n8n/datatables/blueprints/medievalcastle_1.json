@@ -2,7 +2,7 @@
   "medievalcastle_1": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the medievalcastle_1",
     "conversation": "Let's build the medievalcastle_1 together",
     "agent_count": 1,

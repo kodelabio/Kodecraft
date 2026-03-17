@@ -2,7 +2,7 @@
   "Volkswagen_Bus_T1_Camper": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Volkswagen_Bus_T1_Camper",
     "conversation": "Let's build the Volkswagen_Bus_T1_Camper together",
     "agent_count": 1,

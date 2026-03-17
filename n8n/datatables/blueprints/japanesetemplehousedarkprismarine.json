@@ -2,7 +2,7 @@
   "japanesetemplehousedarkprismarine": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesetemplehousedarkprismarine",
     "conversation": "Let's build the japanesetemplehousedarkprismarine together",
     "agent_count": 1,

@@ -2,7 +2,7 @@
   "japanesecastlejungle": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesecastlejungle",
     "conversation": "Let's build the japanesecastlejungle together",
     "agent_count": 1,

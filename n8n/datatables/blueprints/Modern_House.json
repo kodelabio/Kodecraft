@@ -2,7 +2,7 @@
   "Modern_House": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Modern_House",
     "conversation": "Let's build the Modern_House together",
     "agent_count": 1,

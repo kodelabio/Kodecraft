@@ -2,7 +2,7 @@
   "greenhouse": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the greenhouse",
     "conversation": "Let's build the greenhouse together",
     "agent_count": 1,

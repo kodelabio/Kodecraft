@@ -2,7 +2,7 @@
   "japanesecastlemangrove": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesecastlemangrove",
     "conversation": "Let's build the japanesecastlemangrove together",
     "agent_count": 1,

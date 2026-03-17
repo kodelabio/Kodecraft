@@ -2,7 +2,7 @@
   "FuturisticCityBuilding": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the FuturisticCityBuilding",
     "conversation": "Let's build the FuturisticCityBuilding together",
     "agent_count": 1,

@@ -2,7 +2,7 @@
   "Cherry_Blossom_Tree": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the Cherry_Blossom_Tree",
     "conversation": "Let's build the Cherry_Blossom_Tree together",
     "agent_count": 1,

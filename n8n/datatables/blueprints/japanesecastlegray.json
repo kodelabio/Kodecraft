@@ -2,7 +2,7 @@
   "japanesecastlegray": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesecastlegray",
     "conversation": "Let's build the japanesecastlegray together",
     "agent_count": 1,

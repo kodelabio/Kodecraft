@@ -2,7 +2,7 @@
   "japanesecastlebamboo": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the japanesecastlebamboo",
     "conversation": "Let's build the japanesecastlebamboo together",
     "agent_count": 1,

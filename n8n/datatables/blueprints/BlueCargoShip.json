@@ -2,7 +2,7 @@
   "BlueCargoShip": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the BlueCargoShip",
     "conversation": "Let's build the BlueCargoShip together",
     "agent_count": 1,

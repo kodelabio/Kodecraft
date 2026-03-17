@@ -2,7 +2,7 @@
   "bigroofhouse": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the bigroofhouse",
     "conversation": "Let's build the bigroofhouse together",
     "agent_count": 1,

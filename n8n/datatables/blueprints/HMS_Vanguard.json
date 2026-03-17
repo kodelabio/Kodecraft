@@ -2,7 +2,7 @@
   "HMS_Vanguard": {
     "source": "schematic",
     "type": "construction",
-    "verified": false,
+    "verified": true,
     "goal": "Build the HMS_Vanguard",
     "conversation": "Let's build the HMS_Vanguard together",
     "agent_count": 1,

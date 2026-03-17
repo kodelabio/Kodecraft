@@ -293,8 +293,8 @@ export class Task {
         this.conversation = this.data.conversation;
     }
 
-
-      this.taskTimeout = this.data.timeout || 300;
+      // this is in seconds, can be set in task config json, default to 60 minutes
+      this.taskTimeout = this.data.timeout || 3600;
       // Set validator based on task_type
 
       // do goal initialization here
@@ -428,7 +428,7 @@ export class Task {
 
     if (this.taskTimeout) {
       if (elapsedTime >= this.taskTimeout) {
-        console.log("Task timeout reached. Task unsuccessful.");
+        console.error(`Task timeout of ${this.taskTimeout} seconds reached. Task unsuccessful.`);
         this.completed = true;
         this._isDoneResult = { message: "Task timeout reached", score: 0 };
         return this._isDoneResult;

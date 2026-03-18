@@ -28,7 +28,7 @@ export class ConstructionTaskValidator {
     validate() {
         try {
             //console.log(`[Validator] Validating ${this.blueprintType} blueprint...`);
-            
+            const workerName = this.agent.bot.name || this.agent.name || 'Unknown';
             let valid = false;
             let score = 0;
             
@@ -40,7 +40,7 @@ export class ConstructionTaskValidator {
             
             if (result.mismatches.length === 0) {
                 valid = true;
-                console.log('[TASK VALIDATOR] Task is complete');
+                console.log(`[TASK VALIDATOR] [${workerName}] Task is complete`);
             }
             
             let total_blocks = result.mismatches.length + result.matches.length;
@@ -52,7 +52,7 @@ export class ConstructionTaskValidator {
                 this._lastScoreLog = 0;
             }
             if (now - this._lastScoreLog >= 30000) {
-                console.log(`[Validator] Task score: ${score.toFixed(2)}% (${result.matches.length}/${total_blocks} blocks correct)`);
+                console.log(`[Validator] [${workerName}] Task score: ${score.toFixed(2)}% (${result.matches.length}/${total_blocks} blocks correct)`);
                 this._lastScoreLog = now;
             }
             
@@ -61,21 +61,22 @@ export class ConstructionTaskValidator {
                 "score": score
             };
         } catch (error) {
-            console.error('[TASK VALIDATOR] Error validating task:', error);
+            console.error(`[TASK VALIDATOR] [${workerName}] Error validating task:`, error);
             return {
                 "valid": false,
                 "score": 0
             };
         }
     }
-    validateLevel(levelNumber, threshold = 99) {
+    validateLevel(levelNumber, threshold = 95) {
+        const workerName = this.agent.bot.name || this.agent.name || 'Unknown';
         try {
             const levels = this.blueprint.data.levels;
             const targetLevel = levels.find(l => l.level === levelNumber);
             const levelIndex = levels.findIndex(l => l.level === levelNumber);
             
             if (!targetLevel) {
-                console.warn(`[Validator] Level ${levelNumber} not found`);
+                console.warn(`[Validator] [${workerName}] Level ${levelNumber} not found`);
                 return { valid: false, score: 0 };
             }
             
@@ -90,7 +91,7 @@ export class ConstructionTaskValidator {
             const score = totalLevelBlocks > 0 ? (levelMatches.length / totalLevelBlocks) * 100 : 0;
             const valid = score >= threshold;
             
-            console.log(`[Validator] Level ${levelNumber}: ${score.toFixed(2)}% (${levelMatches.length}/${totalLevelBlocks} blocks correct)`);
+            console.log(`[Validator] [${workerName}] Level ${levelNumber}: ${score.toFixed(2)}% (${levelMatches.length}/${totalLevelBlocks} blocks correct)`);
             
             return {
                 valid: valid,
@@ -99,7 +100,7 @@ export class ConstructionTaskValidator {
                 total: totalLevelBlocks
             };
         } catch (error) {
-            console.error(`[Validator] Error validating level ${levelNumber}:`, error);
+            console.error(`[Validator] [${workerName}] Error validating level ${levelNumber}:`, error);
             return { valid: false, score: 0 };
         }
     }
@@ -261,7 +262,7 @@ export class Blueprint {
                 const x = levelData.coordinates[0] + blockData.x + offsetX;
                 const y = levelData.coordinates[1];
                 const z = levelData.coordinates[2] + blockData.z + offsetZ;
-                const expectedBlockName = blockData.material;
+                const expectedBlockName = blockData.material.split('[')[0];
 
                 try {
                     const blockAtLocation = bot.blockAt(new Vec3(x, y, z));
@@ -290,6 +291,7 @@ export class Blueprint {
             // Grid-based format: check placement array
             const startCoords = levelData.coordinates;
             const placement = levelData.placement;
+            
 
             for (let zOffset = 0; zOffset < placement.length; zOffset++) {
                 const row = placement[zOffset];
@@ -303,23 +305,24 @@ export class Blueprint {
                     try {
                         const blockAtLocation = bot.blockAt(new Vec3(x, y, z));
                         const actualBlockName = blockAtLocation ? bot.registry.blocks[blockAtLocation.type].name : "air";
+                        const expectedBaseName = blockName.split('[')[0];
 
-                        if (blockName === "air" && actualBlockName === "air") {
+                        if (expectedBaseName === "air" && actualBlockName === "air") {
                             continue;
                         }
 
-                        if (actualBlockName !== blockName) {
+                        if (actualBlockName !== expectedBaseName) {
                             mismatches.push({
                                 level: levelData.level,
                                 coordinates: [x, y, z],
-                                expected: blockName,
+                                expected: expectedBaseName,
                                 actual: actualBlockName
                             });
                         } else {
                             matches.push({
                                 level: levelData.level,
                                 coordinates: [x, y, z],
-                                expected: blockName,
+                                expected: expectedBaseName,
                                 actual: actualBlockName
                             });
                         }

@@ -156,3 +156,8 @@ Notes:
 - generate a description of the scructure when importing a blueprint
 - using the blueprint description when selecting blueprint to build from
 - using the blueprint description to create new blueprints
+
+# [1.3.9]
+### Fixed
+- workers getting stuck in building loop when cannot place block because of pathfinding problems or isolated blocks
+

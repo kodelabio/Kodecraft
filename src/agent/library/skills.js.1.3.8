@@ -842,81 +842,98 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         return await breakBlockAt(bot, x, y, z);
     }
 
-
-    // Blocks that require state properties - always use setblock for reliability
-    const statePropertyBlocks = [
-        'stairs', 'slab', 'button', 'lever', 'torch', 'redstone_torch',
-        'sign', 'wall_sign', 'door', 'trapdoor', 'fence_gate', 'gate',
-        'repeater', 'comparator', 'rail', 'powered_rail', 'detector_rail',
-        'activator_rail', 'ladder', 'vine', 'lantern', 'chain', 'bell',
-        'pane', 'bars', 'carpet', 'bed', 'dispenser', 'dropper'
-    ];
-    
-    const needsSetblock = statePropertyBlocks.some(keyword => blockType.includes(keyword));
-    
-    if (needsSetblock && !dontCheat) {
-        console.log(`[placeBlock] Block "${blockType}" requires state properties, forcing setblock mode`);
-        dontCheat = false; // Force setblock
-    }
-
-    // Apply state properties for blocks that need them (used by setblock)
-    const originalBlockType = blockType;
-    let face = placeOn === 'north' ? 'south' : placeOn === 'south' ? 'north' : placeOn === 'east' ? 'west' : 'east';
-    if (blockType.includes('torch') && placeOn !== 'bottom') {
-        // insert wall_ before torch
-        blockType = blockType.replace('torch', 'wall_torch');
-        if (placeOn !== 'side' && placeOn !== 'top') {
-            blockType += `[facing=${face}]`;
-        }
-    }
-    if (blockType.includes('button') || blockType === 'lever') {
-        if (placeOn === 'top') {
-            blockType += `[face=ceiling]`;
-        }
-        else if (placeOn === 'bottom') {
-            blockType += `[face=floor]`;
-        }
-        else {
-            blockType += `[facing=${face}]`;
-        }
-    }
-    if (blockType === 'ladder' || blockType === 'repeater' || blockType === 'comparator') {
-        blockType += `[facing=${face}]`;
-    }
-    if (blockType.includes('stairs')) {
-        blockType += `[facing=${face}]`;
-    }
-
     if (bot.modes.isOn('cheat') && !dontCheat) {
-        //console.log(`[placeBlock] Using cheat mode (/setblock)`);
+        console.log(`[placeBlock] Using cheat mode (/setblock)`);
         if (bot.restrict_to_inventory) {
-            let block = bot.inventory.items().find(item => item.name === originalBlockType);
+            let block = bot.inventory.items().find(item => item.name === blockType);
             if (!block) {
-                console.warn(`[placeBlock] ❌ Inventory restricted and no ${originalBlockType} in inventory`);
+                console.warn(`[placeBlock] ❌ Inventory restricted and no ${blockType} in inventory`);
                 log(bot, `Cannot place ${blockType}, you are restricted to your current inventory.`);
                 return false;
             }
         }
 
-        
+        // invert the facing direction
+        let face = placeOn === 'north' ? 'south' : placeOn === 'south' ? 'north' : placeOn === 'east' ? 'west' : 'east';
+        if (blockType.includes('torch') && placeOn !== 'bottom') {
+            // insert wall_ before torch
+            blockType = blockType.replace('torch', 'wall_torch');
+            if (placeOn !== 'side' && placeOn !== 'top') {
+                blockType += `[facing=${face}]`;
+            }
+        }
+        if (blockType.includes('button') || blockType === 'lever') {
+            if (placeOn === 'top') {
+                blockType += `[face=ceiling]`;
+            }
+            else if (placeOn === 'bottom') {
+                blockType += `[face=floor]`;
+            }
+            else {
+                blockType += `[facing=${face}]`;
+            }
+        }
+        if (blockType === 'ladder' || blockType === 'repeater' || blockType === 'comparator') {
+            blockType += `[facing=${face}]`;
+        }
+        if (blockType.includes('stairs')) {
+            blockType += `[facing=${face}]`;
+        }
         if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
         let msg = '/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z) + ' ' + blockType;
-        //console.log(`[placeBlock] Sending command: ${msg}`);
+        
         bot.chat(msg);
-        if (originalBlockType.includes('door'))
+        console.log(`[placeBlock] Sent setblock: ${msg}`);
+        
+        if (blockType.includes('door')) {
             if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
             bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y+1) + ' ' + Math.floor(z) + ' ' + blockType + '[half=upper]');
-        if (originalBlockType.includes('bed'))
+        }
+
+        if (blockType.includes('bed')) {
             if (useDelay) { await new Promise(resolve => setTimeout(resolve, blockPlaceDelay)); }
             bot.chat('/setblock ' + Math.floor(x) + ' ' + Math.floor(y) + ' ' + Math.floor(z-1) + ' ' + blockType + '[part=head]');
-        log(bot, `Used /setblock to place ${blockType} at ${target_dest}.`);
-        //console.log(`[placeBlock] ✓ Placed via /setblock`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log(`[placeBlock] ✓ Setblock confirmed: ${blockType}`);
         return true;
+
+        // Wait and verify block was placed
+        // No verification for setblock in cheat mode because it can be inconsistent and cause more problems than it solves, especially with complex blocks like doors and beds. If the block doesn't appear immediately, it's likely a chunk loading issue and will appear shortly.
+        /*
+        await new Promise(resolve => setTimeout(resolve, 500));
+        bot.world.loadChunk(Math.floor(x) >> 4, Math.floor(z) >> 4);
+
+        const baseBlockType = blockType.split('[')[0];
+        let success = false;
+
+        if (blockType.includes('bed')) {
+            const foot = bot.blockAt(Math.floor(x), Math.floor(y), Math.floor(z));
+            const head = bot.blockAt(Math.floor(x), Math.floor(y), Math.floor(z-1));
+            console.log(`[placeBlock] Bed check: foot=${foot?.name} head=${head?.name}`);
+            success = foot?.name === baseBlockType && head?.name === baseBlockType;
+        } else if (blockType.includes('door')) {
+            const bottom = bot.blockAt(Math.floor(x), Math.floor(y), Math.floor(z));
+            const top = bot.blockAt(Math.floor(x), Math.floor(y+1), Math.floor(z))  ;
+            console.log(`[placeBlock] Door check: bottom=${bottom?.name} top=${top?.name}, expected=${baseBlockType}`);
+            success = bottom?.name === baseBlockType && top?.name === baseBlockType;
+        } else {
+            const placed = bot.blockAt(target_dest);
+            success = placed?.name === baseBlockType;
+        }
+        
+        if (success) {
+            console.log(`[placeBlock] ✓ Setblock confirmed: ${blockType}`);
+            return true;
+        } else {
+            console.error(`[placeBlock] ✗ Setblock failed`);
+            return false;
+        }
+        */
     }
 
-    // Normal placement mode
     //console.log(`[placeBlock] Using normal placement mode`);
-    let item_name = originalBlockType;
+    let item_name = blockType;
     if (item_name == "redstone_wire")
         item_name = "redstone";
     else if (item_name === 'water') {
@@ -936,7 +953,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         //console.log(`[placeBlock] After creative slot set, found: ${!!block_item}`);
     }
     if (!block_item) {
-        console.warn(`[placeBlock] ❌ Don't have any ${item_name} to place`);
+        //console.warn(`[placeBlock] ❌ Don't have any ${item_name} to place`);
         log(bot, `Don't have any ${item_name} to place.`);
         return false;
     }
@@ -945,13 +962,13 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     //console.log(`[placeBlock] Target block at ${target_dest}: ${targetBlock ? targetBlock.name : 'NOT LOADED'}`);
     
     if (!targetBlock) {
-        console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
+        //console.log(`[placeBlock] Block not loaded, waiting for chunks...`);
         log(bot, `Block at ${target_dest} is not loaded. Waiting for chunks...`);
         // Wait a moment for chunks to load
         await new Promise(resolve => setTimeout(resolve, 200));
         const retryBlock = bot.blockAt(target_dest);
         if (!retryBlock) {
-            console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);
+            //console.warn(`[placeBlock] ❌ Chunk still not loaded after retry`);
             log(bot, `Cannot place ${blockType} at ${target_dest}: chunk not loaded.`);
             return false;
         }
@@ -960,7 +977,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     if (targetBlock.name === blockType || (targetBlock.name === 'grass_block' && blockType === 'dirt')) {
         //console.log(`[placeBlock] ⚠️ ${blockType} already at ${targetBlock.position}`);
         log(bot, `${blockType} already at ${targetBlock.position}.`);
-        return true;
+        return false;
     }
     const empty_blocks = ['air', 'water', 'lava', 'grass', 'short_grass', 'tall_grass', 'snow', 'dead_bush', 'fern'];
     if (!empty_blocks.includes(targetBlock.name)) {
@@ -970,15 +987,15 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         // Don't break blocks that look like they belong to the structure
         const structureBlocks = ['stone_bricks', 'cracked_stone_bricks', 'black_wool', 'stone_brick_slab'];
         if (structureBlocks.includes(targetBlock.name)) {
-            console.warn(`[placeBlock] ⚠️ Structure block ${targetBlock.name} in the way at (${x},${y},${z}), skipping`);
+            //console.warn(`[placeBlock] ⚠️ Structure block ${targetBlock.name} in the way at (${x},${y},${z}), skipping`);
             return false;
         }
       
-        console.log(`[placeBlock] Block in the way: ${targetBlock.name}, attempting to break it`);
+        //console.log(`[placeBlock] Block in the way: ${targetBlock.name}, attempting to break it`);
         log(bot, `${targetBlock.name} in the way at ${targetBlock.position}.`);
         const removed = await breakBlockAt(bot, x, y, z);
         if (!removed) {
-            console.warn(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
+            //console.warn(`[placeBlock] ❌ Could not remove ${targetBlock.name}`);
             log(bot, `Cannot place ${blockType} at ${targetBlock.position}: block in the way.`);
             return false;
         }
@@ -1005,7 +1022,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
     }
     else {
         dirs.push(dir_map['bottom']);
-        console.log(`[placeBlock] Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
+        //console.log(`[placeBlock] Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
         log(bot, `Unknown placeOn value "${placeOn}". Defaulting to bottom.`);
     }
     dirs.push(...Object.values(dir_map).filter(d => !dirs.includes(d)));
@@ -1022,18 +1039,12 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     }
     
-    // No adjacent solid block was found to place the block on.
     if (!buildOffBlock) {
-        console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
-        if (dontCheat === true) {  // Only if we haven't already tried setblock
-            return await placeBlock(bot, blockType, x, y, z, placeOn, false);
-        } else {
-            // Already tried setblock, give up
-            console.warn(`[placeBlock] Setblock also failed for isolated block`);
-        }
+        //console.warn(`[placeBlock] ⚠️ No adjacent block found for ${blockType} at (${x},${y},${z}) - isolated block`);
+        //console.warn(`[placeBlock] ❌ No adjacent block to place on!`);
+        log(bot, `Cannot place ${blockType} at ${targetBlock.position}: nothing to place on.`);
         return false;
     }
-        
 
     const pos = bot.entity.position;
     const pos_above = pos.plus(new Vec3(0,1,0));
@@ -1061,7 +1072,7 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         await goToGoal(bot, new pf.goals.GoalNear(pos.x, pos.y, pos.z, 4));
     }
 
-    // Now place it
+    // will throw error if an entity is in the way, and sometimes even if the block was placed
     try {
         if (item_name.includes('bucket')) {
             //console.log(`[placeBlock] Placing bucket item`);
@@ -1082,22 +1093,19 @@ export async function placeBlock(bot, blockType, x, y, z, placeOn='bottom', dont
         }
     } catch (err) {
         if (err.message.includes('blockUpdate') && err.message.includes('timeout')) {
-            // Wait for late-arriving block update packet
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
             const block = bot.blockAt(x, y, z);
-            console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
-            // In case it is there but the server didn't update the client in time, check if the block is actually there before giving up
+            //console.log(`[placeBlock] Timeout - was placing on: ${buildOffBlock.name} at ${buildOffBlock.position}, face: (${faceVec.x},${faceVec.y},${faceVec.z})`);
+            //console.log(`[placeBlock] Post-timeout check at ${target_dest}: ${block?.name} (expected: ${blockType})`);
             if (block && block.name === blockType) {
-                console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
+                //console.log(`[placeBlock] ✓ Block confirmed present despite timeout (server lag)`);
                 log(bot, `Placed ${blockType} at (${x}, ${y}, ${z}).`);
-                // Don't trust blockAt after timeout. 
-                return false;  // ← Force failure so autoBuild retries with setblock
+                return true;
             }
         }
         console.error(`[placeBlock] ❌ Exception: ${err.message}`);
         log(bot, `Failed to place ${blockType} at (${x}, ${y}, ${z}).`);
         return false;
-    }
+        }
 }
 
 export async function equip(bot, itemName) {

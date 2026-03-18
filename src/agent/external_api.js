@@ -2554,26 +2554,28 @@ export class ExternalAPI {
                     // Execute !autoBuild
                     const command = '!autoBuild';
                     console.log(`[BlueprintDirect] Executing: ${command}`);
-                    
+                    let result; // ← Add this declaration
                     try {
-                        const result = await executeCommand(this.agent, command);
+                        result = await executeCommand(this.agent, command);
                         console.log(`[BlueprintDirect] Build result: ${result ? 'success' : 'failed'}`);
                     } catch (buildError) {
                         console.error(`[BlueprintDirect] Build execution error: ${buildError.message}`);
                     }
-                    
-                    // Wait for task completion
-                    const maxWaitTime = 60 * 60 * 1000; // 60 minutes
-                    const startTime = Date.now();
-                    const pollInterval = 2000;
-                    
-                    while (!task.isDone()) {
-                        if (Date.now() - startTime > maxWaitTime) {
-                            console.warn('[BlueprintDirect] Task execution timeout after 15 minutes');
-                            break;
+                    if (!result) {
+                        // Only poll if build failed/incomplete
+                        const maxWaitTime = 60 * 60 * 1000;
+                        const startTime = Date.now();
+                        const pollInterval = 2000;
+                        
+                        while (!task.isDone()) {
+                            if (Date.now() - startTime > maxWaitTime) {
+                                console.warn('[BlueprintDirect] Task execution timeout after 60 minutes');
+                                break;
+                            }
+                            await new Promise(r => setTimeout(r, pollInterval));
                         }
-                        await new Promise(r => setTimeout(r, pollInterval));
                     }
+                    
                     
                     // Get final score
                     const finalScore = task.getScore ? task.getScore() : 'unknown';
@@ -3166,19 +3168,19 @@ export class ExternalAPI {
             // Assign each blueprint to its worker
             setImmediate(async () => {
                 try {
-                    for (const blueprint of blueprints) {
-                        const targetWorker = session.workers.find(w => w.workerName === blueprint.assignedWorker);
+                    for (const blueprintData of blueprints) {
+                        const targetWorker = session.workers.find(w => w.workerName === blueprintData.assignedWorker);
                         
                         if (!targetWorker) {
-                            console.warn(`[Orchestration] Worker ${blueprint.assignedWorker} not found for blueprint ${blueprint.name}`);
+                            console.warn(`[Orchestration] Worker ${blueprintData.assignedWorker} not found for blueprint ${blueprintData.name}`);
                             continue;
                         }
 
-                        console.log(`[Orchestration] Assigning ${blueprint.name} to ${blueprint.assignedWorker} on port ${blueprint.assignedWorkerPort}`);
+                        console.log(`[Orchestration] Assigning ${blueprintData.name} to ${blueprintData.assignedWorker} on port ${blueprintData.assignedWorkerPort}`);
                         
                         await this.orchestration.assignBlueprintToWorkers(
                             sessionId,
-                            blueprint,
+                            blueprintData,
                             [targetWorker],
                             finalTasklocation,
                             conversationId,

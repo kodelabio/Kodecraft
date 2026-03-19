@@ -161,3 +161,9 @@ Notes:
 ### Fixed
 - workers getting stuck in building loop when cannot place block because of pathfinding problems or isolated blocks
 
+# [1.3.10]
+### Added
+- added checks for realm boundaries in Kodecraft Workflow
+- added checks for realm boundaries in Building Workflow
+- added checks for realm boundaries in Collaborative Tasks Workflow
+
